@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+<title>in·real·life</title>
+</head>
+<body>
+
+<div class="app" id="app">
+  <div class="screen" id="screen-location"></div>
+  <div class="screen" id="screen-signup"></div>
+  <div class="screen" id="screen-confirm"></div>
+  <div class="screen" id="screen-signin"></div>
+  <div class="screen" id="screen-welcome"></div>
+  <div class="screen onboarding" id="screen-onboarding"></div>
+  <div class="screen" id="screen-locality"></div>
+  <div class="screen" id="screen-feed"></div>
+  <div class="screen" id="screen-detail"></div>
+  <div class="screen" id="screen-profile"></div>
+  <div class="screen" id="screen-debrief"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="modal-overlay" id="suggestModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Suggest a change</div>
+    <div class="suggest-option" data-field="time">
+      <span class="suggest-label">Time</span>
+      <span class="suggest-value" id="suggestTime"></span>
+    </div>
+    <div class="suggest-option" data-field="place">
+      <span class="suggest-label">Place</span>
+      <span class="suggest-value" id="suggestPlace"></span>
+    </div>
+    <div style="margin-top: 16px;">
+      <button class="btn-full primary" id="suggestSubmit">Send suggestion</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { init } from './js/app.js';
+  init();
+</script>
+
+</body>
+</html>

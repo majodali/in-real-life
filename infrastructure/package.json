@@ -1,0 +1,26 @@
+{
+  "name": "irl-infrastructure",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "cdk": "cdk",
+    "deploy": "cdk deploy --require-approval never",
+    "destroy": "cdk destroy --force",
+    "test": "node --test lambda/api",
+    "test:functional": "node --test test/functional",
+    "test:all": "node --test lambda/api test/functional"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "^2.170.0",
+    "constructs": "^10.4.2"
+  },
+  "devDependencies": {
+    "@aws-sdk/client-cloudformation": "^3.700.0",
+    "@aws-sdk/client-cognito-identity-provider": "^3.700.0",
+    "@aws-sdk/client-dynamodb": "^3.700.0",
+    "@aws-sdk/lib-dynamodb": "^3.700.0",
+    "aws-cdk": "^2.170.0",
+    "aws-sdk-client-mock": "^4.1.0",
+    "typescript": "^5.0.0"
+  }
+}

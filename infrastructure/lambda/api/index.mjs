@@ -1,0 +1,124 @@
+// IRL API Lambda — composition root.
+//
+// Pulls env vars, wires shared deps (DynamoDB client, command runner, projector,
+// workshop-time loader), instantiates per-route handlers, registers them, and
+// exports the dispatch fn. Behaviour lives in the imported modules; this file
+// is wiring only.
+//
+// Mode is derived from STAGE: 'prod' → production, anything else → workshop.
+// Workshop-only routes are registered inside `if (isWorkshop) { ... }` so they
+// don't exist on production stacks. See docs/workshop-mode.md.
+
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
+import { createRouter } from './lib/router.mjs';
+import { createCommandRunner } from './lib/command.mjs';
+import { createProjector } from './lib/projection.mjs';
+import { createWorkshopOffsetLoader } from './lib/workshop-time.mjs';
+import {
+  projectUserRegistered,
+  projectUserProfileCreated,
+  projectUserProfileUpdated,
+  projectLocalityVerificationRequested,
+  projectLocalityVerified,
+  projectUserActivated,
+} from './users/projections.mjs';
+import { createRegisterHandler } from './users/register.mjs';
+import { createProfileHandler } from './users/profile.mjs';
+import { createUpdateProfileHandler } from './users/profile-update.mjs';
+import { createLocalityHandler } from './users/locality.mjs';
+import { createLocalityCheckHandler } from './users/locality-check.mjs';
+import { createGetMeHandler } from './users/me.mjs';
+import { projectLocationNotifyRequested } from './notify/projections.mjs';
+import { createNotifyHandler } from './notify/notify.mjs';
+import { projectWorkshopTimeAdvanced } from './workshop/projections.mjs';
+import { createGetTimeHandler } from './workshop/get-time.mjs';
+import { createAdvanceTimeHandler } from './workshop/admin-time.mjs';
+
+const stage = process.env.STAGE || 'workshop';
+const mode = stage === 'prod' ? 'production' : 'workshop';
+const isWorkshop = mode === 'workshop';
+
+const client = DynamoDBDocumentClient.from(new DynamoDBClient({}));
+
+const tables = {
+  usersTable: process.env.USERS_TABLE,
+  eventsTable: process.env.EVENTS_TABLE,
+  interactionsTable: process.env.INTERACTIONS_TABLE,
+  configTable: process.env.CONFIG_TABLE,
+};
+
+const getWorkshopOffset = createWorkshopOffsetLoader({
+  client,
+  configTable: tables.configTable,
+});
+
+const projector = createProjector({
+  registry: {
+    UserRegistered: projectUserRegistered,
+    UserProfileCreated: projectUserProfileCreated,
+    UserProfileUpdated: projectUserProfileUpdated,
+    LocalityVerificationRequested: projectLocalityVerificationRequested,
+    LocalityVerified: projectLocalityVerified,
+    UserActivated: projectUserActivated,
+    LocationNotifyRequested: projectLocationNotifyRequested,
+    WorkshopTimeAdvanced: projectWorkshopTimeAdvanced,
+  },
+  tables,
+});
+
+const runner = createCommandRunner({
+  client,
+  commandsTable: process.env.COMMANDS_TABLE,
+  eventsLogTable: process.env.EVENTS_LOG_TABLE,
+  projector,
+  getOffset: getWorkshopOffset,
+});
+
+const registerHandler = createRegisterHandler({ runner });
+const profileHandler = createProfileHandler({ runner, client, usersTable: tables.usersTable });
+const updateProfileHandler = createUpdateProfileHandler({ runner, client, usersTable: tables.usersTable });
+const localityHandler = createLocalityHandler({ runner, client, usersTable: tables.usersTable });
+const localityCheckHandler = createLocalityCheckHandler();
+const notifyHandler = createNotifyHandler({ runner });
+const getMeHandler = createGetMeHandler({ client, usersTable: tables.usersTable });
+const getTimeHandler = createGetTimeHandler({ getOffset: getWorkshopOffset });
+const advanceTimeHandler = createAdvanceTimeHandler({ runner, getOffset: getWorkshopOffset });
+
+const router = createRouter();
+
+router.add('GET', '/health', async () => ({
+  statusCode: 200,
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    ok: true,
+    time: new Date().toISOString(),
+    stage,
+    mode,
+    tables: {
+      users: tables.usersTable,
+      events: tables.eventsTable,
+      interactions: tables.interactionsTable,
+      config: tables.configTable,
+      eventsLog: process.env.EVENTS_LOG_TABLE,
+      commands: process.env.COMMANDS_TABLE,
+    },
+  }),
+}));
+
+router.add('GET', '/me', getMeHandler);
+router.add('POST', '/me/register', registerHandler);
+router.add('POST', '/me/profile', profileHandler);
+router.add('PUT', '/me/profile', updateProfileHandler);
+router.add('POST', '/me/locality', localityHandler);
+router.add('GET', '/locality/check', localityCheckHandler);
+router.add('POST', '/notify', notifyHandler);
+router.add('GET', '/time', getTimeHandler);
+
+// Workshop-only routes are registered conditionally so they don't exist
+// on the production Lambda's route table.
+if (isWorkshop) {
+  router.add('POST', '/admin/time', advanceTimeHandler);
+}
+
+export const handler = router.dispatch;

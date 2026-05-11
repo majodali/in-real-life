@@ -1,0 +1,7 @@
+{
+  "name": "irl-frontend",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "description": "Frontend source. Loaded directly by the browser as ES modules; this package.json exists so Node treats .js files as ESM for unit tests."
+}

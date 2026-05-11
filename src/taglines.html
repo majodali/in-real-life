@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+<title>in·real·life — taglines</title>
+</head>
+<body>
+
+<div class="landing">
+  <main class="landing-content">
+
+    <section class="landing-hero tagline-review-hero">
+      <div class="wordmark">in<span>·</span>real<span>·</span>life</div>
+      <span class="tagline-review-badge">Tagline review</span>
+      <p class="tagline-review-summary" id="taglineSummary"></p>
+    </section>
+
+    <section id="taglineGroups"></section>
+
+  </main>
+</div>
+
+<script type="module">
+  import { TAGLINES, CATEGORY_LABELS } from './js/taglines.js';
+
+  function escape(str) {
+    const d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+  }
+
+  const groups = {};
+  for (const t of TAGLINES) {
+    if (!groups[t.category]) groups[t.category] = [];
+    groups[t.category].push(t);
+  }
+
+  const activeCount = TAGLINES.filter(t => t.active).length;
+  document.getElementById('taglineSummary').textContent =
+    `${activeCount} of ${TAGLINES.length} active. Read-only review page.`;
+
+  const container = document.getElementById('taglineGroups');
+  for (const [key, label] of Object.entries(CATEGORY_LABELS)) {
+    const items = groups[key] ?? [];
+    if (items.length === 0) continue;
+    const section = document.createElement('section');
+    section.className = 'tagline-group';
+    const groupActive = items.filter(t => t.active).length;
+    section.innerHTML = `
+      <h2>${escape(label)}</h2>
+      <p class="tagline-group-meta">${groupActive} of ${items.length} active</p>
+    `;
+    for (const t of items) {
+      const card = document.createElement('div');
+      card.className = 'tagline-card' + (t.active ? '' : ' inactive');
+      const attribution = t.attribution
+        ? `<p class="tagline-card-attribution">— ${escape(t.attribution)}</p>`
+        : '';
+      card.innerHTML = `
+        <span class="tagline-card-state">${t.active ? 'active' : 'inactive'}</span>
+        <p class="tagline-card-text">${escape(t.text)}</p>
+        ${attribution}
+      `;
+      section.appendChild(card);
+    }
+    container.appendChild(section);
+  }
+</script>
+
+</body>
+</html>

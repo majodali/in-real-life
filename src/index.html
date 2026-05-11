@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+<title>in·real·life</title>
+</head>
+<body>
+
+<div class="landing">
+  <main class="landing-content">
+
+    <section class="landing-hero">
+      <div class="wordmark">in<span>·</span>real<span>·</span>life</div>
+
+      <p class="tagline" id="tagline"></p>
+      <p class="tagline-attribution" id="taglineAttribution"></p>
+
+      <div class="landing-cta">
+        <button class="btn-primary" onclick="goSignup()">Sign up</button>
+        <a href="#" class="landing-link" onclick="goSignin(event)">I already have an account</a>
+      </div>
+    </section>
+
+    <section class="landing-section">
+      <h2>Why we built this</h2>
+      <p>Making friends as an adult shouldn't require an algorithm.</p>
+      <p>So we built the simplest possible thing: a list of meetups happening near you, and a way to say you'll be there. Then you go. That's the whole thing.</p>
+    </section>
+
+    <section class="landing-section">
+      <h2>How it works</h2>
+      <ol class="landing-steps">
+        <li class="landing-step">
+          <span class="landing-step-num">1</span>
+          <div class="landing-step-body">
+            <h3>Tell us a bit about you</h3>
+            <p>A short interview &mdash; what you like, when you're free, the kind of company you enjoy.</p>
+          </div>
+        </li>
+        <li class="landing-step">
+          <span class="landing-step-num">2</span>
+          <div class="landing-step-body">
+            <h3>See what's nearby</h3>
+            <p>A coffee walk on Saturday, a book swap on Sunday &mdash; events happening close to where you live.</p>
+          </div>
+        </li>
+        <li class="landing-step">
+          <span class="landing-step-num">3</span>
+          <div class="landing-step-body">
+            <h3>Show up</h3>
+            <p>Tap &ldquo;I'll be there,&rdquo; then go. Hellos happen face to face.</p>
+          </div>
+        </li>
+      </ol>
+    </section>
+
+    <section class="landing-section">
+      <h2>Principles</h2>
+      <div class="landing-principles">
+
+        <div class="landing-principle">
+          <h3>Only first names</h3>
+          <p>We share what's needed to recognize you when you arrive &mdash; a first name and a vibe. Your last name, address, and phone number stay yours.</p>
+        </div>
+
+        <div class="landing-principle">
+          <h3>No DMs</h3>
+          <p>There's no inbox. The way to talk to someone is to show up where they'll be.</p>
+        </div>
+
+        <div class="landing-principle">
+          <h3>No likes, follows, or feed</h3>
+          <p>We don't rank people or score you. There's no notification you can't ignore.</p>
+        </div>
+
+        <div class="landing-principle">
+          <h3>Adults only, neighbors only</h3>
+          <p>Sign-up requires being 18+ and verifying you live nearby. This is meant for the neighborhood you're actually in &mdash; not the internet at large.</p>
+        </div>
+
+        <div class="landing-principle">
+          <h3>Show up means show up</h3>
+          <p>Confirming a meetup is a small commitment &mdash; someone's counting on you to come.</p>
+        </div>
+
+        <div class="landing-principle">
+          <h3>We don't sell your data</h3>
+          <p>We collect the minimum needed to make a meetup happen. That's it.</p>
+        </div>
+
+      </div>
+    </section>
+
+    <section class="landing-section">
+      <h2>Where it works</h2>
+      <p>We're starting on Bainbridge Island, Washington. We'll add new neighborhoods one at a time, so each place stays small enough to actually feel like one.</p>
+      <p>Not on Bainbridge? Sign up anyway &mdash; we'll let you know when we get to you.</p>
+    </section>
+
+    <section class="landing-final">
+      <h2>Show up.</h2>
+      <div class="landing-cta">
+        <button class="btn-primary" onclick="goSignup()">Sign up</button>
+        <a href="#" class="landing-link" onclick="goSignin(event)">I already have an account</a>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script type="module">
+  import * as store from './js/store.js';
+  import { pickActiveTagline } from './js/taglines.js';
+
+  const tagline = pickActiveTagline();
+  document.getElementById('tagline').textContent = tagline.text;
+  if (tagline.attribution) {
+    document.getElementById('taglineAttribution').textContent = '— ' + tagline.attribution;
+  }
+
+  window.goSignup = function() {
+    store.clearActiveUser();
+    window.location.href = 'app.html#location';
+  };
+
+  window.goSignin = function(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    store.clearActiveUser();
+    window.location.href = 'app.html#signin';
+  };
+</script>
+
+</body>
+</html>
