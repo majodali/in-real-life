@@ -298,6 +298,91 @@ html, body {
   margin: 0 0 18px;
 }
 
+/* ─── Terms of Use (terms.html) ─── */
+
+.wordmark-link {
+  display: inline-block;
+  text-decoration: none;
+  color: inherit;
+}
+
+.terms-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 28px;
+  font-weight: 400;
+  color: var(--earth);
+  letter-spacing: -0.005em;
+  margin: 8px 0 4px;
+}
+
+.terms-version {
+  font-size: 12px;
+  color: var(--soft);
+  letter-spacing: 0.04em;
+  margin: 0 0 28px;
+  font-style: italic;
+}
+
+.terms-lede {
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--text);
+  margin: 0 0 12px;
+}
+
+.terms-lede:last-of-type { margin-bottom: 0; }
+
+.terms-subhead {
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--soft);
+  font-weight: 500;
+  margin: 18px 0 8px;
+}
+
+.terms-list {
+  list-style: none;
+  padding: 0;
+  margin: 4px 0 14px;
+}
+
+.terms-list li {
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--text);
+  padding: 4px 0 4px 18px;
+  position: relative;
+}
+
+.terms-list li::before {
+  content: '·';
+  color: var(--amber);
+  position: absolute;
+  left: 4px;
+  top: 0;
+  font-size: 22px;
+  line-height: 1.4;
+}
+
+/* ─── Landing footer ─── */
+
+.landing-footer {
+  padding: 32px 0 16px;
+  text-align: center;
+  border-top: 1px solid rgba(74, 103, 65, 0.14);
+  margin-top: 16px;
+}
+
+.landing-footer a {
+  font-size: 13px;
+  color: var(--soft);
+  text-decoration: none;
+  letter-spacing: 0.02em;
+}
+
+.landing-footer a:hover { color: var(--moss); }
+
 /* ─── Tagline review (taglines.html) ─── */
 
 .tagline-review-hero { padding-bottom: 24px; }

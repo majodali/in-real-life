@@ -28,7 +28,7 @@ export function renderSignup(initialEmail = '') {
 
           <label class="auth-check">
             <input type="checkbox" id="signupAgree">
-            <span>I agree to the terms of use and confirm I'm 18 or older.</span>
+            <span>I agree to the <a href="terms.html" target="_blank" rel="noopener" class="auth-link">Terms of Use</a> and confirm I'm 18 or older.</span>
           </label>
 
           <button class="btn-primary" id="signupSubmit" type="submit">Create account</button>

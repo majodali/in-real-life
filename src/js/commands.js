@@ -5,6 +5,8 @@
 // next attempt reuses it — that way a network blip becomes a cache hit
 // at the backend's idempotency table instead of a duplicate event.
 
+import { AGREEMENT_VERSION } from './agreement.js';
+
 const REGISTER_KEY = 'irl_cmd_register';
 const PROFILE_KEY = 'irl_cmd_profile';
 const PROFILE_UPDATE_KEY = 'irl_cmd_profile_update';
@@ -25,7 +27,7 @@ export function createCommands({
     return id;
   }
 
-  async function register({ agreementVersion = 'v1' } = {}) {
+  async function register({ agreementVersion = AGREEMENT_VERSION } = {}) {
     const commandId = getOrMakeCommandId(REGISTER_KEY);
     const result = await api.post('/me/register', { commandId, agreementVersion });
     storage.removeItem(REGISTER_KEY);
