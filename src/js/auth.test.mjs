@@ -261,3 +261,41 @@ test('getCurrentTokens returns the parsed stored tokens, or null if absent', () 
   storage._data.set('irl_auth_tokens', JSON.stringify(tokens));
   assert.deepEqual(auth.getCurrentTokens(), tokens);
 });
+
+// ─── getCurrentClaims ───
+
+function fakeJwt(payload) {
+  const enc = (o) => Buffer.from(JSON.stringify(o)).toString('base64url');
+  return `${enc({ typ: 'JWT' })}.${enc(payload)}.signature`;
+}
+
+test('getCurrentClaims returns null when no tokens are stored', () => {
+  assert.equal(auth.getCurrentClaims(), null);
+});
+
+test('getCurrentClaims decodes the idToken payload', () => {
+  const claims = { sub: 'abc', email: 'a@b.c', 'custom:role': 'admin' };
+  storage._data.set('irl_auth_tokens', JSON.stringify({
+    idToken: fakeJwt(claims),
+    accessToken: 'a', refreshToken: 'r', expiresAt: 999,
+  }));
+  assert.deepEqual(auth.getCurrentClaims(), claims);
+});
+
+test('getCurrentClaims returns null when the idToken is malformed', () => {
+  storage._data.set('irl_auth_tokens', JSON.stringify({
+    idToken: 'not.a.jwt.extra',
+    accessToken: 'a', refreshToken: 'r', expiresAt: 999,
+  }));
+  assert.equal(auth.getCurrentClaims(), null);
+});
+
+test('getCurrentClaims handles base64url padding correctly', () => {
+  // Payloads whose base64 encoding has padding-sensitive lengths.
+  const claims = { x: '1' };
+  storage._data.set('irl_auth_tokens', JSON.stringify({
+    idToken: fakeJwt(claims),
+    accessToken: 'a', refreshToken: 'r', expiresAt: 999,
+  }));
+  assert.deepEqual(auth.getCurrentClaims(), claims);
+});

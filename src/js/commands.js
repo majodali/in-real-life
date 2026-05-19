@@ -85,6 +85,21 @@ export function createCommands({
     return result;
   }
 
+  // Admin / workshop endpoints. Fresh commandId per call for advanceTime
+  // because each click is a distinct user intent ("advance again");
+  // network retries within a single call reuse the local id naturally.
+  async function getTime() {
+    return await api.get('/time');
+  }
+
+  async function advanceTime(args) {
+    return await api.post('/admin/time', { commandId: makeId(), ...args });
+  }
+
+  async function getNotifyList() {
+    return await api.get('/admin/notify-list');
+  }
+
   async function requestNotify({ email, postalCode, country }) {
     const commandId = getOrMakeCommandId(NOTIFY_KEY);
     const body = { commandId, email, postalCode };
@@ -103,5 +118,8 @@ export function createCommands({
     requestNotify,
     exportData,
     deleteAccount,
+    getTime,
+    advanceTime,
+    getNotifyList,
   };
 }

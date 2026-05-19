@@ -267,6 +267,48 @@ test('checkLocality: URL-encodes the postal code', async () => {
   assert.equal(api.get.calls[0][0], '/locality/check?postalCode=ab%20cd');
 });
 
+// ─── Admin / workshop ───
+//
+// advanceTime is "do it again" semantics: each call is a distinct action
+// from the user, so a fresh commandId per call (no persistence) — the
+// opposite of register/createProfile.
+
+test('getTime: GETs /time and returns the response', async () => {
+  api.get = spy(async () => ({ wallTime: 'w', simulatedTime: 's', offsetMs: 0, description: 'real time' }));
+  commands = createCommands({ api, storage, makeId: () => `cmd-${++nextId}` });
+  const result = await commands.getTime();
+  assert.equal(api.get.calls[0][0], '/time');
+  assert.equal(result.description, 'real time');
+});
+
+test('advanceTime: POSTs to /admin/time with a fresh commandId and the action args', async () => {
+  await commands.advanceTime({ action: 'advance', hours: 6 });
+  assert.equal(api.post.calls[0][0], '/admin/time');
+  assert.deepEqual(api.post.calls[0][1], { commandId: 'cmd-1', action: 'advance', hours: 6 });
+});
+
+test('advanceTime: each call gets a new commandId (no persistence)', async () => {
+  await commands.advanceTime({ action: 'advance', days: 1 });
+  await commands.advanceTime({ action: 'advance', days: 1 });
+  assert.notEqual(api.post.calls[0][1].commandId, api.post.calls[1][1].commandId);
+});
+
+test('advanceTime: passes through set / reset action shapes', async () => {
+  await commands.advanceTime({ action: 'set', datetime: '2026-06-01T00:00:00Z' });
+  await commands.advanceTime({ action: 'reset' });
+  assert.equal(api.post.calls[0][1].action, 'set');
+  assert.equal(api.post.calls[0][1].datetime, '2026-06-01T00:00:00Z');
+  assert.equal(api.post.calls[1][1].action, 'reset');
+});
+
+test('getNotifyList: GETs /admin/notify-list and returns the response', async () => {
+  api.get = spy(async () => ({ entries: [{ email: 'a@b.c' }], count: 1 }));
+  commands = createCommands({ api, storage, makeId: () => `cmd-${++nextId}` });
+  const result = await commands.getNotifyList();
+  assert.equal(api.get.calls[0][0], '/admin/notify-list');
+  assert.equal(result.count, 1);
+});
+
 // ─── deleteAccount ───
 
 test('deleteAccount: DELETEs /me with a fresh commandId in the body', async () => {

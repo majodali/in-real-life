@@ -12,6 +12,7 @@ import { renderSignin } from './screens/signin.js';
 import { renderWelcome } from './screens/welcome.js';
 import { renderLocality } from './screens/locality.js';
 import { renderLocation } from './screens/location.js';
+import { renderAdmin } from './screens/admin.js';
 
 const PUBLIC_SCREENS = new Set(['location', 'signup', 'confirm', 'signin', 'welcome', 'onboarding', 'locality']);
 
@@ -118,6 +119,11 @@ function route() {
     case 'profile':
       showScreen('profile');
       renderProfile();
+      break;
+
+    case 'admin':
+      showScreen('admin');
+      renderAdmin();
       break;
 
     case 'feed':

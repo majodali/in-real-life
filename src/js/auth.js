@@ -96,6 +96,27 @@ export function createAuth({
     return readTokens();
   }
 
+  // Decode the id-token JWT payload. The frontend uses this only for
+  // routing decisions (e.g. "is this user an admin?"); the backend
+  // verifies every protected call independently via API Gateway's JWT
+  // authorizer, so an unsigned decode here is safe.
+  function getCurrentClaims() {
+    const tokens = readTokens();
+    if (!tokens?.idToken) return null;
+    const parts = tokens.idToken.split('.');
+    if (parts.length !== 3) return null;
+    try {
+      const b64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+      const padded = b64 + '='.repeat((4 - b64.length % 4) % 4);
+      const json = typeof atob === 'function'
+        ? atob(padded)
+        : Buffer.from(padded, 'base64').toString('binary');
+      return JSON.parse(decodeURIComponent(escape(json)));
+    } catch {
+      return null;
+    }
+  }
+
   async function getValidIdToken() {
     const tokens = readTokens();
     if (!tokens) return null;
@@ -124,6 +145,7 @@ export function createAuth({
     refresh,
     signOut,
     getCurrentTokens,
+    getCurrentClaims,
     getValidIdToken,
   };
 }

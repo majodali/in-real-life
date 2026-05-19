@@ -20,6 +20,9 @@ export function renderProfile() {
     return;
   }
 
+  const claims = auth.getCurrentClaims();
+  const isAdmin = claims?.['custom:role'] === 'admin';
+
   const container = document.getElementById('screen-profile');
 
   container.innerHTML = `
@@ -73,6 +76,19 @@ export function renderProfile() {
           <span class="persona-arrow">\u2193</span>
         </button>
       </div>
+
+      ${isAdmin ? `
+      <div class="profile-section">
+        <button class="profile-tellmore-btn" id="adminLinkBtn">
+          <span class="tellmore-icon">\u{1F6E0}</span>
+          <span class="tellmore-text">
+            <strong>Admin · workshop</strong>
+            <small>Time controls and notify list</small>
+          </span>
+          <span class="persona-arrow">→</span>
+        </button>
+      </div>
+      ` : ''}
 
       <div class="profile-section" id="deleteSection">
         <button class="profile-danger-btn" id="deleteBtn">Delete my account</button>
@@ -152,6 +168,13 @@ export function renderProfile() {
     });
     renderProfile();
   });
+
+  // Admin link (only present for admins)
+  if (isAdmin) {
+    document.getElementById('adminLinkBtn').addEventListener('click', () => {
+      navigate('admin');
+    });
+  }
 
   // Tell us more
   document.getElementById('tellMoreBtn').addEventListener('click', () => {

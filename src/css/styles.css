@@ -1285,3 +1285,67 @@ html, body {
 .toast.show {
   opacity: 1; transform: translateX(-50%) translateY(0);
 }
+
+/* ─── Admin / workshop screen ─── */
+
+.admin-card { text-align: left; }
+
+.admin-section-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 18px;
+  color: var(--earth);
+  margin-bottom: 12px;
+}
+
+.admin-time-display {
+  background: var(--cream);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 13px;
+  color: var(--text);
+  margin-bottom: 14px;
+  line-height: 1.45;
+}
+
+.admin-time-display small { color: var(--soft); font-size: 11px; }
+
+.admin-time-row { margin-bottom: 12px; }
+
+.admin-inline-form {
+  display: flex; gap: 8px; align-items: stretch;
+}
+
+.admin-inline-form .profile-field-input { flex: 1; }
+.admin-inline-form .btn-small { flex: 0 0 auto; }
+
+.admin-reset-btn {
+  background: none;
+  border: 1.5px solid var(--rust);
+  color: var(--rust);
+}
+
+.admin-reset-btn:active { background: rgba(168, 92, 56, 0.08); }
+
+.admin-notify-meta {
+  font-size: 12px; color: var(--soft); margin-bottom: 10px;
+}
+
+.admin-notify-list {
+  display: flex; flex-direction: column; gap: 8px;
+}
+
+.admin-notify-row {
+  background: var(--cream);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.admin-notify-email {
+  font-size: 14px; color: var(--text); word-break: break-all;
+}
+
+.admin-notify-meta-line {
+  display: flex; justify-content: space-between; gap: 8px;
+  font-size: 11px; color: var(--soft); margin-top: 4px;
+}
+

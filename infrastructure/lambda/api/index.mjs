@@ -40,6 +40,7 @@ import { createNotifyHandler } from './notify/notify.mjs';
 import { projectWorkshopTimeAdvanced } from './workshop/projections.mjs';
 import { createGetTimeHandler } from './workshop/get-time.mjs';
 import { createAdvanceTimeHandler } from './workshop/admin-time.mjs';
+import { createNotifyListHandler } from './admin/notify-list.mjs';
 
 const stage = process.env.STAGE || 'workshop';
 const mode = stage === 'prod' ? 'production' : 'workshop';
@@ -114,6 +115,10 @@ const deleteHandler = createDeleteHandler({
 });
 const getTimeHandler = createGetTimeHandler({ getOffset: getWorkshopOffset });
 const advanceTimeHandler = createAdvanceTimeHandler({ runner, getOffset: getWorkshopOffset });
+const notifyListHandler = createNotifyListHandler({
+  client,
+  eventsLogTable: process.env.EVENTS_LOG_TABLE,
+});
 
 const router = createRouter();
 
@@ -146,6 +151,8 @@ router.add('POST', '/me/locality', localityHandler);
 router.add('GET', '/locality/check', localityCheckHandler);
 router.add('POST', '/notify', notifyHandler);
 router.add('GET', '/time', getTimeHandler);
+
+router.add('GET', '/admin/notify-list', notifyListHandler);
 
 // Workshop-only routes are registered conditionally so they don't exist
 // on the production Lambda's route table.
