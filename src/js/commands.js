@@ -12,6 +12,7 @@ const PROFILE_KEY = 'irl_cmd_profile';
 const PROFILE_UPDATE_KEY = 'irl_cmd_profile_update';
 const LOCALITY_KEY = 'irl_cmd_locality';
 const NOTIFY_KEY = 'irl_cmd_notify';
+const DELETE_KEY = 'irl_cmd_delete';
 
 export function createCommands({
   api,
@@ -77,6 +78,13 @@ export function createCommands({
     return await api.get('/me/export');
   }
 
+  async function deleteAccount() {
+    const commandId = getOrMakeCommandId(DELETE_KEY);
+    const result = await api.delete('/me', { commandId });
+    storage.removeItem(DELETE_KEY);
+    return result;
+  }
+
   async function requestNotify({ email, postalCode, country }) {
     const commandId = getOrMakeCommandId(NOTIFY_KEY);
     const body = { commandId, email, postalCode };
@@ -94,5 +102,6 @@ export function createCommands({
     checkLocality,
     requestNotify,
     exportData,
+    deleteAccount,
   };
 }

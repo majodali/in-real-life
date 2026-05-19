@@ -4,8 +4,13 @@ import * as store from '../store.js';
 import { AVATAR_EMOJIS, FOLLOWUP_QUESTIONS } from '../data.js';
 import { startInterview } from './interview.js';
 import { navigate, showToast } from '../app.js';
-import { commands } from '../services.js';
-import { handleProfileSave, handleAvatarChange, handleDataExport } from './profile-handlers.js';
+import { commands, auth } from '../services.js';
+import {
+  handleProfileSave,
+  handleAvatarChange,
+  handleDataExport,
+  handleAccountDelete,
+} from './profile-handlers.js';
 import { renderEllipsisButton, bindEllipsis } from '../components/ellipsis-menu.js';
 
 export function renderProfile() {
@@ -67,6 +72,10 @@ export function renderProfile() {
           </span>
           <span class="persona-arrow">\u2193</span>
         </button>
+      </div>
+
+      <div class="profile-section" id="deleteSection">
+        <button class="profile-danger-btn" id="deleteBtn">Delete my account</button>
       </div>
 
     </div>
@@ -171,6 +180,46 @@ export function renderProfile() {
     } finally {
       exportBtn.disabled = false;
     }
+  });
+
+  // Delete my account — in-place confirmation, no modal/alert.
+  const deleteSection = document.getElementById('deleteSection');
+  document.getElementById('deleteBtn').addEventListener('click', () => {
+    deleteSection.innerHTML = `
+      <p class="profile-danger-warning">
+        This will permanently delete your account, your profile, and the
+        personal information in your event history. There's no undo.
+      </p>
+      <div class="profile-danger-actions">
+        <button class="profile-danger-btn" id="deleteConfirmBtn">Yes, delete</button>
+        <button class="btn-small" id="deleteCancelBtn">Cancel</button>
+      </div>
+    `;
+
+    document.getElementById('deleteCancelBtn').addEventListener('click', () => {
+      renderProfile();
+    });
+
+    document.getElementById('deleteConfirmBtn').addEventListener('click', async (e) => {
+      e.currentTarget.disabled = true;
+      e.currentTarget.textContent = 'Deleting…';
+      await handleAccountDelete({
+        confirmed: true,
+        commands,
+        signOut: () => {
+          auth.signOut();
+          store.clearActiveUser();
+        },
+        showToast,
+        onDeleted: () => { window.location.href = 'index.html'; },
+      });
+      // If we returned without redirecting, the API call failed — restore UI.
+      const stillHere = document.getElementById('deleteConfirmBtn');
+      if (stillHere) {
+        stillHere.disabled = false;
+        stillHere.textContent = 'Yes, delete';
+      }
+    });
   });
 }
 

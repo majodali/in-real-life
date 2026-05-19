@@ -11,6 +11,7 @@
 
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
+import { CognitoIdentityProviderClient } from '@aws-sdk/client-cognito-identity-provider';
 import { createRouter } from './lib/router.mjs';
 import { createCommandRunner } from './lib/command.mjs';
 import { createProjector } from './lib/projection.mjs';
@@ -24,6 +25,7 @@ import {
   projectLocalityVerificationRequested,
   projectLocalityVerified,
   projectUserActivated,
+  projectUserDeleted,
 } from './users/projections.mjs';
 import { createRegisterHandler } from './users/register.mjs';
 import { createProfileHandler } from './users/profile.mjs';
@@ -32,6 +34,7 @@ import { createLocalityHandler } from './users/locality.mjs';
 import { createLocalityCheckHandler } from './users/locality-check.mjs';
 import { createGetMeHandler } from './users/me.mjs';
 import { createExportHandler } from './users/export.mjs';
+import { createDeleteHandler } from './users/delete.mjs';
 import { projectLocationNotifyRequested } from './notify/projections.mjs';
 import { createNotifyHandler } from './notify/notify.mjs';
 import { projectWorkshopTimeAdvanced } from './workshop/projections.mjs';
@@ -43,6 +46,7 @@ const mode = stage === 'prod' ? 'production' : 'workshop';
 const isWorkshop = mode === 'workshop';
 
 const client = DynamoDBDocumentClient.from(new DynamoDBClient({}));
+const cognito = new CognitoIdentityProviderClient({});
 
 const tables = {
   usersTable: process.env.USERS_TABLE,
@@ -69,6 +73,7 @@ const projector = createProjector({
     LocalityVerificationRequested: projectLocalityVerificationRequested,
     LocalityVerified: projectLocalityVerified,
     UserActivated: projectUserActivated,
+    UserDeleted: projectUserDeleted,
     LocationNotifyRequested: projectLocationNotifyRequested,
     WorkshopTimeAdvanced: projectWorkshopTimeAdvanced,
   },
@@ -99,6 +104,14 @@ const exportHandler = createExportHandler({
   keyStore,
   piiFieldsFor,
 });
+const deleteHandler = createDeleteHandler({
+  runner,
+  client,
+  usersTable: tables.usersTable,
+  keyStore,
+  cognito,
+  userPoolId: process.env.COGNITO_USER_POOL_ID,
+});
 const getTimeHandler = createGetTimeHandler({ getOffset: getWorkshopOffset });
 const advanceTimeHandler = createAdvanceTimeHandler({ runner, getOffset: getWorkshopOffset });
 
@@ -125,6 +138,7 @@ router.add('GET', '/health', async () => ({
 
 router.add('GET', '/me', getMeHandler);
 router.add('GET', '/me/export', exportHandler);
+router.add('DELETE', '/me', deleteHandler);
 router.add('POST', '/me/register', registerHandler);
 router.add('POST', '/me/profile', profileHandler);
 router.add('PUT', '/me/profile', updateProfileHandler);

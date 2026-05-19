@@ -150,3 +150,17 @@ export function projectUserActivated(event, tables) {
     },
   };
 }
+
+// UserDeleted tears down the read model: the state row is hard-deleted
+// (it's PII at rest and not needed for replay). The event itself stays in
+// the log for the deletion audit trail; the user's crypto-shred key is
+// deleted separately by the handler, rendering all their prior events'
+// PII permanently unreadable.
+export function projectUserDeleted(event, tables) {
+  return {
+    Delete: {
+      TableName: tables.usersTable,
+      Key: { userId: event.data.userId },
+    },
+  };
+}

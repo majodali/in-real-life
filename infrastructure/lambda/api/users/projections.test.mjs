@@ -12,6 +12,7 @@ import {
   projectLocalityVerificationRequested,
   projectLocalityVerified,
   projectUserActivated,
+  projectUserDeleted,
 } from './projections.mjs';
 
 const sampleEvent = {
@@ -269,4 +270,24 @@ test('projectUserActivated: Update sets activated flag + activatedAt, bumps seq'
 
   assert.match(write.Update.ConditionExpression, /#seq\s*=\s*:expectedSeq/);
   assert.match(write.Update.ConditionExpression, /attribute_not_exists/);
+});
+
+// ─── UserDeleted ───
+
+const deletedEvent = {
+  eventType: 'UserDeleted',
+  version: 1,
+  seq: 6,
+  aggregateId: 'user#abc',
+  wallTime: '2026-05-19T12:00:00.000Z',
+  data: { userId: 'abc' },
+};
+
+test('projectUserDeleted: returns an unconditional Delete on the users row', () => {
+  const write = projectUserDeleted(deletedEvent, { usersTable: 'irl-users-test' });
+  assert.ok(write.Delete, 'expected a Delete op');
+  assert.equal(write.Delete.TableName, 'irl-users-test');
+  assert.deepEqual(write.Delete.Key, { userId: 'abc' });
+  // No ConditionExpression — deletion is idempotent / converging.
+  assert.equal(write.Delete.ConditionExpression, undefined);
 });

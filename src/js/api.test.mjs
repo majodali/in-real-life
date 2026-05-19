@@ -80,6 +80,14 @@ test('put and delete are supported with the same shape', async () => {
   assert.equal(fetchCalls[1].opts.method, 'DELETE');
 });
 
+test('delete sends a JSON body when one is supplied (for commandId-bearing deletes)', async () => {
+  fetchResults = [jsonResponse({})];
+  await api.delete('/me', { commandId: 'cmd-1' });
+  assert.equal(fetchCalls[0].opts.method, 'DELETE');
+  assert.equal(fetchCalls[0].opts.headers['Content-Type'], 'application/json');
+  assert.deepEqual(JSON.parse(fetchCalls[0].opts.body), { commandId: 'cmd-1' });
+});
+
 // ─── Authorization header ───
 
 test('attaches Authorization: Bearer <idToken> from auth.getValidIdToken', async () => {

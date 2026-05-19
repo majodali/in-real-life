@@ -11,7 +11,12 @@
 
 import { test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { handleProfileSave, handleAvatarChange, handleDataExport } from './profile-handlers.js';
+import {
+  handleProfileSave,
+  handleAvatarChange,
+  handleDataExport,
+  handleAccountDelete,
+} from './profile-handlers.js';
 
 function spy(impl) {
   const fn = (...args) => { fn.calls.push(args); return impl(...args); };
@@ -159,5 +164,51 @@ test('export: on API error shows a toast and does not trigger a download', async
   await handleDataExport({ commands, triggerDownload, showToast });
 
   assert.equal(triggerDownload.calls.length, 0);
+  assert.equal(showToast.calls.length, 1);
+});
+
+// ─── handleAccountDelete ───
+
+test('delete: requires explicit confirmation (no confirm → no API call)', async () => {
+  commands.deleteAccount = spy(async () => ({ status: 'deleted' }));
+  const signOut = spy(() => {});
+  const onDeleted = spy(() => {});
+
+  await handleAccountDelete({
+    confirmed: false,
+    commands, signOut, showToast, onDeleted,
+  });
+
+  assert.equal(commands.deleteAccount.calls.length, 0);
+  assert.equal(signOut.calls.length, 0);
+  assert.equal(onDeleted.calls.length, 0);
+});
+
+test('delete: on success signs out, then fires onDeleted (caller routes home)', async () => {
+  const order = [];
+  commands.deleteAccount = spy(async () => { order.push('api'); return { status: 'deleted' }; });
+  const signOut = spy(() => { order.push('signOut'); });
+  const onDeleted = spy(() => { order.push('onDeleted'); });
+
+  await handleAccountDelete({
+    confirmed: true,
+    commands, signOut, showToast, onDeleted,
+  });
+
+  assert.deepEqual(order, ['api', 'signOut', 'onDeleted']);
+});
+
+test('delete: on API error shows toast and does not sign out / route', async () => {
+  commands.deleteAccount = spy(async () => { throw httpError(500, 'boom'); });
+  const signOut = spy(() => {});
+  const onDeleted = spy(() => {});
+
+  await handleAccountDelete({
+    confirmed: true,
+    commands, signOut, showToast, onDeleted,
+  });
+
+  assert.equal(signOut.calls.length, 0);
+  assert.equal(onDeleted.calls.length, 0);
   assert.equal(showToast.calls.length, 1);
 });

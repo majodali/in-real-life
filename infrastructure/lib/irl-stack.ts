@@ -355,6 +355,7 @@ export class IrlStack extends cdk.Stack {
         'cognito-idp:AdminCreateUser',
         'cognito-idp:AdminUpdateUserAttributes',
         'cognito-idp:AdminGetUser',
+        'cognito-idp:AdminDeleteUser',
         'cognito-idp:ListUsers',
       ],
       resources: [userPool.userPoolArn],

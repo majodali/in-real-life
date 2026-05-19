@@ -267,6 +267,35 @@ test('checkLocality: URL-encodes the postal code', async () => {
   assert.equal(api.get.calls[0][0], '/locality/check?postalCode=ab%20cd');
 });
 
+// ─── deleteAccount ───
+
+test('deleteAccount: DELETEs /me with a fresh commandId in the body', async () => {
+  api.delete = spy(async () => ({ status: 'deleted' }));
+  commands = createCommands({ api, storage, makeId: () => `cmd-${++nextId}` });
+
+  const result = await commands.deleteAccount();
+
+  assert.equal(api.delete.calls[0][0], '/me');
+  assert.deepEqual(api.delete.calls[0][1], { commandId: 'cmd-1' });
+  assert.deepEqual(result, { status: 'deleted' });
+});
+
+test('deleteAccount: clears the saved commandId on success', async () => {
+  api.delete = spy(async () => ({ status: 'deleted' }));
+  commands = createCommands({ api, storage, makeId: () => `cmd-${++nextId}` });
+  await commands.deleteAccount();
+  assert.equal(storage.getItem('irl_cmd_delete'), null);
+});
+
+test('deleteAccount: reuses the same commandId across retries when the call throws', async () => {
+  api.delete = spy(async () => { throw new Error('boom'); });
+  commands = createCommands({ api, storage, makeId: () => `cmd-${++nextId}` });
+
+  await assert.rejects(() => commands.deleteAccount());
+  await assert.rejects(() => commands.deleteAccount());
+  assert.equal(api.delete.calls[1][1].commandId, 'cmd-1');
+});
+
 // ─── exportData ───
 //
 // Thin GET wrapper — no commandId/storage. Returns the full export blob.

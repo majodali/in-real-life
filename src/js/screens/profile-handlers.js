@@ -50,3 +50,24 @@ export async function handleDataExport({ commands, triggerDownload, showToast })
     showToast(err.message || 'Could not export your data.');
   }
 }
+
+// Account deletion. Caller passes `confirmed: true` only after the user
+// has explicitly affirmed the destructive action in the UI. On success
+// we sign out (the auth token is now backed by a deleted Cognito user)
+// and let the caller route to wherever makes sense from there.
+export async function handleAccountDelete({
+  confirmed,
+  commands,
+  signOut,
+  showToast,
+  onDeleted,
+}) {
+  if (!confirmed) return;
+  try {
+    await commands.deleteAccount();
+    signOut();
+    onDeleted();
+  } catch (err) {
+    showToast(err.message || 'Could not delete your account.');
+  }
+}
