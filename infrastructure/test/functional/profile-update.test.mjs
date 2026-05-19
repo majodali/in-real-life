@@ -6,7 +6,7 @@ import { randomUUID } from 'node:crypto';
 import { GetCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
 import { loadTestConfig } from '../helpers/config.mjs';
 import { createTestUser, deleteTestUser } from '../helpers/auth.mjs';
-import { purgeUserAggregate, ddb } from '../helpers/cleanup.mjs';
+import { purgeUserAggregate, ddb, readDataKey, decryptEventPii } from '../helpers/cleanup.mjs';
 
 let config;
 let user;
@@ -92,10 +92,16 @@ test('PUT /me/profile: updates name and writes UserProfileUpdated event (seq=3)'
   const updatedEvt = events.Items.find(e => e.eventType === 'UserProfileUpdated');
   assert.ok(updatedEvt);
   assert.equal(updatedEvt.seq, 3);
-  assert.equal(updatedEvt.data.name, 'Matt');
-  // Replay correctness: event captures full new shape (avatar + vibe filled in).
-  assert.equal(updatedEvt.data.avatar, '\u{1F33F}');
-  assert.equal(updatedEvt.data.vibeMessage, 'walks');
+
+  // PII shredded at rest; decrypt to assert replay correctness — the event
+  // still captures the full new shape (avatar + vibe filled in).
+  assert.notEqual(updatedEvt.data.name, 'Matt');
+  const key = await readDataKey({ aggregateId: `user#${user.sub}`, tables: config.tables });
+  assert.ok(key, 'expected a crypto-shred key for the aggregate');
+  const clear = decryptEventPii(updatedEvt, key);
+  assert.equal(clear.data.name, 'Matt');
+  assert.equal(clear.data.avatar, '\u{1F33F}');
+  assert.equal(clear.data.vibeMessage, 'walks');
 });
 
 test('PUT /me/profile: idempotent retry with same commandId returns 200, no second event', async () => {

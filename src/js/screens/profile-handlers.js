@@ -40,3 +40,13 @@ export async function handleAvatarChange({ avatar, commands, saveUser, showToast
     showToast(err.message || 'Could not update avatar.');
   }
 }
+
+export async function handleDataExport({ commands, triggerDownload, showToast }) {
+  try {
+    const data = await commands.exportData();
+    triggerDownload(data);
+    showToast('Your data is downloading.');
+  } catch (err) {
+    showToast(err.message || 'Could not export your data.');
+  }
+}

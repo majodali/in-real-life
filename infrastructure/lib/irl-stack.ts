@@ -244,6 +244,19 @@ export class IrlStack extends cdk.Stack {
       timeToLiveAttribute: 'ttl',
     });
 
+    // Crypto-shred keys: one AES key per aggregate. Deleting a row makes
+    // that aggregate's PII in the (immutable) event log permanently
+    // undecryptable. Point-in-time recovery is DELIBERATELY OFF — a
+    // restorable backup of this table would defeat the shred. Do not
+    // enable PITR or add this table to any backup plan.
+    const userKeysTable = new dynamodb.Table(this, 'UserKeysTable', {
+      tableName: `irl-user-keys-${stage}`,
+      partitionKey: { name: 'aggregateId', type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      pointInTimeRecoverySpecification: { pointInTimeRecoveryEnabled: false },
+    });
+
     // ==========================================
     // Per-stage: Cognito User Pool
     // ==========================================
@@ -304,6 +317,7 @@ export class IrlStack extends cdk.Stack {
       CONFIG_TABLE: configTable.tableName,
       EVENTS_LOG_TABLE: eventsLogTable.tableName,
       COMMANDS_TABLE: commandsTable.tableName,
+      USER_KEYS_TABLE: userKeysTable.tableName,
       CLAUDE_API_KEY_SECRET_ARN: claudeApiKeySecret.secretArn,
       COGNITO_USER_POOL_ID: userPool.userPoolId,
       STAGE: stage,
@@ -330,6 +344,7 @@ export class IrlStack extends cdk.Stack {
     configTable.grantReadWriteData(apiFn);
     eventsLogTable.grantReadWriteData(apiFn);
     commandsTable.grantReadWriteData(apiFn);
+    userKeysTable.grantReadWriteData(apiFn);
     if (feedbackBucket) {
       feedbackBucket.grantRead(apiFn);
     }

@@ -25,6 +25,8 @@ import {
 } from '@aws-sdk/lib-dynamodb';
 import { decodeTime } from './ulid.mjs';
 import { createCommandRunner } from './command.mjs';
+import { piiFieldsFor } from './pii-registry.mjs';
+import { decryptValue } from './crypto-shred.mjs';
 
 const ddbMock = mockClient(DynamoDBDocumentClient);
 
@@ -343,4 +345,119 @@ test('propagates TransactionCanceledException when the failure is not the comman
   ddbMock.on(TransactWriteCommand).rejects(tce);
 
   await assert.rejects(() => runner.runCommand(baseInput()), /Transaction/);
+});
+
+// ─── Crypto-shred: PII encryption on the event-log path ───
+
+function fakeKeyStore(initialKey) {
+  const keys = new Map();
+  if (initialKey) keys.set('user#abc', initialKey);
+  return {
+    created: [],
+    async getOrCreateKey(aggregateId) {
+      if (!keys.has(aggregateId)) {
+        keys.set(aggregateId, Buffer.alloc(32, 7).toString('base64'));
+        this.created.push(aggregateId);
+      }
+      return keys.get(aggregateId);
+    },
+    async getKey(aggregateId) { return keys.get(aggregateId) ?? null; },
+    async deleteKey(aggregateId) { keys.delete(aggregateId); },
+  };
+}
+
+function shreddingRunner(keyStore) {
+  const client = DynamoDBDocumentClient.from(new DynamoDBClient({ region: 'us-east-1' }));
+  return createCommandRunner({
+    client,
+    commandsTable: COMMANDS_TABLE,
+    eventsLogTable: EVENTS_LOG_TABLE,
+    projector,
+    getOffset: async () => workshopOffset,
+    keyStore,
+    piiFieldsFor,
+  });
+}
+
+function loggedEventItems() {
+  const call = ddbMock.commandCalls(TransactWriteCommand)[0];
+  return call.args[0].input.TransactItems
+    .filter((t) => t.Put?.TableName === EVENTS_LOG_TABLE)
+    .map((t) => t.Put.Item);
+}
+
+test('encrypts PII fields on the persisted event; non-PII stays cleartext', async () => {
+  ddbMock.on(GetCommand).resolves({});
+  ddbMock.on(TransactWriteCommand).resolves({});
+  const keyStore = fakeKeyStore();
+  const runner2 = shreddingRunner(keyStore);
+
+  await runner2.runCommand({
+    commandId: 'cmd-1',
+    aggregateId: 'user#abc',
+    events: [{
+      eventType: 'UserRegistered',
+      version: 1,
+      seq: 1,
+      data: { userId: 'abc', email: 'a@b.c', agreementVersion: 'v1', path: 'self' },
+    }],
+    result: { userId: 'abc' },
+  });
+
+  const [item] = loggedEventItems();
+  assert.notEqual(item.data.email, 'a@b.c');                 // encrypted
+  assert.equal(item.data.userId, 'abc');                     // cleartext (not PII)
+  assert.equal(item.data.agreementVersion, 'v1');            // cleartext (compliance)
+  assert.equal(item.data.path, 'self');                      // cleartext
+
+  const key = await keyStore.getKey('user#abc');
+  assert.equal(decryptValue(item.data.email, key), 'a@b.c'); // round-trips
+});
+
+test('the returned events stay cleartext for in-process callers', async () => {
+  ddbMock.on(GetCommand).resolves({});
+  ddbMock.on(TransactWriteCommand).resolves({});
+  const runner2 = shreddingRunner(fakeKeyStore());
+
+  const out = await runner2.runCommand({
+    commandId: 'cmd-1',
+    aggregateId: 'user#abc',
+    events: [{ eventType: 'UserRegistered', version: 1, seq: 1, data: { email: 'a@b.c' } }],
+    result: { userId: 'abc' },
+  });
+
+  assert.equal(out.events[0].data.email, 'a@b.c');
+});
+
+test('projector receives cleartext events even with shredding enabled', async () => {
+  ddbMock.on(GetCommand).resolves({});
+  ddbMock.on(TransactWriteCommand).resolves({});
+  let seen;
+  projector.applyTo = (events) => { seen = events; return []; };
+
+  await shreddingRunner(fakeKeyStore()).runCommand({
+    commandId: 'cmd-1',
+    aggregateId: 'user#abc',
+    events: [{ eventType: 'UserProfileCreated', version: 1, seq: 2, data: { name: 'Matthew' } }],
+    result: { userId: 'abc' },
+  });
+
+  assert.equal(seen[0].data.name, 'Matthew');
+});
+
+test('no key is created for aggregates whose events carry no PII', async () => {
+  ddbMock.on(GetCommand).resolves({});
+  ddbMock.on(TransactWriteCommand).resolves({});
+  const keyStore = fakeKeyStore();
+
+  await shreddingRunner(keyStore).runCommand({
+    commandId: 'cmd-1',
+    aggregateId: 'system#workshop-time',
+    events: [{ eventType: 'WorkshopTimeAdvanced', version: 1, seq: 1, data: { offsetMs: 1000 } }],
+    result: { ok: true },
+  });
+
+  assert.deepEqual(keyStore.created, []);
+  const [item] = loggedEventItems();
+  assert.deepEqual(item.data, { offsetMs: 1000 });
 });

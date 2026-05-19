@@ -26,6 +26,7 @@ export async function loadTestConfig() {
       eventsLog: `irl-events-log-${stage}`,
       commands: `irl-commands-${stage}`,
       config: `irl-config-${stage}`,
+      userKeys: `irl-user-keys-${stage}`,
     },
   };
 

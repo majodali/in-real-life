@@ -267,6 +267,20 @@ test('checkLocality: URL-encodes the postal code', async () => {
   assert.equal(api.get.calls[0][0], '/locality/check?postalCode=ab%20cd');
 });
 
+// ─── exportData ───
+//
+// Thin GET wrapper — no commandId/storage. Returns the full export blob.
+
+test('exportData: GETs /me/export and returns the response', async () => {
+  api.get = spy(async () => ({ userId: 'u-1', profile: {}, events: [] }));
+  commands = createCommands({ api, storage, makeId: () => `cmd-${++nextId}` });
+
+  const result = await commands.exportData();
+
+  assert.equal(api.get.calls[0][0], '/me/export');
+  assert.deepEqual(result, { userId: 'u-1', profile: {}, events: [] });
+});
+
 // ─── requestNotify ───
 
 test('requestNotify: POSTs to /notify with commandId, email, and postalCode', async () => {

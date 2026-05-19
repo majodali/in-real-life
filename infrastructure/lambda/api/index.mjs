@@ -15,6 +15,8 @@ import { createRouter } from './lib/router.mjs';
 import { createCommandRunner } from './lib/command.mjs';
 import { createProjector } from './lib/projection.mjs';
 import { createWorkshopOffsetLoader } from './lib/workshop-time.mjs';
+import { createKeyStore } from './lib/key-store.mjs';
+import { piiFieldsFor } from './lib/pii-registry.mjs';
 import {
   projectUserRegistered,
   projectUserProfileCreated,
@@ -29,6 +31,7 @@ import { createUpdateProfileHandler } from './users/profile-update.mjs';
 import { createLocalityHandler } from './users/locality.mjs';
 import { createLocalityCheckHandler } from './users/locality-check.mjs';
 import { createGetMeHandler } from './users/me.mjs';
+import { createExportHandler } from './users/export.mjs';
 import { projectLocationNotifyRequested } from './notify/projections.mjs';
 import { createNotifyHandler } from './notify/notify.mjs';
 import { projectWorkshopTimeAdvanced } from './workshop/projections.mjs';
@@ -53,6 +56,11 @@ const getWorkshopOffset = createWorkshopOffsetLoader({
   configTable: tables.configTable,
 });
 
+const keyStore = createKeyStore({
+  client,
+  keysTable: process.env.USER_KEYS_TABLE,
+});
+
 const projector = createProjector({
   registry: {
     UserRegistered: projectUserRegistered,
@@ -73,6 +81,8 @@ const runner = createCommandRunner({
   eventsLogTable: process.env.EVENTS_LOG_TABLE,
   projector,
   getOffset: getWorkshopOffset,
+  keyStore,
+  piiFieldsFor,
 });
 
 const registerHandler = createRegisterHandler({ runner });
@@ -82,6 +92,13 @@ const localityHandler = createLocalityHandler({ runner, client, usersTable: tabl
 const localityCheckHandler = createLocalityCheckHandler();
 const notifyHandler = createNotifyHandler({ runner });
 const getMeHandler = createGetMeHandler({ client, usersTable: tables.usersTable });
+const exportHandler = createExportHandler({
+  client,
+  usersTable: tables.usersTable,
+  eventsLogTable: process.env.EVENTS_LOG_TABLE,
+  keyStore,
+  piiFieldsFor,
+});
 const getTimeHandler = createGetTimeHandler({ getOffset: getWorkshopOffset });
 const advanceTimeHandler = createAdvanceTimeHandler({ runner, getOffset: getWorkshopOffset });
 
@@ -107,6 +124,7 @@ router.add('GET', '/health', async () => ({
 }));
 
 router.add('GET', '/me', getMeHandler);
+router.add('GET', '/me/export', exportHandler);
 router.add('POST', '/me/register', registerHandler);
 router.add('POST', '/me/profile', profileHandler);
 router.add('PUT', '/me/profile', updateProfileHandler);

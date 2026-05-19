@@ -7,17 +7,29 @@
 
 import { GetCommand, TransactWriteCommand } from '@aws-sdk/lib-dynamodb';
 import { ulid } from './ulid.mjs';
+import { encryptPii } from './crypto-shred.mjs';
 
 const COMMAND_TTL_SECONDS = 24 * 3600;
 
-export function createCommandRunner({ client, commandsTable, eventsLogTable, projector, getOffset }) {
+export function createCommandRunner({
+  client,
+  commandsTable,
+  eventsLogTable,
+  projector,
+  getOffset,
+  keyStore,
+  piiFieldsFor,
+}) {
   return {
-    runCommand: (input) => runCommand({ client, commandsTable, eventsLogTable, projector, getOffset }, input),
+    runCommand: (input) => runCommand(
+      { client, commandsTable, eventsLogTable, projector, getOffset, keyStore, piiFieldsFor },
+      input,
+    ),
   };
 }
 
 async function runCommand(
-  { client, commandsTable, eventsLogTable, projector, getOffset },
+  { client, commandsTable, eventsLogTable, projector, getOffset, keyStore, piiFieldsFor },
   { commandId, aggregateId, events, result, actorId = 'system', traceId },
 ) {
   // 1. Idempotency check
@@ -45,8 +57,27 @@ async function runCommand(
     ...(traceId !== undefined && { traceId }),
   }));
 
-  // 3. Project enriched events to state-table writes
+  // 3. Project enriched events to state-table writes.
+  //    Projections run on CLEARTEXT events — the state rows are the read
+  //    model and are hard-deleted on account deletion, so they don't need
+  //    shredding. Only the immutable event log does.
   const stateWrites = projector ? projector.applyTo(eventRecords) : [];
+
+  // 3b. Crypto-shred: encrypt PII fields on the records bound for the
+  //     event log. Skipped entirely for aggregates with no PII events
+  //     (e.g. workshop-time) so they never get a key.
+  let logRecords = eventRecords;
+  if (keyStore && piiFieldsFor) {
+    const anyPii = eventRecords.some((r) => piiFieldsFor(r.eventType).length > 0);
+    if (anyPii) {
+      const dataKey = await keyStore.getOrCreateKey(aggregateId);
+      logRecords = eventRecords.map((r) => {
+        const fields = piiFieldsFor(r.eventType);
+        if (fields.length === 0) return r;
+        return { ...r, data: encryptPii(r.data, fields, dataKey) };
+      });
+    }
+  }
 
   // 4. Build the transaction
   const ttl = Math.floor(Date.now() / 1000) + COMMAND_TTL_SECONDS;
@@ -64,7 +95,7 @@ async function runCommand(
     },
   };
 
-  const eventPuts = eventRecords.map((item) => ({
+  const eventPuts = logRecords.map((item) => ({
     Put: {
       TableName: eventsLogTable,
       Item: item,

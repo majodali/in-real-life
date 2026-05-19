@@ -73,6 +73,10 @@ export function createCommands({
     return await api.get(`/locality/check?postalCode=${encodeURIComponent(postalCode)}`);
   }
 
+  async function exportData() {
+    return await api.get('/me/export');
+  }
+
   async function requestNotify({ email, postalCode, country }) {
     const commandId = getOrMakeCommandId(NOTIFY_KEY);
     const body = { commandId, email, postalCode };
@@ -82,5 +86,13 @@ export function createCommands({
     return result;
   }
 
-  return { register, createProfile, updateProfile, verifyLocality, checkLocality, requestNotify };
+  return {
+    register,
+    createProfile,
+    updateProfile,
+    verifyLocality,
+    checkLocality,
+    requestNotify,
+    exportData,
+  };
 }

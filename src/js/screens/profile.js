@@ -5,7 +5,7 @@ import { AVATAR_EMOJIS, FOLLOWUP_QUESTIONS } from '../data.js';
 import { startInterview } from './interview.js';
 import { navigate, showToast } from '../app.js';
 import { commands } from '../services.js';
-import { handleProfileSave, handleAvatarChange } from './profile-handlers.js';
+import { handleProfileSave, handleAvatarChange, handleDataExport } from './profile-handlers.js';
 import { renderEllipsisButton, bindEllipsis } from '../components/ellipsis-menu.js';
 
 export function renderProfile() {
@@ -55,6 +55,17 @@ export function renderProfile() {
             <small>Help us understand you better</small>
           </span>
           <span class="persona-arrow">\u2192</span>
+        </button>
+      </div>
+
+      <div class="profile-section">
+        <button class="profile-tellmore-btn" id="exportBtn">
+          <span class="tellmore-icon">\u{1F4E6}</span>
+          <span class="tellmore-text">
+            <strong>Download my data</strong>
+            <small>Everything we have about you, as a file</small>
+          </span>
+          <span class="persona-arrow">\u2193</span>
         </button>
       </div>
 
@@ -150,6 +161,29 @@ export function renderProfile() {
       },
     });
   });
+
+  // Download my data
+  const exportBtn = document.getElementById('exportBtn');
+  exportBtn.addEventListener('click', async () => {
+    exportBtn.disabled = true;
+    try {
+      await handleDataExport({ commands, triggerDownload, showToast });
+    } finally {
+      exportBtn.disabled = false;
+    }
+  });
+}
+
+function triggerDownload(data) {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `in-real-life-export-${new Date().toISOString().slice(0, 10)}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
 }
 
 function cacheUser(profile) {

@@ -19,6 +19,8 @@ import { createTestUser, deleteTestUser } from '../helpers/auth.mjs';
 import { purgeUserAggregate, ddb } from '../helpers/cleanup.mjs';
 import { createProjector } from '../../lambda/api/lib/projection.mjs';
 import { projectUserRegistered } from '../../lambda/api/users/projections.mjs';
+import { decryptPii } from '../../lambda/api/lib/crypto-shred.mjs';
+import { piiFieldsFor } from '../../lambda/api/lib/pii-registry.mjs';
 
 let config;
 let users = [];
@@ -65,6 +67,19 @@ async function readUserRow(userId) {
   return out.Item;
 }
 
+async function readKey(aggregateId) {
+  const out = await ddb.send(new GetCommand({
+    TableName: config.tables.userKeys,
+    Key: { aggregateId },
+    ConsistentRead: true,
+  }));
+  return out.Item?.dataKey ?? null;
+}
+
+// Recovery path: read events, decrypt PII with the aggregate's key (still
+// present because the account still exists), then project. A deleted user
+// would have no key here and replay would yield shredded state — exactly
+// the intended crypto-shred behaviour.
 async function readEventsForAggregate(aggregateId) {
   const out = await ddb.send(new QueryCommand({
     TableName: config.tables.eventsLog,
@@ -72,7 +87,14 @@ async function readEventsForAggregate(aggregateId) {
     ExpressionAttributeValues: { ':a': aggregateId },
     ConsistentRead: true,
   }));
-  return out.Items ?? [];
+  const items = out.Items ?? [];
+  const key = await readKey(aggregateId);
+  if (!key) return items;
+  return items.map((e) => {
+    const fields = piiFieldsFor(e.eventType);
+    if (fields.length === 0) return e;
+    return { ...e, data: decryptPii(e.data, fields, key) };
+  });
 }
 
 test('replay: state can be rebuilt exactly from the event log alone', async () => {

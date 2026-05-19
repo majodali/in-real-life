@@ -11,7 +11,7 @@
 
 import { test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { handleProfileSave, handleAvatarChange } from './profile-handlers.js';
+import { handleProfileSave, handleAvatarChange, handleDataExport } from './profile-handlers.js';
 
 function spy(impl) {
   const fn = (...args) => { fn.calls.push(args); return impl(...args); };
@@ -135,5 +135,29 @@ test('avatar: on API error shows toast and does not cache', async () => {
     commands, saveUser, showToast,
   });
   assert.equal(saveUser.calls.length, 0);
+  assert.equal(showToast.calls.length, 1);
+});
+
+// ─── handleDataExport ───
+
+test('export: on success calls triggerDownload with the export data and toasts', async () => {
+  const exportData = { userId: 'u-1', profile: {}, events: [] };
+  commands.exportData = spy(async () => exportData);
+  const triggerDownload = spy(() => {});
+
+  await handleDataExport({ commands, triggerDownload, showToast });
+
+  assert.equal(triggerDownload.calls.length, 1);
+  assert.deepEqual(triggerDownload.calls[0][0], exportData);
+  assert.equal(showToast.calls.length, 1);
+});
+
+test('export: on API error shows a toast and does not trigger a download', async () => {
+  commands.exportData = spy(async () => { throw httpError(500, 'boom'); });
+  const triggerDownload = spy(() => {});
+
+  await handleDataExport({ commands, triggerDownload, showToast });
+
+  assert.equal(triggerDownload.calls.length, 0);
   assert.equal(showToast.calls.length, 1);
 });

@@ -9,7 +9,7 @@ import { randomUUID } from 'node:crypto';
 import { GetCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
 import { loadTestConfig } from '../helpers/config.mjs';
 import { createTestUser, deleteTestUser } from '../helpers/auth.mjs';
-import { purgeUserAggregate, ddb } from '../helpers/cleanup.mjs';
+import { purgeUserAggregate, ddb, readDataKey, decryptEventPii } from '../helpers/cleanup.mjs';
 
 let config;
 let user;
@@ -84,10 +84,16 @@ test('POST /me/profile: writes UserProfileCreated event (seq=2) and updates the 
   const profileEvt = events.Items.find(e => e.eventType === 'UserProfileCreated');
   assert.ok(profileEvt);
   assert.equal(profileEvt.seq, 2);
-  assert.equal(profileEvt.data.name, body.name);
-  assert.equal(profileEvt.data.avatar, body.avatar);
-  assert.equal(profileEvt.data.vibeMessage, body.vibeMessage);
-  assert.deepEqual(profileEvt.data.interviewResponses, body.interviewResponses);
+
+  // PII is shredded at rest; assert it round-trips via the key.
+  assert.notEqual(profileEvt.data.name, body.name);
+  const key = await readDataKey({ aggregateId: `user#${user.sub}`, tables: config.tables });
+  assert.ok(key, 'expected a crypto-shred key for the aggregate');
+  const clear = decryptEventPii(profileEvt, key);
+  assert.equal(clear.data.name, body.name);
+  assert.equal(clear.data.avatar, body.avatar);
+  assert.equal(clear.data.vibeMessage, body.vibeMessage);
+  assert.deepEqual(clear.data.interviewResponses, body.interviewResponses);
 
   // State row: profile fields applied, seq bumped to 2.
   const userRow = await ddb.send(new GetCommand({

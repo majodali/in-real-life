@@ -10,7 +10,7 @@ import { randomUUID } from 'node:crypto';
 import { GetCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
 import { loadTestConfig } from '../helpers/config.mjs';
 import { createTestUser, deleteTestUser } from '../helpers/auth.mjs';
-import { purgeUserAggregate, ddb } from '../helpers/cleanup.mjs';
+import { purgeUserAggregate, ddb, readDataKey, decryptEventPii } from '../helpers/cleanup.mjs';
 
 let config;
 let user;
@@ -70,10 +70,18 @@ test('POST /me/register: registers a new user, writes UserRegistered event, proj
   assert.equal(event.commandId, commandId);
   assert.equal(event.actorId, `user#${user.sub}`);
   assert.match(event.eventId, /^[0-9A-HJKMNP-TV-Z]{26}$/);
-  assert.equal(event.data.userId, user.sub);
-  assert.equal(event.data.email, user.email);
-  assert.equal(event.data.agreementVersion, 'v1');
-  assert.equal(event.data.path, 'self');
+
+  // PII is crypto-shredded in the log: email is ciphertext at rest...
+  assert.notEqual(event.data.email, user.email);
+  assert.equal(event.data.userId, user.sub);          // not PII — cleartext
+  assert.equal(event.data.agreementVersion, 'v1');    // compliance — cleartext
+  assert.equal(event.data.path, 'self');              // not PII — cleartext
+
+  // ...but decrypts with the aggregate's key (the export/replay path).
+  const key = await readDataKey({ aggregateId: `user#${user.sub}`, tables: config.tables });
+  assert.ok(key, 'expected a crypto-shred key for the aggregate');
+  const clear = decryptEventPii(event, key);
+  assert.equal(clear.data.email, user.email);
 
   // State row is projected
   const userRow = await ddb.send(new GetCommand({
