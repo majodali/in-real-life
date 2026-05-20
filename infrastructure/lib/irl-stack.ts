@@ -263,7 +263,7 @@ export class IrlStack extends cdk.Stack {
 
     const userPool = new cognito.UserPool(this, 'UserPool', {
       userPoolName: `irl-user-pool-${stage}`,
-      selfSignUpEnabled: false,
+      selfSignUpEnabled: true,
       signInAliases: { email: true },
       autoVerify: { email: true },
       standardAttributes: {
