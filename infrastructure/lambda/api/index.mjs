@@ -41,6 +41,10 @@ import { projectWorkshopTimeAdvanced } from './workshop/projections.mjs';
 import { createGetTimeHandler } from './workshop/get-time.mjs';
 import { createAdvanceTimeHandler } from './workshop/admin-time.mjs';
 import { createNotifyListHandler } from './admin/notify-list.mjs';
+import { projectEventProposed } from './events/projections.mjs';
+import { createProposeEventHandler } from './events/propose.mjs';
+import { createListEventsHandler } from './events/list.mjs';
+import { ulid } from './lib/ulid.mjs';
 
 const stage = process.env.STAGE || 'workshop';
 const mode = stage === 'prod' ? 'production' : 'workshop';
@@ -77,6 +81,7 @@ const projector = createProjector({
     UserDeleted: projectUserDeleted,
     LocationNotifyRequested: projectLocationNotifyRequested,
     WorkshopTimeAdvanced: projectWorkshopTimeAdvanced,
+    EventProposed: projectEventProposed,
   },
   tables,
 });
@@ -119,6 +124,8 @@ const notifyListHandler = createNotifyListHandler({
   client,
   eventsLogTable: process.env.EVENTS_LOG_TABLE,
 });
+const proposeEventHandler = createProposeEventHandler({ runner, makeEventId: ulid });
+const listEventsHandler = createListEventsHandler({ client, eventsTable: tables.eventsTable });
 
 const router = createRouter();
 
@@ -153,6 +160,9 @@ router.add('POST', '/notify', notifyHandler);
 router.add('GET', '/time', getTimeHandler);
 
 router.add('GET', '/admin/notify-list', notifyListHandler);
+
+router.add('POST', '/events', proposeEventHandler);
+router.add('GET', '/events', listEventsHandler);
 
 // Workshop-only routes are registered conditionally so they don't exist
 // on the production Lambda's route table.

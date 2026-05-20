@@ -23,6 +23,7 @@ export async function loadTestConfig() {
     region: REGION,
     tables: {
       users: `irl-users-${stage}`,
+      events: `irl-events-${stage}`,
       eventsLog: `irl-events-log-${stage}`,
       commands: `irl-commands-${stage}`,
       config: `irl-config-${stage}`,
