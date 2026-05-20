@@ -90,6 +90,10 @@ export function renderProfile() {
       </div>
       ` : ''}
 
+      <div class="profile-section">
+        <button class="profile-signout-btn" id="signoutBtn">Sign out</button>
+      </div>
+
       <div class="profile-section" id="deleteSection">
         <button class="profile-danger-btn" id="deleteBtn">Delete my account</button>
       </div>
@@ -203,6 +207,13 @@ export function renderProfile() {
     } finally {
       exportBtn.disabled = false;
     }
+  });
+
+  // Sign out — clear Cognito tokens + local active user, then home.
+  document.getElementById('signoutBtn').addEventListener('click', () => {
+    auth.signOut();
+    store.clearActiveUser();
+    window.location.href = 'index.html';
   });
 
   // Delete my account — in-place confirmation, no modal/alert.
