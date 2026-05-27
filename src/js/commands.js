@@ -118,6 +118,21 @@ export function createCommands({
     return await api.get('/events');
   }
 
+  // Per-click commandId — each press is a distinct user intent, and a
+  // network retry within a single press reuses the local id naturally.
+  async function setEventInteraction({ eventId, level }) {
+    return await api.put(`/events/${encodeURIComponent(eventId)}/interaction`, {
+      commandId: makeId(),
+      level,
+    });
+  }
+
+  async function withdrawEventInteraction({ eventId }) {
+    return await api.delete(`/events/${encodeURIComponent(eventId)}/interaction`, {
+      commandId: makeId(),
+    });
+  }
+
   async function requestNotify({ email, postalCode, country }) {
     const commandId = getOrMakeCommandId(NOTIFY_KEY);
     const body = { commandId, email, postalCode };
@@ -141,5 +156,7 @@ export function createCommands({
     getNotifyList,
     proposeEvent,
     listEvents,
+    setEventInteraction,
+    withdrawEventInteraction,
   };
 }

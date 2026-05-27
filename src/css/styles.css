@@ -1460,6 +1460,69 @@ html, body {
   font-style: italic;
 }
 
+.event-actions {
+  margin-top: 18px; padding-top: 18px;
+  border-top: 1px solid var(--warm);
+  display: flex; flex-direction: column; gap: 10px;
+}
+
+.event-action-status {
+  font-size: 13px; color: var(--moss); font-weight: 500;
+  text-align: center; padding: 6px 0;
+}
+
+.event-action-row {
+  display: flex; gap: 10px;
+}
+
+.event-action-row > button { flex: 1; }
+
+.btn-secondary {
+  width: 100%;
+  background: white;
+  color: var(--earth);
+  border: 1.5px solid var(--moss);
+  border-radius: 14px;
+  padding: 14px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px; font-weight: 500;
+  cursor: pointer; transition: all 0.15s;
+}
+
+.btn-secondary:active { background: var(--mist); }
+.btn-secondary:disabled { opacity: 0.5; cursor: default; }
+
+.btn-outline-rust {
+  background: none;
+  border: 1.5px solid var(--rust);
+  color: var(--rust);
+  border-radius: 14px;
+  padding: 14px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px; font-weight: 500;
+  cursor: pointer; transition: all 0.15s;
+}
+
+.btn-outline-rust:active { background: rgba(168, 92, 56, 0.08); }
+.btn-outline-rust:disabled { opacity: 0.5; cursor: default; }
+
+/* Feed card "you're in" badges */
+
+.card-mylevel {
+  display: inline-block; margin-top: 8px;
+  font-size: 11px; letter-spacing: 0.06em;
+  padding: 3px 10px; border-radius: 999px;
+  font-weight: 500;
+}
+
+.mylevel-interested {
+  background: rgba(196, 133, 58, 0.15); color: var(--amber);
+}
+
+.mylevel-confirmed {
+  background: rgba(122, 158, 110, 0.18); color: var(--moss);
+}
+
 /* ─── Admin / workshop screen ─── */
 
 .admin-card { text-align: left; }

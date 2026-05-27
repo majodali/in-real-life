@@ -7,7 +7,8 @@
 // is removed in slice 8.
 
 import { commands } from '../services.js';
-import { navigate } from '../app.js';
+import { navigate, showToast } from '../app.js';
+import { handleInteraction } from './interaction-handlers.js';
 
 export async function renderEventDetail(eventId) {
   const container = document.getElementById('screen-event');
@@ -79,11 +80,70 @@ export async function renderEventDetail(eventId) {
         <span class="event-count"><strong>${event.confirmedCount ?? 0}</strong> confirmed</span>
       </div>
 
-      <p class="event-detail-hint">
-        Interest, confirmation, and suggestion controls land next.
-      </p>
+      <div class="event-actions" id="eventActions">
+        ${renderInteractionButtons(event.myLevel)}
+      </div>
     </div>
   `;
+
+  bindInteractionButtons(container, event.eventId, event.myLevel);
+}
+
+function renderInteractionButtons(myLevel) {
+  if (myLevel === 'confirmed') {
+    return `
+      <div class="event-action-status">✓ You're confirmed</div>
+      <div class="event-action-row">
+        <button class="btn-secondary" data-action="interested">Just interested instead</button>
+        <button class="btn-outline-rust" data-action="withdraw">I can't make it</button>
+      </div>
+    `;
+  }
+  if (myLevel === 'interested') {
+    return `
+      <div class="event-action-status">✓ You're interested</div>
+      <div class="event-action-row">
+        <button class="btn-primary" data-action="confirmed">I'll be there</button>
+        <button class="btn-outline-rust" data-action="withdraw">Not anymore</button>
+      </div>
+    `;
+  }
+  return `
+    <div class="event-action-row">
+      <button class="btn-secondary" data-action="interested">I'm interested</button>
+      <button class="btn-primary" data-action="confirmed">I'll be there</button>
+    </div>
+  `;
+}
+
+function bindInteractionButtons(container, eventId, currentLevel) {
+  const actions = container.querySelector('#eventActions');
+  if (!actions) return;
+  actions.querySelectorAll('[data-action]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const desired = btn.dataset.action;
+      const originalText = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = 'Saving…';
+      try {
+        await handleInteraction({
+          desired,
+          currentLevel,
+          eventId,
+          commands,
+          showToast,
+          onSuccess: () => {
+            const verb = desired === 'withdraw' ? 'Withdrawn' : desired === 'confirmed' ? 'Confirmed' : 'Interested';
+            showToast(`${verb} ✓`);
+            renderEventDetail(eventId);
+          },
+        });
+      } finally {
+        btn.disabled = false;
+        btn.textContent = originalText;
+      }
+    });
+  });
 }
 
 const LIFECYCLE_LABELS = {

@@ -42,8 +42,17 @@ import { createGetTimeHandler } from './workshop/get-time.mjs';
 import { createAdvanceTimeHandler } from './workshop/admin-time.mjs';
 import { createNotifyListHandler } from './admin/notify-list.mjs';
 import { projectEventProposed } from './events/projections.mjs';
+import {
+  projectInterestExpressed,
+  projectAttendanceConfirmed,
+  projectAttendanceWithdrawn,
+} from './events/interaction-projections.mjs';
 import { createProposeEventHandler } from './events/propose.mjs';
 import { createListEventsHandler } from './events/list.mjs';
+import {
+  createSetInteractionHandler,
+  createWithdrawInteractionHandler,
+} from './events/interaction.mjs';
 import { ulid } from './lib/ulid.mjs';
 
 const stage = process.env.STAGE || 'workshop';
@@ -82,6 +91,9 @@ const projector = createProjector({
     LocationNotifyRequested: projectLocationNotifyRequested,
     WorkshopTimeAdvanced: projectWorkshopTimeAdvanced,
     EventProposed: projectEventProposed,
+    InterestExpressed: projectInterestExpressed,
+    AttendanceConfirmed: projectAttendanceConfirmed,
+    AttendanceWithdrawn: projectAttendanceWithdrawn,
   },
   tables,
 });
@@ -125,7 +137,21 @@ const notifyListHandler = createNotifyListHandler({
   eventsLogTable: process.env.EVENTS_LOG_TABLE,
 });
 const proposeEventHandler = createProposeEventHandler({ runner, makeEventId: ulid });
-const listEventsHandler = createListEventsHandler({ client, eventsTable: tables.eventsTable });
+const listEventsHandler = createListEventsHandler({
+  client,
+  eventsTable: tables.eventsTable,
+  interactionsTable: tables.interactionsTable,
+});
+const setInteractionHandler = createSetInteractionHandler({
+  runner, client,
+  eventsTable: tables.eventsTable,
+  interactionsTable: tables.interactionsTable,
+});
+const withdrawInteractionHandler = createWithdrawInteractionHandler({
+  runner, client,
+  eventsTable: tables.eventsTable,
+  interactionsTable: tables.interactionsTable,
+});
 
 const router = createRouter();
 
@@ -163,6 +189,8 @@ router.add('GET', '/admin/notify-list', notifyListHandler);
 
 router.add('POST', '/events', proposeEventHandler);
 router.add('GET', '/events', listEventsHandler);
+router.add('PUT', '/events/:eventId/interaction', setInteractionHandler);
+router.add('DELETE', '/events/:eventId/interaction', withdrawInteractionHandler);
 
 // Workshop-only routes are registered conditionally so they don't exist
 // on the production Lambda's route table.

@@ -106,6 +106,12 @@ function renderCard(event) {
     ? 'No-one in yet'
     : `${event.confirmedCount ?? 0} confirmed · ${event.interestCount ?? 0} interested`;
 
+  const myLevelBadge = event.myLevel === 'confirmed'
+    ? `<span class="card-mylevel mylevel-confirmed">✓ You're confirmed</span>`
+    : event.myLevel === 'interested'
+      ? `<span class="card-mylevel mylevel-interested">★ You're interested</span>`
+      : '';
+
   const bodyHtml = `
     <div class="card-body">
       <div class="card-meta">
@@ -118,6 +124,7 @@ function renderCard(event) {
         <span>\u{1F4CD} ${escapeHtml(event.location)}</span>
       </div>
       <div class="card-organizer">by ${escapeHtml(event.organizerName)}</div>
+      ${myLevelBadge}
     </div>
   `;
 

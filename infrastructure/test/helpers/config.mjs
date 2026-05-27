@@ -24,6 +24,7 @@ export async function loadTestConfig() {
     tables: {
       users: `irl-users-${stage}`,
       events: `irl-events-${stage}`,
+      interactions: `irl-interactions-${stage}`,
       eventsLog: `irl-events-log-${stage}`,
       commands: `irl-commands-${stage}`,
       config: `irl-config-${stage}`,

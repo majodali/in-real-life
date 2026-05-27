@@ -471,3 +471,41 @@ test('listEvents: GETs /events and returns the response', async () => {
   assert.equal(api.get.calls[0][0], '/events');
   assert.deepEqual(result, { events: [{ eventId: 'a' }], count: 1 });
 });
+
+test('setEventInteraction: PUTs /events/:id/interaction with fresh commandId + level', async () => {
+  api.put = spy(async () => ({ eventId: 'evt-1', level: 'interested' }));
+  commands = createCommands({ api, storage, makeId: () => `cmd-${++nextId}` });
+
+  await commands.setEventInteraction({ eventId: 'evt-1', level: 'interested' });
+  assert.equal(api.put.calls.length, 1);
+  assert.equal(api.put.calls[0][0], '/events/evt-1/interaction');
+  assert.deepEqual(api.put.calls[0][1], { commandId: 'cmd-1', level: 'interested' });
+});
+
+test('setEventInteraction: each call gets a new commandId (no persistence)', async () => {
+  api.put = spy(async () => ({}));
+  commands = createCommands({ api, storage, makeId: () => `cmd-${++nextId}` });
+
+  await commands.setEventInteraction({ eventId: 'e', level: 'interested' });
+  await commands.setEventInteraction({ eventId: 'e', level: 'confirmed' });
+  assert.equal(api.put.calls[0][1].commandId, 'cmd-1');
+  assert.equal(api.put.calls[1][1].commandId, 'cmd-2');
+});
+
+test('setEventInteraction: URL-encodes the eventId', async () => {
+  api.put = spy(async () => ({}));
+  commands = createCommands({ api, storage, makeId: () => `cmd-${++nextId}` });
+
+  await commands.setEventInteraction({ eventId: 'evt/with/slash', level: 'interested' });
+  assert.equal(api.put.calls[0][0], '/events/evt%2Fwith%2Fslash/interaction');
+});
+
+test('withdrawEventInteraction: DELETEs /events/:id/interaction with fresh commandId', async () => {
+  api.delete = spy(async () => ({ eventId: 'evt-1', level: null }));
+  commands = createCommands({ api, storage, makeId: () => `cmd-${++nextId}` });
+
+  await commands.withdrawEventInteraction({ eventId: 'evt-1' });
+  assert.equal(api.delete.calls.length, 1);
+  assert.equal(api.delete.calls[0][0], '/events/evt-1/interaction');
+  assert.deepEqual(api.delete.calls[0][1], { commandId: 'cmd-1' });
+});

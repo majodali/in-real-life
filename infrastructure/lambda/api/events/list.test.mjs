@@ -43,7 +43,9 @@ let client, handler;
 
 beforeEach(() => {
   client = { send: spy(async () => ({ Items: [] })) };
-  handler = createListEventsHandler({ client, eventsTable: 'irl-events-test' });
+  handler = createListEventsHandler({
+    client, eventsTable: 'irl-events-test', interactionsTable: 'irl-interactions-test',
+  });
 });
 
 // ─── Auth ───
@@ -119,5 +121,63 @@ test('passes through the full event row shape', async () => {
   handler = createListEventsHandler({ client, eventsTable: 't' });
   const response = await handler(makeEvent({ claims: validClaims }));
   const body = JSON.parse(response.body);
-  assert.deepEqual(body.events[0], row);
+  // myLevel always present (null when no interaction); other fields pass through.
+  assert.deepEqual(body.events[0], { ...row, myLevel: null });
+});
+
+// ─── myLevel merge ───
+
+test('myLevel: merges the caller\'s interaction level per event', async () => {
+  let call = 0;
+  client.send = spy(async (cmd) => {
+    call++;
+    // Call 1: scan events → two rows
+    if (call === 1) return { Items: [sampleRow({ eventId: 'a' }), sampleRow({ eventId: 'b' })] };
+    // Call 2: query interactions → user is interested in 'a', confirmed in 'b'
+    return { Items: [
+      { userId: validClaims.sub, eventId: 'a', level: 'interested' },
+      { userId: validClaims.sub, eventId: 'b', level: 'confirmed' },
+    ] };
+  });
+  handler = createListEventsHandler({
+    client, eventsTable: 't', interactionsTable: 'i',
+  });
+  const response = await handler(makeEvent({ claims: validClaims }));
+  const body = JSON.parse(response.body);
+  const a = body.events.find((e) => e.eventId === 'a');
+  const b = body.events.find((e) => e.eventId === 'b');
+  assert.equal(a.myLevel, 'interested');
+  assert.equal(b.myLevel, 'confirmed');
+});
+
+test('myLevel: null when the caller has no interaction with the event', async () => {
+  let call = 0;
+  client.send = spy(async () => {
+    call++;
+    if (call === 1) return { Items: [sampleRow({ eventId: 'a' })] };
+    return { Items: [] }; // no interactions
+  });
+  handler = createListEventsHandler({
+    client, eventsTable: 't', interactionsTable: 'i',
+  });
+  const response = await handler(makeEvent({ claims: validClaims }));
+  const body = JSON.parse(response.body);
+  assert.equal(body.events[0].myLevel, null);
+});
+
+test('myLevel: interactions query filters to the caller\'s userId', async () => {
+  let call = 0;
+  let interactionQueryInput;
+  client.send = spy(async (cmd) => {
+    call++;
+    if (call === 1) return { Items: [] };
+    interactionQueryInput = cmd.input;
+    return { Items: [] };
+  });
+  handler = createListEventsHandler({
+    client, eventsTable: 't', interactionsTable: 'i',
+  });
+  await handler(makeEvent({ claims: validClaims }));
+  assert.equal(interactionQueryInput.TableName, 'i');
+  assert.equal(interactionQueryInput.ExpressionAttributeValues[':u'], validClaims.sub);
 });
