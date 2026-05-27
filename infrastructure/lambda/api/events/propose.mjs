@@ -45,6 +45,11 @@ export function createProposeEventHandler({ runner, makeEventId }) {
     if (endTime != null && Number.isNaN(new Date(endTime).getTime())) {
       return reply(400, { error: 'endTime is not a parseable ISO datetime' });
     }
+    if (minimumAttendance !== undefined && minimumAttendance !== null) {
+      if (!Number.isInteger(minimumAttendance) || minimumAttendance < 3) {
+        return reply(400, { error: 'minimumAttendance must be an integer >= 3' });
+      }
+    }
 
     const eventId = makeEventId();
     const aggregateId = `event#${eventId}`;

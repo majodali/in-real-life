@@ -75,12 +75,26 @@ test('minimumAttendance not a positive integer: toast + onValidationError', asyn
   assert.equal(onValidationError.calls[0][0], 'minimumAttendance');
 });
 
-test('minimumAttendance=0 rejected', async () => {
+test('minimumAttendance below 3 rejected (0, 1, 2)', async () => {
+  for (const v of [0, 1, 2]) {
+    commands.proposeEvent.calls.length = 0;
+    onValidationError.calls.length = 0;
+    await handleProposeSubmit({
+      ...valid, minimumAttendance: v,
+      commands, showToast, onSuccess, onValidationError,
+    });
+    assert.equal(commands.proposeEvent.calls.length, 0, `expected reject for min=${v}`);
+    assert.equal(onValidationError.calls[0][0], 'minimumAttendance');
+  }
+});
+
+test('minimumAttendance=3 accepted (the floor)', async () => {
   await handleProposeSubmit({
-    ...valid, minimumAttendance: 0,
+    ...valid, minimumAttendance: 3,
     commands, showToast, onSuccess, onValidationError,
   });
-  assert.equal(commands.proposeEvent.calls.length, 0);
+  assert.equal(commands.proposeEvent.calls.length, 1);
+  assert.equal(commands.proposeEvent.calls[0][0].minimumAttendance, 3);
 });
 
 // ─── Happy paths ───

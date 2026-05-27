@@ -65,7 +65,7 @@ export async function handleProposeSubmit({
   const minAttendance = normaliseMinimum(minimumAttendance);
   if (minimumAttendance !== undefined && minimumAttendance !== '' && minAttendance == null) {
     onValidationError?.('minimumAttendance');
-    showToast('Minimum attendance should be a whole number.');
+    showToast('Minimum attendance must be a whole number of 3 or more.');
     return;
   }
 
@@ -101,6 +101,6 @@ function normaliseMinimum(value) {
   const n = Number(value);
   if (!Number.isFinite(n)) return null;
   if (!Number.isInteger(n)) return null;
-  if (n < 1) return null;
+  if (n < 3) return null;
   return n;
 }

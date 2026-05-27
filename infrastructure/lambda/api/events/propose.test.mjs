@@ -110,6 +110,30 @@ test('400 when startTime is not a parseable ISO datetime', async () => {
   assert.match(JSON.parse(response.body).error, /startTime/i);
 });
 
+test('400 when minimumAttendance is below 3', async () => {
+  for (const v of [0, 1, 2]) {
+    const response = await handler(makeEvent({
+      claims: validClaims, body: { ...validBody, minimumAttendance: v },
+    }));
+    assert.equal(response.statusCode, 400, `expected 400 for min=${v}`);
+    assert.match(JSON.parse(response.body).error, /minimumAttendance/);
+  }
+});
+
+test('400 when minimumAttendance is not an integer', async () => {
+  const response = await handler(makeEvent({
+    claims: validClaims, body: { ...validBody, minimumAttendance: 3.5 },
+  }));
+  assert.equal(response.statusCode, 400);
+});
+
+test('accepts minimumAttendance=3 (the floor)', async () => {
+  const response = await handler(makeEvent({
+    claims: validClaims, body: { ...validBody, minimumAttendance: 3 },
+  }));
+  assert.equal(response.statusCode, 201);
+});
+
 // ─── Happy path ───
 
 test('returns 201 with the new eventId on first attempt', async () => {
