@@ -13,6 +13,7 @@ const PROFILE_UPDATE_KEY = 'irl_cmd_profile_update';
 const LOCALITY_KEY = 'irl_cmd_locality';
 const NOTIFY_KEY = 'irl_cmd_notify';
 const DELETE_KEY = 'irl_cmd_delete';
+const PROPOSE_EVENT_KEY = 'irl_cmd_propose_event';
 
 export function createCommands({
   api,
@@ -100,6 +101,23 @@ export function createCommands({
     return await api.get('/admin/notify-list');
   }
 
+  async function proposeEvent({
+    title, description, startTime, endTime, location, organizerName, minimumAttendance,
+  }) {
+    const commandId = getOrMakeCommandId(PROPOSE_EVENT_KEY);
+    const body = { commandId, title, startTime, location, organizerName };
+    if (description !== undefined) body.description = description;
+    if (endTime !== undefined) body.endTime = endTime;
+    if (minimumAttendance !== undefined) body.minimumAttendance = minimumAttendance;
+    const result = await api.post('/events', body);
+    storage.removeItem(PROPOSE_EVENT_KEY);
+    return result;
+  }
+
+  async function listEvents() {
+    return await api.get('/events');
+  }
+
   async function requestNotify({ email, postalCode, country }) {
     const commandId = getOrMakeCommandId(NOTIFY_KEY);
     const body = { commandId, email, postalCode };
@@ -121,5 +139,7 @@ export function createCommands({
     getTime,
     advanceTime,
     getNotifyList,
+    proposeEvent,
+    listEvents,
   };
 }

@@ -384,3 +384,90 @@ test('requestNotify: reuses the same commandId across retries when the API call 
   await assert.rejects(() => commands.requestNotify({ email: 'a@b.c', postalCode: '94110' }));
   assert.equal(api.post.calls[1][1].commandId, 'cmd-1');
 });
+
+// ─── proposeEvent / listEvents ───
+
+test('proposeEvent: POSTs to /events with commandId and all provided fields', async () => {
+  api.post = spy(async () => ({ eventId: 'evt-xyz' }));
+  commands = createCommands({ api, storage, makeId: () => `cmd-${++nextId}` });
+
+  await commands.proposeEvent({
+    title: 'Coffee walk',
+    description: 'Easy walk',
+    startTime: '2026-06-01T16:00:00Z',
+    endTime: '2026-06-01T17:30:00Z',
+    location: 'Blackbird Bakery',
+    organizerName: 'Matthew',
+    minimumAttendance: 3,
+  });
+
+  assert.equal(api.post.calls.length, 1);
+  assert.equal(api.post.calls[0][0], '/events');
+  assert.deepEqual(api.post.calls[0][1], {
+    commandId: 'cmd-1',
+    title: 'Coffee walk',
+    description: 'Easy walk',
+    startTime: '2026-06-01T16:00:00Z',
+    endTime: '2026-06-01T17:30:00Z',
+    location: 'Blackbird Bakery',
+    organizerName: 'Matthew',
+    minimumAttendance: 3,
+  });
+});
+
+test('proposeEvent: omits optional fields when not provided', async () => {
+  api.post = spy(async () => ({ eventId: 'evt-xyz' }));
+  commands = createCommands({ api, storage, makeId: () => `cmd-${++nextId}` });
+
+  await commands.proposeEvent({
+    title: 'Coffee walk',
+    startTime: '2026-06-01T16:00:00Z',
+    location: 'Blackbird Bakery',
+    organizerName: 'Matthew',
+  });
+
+  const body = api.post.calls[0][1];
+  assert.equal(body.description, undefined);
+  assert.equal(body.endTime, undefined);
+  assert.equal(body.minimumAttendance, undefined);
+});
+
+test('proposeEvent: clears the saved commandId on success', async () => {
+  api.post = spy(async () => ({ eventId: 'evt-xyz' }));
+  commands = createCommands({ api, storage, makeId: () => `cmd-${++nextId}` });
+
+  await commands.proposeEvent({
+    title: 'x', startTime: 't', location: 'l', organizerName: 'n',
+  });
+  assert.equal(storage.getItem('irl_cmd_propose_event'), null);
+});
+
+test('proposeEvent: reuses the same commandId across retries when the API call throws', async () => {
+  api.post = spy(async () => { throw new Error('boom'); });
+  commands = createCommands({ api, storage, makeId: () => `cmd-${++nextId}` });
+
+  const args = { title: 'x', startTime: 't', location: 'l', organizerName: 'n' };
+  await assert.rejects(() => commands.proposeEvent(args));
+  await assert.rejects(() => commands.proposeEvent(args));
+  assert.equal(api.post.calls[1][1].commandId, 'cmd-1');
+});
+
+test('proposeEvent: returns the API response (with eventId)', async () => {
+  api.post = spy(async () => ({ eventId: 'evt-42' }));
+  commands = createCommands({ api, storage, makeId: () => `cmd-${++nextId}` });
+
+  const result = await commands.proposeEvent({
+    title: 'x', startTime: 't', location: 'l', organizerName: 'n',
+  });
+  assert.deepEqual(result, { eventId: 'evt-42' });
+});
+
+test('listEvents: GETs /events and returns the response', async () => {
+  api.get = spy(async () => ({ events: [{ eventId: 'a' }], count: 1 }));
+  commands = createCommands({ api, storage, makeId: () => `cmd-${++nextId}` });
+
+  const result = await commands.listEvents();
+  assert.equal(api.get.calls.length, 1);
+  assert.equal(api.get.calls[0][0], '/events');
+  assert.deepEqual(result, { events: [{ eventId: 'a' }], count: 1 });
+});

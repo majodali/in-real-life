@@ -1302,6 +1302,164 @@ html, body {
   opacity: 1; transform: translateX(-50%) translateY(0);
 }
 
+/* ─── Feed: propose CTA + empty / loading states ─── */
+
+.feed-propose-btn {
+  margin-top: 14px;
+  width: 100%;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.18);
+  color: var(--mist);
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  display: flex; align-items: center; gap: 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.feed-header.light .feed-propose-btn {
+  background: var(--cream);
+  border-color: var(--warm);
+  color: var(--earth);
+}
+
+.feed-propose-btn:active { transform: scale(0.99); }
+
+.feed-propose-plus {
+  font-size: 18px; line-height: 1; opacity: 0.8;
+}
+
+.feed-loading {
+  padding: 40px 20px; text-align: center; color: var(--soft); font-size: 13px;
+}
+
+.feed-empty {
+  padding: 60px 20px 40px; text-align: center;
+}
+
+.feed-empty p {
+  margin-bottom: 6px; font-size: 14px; color: var(--text);
+}
+
+.feed-empty p.feed-empty-sub {
+  color: var(--soft); font-size: 13px; margin-bottom: 20px;
+}
+
+.feed-empty-cta { max-width: 240px; margin: 0 auto; }
+
+.card-organizer {
+  margin-top: 8px; font-size: 11px; color: var(--soft);
+  font-style: italic;
+}
+
+/* ─── Propose form ─── */
+
+.propose-intro {
+  font-size: 13px; line-height: 1.5; color: var(--soft);
+  margin-bottom: 18px; padding: 0 4px;
+}
+
+.propose-intro em { color: var(--earth); font-style: normal; font-weight: 500; }
+
+.propose-form {
+  background: white; border-radius: 14px; padding: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.propose-textarea {
+  font-family: 'DM Sans', sans-serif;
+  resize: vertical; min-height: 72px;
+}
+
+.profile-field-hint {
+  display: block; margin-top: 6px; font-size: 11px; color: var(--soft);
+  line-height: 1.4;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+.shake { animation: shake 0.3s ease; border-color: var(--rust) !important; }
+
+/* ─── Event detail (real events) ─── */
+
+.event-detail-loading {
+  padding: 40px 20px; text-align: center; color: var(--soft); font-size: 13px;
+}
+
+.event-card-large {
+  background: white; border-radius: 14px; padding: 22px 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.event-card-meta {
+  display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;
+}
+
+.event-state {
+  font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+  background: var(--mist); color: var(--earth);
+  padding: 4px 10px; border-radius: 999px; font-weight: 500;
+}
+
+.event-state-proposed { background: rgba(196, 133, 58, 0.15); color: var(--amber); }
+.event-state-planned { background: rgba(122, 158, 110, 0.18); color: var(--moss); }
+.event-state-in-progress { background: rgba(168, 92, 56, 0.18); color: var(--rust); }
+.event-state-over, .event-state-cancelled { background: var(--warm); color: var(--soft); }
+
+.event-source {
+  font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--soft); padding: 4px 0;
+}
+
+.event-title {
+  font-family: 'Playfair Display', serif; font-size: 22px;
+  color: var(--earth); margin-bottom: 10px; line-height: 1.25;
+}
+
+.event-description {
+  font-size: 14px; line-height: 1.55; color: var(--text);
+  margin-bottom: 18px;
+}
+
+.event-facts {
+  display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px;
+}
+
+.event-fact {
+  display: flex; gap: 12px; align-items: baseline;
+}
+
+.event-fact-label {
+  font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--soft); flex: 0 0 100px;
+}
+
+.event-fact-value {
+  font-size: 14px; color: var(--text); flex: 1;
+}
+
+.event-counts {
+  display: flex; gap: 18px; padding-top: 14px;
+  border-top: 1px solid var(--warm); margin-top: 4px;
+  font-size: 13px; color: var(--soft);
+}
+
+.event-count strong { color: var(--text); font-weight: 500; margin-right: 4px; }
+
+.event-detail-hint {
+  margin-top: 18px; padding: 10px 12px;
+  background: var(--cream); border-radius: 10px;
+  font-size: 12px; color: var(--soft); text-align: center;
+  font-style: italic;
+}
+
 /* ─── Admin / workshop screen ─── */
 
 .admin-card { text-align: left; }

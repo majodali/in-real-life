@@ -13,6 +13,8 @@ import { renderWelcome } from './screens/welcome.js';
 import { renderLocality } from './screens/locality.js';
 import { renderLocation } from './screens/location.js';
 import { renderAdmin } from './screens/admin.js';
+import { renderPropose } from './screens/propose.js';
+import { renderEventDetail } from './screens/event-detail.js';
 
 const PUBLIC_SCREENS = new Set(['location', 'signup', 'confirm', 'signin', 'welcome', 'onboarding', 'locality']);
 
@@ -124,6 +126,20 @@ function route() {
     case 'admin':
       showScreen('admin');
       renderAdmin();
+      break;
+
+    case 'propose':
+      showScreen('propose');
+      renderPropose();
+      break;
+
+    case 'event':
+      if (param) {
+        showScreen('event');
+        renderEventDetail(param);
+      } else {
+        navigate('feed');
+      }
       break;
 
     case 'feed':
