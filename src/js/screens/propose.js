@@ -61,10 +61,10 @@ export function renderPropose() {
         </div>
 
         <div class="profile-field">
-          <label class="profile-field-label" for="proposeMin">Min. attendance <span class="auth-optional">(optional)</span></label>
+          <label class="profile-field-label" for="proposeMin">Min. attendance</label>
           <input class="profile-field-input" id="proposeMin" type="number" inputmode="numeric" min="3" step="1"
-                 placeholder="e.g. 3">
-          <small class="profile-field-hint">3 or more. You'll be notified when this many people have confirmed.</small>
+                 placeholder="3">
+          <small class="profile-field-hint">Defaults to 3, including you. Raise it if this only makes sense with more people.</small>
         </div>
 
         <button class="btn-primary" id="proposeSubmit" type="submit">Propose it</button>

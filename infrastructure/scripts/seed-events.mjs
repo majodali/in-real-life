@@ -17,13 +17,17 @@
 // Re-running with the same idToken is safe: each entry mints a fresh
 // commandId per run, so re-runs add fresh events rather than dedup'ing.
 
-import { randomUUID } from 'node:crypto';
+import { randomUUID } from "node:crypto";
 
-const apiUrl = process.env.IRL_API_URL;
-const idToken = process.env.IRL_ID_TOKEN;
+const apiUrl = process.env.IRL_API_URL || "https://api.in-real.life";
+const idToken =
+  process.env.IRL_ID_TOKEN ||
+  "eyJraWQiOiJ5UUFNNE50cjhjYVllenVDVXl1Q2NBY2I4aXNHNHdLUzg0eHRRUUhtbk1BPSIsImFsZyI6IlJTMjU2In0.eyJzdWIiOiIyNDY4NTQwOC1iMDQxLTcwMDktYTg0MS05MjYxODMzOWI4MTIiLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwiaXNzIjoiaHR0cHM6Ly9jb2duaXRvLWlkcC51cy1lYXN0LTEuYW1hem9uYXdzLmNvbS91cy1lYXN0LTFfcXZvVEJadnNoIiwiY29nbml0bzp1c2VybmFtZSI6IjI0Njg1NDA4LWIwNDEtNzAwOS1hODQxLTkyNjE4MzM5YjgxMiIsIm9yaWdpbl9qdGkiOiJkYWQ4YzYwOS00NWVjLTQzN2ItYWQzNS02YjQyNTAyYzZjMGUiLCJhdWQiOiI1bW5rY2RxcWxlYjY5c2w4M3ZxajJjaXZoaiIsImV2ZW50X2lkIjoiZWEwZDYwY2QtZDQwNS00OGVlLWE4OWYtNWIwMTk2YzcxMmY3IiwidG9rZW5fdXNlIjoiaWQiLCJhdXRoX3RpbWUiOjE3Nzk4NTAxODQsImV4cCI6MTc3OTkyNDU5MywiY3VzdG9tOnJvbGUiOiJhZG1pbiIsImlhdCI6MTc3OTkyMDk5MywianRpIjoiMmU1ZTYxODUtMjRiMC00NmM2LThiOGUtNmI3NGQ4Yzk4ZmIyIiwiZW1haWwiOiJtYXR0aGV3QGxpZGRsZS5jbG91ZCJ9.cF9M1XDpgjZK98RjCaZz9hsO4xNzV-cspZ2zQe3Y_jkrjfJBzIFLfyA7Bj7CFZv7wSsGaHwGYkq1-BgARPZ8gAJ0XdmODCN2r7h1DCqpBkE0xKHTklytRwk2CJ_dnfE_7GQpFmVUyfTRnQpvCPmF16I5T659kwHX6F5usVHLmoBEPX3qcafLn78b6chAKas2oQargRMcLxsBut3nvaQ59p31ejvvqvu6zqOpTBmnNEF1OmF2CYwaZFxIr5hHYbW00IoJ7oLbIKxqhM9bBLjNY1GcIGBD7g5E_DYO1BETo3ss-UKdCSpx74OtQZAiaa6lGZ7wCaJiYSz8KP6IFnPIUw";
 
 if (!apiUrl || !idToken) {
-  console.error('Usage: IRL_API_URL=... IRL_ID_TOKEN=... node infrastructure/scripts/seed-events.mjs');
+  console.error(
+    "Usage: IRL_API_URL=... IRL_ID_TOKEN=... node infrastructure/scripts/seed-events.mjs",
+  );
   process.exit(1);
 }
 
@@ -38,74 +42,75 @@ function inDays(days, hours, minutes = 0) {
 
 const events = [
   {
-    title: 'Morning coffee & walk',
-    description: 'Easy walk along the waterfront, coffee at Blackbird afterwards.',
+    title: "Morning coffee & walk",
+    description:
+      "Easy walk along the waterfront, coffee at Blackbird afterwards.",
     startTime: inDays(3, 8, 30),
     endTime: inDays(3, 10, 0),
-    location: 'Blackbird Bakery',
-    organizerName: 'Sarah',
+    location: "Blackbird Bakery",
+    organizerName: "Sarah",
     minimumAttendance: 3,
   },
   {
-    title: 'Winslow Farmers Market — meet up at the entrance',
-    description: 'Wander, sample, chat. Mostly we hang at the bread stall.',
+    title: "Winslow Farmers Market — meet up at the entrance",
+    description: "Wander, sample, chat. Mostly we hang at the bread stall.",
     startTime: inDays(4, 9, 30),
     endTime: inDays(4, 11, 0),
-    location: 'Winslow Way',
-    organizerName: 'James',
+    location: "Winslow Way",
+    organizerName: "James",
   },
   {
-    title: 'Acoustic night at Harbour Pub',
-    description: 'Local musicians, no cover. Comfortable for new faces.',
+    title: "Acoustic night at Harbour Pub",
+    description: "Local musicians, no cover. Comfortable for new faces.",
     startTime: inDays(5, 19, 0),
     endTime: inDays(5, 22, 0),
-    location: 'Harbour Pub',
-    organizerName: 'Mike',
+    location: "Harbour Pub",
+    organizerName: "Mike",
     minimumAttendance: 4,
   },
   {
-    title: 'Sunset beach photo walk',
-    description: 'Bring a phone or a camera. We meander, we shoot, we share.',
+    title: "Sunset beach photo walk",
+    description: "Bring a phone or a camera. We meander, we shoot, we share.",
     startTime: inDays(6, 19, 30),
     endTime: inDays(6, 21, 0),
-    location: 'Pritchard Park',
-    organizerName: 'Ava',
+    location: "Pritchard Park",
+    organizerName: "Ava",
     minimumAttendance: 3,
   },
   {
     title: 'Book club — "The Overstory"',
-    description: 'Chapters 1-4. Bring your favourite tree.',
+    description: "Chapters 1-4. Bring your favourite tree.",
     startTime: inDays(7, 19, 0),
     endTime: inDays(7, 21, 0),
-    location: 'Eagle Harbor Books',
-    organizerName: 'Priya',
+    location: "Eagle Harbor Books",
+    organizerName: "Priya",
     minimumAttendance: 5,
   },
   {
-    title: 'Pickup soccer at Battle Point',
-    description: 'Casual, all skill levels. Bring water.',
+    title: "Pickup soccer at Battle Point",
+    description: "Casual, all skill levels. Bring water.",
     startTime: inDays(8, 18, 0),
     endTime: inDays(8, 19, 30),
-    location: 'Battle Point Park',
-    organizerName: 'Tom',
+    location: "Battle Point Park",
+    organizerName: "Tom",
     minimumAttendance: 6,
   },
   {
-    title: 'Trivia night',
-    description: 'Pub trivia, teams of up to 6. Mixed tables welcome.',
+    title: "Trivia night",
+    description: "Pub trivia, teams of up to 6. Mixed tables welcome.",
     startTime: inDays(10, 19, 30),
     endTime: inDays(10, 22, 0),
-    location: 'Harbour Pub',
-    organizerName: 'Jordan',
+    location: "Harbour Pub",
+    organizerName: "Jordan",
     minimumAttendance: 4,
   },
   {
-    title: 'Sunday garden potluck',
-    description: 'Bring a dish to share and something to talk about.',
+    title: "Sunday garden potluck",
+    description: "Bring a dish to share and something to talk about.",
     startTime: inDays(14, 13, 0),
     endTime: inDays(14, 16, 0),
-    location: 'Strawberry Hill Park',
-    organizerName: 'Linda',
+    location: "Strawberry Hill Park",
+    organizerName: "Linda",
     minimumAttendance: 6,
   },
 ];
@@ -113,16 +118,20 @@ const events = [
 async function postEvent(entry) {
   const body = { commandId: randomUUID(), ...entry };
   const res = await fetch(`${apiUrl}/events`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
       Authorization: `Bearer ${idToken}`,
     },
     body: JSON.stringify(body),
   });
   const text = await res.text();
   let parsed;
-  try { parsed = JSON.parse(text); } catch { parsed = text; }
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    parsed = text;
+  }
   return { status: res.status, body: parsed };
 }
 

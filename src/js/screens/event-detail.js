@@ -67,10 +67,10 @@ export async function renderEventDetail(eventId) {
           <span class="event-fact-label">Organizer</span>
           <span class="event-fact-value">${escapeHtml(event.organizerName)}</span>
         </div>
-        ${event.minimumAttendance ? `
+        ${event.minimumAttendance > 3 ? `
         <div class="event-fact">
           <span class="event-fact-label">Needs at least</span>
-          <span class="event-fact-value">${event.minimumAttendance} ${event.minimumAttendance === 1 ? 'person' : 'people'}</span>
+          <span class="event-fact-value">${event.minimumAttendance} people (including the organizer)</span>
         </div>
         ` : ''}
       </div>

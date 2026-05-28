@@ -204,12 +204,12 @@ test('description and endTime are optional (omitted from data when absent)', asy
   assert.equal(d.endTime, undefined);
 });
 
-test('minimumAttendance optional', async () => {
+test('minimumAttendance defaults to 3 when omitted', async () => {
   const body = { ...validBody };
   delete body.minimumAttendance;
   await handler(makeEvent({ claims: validClaims, body }));
   const d = runner.runCommand.calls[0][0].events[0].data;
-  assert.equal(d.minimumAttendance, undefined);
+  assert.equal(d.minimumAttendance, 3);
 });
 
 test('caches eventId on the command result so retries return it', async () => {

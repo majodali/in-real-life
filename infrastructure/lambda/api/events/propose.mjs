@@ -29,8 +29,11 @@ export function createProposeEventHandler({ runner, makeEventId }) {
     }
 
     const { commandId, title, description, startTime, endTime, location,
-            organizerName, minimumAttendance } = body;
+            organizerName } = body;
     const source = body.source ?? 'community';
+    // Minimum attendance includes the organizer. Default 3 — the smallest
+    // group that feels like a community gathering rather than a duo.
+    const minimumAttendance = body.minimumAttendance ?? 3;
 
     if (!commandId) return reply(400, { error: 'commandId required' });
     if (!title) return reply(400, { error: 'title required' });
@@ -45,10 +48,8 @@ export function createProposeEventHandler({ runner, makeEventId }) {
     if (endTime != null && Number.isNaN(new Date(endTime).getTime())) {
       return reply(400, { error: 'endTime is not a parseable ISO datetime' });
     }
-    if (minimumAttendance !== undefined && minimumAttendance !== null) {
-      if (!Number.isInteger(minimumAttendance) || minimumAttendance < 3) {
-        return reply(400, { error: 'minimumAttendance must be an integer >= 3' });
-      }
+    if (!Number.isInteger(minimumAttendance) || minimumAttendance < 3) {
+      return reply(400, { error: 'minimumAttendance must be an integer >= 3' });
     }
 
     const eventId = makeEventId();
@@ -65,7 +66,7 @@ export function createProposeEventHandler({ runner, makeEventId }) {
     };
     if (description !== undefined) data.description = description;
     if (endTime !== undefined) data.endTime = endTime;
-    if (minimumAttendance !== undefined) data.minimumAttendance = minimumAttendance;
+    data.minimumAttendance = minimumAttendance;
 
     const events = [{
       eventType: 'EventProposed',
