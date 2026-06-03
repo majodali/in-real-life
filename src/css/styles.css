@@ -1506,6 +1506,39 @@ html, body {
 .btn-outline-rust:active { background: rgba(168, 92, 56, 0.08); }
 .btn-outline-rust:disabled { opacity: 0.5; cursor: default; }
 
+/* Organizer controls on event detail */
+
+.event-organizer-controls {
+  margin-top: 18px; padding-top: 18px;
+  border-top: 1px solid var(--warm);
+  display: flex; flex-direction: column; gap: 12px;
+}
+
+.organizer-controls-label {
+  font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--soft);
+}
+
+.organizer-threshold-met {
+  padding: 10px 12px;
+  background: rgba(196, 133, 58, 0.10);
+  border-radius: 10px;
+  font-size: 13px; line-height: 1.5;
+  color: var(--earth);
+}
+
+.organizer-toggle {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; color: var(--text);
+  padding: 6px 0;
+  cursor: pointer;
+}
+
+.organizer-toggle input[type="checkbox"] {
+  width: 18px; height: 18px; accent-color: var(--moss);
+  cursor: pointer;
+}
+
 /* Feed card "you're in" badges */
 
 .card-mylevel {

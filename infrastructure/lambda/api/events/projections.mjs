@@ -23,6 +23,7 @@ export function projectEventProposed(event, tables) {
   };
   if (d.description !== undefined) item.description = d.description;
   if (d.minimumAttendance !== undefined) item.minimumAttendance = d.minimumAttendance;
+  item.autoPlanOnThreshold = d.autoPlanOnThreshold === true;
 
   return {
     Put: {

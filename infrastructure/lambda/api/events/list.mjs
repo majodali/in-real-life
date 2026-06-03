@@ -17,7 +17,7 @@ function reply(statusCode, body) {
   };
 }
 
-export function createListEventsHandler({ client, eventsTable, interactionsTable }) {
+export function createListEventsHandler({ client, eventsTable, interactionsTable, getOffset }) {
   return async function handler(event) {
     const claims = event?.requestContext?.authorizer?.jwt?.claims;
     if (!claims || !claims.sub) return reply(401, { error: 'unauthorized' });
@@ -58,8 +58,26 @@ export function createListEventsHandler({ client, eventsTable, interactionsTable
       return av < bv ? -1 : av > bv ? 1 : 0;
     });
 
-    const events = items.map((e) => ({ ...e, myLevel: levelByEvent.get(e.eventId) ?? null }));
+    // Compute the effective lifecycle state using the simulated clock.
+    // Stored states are the human-controlled ones; "in-progress" and "over"
+    // are time-derived so we don't need a scheduled job to flip them.
+    const offset = getOffset ? (await getOffset()).offsetMs : 0;
+    const nowIso = new Date(Date.now() + offset).toISOString();
 
-    return reply(200, { events, count: events.length });
+    const events = items.map((e) => ({
+      ...e,
+      myLevel: levelByEvent.get(e.eventId) ?? null,
+      effectiveState: computeEffectiveState(e, nowIso),
+    }));
+
+    return reply(200, { events, count: events.length, simulatedTime: nowIso });
   };
+}
+
+export function computeEffectiveState(row, nowIso) {
+  if (row.lifecycleState === 'cancelled') return 'cancelled';
+  if (row.lifecycleState !== 'planned') return row.lifecycleState;
+  if (row.endTime && nowIso >= row.endTime) return 'over';
+  if (row.startTime && nowIso >= row.startTime) return 'in-progress';
+  return 'planned';
 }

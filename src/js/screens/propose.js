@@ -67,6 +67,15 @@ export function renderPropose() {
           <small class="profile-field-hint">Defaults to 3, including you. Raise it if this only makes sense with more people.</small>
         </div>
 
+        <label class="organizer-toggle">
+          <input type="checkbox" id="proposeAutoPlan">
+          <span>Auto-confirm once the minimum is reached</span>
+        </label>
+        <small class="profile-field-hint" style="display:block; margin-bottom:14px;">
+          Safety net: if you forget to check in, the event still becomes
+          planned once enough people commit.
+        </small>
+
         <button class="btn-primary" id="proposeSubmit" type="submit">Propose it</button>
       </form>
     </div>
@@ -90,6 +99,7 @@ export function renderPropose() {
         location: document.getElementById('proposeLocation').value,
         organizerName: user.name,
         minimumAttendance: document.getElementById('proposeMin').value,
+        autoPlanOnThreshold: document.getElementById('proposeAutoPlan').checked,
         commands,
         showToast,
         onSuccess: ({ eventId }) => {

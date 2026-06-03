@@ -7,7 +7,7 @@
 
 import { test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { createListEventsHandler } from './list.mjs';
+import { createListEventsHandler, computeEffectiveState } from './list.mjs';
 
 function spy(impl) {
   const fn = (...args) => { fn.calls.push(args); return impl(...args); };
@@ -121,8 +121,10 @@ test('passes through the full event row shape', async () => {
   handler = createListEventsHandler({ client, eventsTable: 't' });
   const response = await handler(makeEvent({ claims: validClaims }));
   const body = JSON.parse(response.body);
-  // myLevel always present (null when no interaction); other fields pass through.
-  assert.deepEqual(body.events[0], { ...row, myLevel: null });
+  // myLevel always present (null when no interaction). effectiveState
+  // derived from lifecycleState; for an event whose row has lifecycleState
+  // 'proposed' the effective state is the same.
+  assert.deepEqual(body.events[0], { ...row, myLevel: null, effectiveState: 'proposed' });
 });
 
 // ─── myLevel merge ───
@@ -180,4 +182,75 @@ test('myLevel: interactions query filters to the caller\'s userId', async () => 
   await handler(makeEvent({ claims: validClaims }));
   assert.equal(interactionQueryInput.TableName, 'i');
   assert.equal(interactionQueryInput.ExpressionAttributeValues[':u'], validClaims.sub);
+});
+
+// ─── computeEffectiveState ───
+
+test('computeEffectiveState: cancelled stays cancelled regardless of time', () => {
+  const row = { lifecycleState: 'cancelled', startTime: '2020-01-01T00:00:00Z', endTime: '2020-01-01T01:00:00Z' };
+  assert.equal(computeEffectiveState(row, '2026-06-01T12:00:00Z'), 'cancelled');
+});
+
+test('computeEffectiveState: proposed stays proposed', () => {
+  const row = { lifecycleState: 'proposed', startTime: '2020-01-01T00:00:00Z' };
+  assert.equal(computeEffectiveState(row, '2026-06-01T12:00:00Z'), 'proposed');
+});
+
+test('computeEffectiveState: planned in the future stays planned', () => {
+  const row = {
+    lifecycleState: 'planned',
+    startTime: '2026-06-10T18:00:00Z',
+    endTime: '2026-06-10T20:00:00Z',
+  };
+  assert.equal(computeEffectiveState(row, '2026-06-01T12:00:00Z'), 'planned');
+});
+
+test('computeEffectiveState: planned currently happening → in-progress', () => {
+  const row = {
+    lifecycleState: 'planned',
+    startTime: '2026-06-01T11:00:00Z',
+    endTime: '2026-06-01T13:00:00Z',
+  };
+  assert.equal(computeEffectiveState(row, '2026-06-01T12:00:00Z'), 'in-progress');
+});
+
+test('computeEffectiveState: planned past endTime → over', () => {
+  const row = {
+    lifecycleState: 'planned',
+    startTime: '2026-05-30T18:00:00Z',
+    endTime: '2026-05-30T20:00:00Z',
+  };
+  assert.equal(computeEffectiveState(row, '2026-06-01T12:00:00Z'), 'over');
+});
+
+test('computeEffectiveState: planned with no endTime → in-progress once startTime passes (no auto-over)', () => {
+  const row = { lifecycleState: 'planned', startTime: '2026-05-30T18:00:00Z' };
+  assert.equal(computeEffectiveState(row, '2026-06-01T12:00:00Z'), 'in-progress');
+});
+
+test('list: response includes effectiveState per event and simulatedTime', async () => {
+  client.send = spy(async (cmd) => {
+    if (cmd.input.TableName === 't') {
+      return { Items: [sampleRow({
+        lifecycleState: 'planned',
+        startTime: '2026-06-01T11:00:00Z',
+        endTime: '2026-06-01T13:00:00Z',
+      })] };
+    }
+    return { Items: [] };
+  });
+  handler = createListEventsHandler({
+    client, eventsTable: 't', interactionsTable: 'i',
+    getOffset: async () => ({ offsetMs: 0 }),
+  });
+  const realNow = Date.now;
+  Date.now = () => new Date('2026-06-01T12:00:00Z').getTime();
+  try {
+    const res = await handler(makeEvent({ claims: validClaims }));
+    const body = JSON.parse(res.body);
+    assert.equal(body.events[0].effectiveState, 'in-progress');
+    assert.equal(body.simulatedTime, '2026-06-01T12:00:00.000Z');
+  } finally {
+    Date.now = realNow;
+  }
 });

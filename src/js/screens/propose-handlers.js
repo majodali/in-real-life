@@ -15,6 +15,7 @@ export async function handleProposeSubmit({
   location,
   organizerName,
   minimumAttendance,
+  autoPlanOnThreshold,
   commands,
   showToast,
   onSuccess,
@@ -80,6 +81,7 @@ export async function handleProposeSubmit({
       location: trimmedLocation,
       organizerName: trimmedOrganizerName || undefined,
       minimumAttendance: minAttendance ?? undefined,
+      autoPlanOnThreshold: autoPlanOnThreshold === true,
     });
     onSuccess?.(result);
   } catch (err) {

@@ -67,6 +67,7 @@ export function createProposeEventHandler({ runner, makeEventId }) {
     if (description !== undefined) data.description = description;
     if (endTime !== undefined) data.endTime = endTime;
     data.minimumAttendance = minimumAttendance;
+    data.autoPlanOnThreshold = body.autoPlanOnThreshold === true;
 
     const events = [{
       eventType: 'EventProposed',

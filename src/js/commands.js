@@ -102,13 +102,15 @@ export function createCommands({
   }
 
   async function proposeEvent({
-    title, description, startTime, endTime, location, organizerName, minimumAttendance,
+    title, description, startTime, endTime, location, organizerName,
+    minimumAttendance, autoPlanOnThreshold,
   }) {
     const commandId = getOrMakeCommandId(PROPOSE_EVENT_KEY);
     const body = { commandId, title, startTime, location, organizerName };
     if (description !== undefined) body.description = description;
     if (endTime !== undefined) body.endTime = endTime;
     if (minimumAttendance !== undefined) body.minimumAttendance = minimumAttendance;
+    if (autoPlanOnThreshold !== undefined) body.autoPlanOnThreshold = autoPlanOnThreshold;
     const result = await api.post('/events', body);
     storage.removeItem(PROPOSE_EVENT_KEY);
     return result;
@@ -130,6 +132,27 @@ export function createCommands({
   async function withdrawEventInteraction({ eventId }) {
     return await api.delete(`/events/${encodeURIComponent(eventId)}/interaction`, {
       commandId: makeId(),
+    });
+  }
+
+  // Lifecycle (organizer-only). Each press is a distinct intent → fresh
+  // commandId per call; an in-flight retry reuses it locally.
+  async function scheduleEvent({ eventId }) {
+    return await api.put(`/events/${encodeURIComponent(eventId)}/schedule`, {
+      commandId: makeId(),
+    });
+  }
+
+  async function cancelEvent({ eventId, reason }) {
+    const body = { commandId: makeId() };
+    if (reason !== undefined && reason !== '') body.reason = reason;
+    return await api.put(`/events/${encodeURIComponent(eventId)}/cancel`, body);
+  }
+
+  async function setAutoPlanOnThreshold({ eventId, autoPlanOnThreshold }) {
+    return await api.put(`/events/${encodeURIComponent(eventId)}/auto-plan`, {
+      commandId: makeId(),
+      autoPlanOnThreshold,
     });
   }
 
@@ -158,5 +181,8 @@ export function createCommands({
     listEvents,
     setEventInteraction,
     withdrawEventInteraction,
+    scheduleEvent,
+    cancelEvent,
+    setAutoPlanOnThreshold,
   };
 }

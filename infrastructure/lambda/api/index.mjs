@@ -47,12 +47,22 @@ import {
   projectAttendanceConfirmed,
   projectAttendanceWithdrawn,
 } from './events/interaction-projections.mjs';
+import {
+  projectEventScheduled,
+  projectEventCancelled,
+  projectEventAutoPlanSettingChanged,
+} from './events/lifecycle-projections.mjs';
 import { createProposeEventHandler } from './events/propose.mjs';
 import { createListEventsHandler } from './events/list.mjs';
 import {
   createSetInteractionHandler,
   createWithdrawInteractionHandler,
 } from './events/interaction.mjs';
+import {
+  createScheduleEventHandler,
+  createCancelEventHandler,
+  createAutoPlanHandler,
+} from './events/lifecycle.mjs';
 import { ulid } from './lib/ulid.mjs';
 
 const stage = process.env.STAGE || 'workshop';
@@ -94,6 +104,9 @@ const projector = createProjector({
     InterestExpressed: projectInterestExpressed,
     AttendanceConfirmed: projectAttendanceConfirmed,
     AttendanceWithdrawn: projectAttendanceWithdrawn,
+    EventScheduled: projectEventScheduled,
+    EventCancelled: projectEventCancelled,
+    EventAutoPlanSettingChanged: projectEventAutoPlanSettingChanged,
   },
   tables,
 });
@@ -141,6 +154,7 @@ const listEventsHandler = createListEventsHandler({
   client,
   eventsTable: tables.eventsTable,
   interactionsTable: tables.interactionsTable,
+  getOffset: getWorkshopOffset,
 });
 const setInteractionHandler = createSetInteractionHandler({
   runner, client,
@@ -151,6 +165,15 @@ const withdrawInteractionHandler = createWithdrawInteractionHandler({
   runner, client,
   eventsTable: tables.eventsTable,
   interactionsTable: tables.interactionsTable,
+});
+const scheduleEventHandler = createScheduleEventHandler({
+  runner, client, eventsTable: tables.eventsTable,
+});
+const cancelEventHandler = createCancelEventHandler({
+  runner, client, eventsTable: tables.eventsTable,
+});
+const autoPlanHandler = createAutoPlanHandler({
+  runner, client, eventsTable: tables.eventsTable,
 });
 
 const router = createRouter();
@@ -191,6 +214,9 @@ router.add('POST', '/events', proposeEventHandler);
 router.add('GET', '/events', listEventsHandler);
 router.add('PUT', '/events/:eventId/interaction', setInteractionHandler);
 router.add('DELETE', '/events/:eventId/interaction', withdrawInteractionHandler);
+router.add('PUT', '/events/:eventId/schedule', scheduleEventHandler);
+router.add('PUT', '/events/:eventId/cancel', cancelEventHandler);
+router.add('PUT', '/events/:eventId/auto-plan', autoPlanHandler);
 
 // Workshop-only routes are registered conditionally so they don't exist
 // on the production Lambda's route table.

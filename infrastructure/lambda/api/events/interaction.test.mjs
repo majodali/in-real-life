@@ -90,6 +90,12 @@ test('PUT: 404 when event row is missing', async () => {
   assert.equal(res.statusCode, 404);
 });
 
+test('PUT: 409 when event is cancelled', async () => {
+  eventRow = { ...eventRow, lifecycleState: 'cancelled' };
+  const res = await handler(makeEvent({ claims: validClaims, body: validBody }));
+  assert.equal(res.statusCode, 409);
+});
+
 // ─── Set level: happy paths ───
 
 test('PUT level=interested first time: emits InterestExpressed with previousLevel=null', async () => {
@@ -195,4 +201,77 @@ test('DELETE from confirmed: previousLevel=confirmed', async () => {
   await withdrawHandler(makeEvent({ claims: validClaims, body: { commandId: 'c' } }));
   const [args] = runner.runCommand.calls[0];
   assert.equal(args.events[0].data.previousLevel, 'confirmed');
+});
+
+// ─── Auto-plan side effect ───
+
+test('auto-plan: confirm reaching threshold fires EventScheduled as a second command', async () => {
+  eventRow = {
+    ...eventRow, autoPlanOnThreshold: true, minimumAttendance: 3, confirmedCount: 1,
+  };
+  // Reflect the projection's atomic ADD: the post-confirm count is 2.
+  // With the organizer implicit (+1) the threshold of 3 is reached.
+  runner.runCommand = spy(async ({ result }) => {
+    eventRow = { ...eventRow, confirmedCount: 2 };
+    return { cached: false, events: [], result };
+  });
+
+  const res = await handler(makeEvent({
+    claims: validClaims, body: { commandId: 'cmd-1', level: 'confirmed' },
+  }));
+  assert.equal(res.statusCode, 201);
+  assert.equal(runner.runCommand.calls.length, 2);
+  const second = runner.runCommand.calls[1][0];
+  assert.equal(second.events[0].eventType, 'EventScheduled');
+  assert.equal(second.events[0].data.autoTriggered, true);
+  assert.equal(second.events[0].data.scheduledBy, 'auto');
+  assert.equal(second.aggregateId, 'event#evt-1');
+});
+
+test('auto-plan: confirm without autoPlanOnThreshold does NOT fire EventScheduled', async () => {
+  eventRow = {
+    ...eventRow, autoPlanOnThreshold: false, minimumAttendance: 3, confirmedCount: 2,
+  };
+  await handler(makeEvent({
+    claims: validClaims, body: { commandId: 'cmd-1', level: 'confirmed' },
+  }));
+  assert.equal(runner.runCommand.calls.length, 1);
+});
+
+test('auto-plan: confirm below threshold does NOT fire EventScheduled', async () => {
+  eventRow = {
+    ...eventRow, autoPlanOnThreshold: true, minimumAttendance: 6, confirmedCount: 1,
+  };
+  runner.runCommand = spy(async ({ result }) => {
+    eventRow = { ...eventRow, confirmedCount: 2 };
+    return { cached: false, events: [], result };
+  });
+  await handler(makeEvent({
+    claims: validClaims, body: { commandId: 'cmd-1', level: 'confirmed' },
+  }));
+  assert.equal(runner.runCommand.calls.length, 1);
+});
+
+test('auto-plan: expressing interest does NOT fire EventScheduled (only confirm does)', async () => {
+  eventRow = {
+    ...eventRow, autoPlanOnThreshold: true, minimumAttendance: 3, confirmedCount: 5,
+  };
+  await handler(makeEvent({
+    claims: validClaims, body: { commandId: 'cmd-1', level: 'interested' },
+  }));
+  assert.equal(runner.runCommand.calls.length, 1);
+});
+
+test('auto-plan: if event is no longer proposed at fresh-read time, skip', async () => {
+  eventRow = {
+    ...eventRow, autoPlanOnThreshold: true, minimumAttendance: 3, confirmedCount: 1,
+  };
+  runner.runCommand = spy(async ({ result }) => {
+    eventRow = { ...eventRow, confirmedCount: 2, lifecycleState: 'planned' };
+    return { cached: false, events: [], result };
+  });
+  await handler(makeEvent({
+    claims: validClaims, body: { commandId: 'cmd-1', level: 'confirmed' },
+  }));
+  assert.equal(runner.runCommand.calls.length, 1);
 });

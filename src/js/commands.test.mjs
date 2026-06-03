@@ -509,3 +509,38 @@ test('withdrawEventInteraction: DELETEs /events/:id/interaction with fresh comma
   assert.equal(api.delete.calls[0][0], '/events/evt-1/interaction');
   assert.deepEqual(api.delete.calls[0][1], { commandId: 'cmd-1' });
 });
+
+test('scheduleEvent: PUTs /events/:id/schedule with fresh commandId', async () => {
+  api.put = spy(async () => ({}));
+  commands = createCommands({ api, storage, makeId: () => `cmd-${++nextId}` });
+
+  await commands.scheduleEvent({ eventId: 'evt-1' });
+  assert.equal(api.put.calls[0][0], '/events/evt-1/schedule');
+  assert.deepEqual(api.put.calls[0][1], { commandId: 'cmd-1' });
+});
+
+test('cancelEvent: PUTs /events/:id/cancel with optional reason', async () => {
+  api.put = spy(async () => ({}));
+  commands = createCommands({ api, storage, makeId: () => `cmd-${++nextId}` });
+
+  await commands.cancelEvent({ eventId: 'evt-1', reason: 'Low turnout' });
+  assert.equal(api.put.calls[0][0], '/events/evt-1/cancel');
+  assert.deepEqual(api.put.calls[0][1], { commandId: 'cmd-1', reason: 'Low turnout' });
+});
+
+test('cancelEvent: omits reason when empty string', async () => {
+  api.put = spy(async () => ({}));
+  commands = createCommands({ api, storage, makeId: () => `cmd-${++nextId}` });
+
+  await commands.cancelEvent({ eventId: 'evt-1', reason: '' });
+  assert.deepEqual(api.put.calls[0][1], { commandId: 'cmd-1' });
+});
+
+test('setAutoPlanOnThreshold: PUTs /events/:id/auto-plan with the boolean', async () => {
+  api.put = spy(async () => ({}));
+  commands = createCommands({ api, storage, makeId: () => `cmd-${++nextId}` });
+
+  await commands.setAutoPlanOnThreshold({ eventId: 'evt-1', autoPlanOnThreshold: true });
+  assert.equal(api.put.calls[0][0], '/events/evt-1/auto-plan');
+  assert.deepEqual(api.put.calls[0][1], { commandId: 'cmd-1', autoPlanOnThreshold: true });
+});

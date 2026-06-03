@@ -1,11 +1,13 @@
-// Real-event detail screen (read-only in slice 2).
+// Real-event detail screen.
 //
-// Reads the full event list and shows the single matching event. Action
-// buttons (interest / confirm / suggestions) land in later slices. The
-// detail page for mock prototype events still lives at #detail/:id —
-// this one is at #event/:id so the two coexist until the mock catalog
-// is removed in slice 8.
+// Reads the events list and shows the single matching event. Renders:
+//   - Lifecycle pill (uses effectiveState, which factors in workshop time)
+//   - Interaction buttons (interested / confirmed / withdraw) — hidden
+//     once the event is cancelled or over
+//   - Organizer controls (schedule / cancel / auto-plan toggle) — only
+//     shown to the organizer, with affordances appropriate to state
 
+import * as store from '../store.js';
 import { commands } from '../services.js';
 import { navigate, showToast } from '../app.js';
 import { handleInteraction } from './interaction-handlers.js';
@@ -41,14 +43,18 @@ export async function renderEventDetail(eventId) {
     return;
   }
 
+  const me = store.getActiveUser();
+  const iAmOrganizer = me && me.id === event.organizerId;
   const start = formatDateRange(event.startTime, event.endTime);
-  const lifecycleLabel = LIFECYCLE_LABELS[event.lifecycleState] || event.lifecycleState;
+  const effective = event.effectiveState || event.lifecycleState;
+  const lifecycleLabel = LIFECYCLE_LABELS[effective] || effective;
   const sourceLabel = SOURCE_LABELS[event.source] || event.source;
+  const showInteractionButtons = effective !== 'cancelled' && effective !== 'over';
 
   container.querySelector('.profile-body').innerHTML = `
     <div class="event-card-large">
       <div class="event-card-meta">
-        <span class="event-state event-state-${event.lifecycleState}">${escapeHtml(lifecycleLabel)}</span>
+        <span class="event-state event-state-${effective}">${escapeHtml(lifecycleLabel)}</span>
         <span class="event-source">${escapeHtml(sourceLabel)}</span>
       </div>
       <h2 class="event-title">${escapeHtml(event.title)}</h2>
@@ -73,6 +79,12 @@ export async function renderEventDetail(eventId) {
           <span class="event-fact-value">${event.minimumAttendance} people (including the organizer)</span>
         </div>
         ` : ''}
+        ${event.lifecycleState === 'cancelled' && event.cancellationReason ? `
+        <div class="event-fact">
+          <span class="event-fact-label">Cancelled because</span>
+          <span class="event-fact-value">${escapeHtml(event.cancellationReason)}</span>
+        </div>
+        ` : ''}
       </div>
 
       <div class="event-counts">
@@ -80,13 +92,22 @@ export async function renderEventDetail(eventId) {
         <span class="event-count"><strong>${event.confirmedCount ?? 0}</strong> confirmed</span>
       </div>
 
-      <div class="event-actions" id="eventActions">
-        ${renderInteractionButtons(event.myLevel)}
-      </div>
+      ${showInteractionButtons ? `
+        <div class="event-actions" id="eventActions">
+          ${renderInteractionButtons(event.myLevel)}
+        </div>
+      ` : ''}
+
+      ${iAmOrganizer ? renderOrganizerControls(event) : ''}
     </div>
   `;
 
-  bindInteractionButtons(container, event.eventId, event.myLevel);
+  if (showInteractionButtons) {
+    bindInteractionButtons(container, event.eventId, event.myLevel);
+  }
+  if (iAmOrganizer) {
+    bindOrganizerControls(container, event);
+  }
 }
 
 function renderInteractionButtons(myLevel) {
@@ -112,6 +133,36 @@ function renderInteractionButtons(myLevel) {
     <div class="event-action-row">
       <button class="btn-secondary" data-action="interested">I'm interested</button>
       <button class="btn-primary" data-action="confirmed">I'll be there</button>
+    </div>
+  `;
+}
+
+function renderOrganizerControls(event) {
+  const effective = event.effectiveState || event.lifecycleState;
+  if (effective === 'cancelled' || effective === 'over') return '';
+
+  const min = event.minimumAttendance ?? 3;
+  // The organizer counts as implicit +1 (they proposed it). Threshold met
+  // when confirmedCount + 1 >= min.
+  const reached = (event.confirmedCount ?? 0) + 1 >= min;
+  const stored = event.lifecycleState;
+
+  return `
+    <div class="event-organizer-controls">
+      <div class="organizer-controls-label">Your event</div>
+      ${stored === 'proposed' ? `
+        ${reached ? `
+          <p class="organizer-threshold-met">✨ Threshold reached. ${event.autoPlanOnThreshold ? 'Auto-plan should have triggered — refresh to see it.' : 'Confirm this is happening when you\'re ready.'}</p>
+        ` : ''}
+        <button class="btn-primary" data-organizer-action="schedule">
+          ${reached ? 'Confirm this is happening' : 'It\'s on — confirm now'}
+        </button>
+        <label class="organizer-toggle">
+          <input type="checkbox" id="autoPlanToggle" ${event.autoPlanOnThreshold ? 'checked' : ''}>
+          <span>Auto-confirm once ${min} are in (including you)</span>
+        </label>
+      ` : ''}
+      <button class="btn-outline-rust" data-organizer-action="cancel">Cancel this event</button>
     </div>
   `;
 }
@@ -143,6 +194,83 @@ function bindInteractionButtons(container, eventId, currentLevel) {
         btn.textContent = originalText;
       }
     });
+  });
+}
+
+function bindOrganizerControls(container, event) {
+  const schedule = container.querySelector('[data-organizer-action="schedule"]');
+  if (schedule) {
+    schedule.addEventListener('click', async () => {
+      const original = schedule.textContent;
+      schedule.disabled = true;
+      schedule.textContent = 'Saving…';
+      try {
+        await commands.scheduleEvent({ eventId: event.eventId });
+        showToast("It's on! 🌿");
+        renderEventDetail(event.eventId);
+      } catch (err) {
+        showToast(err?.message || 'Could not confirm. Try again.');
+        schedule.disabled = false;
+        schedule.textContent = original;
+      }
+    });
+  }
+
+  const cancelBtn = container.querySelector('[data-organizer-action="cancel"]');
+  if (cancelBtn) {
+    cancelBtn.addEventListener('click', () => {
+      promptCancel(container, event);
+    });
+  }
+
+  const auto = container.querySelector('#autoPlanToggle');
+  if (auto) {
+    auto.addEventListener('change', async (e) => {
+      const next = e.target.checked;
+      auto.disabled = true;
+      try {
+        await commands.setAutoPlanOnThreshold({
+          eventId: event.eventId, autoPlanOnThreshold: next,
+        });
+        renderEventDetail(event.eventId);
+      } catch (err) {
+        showToast(err?.message || 'Could not save that.');
+        e.target.checked = !next;
+      } finally {
+        auto.disabled = false;
+      }
+    });
+  }
+}
+
+function promptCancel(container, event) {
+  // In-place prompt: text field + confirm/back.
+  const controls = container.querySelector('.event-organizer-controls');
+  if (!controls) return;
+  controls.innerHTML = `
+    <div class="organizer-controls-label">Cancel this event?</div>
+    <p class="profile-danger-warning">Anyone interested or confirmed will see this event marked as cancelled. There's no undo.</p>
+    <label class="profile-field-label" for="cancelReason">Reason (optional)</label>
+    <input class="profile-field-input" id="cancelReason" maxlength="200"
+           placeholder="e.g. Not enough interest this time">
+    <div class="event-action-row" style="margin-top:12px;">
+      <button class="btn-secondary" id="cancelAbort">Never mind</button>
+      <button class="btn-outline-rust" id="cancelConfirm">Yes, cancel</button>
+    </div>
+  `;
+  document.getElementById('cancelAbort').addEventListener('click', () => renderEventDetail(event.eventId));
+  document.getElementById('cancelConfirm').addEventListener('click', async (e) => {
+    const reason = document.getElementById('cancelReason').value;
+    e.currentTarget.disabled = true;
+    e.currentTarget.textContent = 'Cancelling…';
+    try {
+      await commands.cancelEvent({ eventId: event.eventId, reason });
+      showToast('Cancelled.');
+      renderEventDetail(event.eventId);
+    } catch (err) {
+      showToast(err?.message || 'Could not cancel.');
+      renderEventDetail(event.eventId);
+    }
   });
 }
 

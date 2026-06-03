@@ -97,8 +97,9 @@ export async function renderFeed() {
 function renderCard(event) {
   const cardStyle = getAltSelection('feed-card-style');
   const cardClass = cardStyle === 'accent-left' ? 'accent-left' : cardStyle === 'no-accent' ? 'no-accent' : '';
-  const lifecycleLabel = LIFECYCLE_LABELS[event.lifecycleState] || event.lifecycleState;
-  const accent = ACCENT_FOR_LIFECYCLE[event.lifecycleState] || 'sage';
+  const effective = event.effectiveState || event.lifecycleState;
+  const lifecycleLabel = LIFECYCLE_LABELS[effective] || effective;
+  const accent = ACCENT_FOR_LIFECYCLE[effective] || 'sage';
   const when = formatWhen(event.startTime);
 
   const accentHtml = `<div class="card-accent ${accent}"></div>`;

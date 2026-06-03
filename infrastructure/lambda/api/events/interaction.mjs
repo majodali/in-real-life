@@ -61,6 +61,9 @@ export function createSetInteractionHandler({ runner, client, eventsTable, inter
 
     const eventRow = await readEventRow(client, eventsTable, eventId);
     if (!eventRow) return reply(404, { error: 'event not found' });
+    if (eventRow.lifecycleState === 'cancelled') {
+      return reply(409, { error: 'event is cancelled' });
+    }
 
     const userId = claims.sub;
     const interactionRow = await readInteractionRow(client, interactionsTable, userId, eventId);
@@ -93,6 +96,46 @@ export function createSetInteractionHandler({ runner, client, eventsTable, inter
       events,
       result,
     });
+
+    // Auto-plan side effect: if the user just confirmed AND the event has
+    // opted into auto-plan AND threshold is reached (counting the organizer
+    // as implicit +1), emit EventScheduled on event#<eventId> in a separate
+    // command so it gets its own idempotency record.
+    //
+    // We re-read the event row so the confirmedCount reflects the projection
+    // we just wrote. If a concurrent caller already scheduled, the projection's
+    // conditional check will reject and we swallow the error.
+    if (!out.cached && level === 'confirmed' && eventRow.autoPlanOnThreshold) {
+      try {
+        const fresh = await readEventRow(client, eventsTable, eventId);
+        if (fresh && fresh.lifecycleState === 'proposed' && fresh.autoPlanOnThreshold) {
+          const reached = (fresh.confirmedCount ?? 0) + 1 >= (fresh.minimumAttendance ?? Infinity);
+          if (reached) {
+            await runner.runCommand({
+              commandId: `${commandId}-autoplan`,
+              aggregateId: `event#${eventId}`,
+              actorId: 'system#auto-plan',
+              events: [{
+                eventType: 'EventScheduled',
+                version: 1,
+                seq: fresh.seq + 1,
+                data: { eventId, scheduledBy: 'auto', autoTriggered: true },
+              }],
+              result: { eventId, lifecycleState: 'planned', autoTriggered: true },
+            }).catch((err) => {
+              // Concurrent autoplan or operator schedule won the race —
+              // their write succeeded, ours bounces. Either way the event
+              // is now planned and the user got their confirmation.
+              if (err?.name !== 'TransactionCanceledException') throw err;
+            });
+          }
+        }
+      } catch (err) {
+        // Auto-plan is best-effort. The user's interaction already succeeded;
+        // failing the auto-plan shouldn't undo that.
+        console.error('auto-plan side effect failed:', err);
+      }
+    }
 
     return reply(out.cached ? 200 : 201, out.result);
   };
