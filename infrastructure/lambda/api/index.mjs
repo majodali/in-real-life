@@ -80,6 +80,19 @@ import {
   createVoteSuggestionHandler,
   createRetractSuggestionVoteHandler,
 } from './events/suggestion.mjs';
+import {
+  projectPollCreated,
+  projectPollClosed,
+  projectPollVoteCast,
+  projectPollVoteRetracted,
+} from './events/poll-projections.mjs';
+import {
+  createMakePollHandler,
+  createListPollsHandler,
+  createClosePollHandler,
+  createCastPollVoteHandler,
+  createRetractPollVoteHandler,
+} from './events/poll.mjs';
 import { ulid } from './lib/ulid.mjs';
 
 const stage = process.env.STAGE || 'workshop';
@@ -95,6 +108,8 @@ const tables = {
   interactionsTable: process.env.INTERACTIONS_TABLE,
   suggestionsTable: process.env.SUGGESTIONS_TABLE,
   suggestionVotesTable: process.env.SUGGESTION_VOTES_TABLE,
+  pollsTable: process.env.POLLS_TABLE,
+  pollVotesTable: process.env.POLL_VOTES_TABLE,
   configTable: process.env.CONFIG_TABLE,
 };
 
@@ -133,6 +148,10 @@ const projector = createProjector({
     SuggestionResponded: projectSuggestionResponded,
     SuggestionVoteExpressed: projectSuggestionVoteExpressed,
     SuggestionVoteRetracted: projectSuggestionVoteRetracted,
+    PollCreated: projectPollCreated,
+    PollClosed: projectPollClosed,
+    PollVoteCast: projectPollVoteCast,
+    PollVoteRetracted: projectPollVoteRetracted,
   },
   tables,
 });
@@ -228,6 +247,29 @@ const retractSuggestionVoteHandler = createRetractSuggestionVoteHandler({
   runner, client,
   suggestionVotesTable: tables.suggestionVotesTable,
 });
+const makePollHandler = createMakePollHandler({
+  runner, client, makeId: ulid,
+  eventsTable: tables.eventsTable, pollsTable: tables.pollsTable,
+});
+const listPollsHandler = createListPollsHandler({
+  client,
+  pollsTable: tables.pollsTable,
+  pollVotesTable: tables.pollVotesTable,
+});
+const closePollHandler = createClosePollHandler({
+  runner, client,
+  eventsTable: tables.eventsTable, pollsTable: tables.pollsTable,
+});
+const castPollVoteHandler = createCastPollVoteHandler({
+  runner, client,
+  eventsTable: tables.eventsTable,
+  pollsTable: tables.pollsTable,
+  pollVotesTable: tables.pollVotesTable,
+});
+const retractPollVoteHandler = createRetractPollVoteHandler({
+  runner, client,
+  pollVotesTable: tables.pollVotesTable,
+});
 
 const router = createRouter();
 
@@ -277,6 +319,12 @@ router.add('PUT', '/events/:eventId/suggestions/:suggestionId/status', setSugges
 router.add('PUT', '/events/:eventId/suggestions/:suggestionId/response', setSuggestionResponseHandler);
 router.add('PUT', '/events/:eventId/suggestions/:suggestionId/vote', voteSuggestionHandler);
 router.add('DELETE', '/events/:eventId/suggestions/:suggestionId/vote', retractSuggestionVoteHandler);
+
+router.add('POST', '/events/:eventId/polls', makePollHandler);
+router.add('GET', '/events/:eventId/polls', listPollsHandler);
+router.add('PUT', '/events/:eventId/polls/:pollId/close', closePollHandler);
+router.add('PUT', '/events/:eventId/polls/:pollId/vote', castPollVoteHandler);
+router.add('DELETE', '/events/:eventId/polls/:pollId/vote', retractPollVoteHandler);
 
 // Workshop-only routes are registered conditionally so they don't exist
 // on the production Lambda's route table.

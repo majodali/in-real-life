@@ -1677,6 +1677,107 @@ html, body {
 .suggest-link:active { color: var(--earth); }
 .suggest-link-warn { color: var(--rust); }
 
+/* Polls section */
+
+.poll-new-details {
+  margin-bottom: 12px;
+  background: var(--cream); border-radius: 10px;
+  padding: 8px 12px;
+}
+
+.poll-new-summary {
+  cursor: pointer; font-size: 12px;
+  color: var(--moss); padding: 4px 0;
+  list-style: none;
+}
+
+.poll-new-summary::-webkit-details-marker { display: none; }
+
+.poll-form {
+  margin-top: 10px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+
+.poll-options {
+  display: flex; flex-direction: column; gap: 6px;
+}
+
+.poll-option-input {
+  font-size: 13px; padding: 8px 10px;
+}
+
+.poll-form-actions {
+  display: flex; justify-content: space-between; align-items: center;
+}
+
+.polls-list {
+  display: flex; flex-direction: column; gap: 12px;
+}
+
+.poll-card {
+  background: var(--cream); border-radius: 12px; padding: 12px;
+}
+
+.poll-question {
+  font-size: 14px; font-weight: 500; color: var(--text);
+  margin-bottom: 4px;
+}
+
+.poll-meta {
+  font-size: 11px; color: var(--soft); margin-bottom: 10px;
+}
+
+.poll-options-list {
+  display: flex; flex-direction: column; gap: 6px;
+}
+
+.poll-option {
+  position: relative; overflow: hidden;
+  background: white; border: 1px solid var(--warm);
+  border-radius: 10px; padding: 10px 12px;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer; transition: border-color 0.15s;
+  text-align: left;
+}
+
+.poll-option:not(:disabled):active { transform: scale(0.99); }
+.poll-option:disabled { cursor: default; opacity: 0.85; }
+
+.poll-option-mine { border-color: var(--moss); }
+.poll-option-outcome {
+  border-color: var(--moss);
+  background: rgba(122, 158, 110, 0.10);
+}
+
+.poll-option-bar {
+  position: absolute; top: 0; left: 0; bottom: 0;
+  background: rgba(122, 158, 110, 0.15);
+  transition: width 0.25s ease;
+  z-index: 0;
+}
+
+.poll-option-content {
+  position: relative; z-index: 1;
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 12px;
+}
+
+.poll-option-label {
+  font-size: 13px; color: var(--text);
+}
+
+.poll-option-stats {
+  font-size: 11px; color: var(--soft); white-space: nowrap;
+}
+
+.poll-actions {
+  margin-top: 10px; padding-top: 10px;
+  border-top: 1px solid var(--warm);
+  display: flex; flex-wrap: wrap; gap: 12px;
+}
+
+.suggest-status-closed { background: var(--warm); color: var(--soft); }
+
 /* Feed card "you're in" badges */
 
 .card-mylevel {

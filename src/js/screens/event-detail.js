@@ -12,6 +12,7 @@ import { commands } from '../services.js';
 import { navigate, showToast } from '../app.js';
 import { handleInteraction } from './interaction-handlers.js';
 import { renderSuggestionsSection } from './event-suggestions.js';
+import { renderPollsSection } from './event-polls.js';
 
 export async function renderEventDetail(eventId) {
   const container = document.getElementById('screen-event');
@@ -103,6 +104,7 @@ export async function renderEventDetail(eventId) {
 
       ${event.lifecycleState === 'proposed' ? `
         <div class="event-suggestions" id="suggestionsSection"></div>
+        <div class="event-suggestions" id="pollsSection"></div>
       ` : ''}
     </div>
   `;
@@ -115,6 +117,9 @@ export async function renderEventDetail(eventId) {
   }
   if (event.lifecycleState === 'proposed') {
     renderSuggestionsSection(container, event, {
+      onChange: () => renderEventDetail(eventId),
+    });
+    renderPollsSection(container, event, {
       onChange: () => renderEventDetail(eventId),
     });
   }

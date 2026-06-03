@@ -234,6 +234,25 @@ export class IrlStack extends cdk.Stack {
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
 
+    // Organizer-created polls on a proposed event. Same shape as the
+    // suggestions table (pk eventId, sk pollId) so "all polls for event"
+    // is a single Query.
+    const pollsTable = new dynamodb.Table(this, 'PollsTable', {
+      tableName: `irl-polls-${stage}`,
+      partitionKey: { name: 'eventId', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'pollId', type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
+
+    const pollVotesTable = new dynamodb.Table(this, 'PollVotesTable', {
+      tableName: `irl-poll-votes-${stage}`,
+      partitionKey: { name: 'userId', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'pollId', type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
+
     const configTable = new dynamodb.Table(this, 'ConfigTable', {
       tableName: `irl-config-${stage}`,
       partitionKey: { name: 'configKey', type: dynamodb.AttributeType.STRING },
@@ -339,6 +358,8 @@ export class IrlStack extends cdk.Stack {
       INTERACTIONS_TABLE: interactionsTable.tableName,
       SUGGESTIONS_TABLE: suggestionsTable.tableName,
       SUGGESTION_VOTES_TABLE: suggestionVotesTable.tableName,
+      POLLS_TABLE: pollsTable.tableName,
+      POLL_VOTES_TABLE: pollVotesTable.tableName,
       CONFIG_TABLE: configTable.tableName,
       EVENTS_LOG_TABLE: eventsLogTable.tableName,
       COMMANDS_TABLE: commandsTable.tableName,
@@ -368,6 +389,8 @@ export class IrlStack extends cdk.Stack {
     interactionsTable.grantReadWriteData(apiFn);
     suggestionsTable.grantReadWriteData(apiFn);
     suggestionVotesTable.grantReadWriteData(apiFn);
+    pollsTable.grantReadWriteData(apiFn);
+    pollVotesTable.grantReadWriteData(apiFn);
     configTable.grantReadWriteData(apiFn);
     eventsLogTable.grantReadWriteData(apiFn);
     commandsTable.grantReadWriteData(apiFn);

@@ -199,6 +199,41 @@ export function createCommands({
     );
   }
 
+  // ─── Polls ───
+
+  async function makePoll({ eventId, question, options }) {
+    return await api.post(`/events/${encodeURIComponent(eventId)}/polls`, {
+      commandId: makeId(), question, options,
+    });
+  }
+
+  async function listPolls({ eventId }) {
+    return await api.get(`/events/${encodeURIComponent(eventId)}/polls`);
+  }
+
+  async function closePoll({ eventId, pollId, outcome }) {
+    const body = { commandId: makeId() };
+    if (outcome !== undefined && outcome !== null && outcome !== '') body.outcome = outcome;
+    return await api.put(
+      `/events/${encodeURIComponent(eventId)}/polls/${encodeURIComponent(pollId)}/close`,
+      body,
+    );
+  }
+
+  async function castPollVote({ eventId, pollId, optionId }) {
+    return await api.put(
+      `/events/${encodeURIComponent(eventId)}/polls/${encodeURIComponent(pollId)}/vote`,
+      { commandId: makeId(), optionId },
+    );
+  }
+
+  async function retractPollVote({ eventId, pollId }) {
+    return await api.delete(
+      `/events/${encodeURIComponent(eventId)}/polls/${encodeURIComponent(pollId)}/vote`,
+      { commandId: makeId() },
+    );
+  }
+
   async function requestNotify({ email, postalCode, country }) {
     const commandId = getOrMakeCommandId(NOTIFY_KEY);
     const body = { commandId, email, postalCode };
@@ -233,5 +268,10 @@ export function createCommands({
     setSuggestionResponse,
     voteOnSuggestion,
     retractSuggestionVote,
+    makePoll,
+    listPolls,
+    closePoll,
+    castPollVote,
+    retractPollVote,
   };
 }
