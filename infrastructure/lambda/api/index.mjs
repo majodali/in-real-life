@@ -63,6 +63,23 @@ import {
   createCancelEventHandler,
   createAutoPlanHandler,
 } from './events/lifecycle.mjs';
+import {
+  projectSuggestionMade,
+  projectSuggestionWithdrawn,
+  projectSuggestionAdopted,
+  projectSuggestionRejected,
+  projectSuggestionResponded,
+  projectSuggestionVoteExpressed,
+  projectSuggestionVoteRetracted,
+} from './events/suggestion-projections.mjs';
+import {
+  createMakeSuggestionHandler,
+  createListSuggestionsHandler,
+  createSetSuggestionStatusHandler,
+  createSetSuggestionResponseHandler,
+  createVoteSuggestionHandler,
+  createRetractSuggestionVoteHandler,
+} from './events/suggestion.mjs';
 import { ulid } from './lib/ulid.mjs';
 
 const stage = process.env.STAGE || 'workshop';
@@ -76,6 +93,8 @@ const tables = {
   usersTable: process.env.USERS_TABLE,
   eventsTable: process.env.EVENTS_TABLE,
   interactionsTable: process.env.INTERACTIONS_TABLE,
+  suggestionsTable: process.env.SUGGESTIONS_TABLE,
+  suggestionVotesTable: process.env.SUGGESTION_VOTES_TABLE,
   configTable: process.env.CONFIG_TABLE,
 };
 
@@ -107,6 +126,13 @@ const projector = createProjector({
     EventScheduled: projectEventScheduled,
     EventCancelled: projectEventCancelled,
     EventAutoPlanSettingChanged: projectEventAutoPlanSettingChanged,
+    SuggestionMade: projectSuggestionMade,
+    SuggestionWithdrawn: projectSuggestionWithdrawn,
+    SuggestionAdopted: projectSuggestionAdopted,
+    SuggestionRejected: projectSuggestionRejected,
+    SuggestionResponded: projectSuggestionResponded,
+    SuggestionVoteExpressed: projectSuggestionVoteExpressed,
+    SuggestionVoteRetracted: projectSuggestionVoteRetracted,
   },
   tables,
 });
@@ -175,6 +201,33 @@ const cancelEventHandler = createCancelEventHandler({
 const autoPlanHandler = createAutoPlanHandler({
   runner, client, eventsTable: tables.eventsTable,
 });
+const makeSuggestionHandler = createMakeSuggestionHandler({
+  runner, client, makeId: ulid,
+  eventsTable: tables.eventsTable, suggestionsTable: tables.suggestionsTable,
+});
+const listSuggestionsHandler = createListSuggestionsHandler({
+  client,
+  suggestionsTable: tables.suggestionsTable,
+  suggestionVotesTable: tables.suggestionVotesTable,
+});
+const setSuggestionStatusHandler = createSetSuggestionStatusHandler({
+  runner, client,
+  eventsTable: tables.eventsTable, suggestionsTable: tables.suggestionsTable,
+});
+const setSuggestionResponseHandler = createSetSuggestionResponseHandler({
+  runner, client,
+  eventsTable: tables.eventsTable, suggestionsTable: tables.suggestionsTable,
+});
+const voteSuggestionHandler = createVoteSuggestionHandler({
+  runner, client,
+  eventsTable: tables.eventsTable,
+  suggestionsTable: tables.suggestionsTable,
+  suggestionVotesTable: tables.suggestionVotesTable,
+});
+const retractSuggestionVoteHandler = createRetractSuggestionVoteHandler({
+  runner, client,
+  suggestionVotesTable: tables.suggestionVotesTable,
+});
 
 const router = createRouter();
 
@@ -217,6 +270,13 @@ router.add('DELETE', '/events/:eventId/interaction', withdrawInteractionHandler)
 router.add('PUT', '/events/:eventId/schedule', scheduleEventHandler);
 router.add('PUT', '/events/:eventId/cancel', cancelEventHandler);
 router.add('PUT', '/events/:eventId/auto-plan', autoPlanHandler);
+
+router.add('POST', '/events/:eventId/suggestions', makeSuggestionHandler);
+router.add('GET', '/events/:eventId/suggestions', listSuggestionsHandler);
+router.add('PUT', '/events/:eventId/suggestions/:suggestionId/status', setSuggestionStatusHandler);
+router.add('PUT', '/events/:eventId/suggestions/:suggestionId/response', setSuggestionResponseHandler);
+router.add('PUT', '/events/:eventId/suggestions/:suggestionId/vote', voteSuggestionHandler);
+router.add('DELETE', '/events/:eventId/suggestions/:suggestionId/vote', retractSuggestionVoteHandler);
 
 // Workshop-only routes are registered conditionally so they don't exist
 // on the production Lambda's route table.

@@ -211,6 +211,29 @@ export class IrlStack extends cdk.Stack {
       sortKey: { name: 'userId', type: dynamodb.AttributeType.STRING },
     });
 
+    // Suggestions on proposed events. eventId partition so all suggestions
+    // for a single event are one Query. suggestionId is a ULID so it sorts
+    // by creation time within the event.
+    const suggestionsTable = new dynamodb.Table(this, 'SuggestionsTable', {
+      tableName: `irl-suggestions-${stage}`,
+      partitionKey: { name: 'eventId', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'suggestionId', type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
+
+    // Per-user votes on suggestions. userId partition lets us fetch
+    // "what did I vote on?" for an event in one query — same shape as
+    // interactions so the frontend can merge myVote into the suggestion
+    // list without N+1.
+    const suggestionVotesTable = new dynamodb.Table(this, 'SuggestionVotesTable', {
+      tableName: `irl-suggestion-votes-${stage}`,
+      partitionKey: { name: 'userId', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'suggestionId', type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
+
     const configTable = new dynamodb.Table(this, 'ConfigTable', {
       tableName: `irl-config-${stage}`,
       partitionKey: { name: 'configKey', type: dynamodb.AttributeType.STRING },
@@ -314,6 +337,8 @@ export class IrlStack extends cdk.Stack {
       USERS_TABLE: usersTable.tableName,
       EVENTS_TABLE: eventsTable.tableName,
       INTERACTIONS_TABLE: interactionsTable.tableName,
+      SUGGESTIONS_TABLE: suggestionsTable.tableName,
+      SUGGESTION_VOTES_TABLE: suggestionVotesTable.tableName,
       CONFIG_TABLE: configTable.tableName,
       EVENTS_LOG_TABLE: eventsLogTable.tableName,
       COMMANDS_TABLE: commandsTable.tableName,
@@ -341,6 +366,8 @@ export class IrlStack extends cdk.Stack {
     usersTable.grantReadWriteData(apiFn);
     eventsTable.grantReadWriteData(apiFn);
     interactionsTable.grantReadWriteData(apiFn);
+    suggestionsTable.grantReadWriteData(apiFn);
+    suggestionVotesTable.grantReadWriteData(apiFn);
     configTable.grantReadWriteData(apiFn);
     eventsLogTable.grantReadWriteData(apiFn);
     commandsTable.grantReadWriteData(apiFn);

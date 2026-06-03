@@ -156,6 +156,49 @@ export function createCommands({
     });
   }
 
+  // ─── Suggestions ───
+  // Per-click commandId for every action — each press is a distinct intent.
+
+  async function makeSuggestion({ eventId, text, tags = [] }) {
+    return await api.post(`/events/${encodeURIComponent(eventId)}/suggestions`, {
+      commandId: makeId(), text, tags,
+    });
+  }
+
+  async function listSuggestions({ eventId }) {
+    return await api.get(`/events/${encodeURIComponent(eventId)}/suggestions`);
+  }
+
+  async function setSuggestionStatus({ eventId, suggestionId, status, reason }) {
+    const body = { commandId: makeId(), status };
+    if (reason !== undefined && reason !== '') body.reason = reason;
+    return await api.put(
+      `/events/${encodeURIComponent(eventId)}/suggestions/${encodeURIComponent(suggestionId)}/status`,
+      body,
+    );
+  }
+
+  async function setSuggestionResponse({ eventId, suggestionId, response }) {
+    return await api.put(
+      `/events/${encodeURIComponent(eventId)}/suggestions/${encodeURIComponent(suggestionId)}/response`,
+      { commandId: makeId(), response },
+    );
+  }
+
+  async function voteOnSuggestion({ eventId, suggestionId, vote }) {
+    return await api.put(
+      `/events/${encodeURIComponent(eventId)}/suggestions/${encodeURIComponent(suggestionId)}/vote`,
+      { commandId: makeId(), vote },
+    );
+  }
+
+  async function retractSuggestionVote({ eventId, suggestionId }) {
+    return await api.delete(
+      `/events/${encodeURIComponent(eventId)}/suggestions/${encodeURIComponent(suggestionId)}/vote`,
+      { commandId: makeId() },
+    );
+  }
+
   async function requestNotify({ email, postalCode, country }) {
     const commandId = getOrMakeCommandId(NOTIFY_KEY);
     const body = { commandId, email, postalCode };
@@ -184,5 +227,11 @@ export function createCommands({
     scheduleEvent,
     cancelEvent,
     setAutoPlanOnThreshold,
+    makeSuggestion,
+    listSuggestions,
+    setSuggestionStatus,
+    setSuggestionResponse,
+    voteOnSuggestion,
+    retractSuggestionVote,
   };
 }

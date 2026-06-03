@@ -11,6 +11,7 @@ import * as store from '../store.js';
 import { commands } from '../services.js';
 import { navigate, showToast } from '../app.js';
 import { handleInteraction } from './interaction-handlers.js';
+import { renderSuggestionsSection } from './event-suggestions.js';
 
 export async function renderEventDetail(eventId) {
   const container = document.getElementById('screen-event');
@@ -99,6 +100,10 @@ export async function renderEventDetail(eventId) {
       ` : ''}
 
       ${iAmOrganizer ? renderOrganizerControls(event) : ''}
+
+      ${event.lifecycleState === 'proposed' ? `
+        <div class="event-suggestions" id="suggestionsSection"></div>
+      ` : ''}
     </div>
   `;
 
@@ -107,6 +112,11 @@ export async function renderEventDetail(eventId) {
   }
   if (iAmOrganizer) {
     bindOrganizerControls(container, event);
+  }
+  if (event.lifecycleState === 'proposed') {
+    renderSuggestionsSection(container, event, {
+      onChange: () => renderEventDetail(eventId),
+    });
   }
 }
 
