@@ -1418,6 +1418,11 @@ html, body {
   color: var(--soft); padding: 4px 0;
 }
 
+.event-edited {
+  font-size: 10px; letter-spacing: 0.06em; text-transform: lowercase;
+  color: var(--soft); font-style: italic; padding: 4px 0;
+}
+
 .event-title {
   font-family: 'Playfair Display', serif; font-size: 22px;
   color: var(--earth); margin-bottom: 10px; line-height: 1.25;

@@ -156,6 +156,16 @@ export function createCommands({
     });
   }
 
+  async function editEvent({ eventId, title, description, startTime, endTime, location }) {
+    const body = { commandId: makeId() };
+    if (title !== undefined) body.title = title;
+    if (description !== undefined) body.description = description;
+    if (startTime !== undefined) body.startTime = startTime;
+    if (endTime !== undefined) body.endTime = endTime;
+    if (location !== undefined) body.location = location;
+    return await api.put(`/events/${encodeURIComponent(eventId)}`, body);
+  }
+
   // ─── Suggestions ───
   // Per-click commandId for every action — each press is a distinct intent.
 
@@ -262,6 +272,7 @@ export function createCommands({
     scheduleEvent,
     cancelEvent,
     setAutoPlanOnThreshold,
+    editEvent,
     makeSuggestion,
     listSuggestions,
     setSuggestionStatus,

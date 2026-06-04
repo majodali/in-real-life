@@ -12,6 +12,7 @@ import {
   createScheduleEventHandler,
   createCancelEventHandler,
   createAutoPlanHandler,
+  createEditEventHandler,
 } from './lifecycle.mjs';
 
 function spy(impl) {
@@ -32,7 +33,7 @@ const organizerClaims = { sub: 'organizer-1', email: 'org@example.test' };
 const otherClaims = { sub: 'other-1', email: 'other@example.test' };
 
 let runner, client, eventRow;
-let schedule, cancel, autoPlan;
+let schedule, cancel, autoPlan, edit;
 
 beforeEach(() => {
   eventRow = {
@@ -41,6 +42,9 @@ beforeEach(() => {
     organizerId: 'organizer-1',
     lifecycleState: 'proposed',
     autoPlanOnThreshold: false,
+    title: 'Original title',
+    location: 'Original location',
+    startTime: '2026-07-01T10:00:00Z',
   };
   client = {
     send: spy(async () => ({ Item: eventRow })),
@@ -51,6 +55,7 @@ beforeEach(() => {
   schedule = createScheduleEventHandler({ runner, client, eventsTable: 'irl-events-test' });
   cancel = createCancelEventHandler({ runner, client, eventsTable: 'irl-events-test' });
   autoPlan = createAutoPlanHandler({ runner, client, eventsTable: 'irl-events-test' });
+  edit = createEditEventHandler({ runner, client, eventsTable: 'irl-events-test' });
 });
 
 // ─── Schedule ───
@@ -189,4 +194,105 @@ test('auto-plan: 200 no-op if value already matches', async () => {
   }));
   assert.equal(res.statusCode, 200);
   assert.equal(runner.runCommand.calls.length, 0);
+});
+
+// ─── Edit ───
+
+test('edit: 401 when no claims', async () => {
+  const res = await edit(makeEvent({ body: { commandId: 'c', title: 'New' } }));
+  assert.equal(res.statusCode, 401);
+});
+
+test('edit: 403 when caller is not organizer', async () => {
+  const res = await edit(makeEvent({
+    claims: otherClaims, body: { commandId: 'c', title: 'New' },
+  }));
+  assert.equal(res.statusCode, 403);
+});
+
+test('edit: 404 when event row missing', async () => {
+  eventRow = null;
+  const res = await edit(makeEvent({
+    claims: organizerClaims, body: { commandId: 'c', title: 'New' },
+  }));
+  assert.equal(res.statusCode, 404);
+});
+
+test('edit: 409 when event is cancelled', async () => {
+  eventRow.lifecycleState = 'cancelled';
+  const res = await edit(makeEvent({
+    claims: organizerClaims, body: { commandId: 'c', title: 'New' },
+  }));
+  assert.equal(res.statusCode, 409);
+});
+
+test('edit: 400 when commandId missing', async () => {
+  const res = await edit(makeEvent({ claims: organizerClaims, body: { title: 'New' } }));
+  assert.equal(res.statusCode, 400);
+});
+
+test('edit: 400 when no editable field is provided', async () => {
+  const res = await edit(makeEvent({ claims: organizerClaims, body: { commandId: 'c' } }));
+  assert.equal(res.statusCode, 400);
+  assert.match(JSON.parse(res.body).error, /at least one/i);
+});
+
+test('edit: emits EventEdited with only the changed fields, seq=current+1', async () => {
+  const res = await edit(makeEvent({
+    claims: organizerClaims,
+    body: { commandId: 'c', title: 'New title', location: 'New venue' },
+  }));
+  assert.equal(res.statusCode, 201);
+
+  const [args] = runner.runCommand.calls[0];
+  assert.equal(args.aggregateId, 'event#evt-1');
+  assert.equal(args.events[0].eventType, 'EventEdited');
+  assert.equal(args.events[0].seq, 2);
+  assert.equal(args.events[0].data.editedBy, 'organizer-1');
+  assert.deepEqual(args.events[0].data.fields, {
+    title: 'New title',
+    location: 'New venue',
+  });
+});
+
+test('edit: works while planned (the common case)', async () => {
+  eventRow.lifecycleState = 'planned';
+  eventRow.seq = 2;
+  const res = await edit(makeEvent({
+    claims: organizerClaims, body: { commandId: 'c', title: 'New' },
+  }));
+  assert.equal(res.statusCode, 201);
+  assert.equal(runner.runCommand.calls[0][0].events[0].seq, 3);
+});
+
+test('edit: 400 when startTime is not a parseable ISO', async () => {
+  const res = await edit(makeEvent({
+    claims: organizerClaims, body: { commandId: 'c', startTime: 'not a date' },
+  }));
+  assert.equal(res.statusCode, 400);
+});
+
+test('edit: 400 when endTime <= startTime (merging with current row)', async () => {
+  // Current startTime is '2026-07-01T10:00:00Z'; new endTime earlier → 400.
+  const res = await edit(makeEvent({
+    claims: organizerClaims, body: { commandId: 'c', endTime: '2026-07-01T09:00:00Z' },
+  }));
+  assert.equal(res.statusCode, 400);
+});
+
+test('edit: 400 when title is blank', async () => {
+  const res = await edit(makeEvent({
+    claims: organizerClaims, body: { commandId: 'c', title: '   ' },
+  }));
+  assert.equal(res.statusCode, 400);
+});
+
+test('edit: trims string fields', async () => {
+  await edit(makeEvent({
+    claims: organizerClaims,
+    body: { commandId: 'c', title: '  New  ', location: '  Where  ' },
+  }));
+  const fields = runner.runCommand.calls[0][0].events[0].data.fields;
+  assert.equal(fields.title, 'New');
+  assert.equal(fields.location, 'Where');
 });

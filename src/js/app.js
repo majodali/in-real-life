@@ -15,6 +15,7 @@ import { renderLocation } from './screens/location.js';
 import { renderAdmin } from './screens/admin.js';
 import { renderPropose } from './screens/propose.js';
 import { renderEventDetail } from './screens/event-detail.js';
+import { renderEdit } from './screens/edit.js';
 
 const PUBLIC_SCREENS = new Set(['location', 'signup', 'confirm', 'signin', 'welcome', 'onboarding', 'locality']);
 
@@ -137,6 +138,15 @@ function route() {
       if (param) {
         showScreen('event');
         renderEventDetail(param);
+      } else {
+        navigate('feed');
+      }
+      break;
+
+    case 'edit':
+      if (param) {
+        showScreen('edit');
+        renderEdit(param);
       } else {
         navigate('feed');
       }

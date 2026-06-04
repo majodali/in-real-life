@@ -6,6 +6,7 @@ import {
   projectEventScheduled,
   projectEventCancelled,
   projectEventAutoPlanSettingChanged,
+  projectEventEdited,
 } from './lifecycle-projections.mjs';
 
 const tables = { eventsTable: 'irl-events-test' };
@@ -115,4 +116,63 @@ test('EventAutoPlanSettingChanged: requires current state proposed', () => {
   // the auto-plan flag stops mattering.
   const write = projectEventAutoPlanSettingChanged(autoPlanBase, tables);
   assert.match(write.Update.ConditionExpression, /lifecycleState = :proposed/);
+});
+
+// ─── EventEdited ───
+
+const editedBase = {
+  eventType: 'EventEdited',
+  version: 1,
+  seq: 2,
+  aggregateId: 'event#evt-1',
+  wallTime: '2026-06-03T10:00:00.000Z',
+  data: {
+    eventId: 'evt-1',
+    editedBy: 'organizer-1',
+    fields: {
+      title: 'Updated title',
+      location: 'New venue',
+    },
+  },
+};
+
+test('EventEdited: SETs only the provided fields + bumps seq + records editedAt', () => {
+  const write = projectEventEdited(editedBase, tables);
+  assert.ok(write.Update);
+  assert.match(write.Update.UpdateExpression, /#title = :title/);
+  assert.match(write.Update.UpdateExpression, /#location = :location/);
+  assert.match(write.Update.UpdateExpression, /lastEditedAt = :now/);
+  assert.match(write.Update.UpdateExpression, /#seq = :seq/);
+  // description / startTime / endTime not in this event → not in the SET
+  assert.equal(write.Update.UpdateExpression.includes('description'), false);
+  assert.equal(write.Update.UpdateExpression.includes('startTime'), false);
+  assert.equal(write.Update.ExpressionAttributeValues[':title'], 'Updated title');
+  assert.equal(write.Update.ExpressionAttributeValues[':location'], 'New venue');
+});
+
+test('EventEdited: condition on prior seq AND not cancelled', () => {
+  const write = projectEventEdited(editedBase, tables);
+  assert.match(write.Update.ConditionExpression, /#seq = :prevSeq/);
+  assert.match(write.Update.ConditionExpression, /lifecycleState <> :cancelled/);
+});
+
+test('EventEdited: supports all editable fields', () => {
+  const event = {
+    ...editedBase,
+    data: {
+      eventId: 'evt-1', editedBy: 'organizer-1',
+      fields: {
+        title: 'T', description: 'D',
+        startTime: '2026-07-01T10:00:00Z', endTime: '2026-07-01T11:00:00Z',
+        location: 'L',
+      },
+    },
+  };
+  const write = projectEventEdited(event, tables);
+  const v = write.Update.ExpressionAttributeValues;
+  assert.equal(v[':title'], 'T');
+  assert.equal(v[':description'], 'D');
+  assert.equal(v[':startTime'], '2026-07-01T10:00:00Z');
+  assert.equal(v[':endTime'], '2026-07-01T11:00:00Z');
+  assert.equal(v[':location'], 'L');
 });

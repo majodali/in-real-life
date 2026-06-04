@@ -166,12 +166,20 @@ test('POST: 404 when event missing', async () => {
   assert.equal(res.statusCode, 404);
 });
 
-test('POST: 409 when event is not proposed', async () => {
-  eventRow.lifecycleState = 'planned';
+test('POST: 409 when event is cancelled', async () => {
+  eventRow.lifecycleState = 'cancelled';
   const res = await makeMakeHandler()(makeEvent({
     claims: otherClaims, body: { commandId: 'c', text: 'hi' },
   }));
   assert.equal(res.statusCode, 409);
+});
+
+test('POST: still allowed once the event is planned', async () => {
+  eventRow.lifecycleState = 'planned';
+  const res = await makeMakeHandler()(makeEvent({
+    claims: otherClaims, body: { commandId: 'c', text: 'A change request' },
+  }));
+  assert.equal(res.statusCode, 201);
 });
 
 test('POST: emits SuggestionMade with text, tags, byUserId/Name, fresh suggestionId', async () => {

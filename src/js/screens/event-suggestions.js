@@ -28,13 +28,16 @@ export async function renderSuggestionsSection(container, event, { onChange } = 
     listError = err?.message || 'Could not load suggestions.';
   }
 
+  const isPlanned = event.lifecycleState === 'planned';
   anchor.innerHTML = `
     <div class="suggestions-header">
-      <div class="organizer-controls-label">Suggestions</div>
+      <div class="organizer-controls-label">${isPlanned ? 'Suggest a change' : 'Suggestions'}</div>
       <span class="suggestions-count">${suggestions.length}</span>
     </div>
     <p class="suggestions-hint">
-      Free-form. Tag time or place to help the organizer scan. Be brief.
+      ${isPlanned
+        ? 'It\'s planned, but if something would make it better — or you can\'t make it as-is — say so. Tag time or place if it applies.'
+        : 'Free-form. Tag time or place to help the organizer scan. Be brief.'}
     </p>
 
     <form id="suggestForm" class="suggest-form">

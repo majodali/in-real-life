@@ -1,4 +1,6 @@
-// Route handlers for the suggestion endpoints on a proposed event.
+// Route handlers for the suggestion endpoints on an event.
+// Suggestions are open through proposed AND planned (closed for cancelled,
+// hidden by the frontend once endTime passes — "over" is computed).
 //
 // See suggestion.test.mjs for the spec and docs/event-sourcing.md for
 // the aggregate model — suggestion#<suggestionId> for the suggestion's
@@ -11,6 +13,11 @@ const TEXT_MAX = 200;
 const RESPONSE_MAX = 200;
 const VALID_TAGS = new Set(['time', 'place']);
 const VALID_VOTES = new Set(['support', 'object']);
+// Suggestions are open through the malleable AND committed phases.
+// Once the event is cancelled or its time window is over the surface
+// closes — but "over" is computed at read time, so we only block
+// cancelled here. The frontend hides the section past endTime.
+const SUGGESTION_OPEN_STATES = new Set(['proposed', 'planned']);
 
 function reply(statusCode, body) {
   return {
@@ -84,8 +91,8 @@ export function createMakeSuggestionHandler({
 
     const eventRow = await readEventRow(client, eventsTable, eventId);
     if (!eventRow) return reply(404, { error: 'event not found' });
-    if (eventRow.lifecycleState !== 'proposed') {
-      return reply(409, { error: `suggestions only apply to proposed events (current: ${eventRow.lifecycleState})` });
+    if (!SUGGESTION_OPEN_STATES.has(eventRow.lifecycleState)) {
+      return reply(409, { error: `suggestions are closed (event is ${eventRow.lifecycleState})` });
     }
 
     const suggestionId = makeId();
@@ -204,8 +211,8 @@ export function createSetSuggestionStatusHandler({
 
     const eventRow = await readEventRow(client, eventsTable, eventId);
     if (!eventRow) return reply(404, { error: 'event not found' });
-    if (eventRow.lifecycleState !== 'proposed') {
-      return reply(409, { error: `suggestions only apply to proposed events` });
+    if (!SUGGESTION_OPEN_STATES.has(eventRow.lifecycleState)) {
+      return reply(409, { error: `suggestions are closed (event is ${eventRow.lifecycleState})` });
     }
 
     const suggestionRow = await readSuggestionRow(client, suggestionsTable, eventId, suggestionId);
@@ -324,7 +331,7 @@ export function createVoteSuggestionHandler({
 
     const eventRow = await readEventRow(client, eventsTable, eventId);
     if (!eventRow) return reply(404, { error: 'event not found' });
-    if (eventRow.lifecycleState !== 'proposed') {
+    if (!SUGGESTION_OPEN_STATES.has(eventRow.lifecycleState)) {
       return reply(409, { error: 'suggestions only apply to proposed events' });
     }
 

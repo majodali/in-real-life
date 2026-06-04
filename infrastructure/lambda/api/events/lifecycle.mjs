@@ -119,6 +119,81 @@ export function createCancelEventHandler({ runner, client, eventsTable }) {
   };
 }
 
+// Editable fields on an event. Sparse update — only the keys the
+// organizer touches make it into EventEdited.data.fields. All optional.
+const EDITABLE_FIELDS = ['title', 'description', 'startTime', 'endTime', 'location'];
+
+export function createEditEventHandler({ runner, client, eventsTable }) {
+  return async function handler(httpEvent) {
+    const ctx = await parseAndCheckOrganizer(httpEvent, client, eventsTable);
+    if (ctx.error) return ctx.error;
+    const { row, body, commandId, eventId } = ctx;
+
+    if (row.lifecycleState === 'cancelled') {
+      return reply(409, { error: 'event is cancelled' });
+    }
+
+    const fields = {};
+    for (const key of EDITABLE_FIELDS) {
+      if (Object.prototype.hasOwnProperty.call(body, key)) {
+        const v = body[key];
+        if (typeof v === 'string') fields[key] = v.trim();
+        else fields[key] = v;
+      }
+    }
+    if (Object.keys(fields).length === 0) {
+      return reply(400, { error: 'at least one editable field required (title, description, startTime, endTime, location)' });
+    }
+
+    // Per-field validation.
+    if ('title' in fields) {
+      if (typeof fields.title !== 'string' || fields.title.length === 0) {
+        return reply(400, { error: 'title must not be blank' });
+      }
+    }
+    if ('location' in fields) {
+      if (typeof fields.location !== 'string' || fields.location.length === 0) {
+        return reply(400, { error: 'location must not be blank' });
+      }
+    }
+    if ('startTime' in fields) {
+      if (Number.isNaN(new Date(fields.startTime).getTime())) {
+        return reply(400, { error: 'startTime is not a parseable ISO datetime' });
+      }
+    }
+    if ('endTime' in fields && fields.endTime != null) {
+      if (Number.isNaN(new Date(fields.endTime).getTime())) {
+        return reply(400, { error: 'endTime is not a parseable ISO datetime' });
+      }
+      const effectiveStart = 'startTime' in fields ? fields.startTime : row.startTime;
+      if (new Date(fields.endTime) <= new Date(effectiveStart)) {
+        return reply(400, { error: 'endTime must be after startTime' });
+      }
+    }
+
+    const events = [{
+      eventType: 'EventEdited',
+      version: 1,
+      seq: row.seq + 1,
+      data: {
+        eventId,
+        editedBy: ctx.claims.sub,
+        fields,
+      },
+    }];
+
+    const out = await runner.runCommand({
+      commandId,
+      aggregateId: `event#${eventId}`,
+      actorId: `user#${ctx.claims.sub}`,
+      events,
+      result: { eventId, fields },
+    });
+
+    return reply(out.cached ? 200 : 201, out.result);
+  };
+}
+
 export function createAutoPlanHandler({ runner, client, eventsTable }) {
   return async function handler(httpEvent) {
     const ctx = await parseAndCheckOrganizer(httpEvent, client, eventsTable);

@@ -51,6 +51,7 @@ import {
   projectEventScheduled,
   projectEventCancelled,
   projectEventAutoPlanSettingChanged,
+  projectEventEdited,
 } from './events/lifecycle-projections.mjs';
 import { createProposeEventHandler } from './events/propose.mjs';
 import { createListEventsHandler } from './events/list.mjs';
@@ -62,6 +63,7 @@ import {
   createScheduleEventHandler,
   createCancelEventHandler,
   createAutoPlanHandler,
+  createEditEventHandler,
 } from './events/lifecycle.mjs';
 import {
   projectSuggestionMade,
@@ -141,6 +143,7 @@ const projector = createProjector({
     EventScheduled: projectEventScheduled,
     EventCancelled: projectEventCancelled,
     EventAutoPlanSettingChanged: projectEventAutoPlanSettingChanged,
+    EventEdited: projectEventEdited,
     SuggestionMade: projectSuggestionMade,
     SuggestionWithdrawn: projectSuggestionWithdrawn,
     SuggestionAdopted: projectSuggestionAdopted,
@@ -218,6 +221,9 @@ const cancelEventHandler = createCancelEventHandler({
   runner, client, eventsTable: tables.eventsTable,
 });
 const autoPlanHandler = createAutoPlanHandler({
+  runner, client, eventsTable: tables.eventsTable,
+});
+const editEventHandler = createEditEventHandler({
   runner, client, eventsTable: tables.eventsTable,
 });
 const makeSuggestionHandler = createMakeSuggestionHandler({
@@ -312,6 +318,7 @@ router.add('DELETE', '/events/:eventId/interaction', withdrawInteractionHandler)
 router.add('PUT', '/events/:eventId/schedule', scheduleEventHandler);
 router.add('PUT', '/events/:eventId/cancel', cancelEventHandler);
 router.add('PUT', '/events/:eventId/auto-plan', autoPlanHandler);
+router.add('PUT', '/events/:eventId', editEventHandler);
 
 router.add('POST', '/events/:eventId/suggestions', makeSuggestionHandler);
 router.add('GET', '/events/:eventId/suggestions', listSuggestionsHandler);

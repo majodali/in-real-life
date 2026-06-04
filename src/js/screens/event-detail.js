@@ -58,6 +58,7 @@ export async function renderEventDetail(eventId) {
       <div class="event-card-meta">
         <span class="event-state event-state-${effective}">${escapeHtml(lifecycleLabel)}</span>
         <span class="event-source">${escapeHtml(sourceLabel)}</span>
+        ${event.lastEditedAt ? `<span class="event-edited" title="${escapeHtml(new Date(event.lastEditedAt).toLocaleString())}">edited</span>` : ''}
       </div>
       <h2 class="event-title">${escapeHtml(event.title)}</h2>
       ${event.description ? `<p class="event-description">${escapeHtml(event.description)}</p>` : ''}
@@ -102,8 +103,10 @@ export async function renderEventDetail(eventId) {
 
       ${iAmOrganizer ? renderOrganizerControls(event) : ''}
 
-      ${event.lifecycleState === 'proposed' ? `
+      ${event.lifecycleState === 'proposed' || event.lifecycleState === 'planned' ? `
         <div class="event-suggestions" id="suggestionsSection"></div>
+      ` : ''}
+      ${event.lifecycleState === 'proposed' ? `
         <div class="event-suggestions" id="pollsSection"></div>
       ` : ''}
     </div>
@@ -115,10 +118,12 @@ export async function renderEventDetail(eventId) {
   if (iAmOrganizer) {
     bindOrganizerControls(container, event);
   }
-  if (event.lifecycleState === 'proposed') {
+  if (event.lifecycleState === 'proposed' || event.lifecycleState === 'planned') {
     renderSuggestionsSection(container, event, {
       onChange: () => renderEventDetail(eventId),
     });
+  }
+  if (event.lifecycleState === 'proposed') {
     renderPollsSection(container, event, {
       onChange: () => renderEventDetail(eventId),
     });
@@ -177,6 +182,7 @@ function renderOrganizerControls(event) {
           <span>Auto-confirm once ${min} are in (including you)</span>
         </label>
       ` : ''}
+      <button class="btn-secondary" data-organizer-action="edit">Edit event</button>
       <button class="btn-outline-rust" data-organizer-action="cancel">Cancel this event</button>
     </div>
   `;
@@ -229,6 +235,11 @@ function bindOrganizerControls(container, event) {
         schedule.textContent = original;
       }
     });
+  }
+
+  const editBtn = container.querySelector('[data-organizer-action="edit"]');
+  if (editBtn) {
+    editBtn.addEventListener('click', () => navigate('edit', event.eventId));
   }
 
   const cancelBtn = container.querySelector('[data-organizer-action="cancel"]');

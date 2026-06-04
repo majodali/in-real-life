@@ -58,6 +58,41 @@ export function projectEventCancelled(event, tables) {
   };
 }
 
+// SET-only-what-changed update for the editable fields. Conditioned on
+// prior seq + lifecycleState <> cancelled. The handler is responsible for
+// rejecting edits on cancelled/over events; this projection guard catches
+// the cancelled case as a defence in depth.
+const EDITABLE_FIELDS = new Set(['title', 'description', 'startTime', 'endTime', 'location']);
+
+export function projectEventEdited(event, tables) {
+  const names = { '#seq': 'seq' };
+  const values = {
+    ':now': event.wallTime,
+    ':seq': event.seq,
+    ':prevSeq': event.seq - 1,
+    ':cancelled': 'cancelled',
+  };
+  const sets = ['lastEditedAt = :now', '#seq = :seq'];
+  for (const [field, value] of Object.entries(event.data.fields || {})) {
+    if (!EDITABLE_FIELDS.has(field)) continue;
+    const nameKey = `#${field}`;
+    const valueKey = `:${field}`;
+    names[nameKey] = field;
+    values[valueKey] = value;
+    sets.push(`${nameKey} = ${valueKey}`);
+  }
+  return {
+    Update: {
+      TableName: tables.eventsTable,
+      Key: { eventId: event.data.eventId },
+      UpdateExpression: `SET ${sets.join(', ')}`,
+      ConditionExpression: '#seq = :prevSeq AND lifecycleState <> :cancelled',
+      ExpressionAttributeNames: names,
+      ExpressionAttributeValues: values,
+    },
+  };
+}
+
 export function projectEventAutoPlanSettingChanged(event, tables) {
   return {
     Update: {
