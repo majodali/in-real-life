@@ -121,10 +121,12 @@ test('passes through the full event row shape', async () => {
   handler = createListEventsHandler({ client, eventsTable: 't' });
   const response = await handler(makeEvent({ claims: validClaims }));
   const body = JSON.parse(response.body);
-  // myLevel always present (null when no interaction). effectiveState
-  // derived from lifecycleState; for an event whose row has lifecycleState
-  // 'proposed' the effective state is the same.
-  assert.deepEqual(body.events[0], { ...row, myLevel: null, effectiveState: 'proposed' });
+  // myLevel + myDebrief always present (null when no interaction).
+  // effectiveState derived from lifecycleState; for an event whose row has
+  // lifecycleState 'proposed' the effective state is the same.
+  assert.deepEqual(body.events[0], {
+    ...row, myLevel: null, myDebrief: null, effectiveState: 'proposed',
+  });
 });
 
 // ─── myLevel merge ───

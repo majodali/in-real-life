@@ -103,6 +103,9 @@ export async function renderEventDetail(eventId) {
 
       ${iAmOrganizer ? renderOrganizerControls(event) : ''}
 
+      ${effective === 'over' && event.myLevel === 'confirmed' ? renderDebriefSection(event) : ''}
+      ${event.myDebrief && effective === 'over' ? renderMyDebrief(event) : ''}
+
       ${event.lifecycleState === 'proposed' || event.lifecycleState === 'planned' ? `
         <div class="event-suggestions" id="suggestionsSection"></div>
       ` : ''}
@@ -128,6 +131,81 @@ export async function renderEventDetail(eventId) {
       onChange: () => renderEventDetail(eventId),
     });
   }
+  if (effective === 'over' && event.myLevel === 'confirmed' && !event.myDebrief) {
+    bindDebriefForm(container, event);
+  }
+}
+
+function renderDebriefSection(event) {
+  if (event.myDebrief) return '';  // already debriefed — see renderMyDebrief
+  return `
+    <div class="event-debrief">
+      <div class="organizer-controls-label">How was it?</div>
+      <p class="suggestions-hint">A quick reflection — it shapes what we suggest you next.</p>
+      <form id="debriefForm" class="debrief-form">
+        <div class="debrief-rating" id="debriefRating">
+          ${[1, 2, 3, 4, 5].map((n) => `
+            <button type="button" class="debrief-star" data-rating="${n}">★</button>
+          `).join('')}
+        </div>
+        <textarea class="profile-field-input suggest-textarea" id="debriefNotes"
+                  rows="2" maxlength="500"
+                  placeholder="One line about how it went (optional)"></textarea>
+        <button type="submit" class="btn-primary" id="debriefSubmit">Save</button>
+      </form>
+    </div>
+  `;
+}
+
+function renderMyDebrief(event) {
+  const d = event.myDebrief;
+  const stars = '★'.repeat(d.rating) + '☆'.repeat(5 - d.rating);
+  return `
+    <div class="event-debrief event-debrief-done">
+      <div class="organizer-controls-label">Your reflection</div>
+      <div class="debrief-saved-row">
+        <span class="debrief-saved-stars">${stars}</span>
+        ${d.notes ? `<span class="debrief-saved-notes">${escapeHtml(d.notes)}</span>` : ''}
+      </div>
+    </div>
+  `;
+}
+
+function bindDebriefForm(container, event) {
+  const form = container.querySelector('#debriefForm');
+  if (!form) return;
+  let selected = 0;
+  const stars = form.querySelectorAll('[data-rating]');
+  stars.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      selected = Number(btn.dataset.rating);
+      stars.forEach((s) => {
+        s.classList.toggle('selected', Number(s.dataset.rating) <= selected);
+      });
+    });
+  });
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (selected < 1) {
+      showToast('Tap a star to rate.');
+      return;
+    }
+    const notes = container.querySelector('#debriefNotes').value.trim();
+    const submit = container.querySelector('#debriefSubmit');
+    submit.disabled = true;
+    submit.textContent = 'Saving…';
+    try {
+      await commands.submitDebrief({ eventId: event.eventId, rating: selected, notes });
+      showToast('Saved.');
+      renderEventDetail(event.eventId);
+    } catch (err) {
+      showToast(err?.message || 'Could not save.');
+    } finally {
+      submit.disabled = false;
+      submit.textContent = 'Save';
+    }
+  });
 }
 
 function renderInteractionButtons(myLevel) {

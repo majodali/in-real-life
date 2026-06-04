@@ -34,8 +34,9 @@ export function createListEventsHandler({ client, eventsTable, interactionsTable
     } while (ExclusiveStartKey);
 
     // Pull the caller's interactions in one query (partitioned by userId).
-    // Lets us merge per-event myLevel without an N+1 lookup.
+    // Lets us merge per-event myLevel + myDebrief without an N+1 lookup.
     const levelByEvent = new Map();
+    const debriefByEvent = new Map();
     if (interactionsTable) {
       let lastKey;
       do {
@@ -47,6 +48,7 @@ export function createListEventsHandler({ client, eventsTable, interactionsTable
         }));
         for (const row of out.Items ?? []) {
           levelByEvent.set(row.eventId, row.level);
+          if (row.debrief) debriefByEvent.set(row.eventId, row.debrief);
         }
         lastKey = out.LastEvaluatedKey;
       } while (lastKey);
@@ -67,6 +69,7 @@ export function createListEventsHandler({ client, eventsTable, interactionsTable
     const events = items.map((e) => ({
       ...e,
       myLevel: levelByEvent.get(e.eventId) ?? null,
+      myDebrief: debriefByEvent.get(e.eventId) ?? null,
       effectiveState: computeEffectiveState(e, nowIso),
     }));
 

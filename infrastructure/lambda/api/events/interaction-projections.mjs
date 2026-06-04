@@ -96,6 +96,27 @@ export function projectAttendanceConfirmed(event, tables) {
   return writes;
 }
 
+export function projectDebriefSubmitted(event, tables) {
+  const { userId, eventId, rating, notes } = event.data;
+  const debrief = { rating, submittedAt: event.wallTime };
+  if (notes !== undefined) debrief.notes = notes;
+  return [{
+    Update: {
+      TableName: tables.interactionsTable,
+      Key: { userId, eventId },
+      UpdateExpression: 'SET debrief = :debrief, #seq = :seq, updatedAt = :now',
+      ConditionExpression: '#seq = :prevSeq',
+      ExpressionAttributeNames: { '#seq': 'seq' },
+      ExpressionAttributeValues: {
+        ':debrief': debrief,
+        ':seq': event.seq,
+        ':prevSeq': event.seq - 1,
+        ':now': event.wallTime,
+      },
+    },
+  }];
+}
+
 export function projectAttendanceWithdrawn(event, tables) {
   const { userId, eventId, previousLevel } = event.data;
   const writes = [{

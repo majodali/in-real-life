@@ -8,46 +8,6 @@ const STORE_KEY = 'irl_alt_selections';
 const VOTES_KEY = 'irl_alt_votes';
 
 export const ALTERNATIVES = {
-  'feed-tabs': {
-    label: 'Tab labels',
-    screen: 'feed',
-    options: [
-      { id: 'a', label: 'Happening / Possible / Nearby', value: ['Happening', 'Possible', 'Nearby'] },
-      { id: 'b', label: 'This week / Forming / Around here', value: ['This week', 'Forming', 'Around here'] },
-      { id: 'c', label: 'Confirmed / Open / Explore', value: ['Confirmed', 'Open', 'Explore'] },
-    ],
-    default: 'a',
-  },
-  'feed-rsvp-btn': {
-    label: 'RSVP button text',
-    screen: 'feed',
-    options: [
-      { id: 'a', label: "I'm in", value: "I'm in" },
-      { id: 'b', label: 'Count me in', value: 'Count me in' },
-      { id: 'c', label: "I'll be there", value: "I'll be there" },
-    ],
-    default: 'a',
-  },
-  'detail-confirm-btn': {
-    label: 'Confirm button text',
-    screen: 'detail',
-    options: [
-      { id: 'a', label: 'Confirm & show up \u2192', value: 'Confirm & show up \u2192' },
-      { id: 'b', label: "I'll be there \u2192", value: "I'll be there \u2192" },
-      { id: 'c', label: 'Count me in \u2192', value: 'Count me in \u2192' },
-    ],
-    default: 'a',
-  },
-  'detail-privacy': {
-    label: 'Privacy note',
-    screen: 'detail',
-    options: [
-      { id: 'a', label: 'Show on page', value: 'inline' },
-      { id: 'b', label: 'Hide from page', value: 'hidden' },
-      { id: 'c', label: 'Show as tooltip', value: 'tooltip' },
-    ],
-    default: 'a',
-  },
   'feed-card-style': {
     label: 'Card accent style',
     screen: 'feed',

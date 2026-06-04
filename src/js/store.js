@@ -1,12 +1,13 @@
 // ─── localStorage wrapper for in·real·life ───
+//
+// User identity + profile cache only. The prototype's RSVP / confirmation
+// / attended / debrief layers used to live here too; those are now real
+// events on the backend (see GET /events myLevel + myDebrief) and the
+// local store no longer mirrors them.
 
 const KEYS = {
   users: 'irl_users',
   activeUser: 'irl_active_user',
-  rsvps: 'irl_rsvps',
-  confirmations: 'irl_confirmations',
-  attended: 'irl_attended',
-  debriefs: 'irl_debriefs',
 };
 
 function read(key, fallback = null) {
@@ -85,87 +86,12 @@ export function clearActiveUser() {
   localStorage.removeItem(KEYS.activeUser);
 }
 
-// ─── RSVPs ───
-
-export function getRsvps(userId) {
-  const all = read(KEYS.rsvps, {});
-  return all[userId] || [];
-}
-
-export function isRsvped(userId, eventId) {
-  return getRsvps(userId).includes(eventId);
-}
-
-export function toggleRsvp(userId, eventId) {
-  const all = read(KEYS.rsvps, {});
-  const list = all[userId] || [];
-  const idx = list.indexOf(eventId);
-  if (idx >= 0) {
-    list.splice(idx, 1);
-  } else {
-    list.push(eventId);
+// ─── Legacy cleanup ───
+//
+// Wipe the orphaned mock-era localStorage keys on next visit. One-time
+// cleanup; safe to leave running indefinitely (no-op once removed).
+try {
+  for (const key of ['irl_rsvps', 'irl_confirmations', 'irl_attended', 'irl_debriefs']) {
+    if (typeof localStorage !== 'undefined') localStorage.removeItem(key);
   }
-  all[userId] = list;
-  write(KEYS.rsvps, all);
-  return idx < 0; // true = now rsvped
-}
-
-// ─── Confirmations ───
-
-export function getConfirmations(userId) {
-  const all = read(KEYS.confirmations, {});
-  return all[userId] || [];
-}
-
-export function isConfirmed(userId, eventId) {
-  return getConfirmations(userId).includes(eventId);
-}
-
-export function confirmEvent(userId, eventId) {
-  const all = read(KEYS.confirmations, {});
-  const list = all[userId] || [];
-  if (!list.includes(eventId)) {
-    list.push(eventId);
-  }
-  all[userId] = list;
-  write(KEYS.confirmations, all);
-}
-
-// ─── Attended ───
-
-export function isAttended(userId, eventId) {
-  const all = read(KEYS.attended, {});
-  return (all[userId] || []).includes(eventId);
-}
-
-export function markAttended(userId, eventId) {
-  const all = read(KEYS.attended, {});
-  const list = all[userId] || [];
-  if (!list.includes(eventId)) {
-    list.push(eventId);
-  }
-  all[userId] = list;
-  write(KEYS.attended, all);
-}
-
-// ─── Debriefs ───
-
-export function getDebrief(userId, eventId) {
-  const all = read(KEYS.debriefs, {});
-  return all[userId]?.[eventId] || null;
-}
-
-export function hasDebriefed(userId, eventId) {
-  return !!getDebrief(userId, eventId);
-}
-
-export function saveDebrief(userId, eventId, debrief) {
-  const all = read(KEYS.debriefs, {});
-  if (!all[userId]) all[userId] = {};
-  all[userId][eventId] = {
-    ...debrief,
-    timestamp: new Date().toISOString(),
-  };
-  write(KEYS.debriefs, all);
-}
-
+} catch { /* ignore */ }

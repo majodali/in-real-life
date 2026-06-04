@@ -2,10 +2,8 @@
 
 import * as store from './store.js';
 import { renderFeed } from './screens/feed.js';
-import { renderDetail } from './screens/detail.js';
 import { renderOnboarding } from './screens/onboarding.js';
 import { renderProfile } from './screens/profile.js';
-import { renderDebrief } from './screens/debrief.js';
 import { renderSignup } from './screens/signup.js';
 import { renderConfirm } from './screens/confirm.js';
 import { renderSignin } from './screens/signin.js';
@@ -101,22 +99,10 @@ function route() {
       renderLocality();
       break;
 
+    // Legacy mock-event routes (#detail, #debrief) folded into #event.
     case 'detail':
-      if (param) {
-        showScreen('detail');
-        renderDetail(param);
-      } else {
-        navigate('feed');
-      }
-      break;
-
     case 'debrief':
-      if (param) {
-        showScreen('debrief');
-        renderDebrief(param);
-      } else {
-        navigate('feed');
-      }
+      if (param) navigate('event', param); else navigate('feed');
       break;
 
     case 'profile':

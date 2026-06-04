@@ -166,6 +166,12 @@ export function createCommands({
     return await api.put(`/events/${encodeURIComponent(eventId)}`, body);
   }
 
+  async function submitDebrief({ eventId, rating, notes }) {
+    const body = { commandId: makeId(), rating };
+    if (notes !== undefined && notes !== '') body.notes = notes;
+    return await api.post(`/events/${encodeURIComponent(eventId)}/debrief`, body);
+  }
+
   // ─── Suggestions ───
   // Per-click commandId for every action — each press is a distinct intent.
 
@@ -273,6 +279,7 @@ export function createCommands({
     cancelEvent,
     setAutoPlanOnThreshold,
     editEvent,
+    submitDebrief,
     makeSuggestion,
     listSuggestions,
     setSuggestionStatus,

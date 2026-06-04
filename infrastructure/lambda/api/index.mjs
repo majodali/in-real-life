@@ -46,6 +46,7 @@ import {
   projectInterestExpressed,
   projectAttendanceConfirmed,
   projectAttendanceWithdrawn,
+  projectDebriefSubmitted,
 } from './events/interaction-projections.mjs';
 import {
   projectEventScheduled,
@@ -58,6 +59,7 @@ import { createListEventsHandler } from './events/list.mjs';
 import {
   createSetInteractionHandler,
   createWithdrawInteractionHandler,
+  createSubmitDebriefHandler,
 } from './events/interaction.mjs';
 import {
   createScheduleEventHandler,
@@ -140,6 +142,7 @@ const projector = createProjector({
     InterestExpressed: projectInterestExpressed,
     AttendanceConfirmed: projectAttendanceConfirmed,
     AttendanceWithdrawn: projectAttendanceWithdrawn,
+    DebriefSubmitted: projectDebriefSubmitted,
     EventScheduled: projectEventScheduled,
     EventCancelled: projectEventCancelled,
     EventAutoPlanSettingChanged: projectEventAutoPlanSettingChanged,
@@ -213,6 +216,12 @@ const withdrawInteractionHandler = createWithdrawInteractionHandler({
   runner, client,
   eventsTable: tables.eventsTable,
   interactionsTable: tables.interactionsTable,
+});
+const submitDebriefHandler = createSubmitDebriefHandler({
+  runner, client,
+  eventsTable: tables.eventsTable,
+  interactionsTable: tables.interactionsTable,
+  getOffset: getWorkshopOffset,
 });
 const scheduleEventHandler = createScheduleEventHandler({
   runner, client, eventsTable: tables.eventsTable,
@@ -315,6 +324,7 @@ router.add('POST', '/events', proposeEventHandler);
 router.add('GET', '/events', listEventsHandler);
 router.add('PUT', '/events/:eventId/interaction', setInteractionHandler);
 router.add('DELETE', '/events/:eventId/interaction', withdrawInteractionHandler);
+router.add('POST', '/events/:eventId/debrief', submitDebriefHandler);
 router.add('PUT', '/events/:eventId/schedule', scheduleEventHandler);
 router.add('PUT', '/events/:eventId/cancel', cancelEventHandler);
 router.add('PUT', '/events/:eventId/auto-plan', autoPlanHandler);

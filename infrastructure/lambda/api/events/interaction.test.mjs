@@ -12,6 +12,7 @@ import assert from 'node:assert/strict';
 import {
   createSetInteractionHandler,
   createWithdrawInteractionHandler,
+  createSubmitDebriefHandler,
 } from './interaction.mjs';
 
 function spy(impl) {
@@ -274,4 +275,97 @@ test('auto-plan: if event is no longer proposed at fresh-read time, skip', async
     claims: validClaims, body: { commandId: 'cmd-1', level: 'confirmed' },
   }));
   assert.equal(runner.runCommand.calls.length, 1);
+});
+
+// ─── Debrief ───
+
+function debriefHandler() {
+  return createSubmitDebriefHandler({
+    runner, client,
+    eventsTable: 'irl-events-test',
+    interactionsTable: 'irl-interactions-test',
+    getOffset: async () => ({ offsetMs: 0 }),
+  });
+}
+
+function makeBody(extra = {}) {
+  return { commandId: 'cmd-1', rating: 4, ...extra };
+}
+
+test('debrief: 401 without auth', async () => {
+  const res = await debriefHandler()(makeEvent({ body: makeBody() }));
+  assert.equal(res.statusCode, 401);
+});
+
+test('debrief: 400 when rating missing', async () => {
+  const res = await debriefHandler()(makeEvent({
+    claims: validClaims, body: { commandId: 'c' },
+  }));
+  assert.equal(res.statusCode, 400);
+});
+
+test('debrief: 400 when rating not 1-5', async () => {
+  for (const r of [0, 6, 3.5, -1]) {
+    const res = await debriefHandler()(makeEvent({
+      claims: validClaims, body: makeBody({ rating: r }),
+    }));
+    assert.equal(res.statusCode, 400, `expected 400 for rating=${r}`);
+  }
+});
+
+test('debrief: 404 when event row is missing', async () => {
+  eventRow = null;
+  const res = await debriefHandler()(makeEvent({ claims: validClaims, body: makeBody() }));
+  assert.equal(res.statusCode, 404);
+});
+
+test('debrief: 409 when user is not confirmed for the event', async () => {
+  // Event over but user has no interaction row.
+  eventRow.lifecycleState = 'planned';
+  eventRow.endTime = '2026-01-01T00:00:00Z';
+  interactionRow = null;
+  const res = await debriefHandler()(makeEvent({ claims: validClaims, body: makeBody() }));
+  assert.equal(res.statusCode, 409);
+});
+
+test('debrief: 409 when event is not yet over', async () => {
+  eventRow.lifecycleState = 'planned';
+  eventRow.endTime = '2099-01-01T00:00:00Z';
+  interactionRow = { userId: 'user-a', eventId: 'evt-1', level: 'confirmed', seq: 1 };
+  const res = await debriefHandler()(makeEvent({ claims: validClaims, body: makeBody() }));
+  assert.equal(res.statusCode, 409);
+});
+
+test('debrief: 409 when event was cancelled', async () => {
+  eventRow.lifecycleState = 'cancelled';
+  interactionRow = { userId: 'user-a', eventId: 'evt-1', level: 'confirmed', seq: 1 };
+  const res = await debriefHandler()(makeEvent({ claims: validClaims, body: makeBody() }));
+  assert.equal(res.statusCode, 409);
+});
+
+test('debrief: emits DebriefSubmitted with seq=current+1 and rating + notes', async () => {
+  eventRow.lifecycleState = 'planned';
+  eventRow.endTime = '2026-01-01T00:00:00Z';
+  interactionRow = { userId: 'user-a', eventId: 'evt-1', level: 'confirmed', seq: 1 };
+  const res = await debriefHandler()(makeEvent({
+    claims: validClaims, body: makeBody({ rating: 5, notes: 'lovely' }),
+  }));
+  assert.equal(res.statusCode, 201);
+  const args = runner.runCommand.calls[0][0];
+  assert.equal(args.aggregateId, 'interaction#user-a#evt-1');
+  assert.equal(args.events[0].eventType, 'DebriefSubmitted');
+  assert.equal(args.events[0].seq, 2);
+  assert.equal(args.events[0].data.rating, 5);
+  assert.equal(args.events[0].data.notes, 'lovely');
+});
+
+test('debrief: notes is optional and capped at 500 chars', async () => {
+  eventRow.lifecycleState = 'planned';
+  eventRow.endTime = '2026-01-01T00:00:00Z';
+  interactionRow = { userId: 'user-a', eventId: 'evt-1', level: 'confirmed', seq: 1 };
+  await debriefHandler()(makeEvent({
+    claims: validClaims, body: makeBody({ notes: 'x'.repeat(1000) }),
+  }));
+  const data = runner.runCommand.calls[0][0].events[0].data;
+  assert.equal(data.notes.length, 500);
 });

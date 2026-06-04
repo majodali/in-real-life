@@ -15,6 +15,7 @@ import {
   projectInterestExpressed,
   projectAttendanceConfirmed,
   projectAttendanceWithdrawn,
+  projectDebriefSubmitted,
 } from './interaction-projections.mjs';
 
 const tables = { eventsTable: 'irl-events-test', interactionsTable: 'irl-interactions-test' };
@@ -160,4 +161,48 @@ test('AttendanceWithdrawn carries delete condition on matching seq', () => {
   const del = writes.find((w) => w.Delete);
   assert.match(del.Delete.ConditionExpression, /#seq = :prevSeq/);
   assert.equal(del.Delete.ExpressionAttributeValues[':prevSeq'], 1);
+});
+
+// ─── DebriefSubmitted ───
+
+const debriefBase = {
+  eventType: 'DebriefSubmitted',
+  version: 1,
+  seq: 3,
+  aggregateId: 'interaction#user-a#evt-1',
+  wallTime: '2026-06-05T10:00:00.000Z',
+  data: {
+    userId: 'user-a',
+    eventId: 'evt-1',
+    rating: 4,
+    notes: 'Nice walk, good chat.',
+  },
+};
+
+test('DebriefSubmitted: Updates interaction row with debrief object + seq', () => {
+  const writes = projectDebriefSubmitted(debriefBase, tables);
+  assert.equal(writes.length, 1);
+  const update = writes[0].Update;
+  assert.equal(update.TableName, 'irl-interactions-test');
+  assert.deepEqual(update.Key, { userId: 'user-a', eventId: 'evt-1' });
+  assert.match(update.UpdateExpression, /debrief = :debrief/);
+  assert.match(update.UpdateExpression, /#seq = :seq/);
+  const debrief = update.ExpressionAttributeValues[':debrief'];
+  assert.equal(debrief.rating, 4);
+  assert.equal(debrief.notes, 'Nice walk, good chat.');
+  assert.equal(debrief.submittedAt, '2026-06-05T10:00:00.000Z');
+});
+
+test('DebriefSubmitted: notes optional', () => {
+  const ev = { ...debriefBase, data: { ...debriefBase.data, notes: undefined } };
+  const writes = projectDebriefSubmitted(ev, tables);
+  const debrief = writes[0].Update.ExpressionAttributeValues[':debrief'];
+  assert.equal(debrief.rating, 4);
+  assert.equal(debrief.notes, undefined);
+});
+
+test('DebriefSubmitted: condition guards prior seq', () => {
+  const writes = projectDebriefSubmitted(debriefBase, tables);
+  assert.match(writes[0].Update.ConditionExpression, /#seq = :prevSeq/);
+  assert.equal(writes[0].Update.ExpressionAttributeValues[':prevSeq'], 2);
 });
