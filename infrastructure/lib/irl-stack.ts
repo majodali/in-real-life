@@ -116,11 +116,21 @@ export class IrlStack extends cdk.Stack {
         ),
       });
 
+      // Frontend deployment is split: CDK handles static assets (CSS,
+      // JS modules) but skips app.html — that file has __IRL_*__ runtime
+      // config placeholders that CDK can't substitute. Substitution +
+      // app.html upload + CloudFront invalidation live in
+      // infrastructure/scripts/inject-config.mjs. prune:false stops CDK
+      // from deleting the substituted app.html. retainOnDelete:true
+      // means we can later remove this resource without losing bucket
+      // contents.
       new s3deploy.BucketDeployment(this, 'DeploySite', {
-        sources: [s3deploy.Source.asset(path.join(__dirname, '../../src'))],
+        sources: [s3deploy.Source.asset(path.join(__dirname, '../../src'), {
+          exclude: ['app.html', '**/*.test.mjs'],
+        })],
         destinationBucket: siteBucket,
-        distribution,
-        distributionPaths: ['/*'],
+        prune: false,
+        retainOnDelete: true,
       });
 
       new cdk.CfnOutput(this, 'SiteUrl', {
