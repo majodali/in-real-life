@@ -20,20 +20,38 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const DOMAIN_NAME = 'in-real.life';
-const API_DOMAIN = `api.${DOMAIN_NAME}`;
-
-export type Stage = 'workshop' | 'test';
+// Stages drive feature-flag behaviour:
+//   'prod'      → mode=production in Lambda; workshop-only routes excluded
+//   'workshop'  → mode=workshop; time controls + admin scaffolding enabled
+//   'test'      → backend-only; same workshop scaffolding for functional tests
+// Stage names beyond these three (e.g. 'workshop-bainbridge') are treated as
+// workshop variants.
+export type Stage = string;
 
 export interface IrlStackProps extends cdk.StackProps {
   stage: Stage;
+  // Custom domain configuration. When set, the stack provisions a hosted
+  // zone, ACM certificate, CloudFront distribution, and an api.<apex>
+  // mapping for the HTTP API. Leave undefined for backend-only deployments
+  // (e.g. test) or environments that publish under the raw API Gateway URL.
+  domain?: {
+    apex: string;  // e.g. 'in-real.life' — site served from here, API at api.<apex>
+  };
+  // Deploy the static site bucket + CloudFront + DNS record. Defaults to
+  // true when domain is set, false otherwise. Useful to override when you
+  // want a backend-only stack that still has a custom API domain (rare).
+  deploySite?: boolean;
 }
 
 export class IrlStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: IrlStackProps) {
     super(scope, id, props);
-    const { stage } = props;
-    const isWorkshop = stage === 'workshop';
+    const { stage, domain } = props;
+    const deploySite = props.deploySite ?? domain !== undefined;
+    // "workshop scaffolding" = the workshop-time + admin-time-control routes.
+    // Test stacks include them too so functional tests can advance the clock.
+    const isWorkshop = stage !== 'prod';
+    const apiDomain = domain ? `api.${domain.apex}` : undefined;
 
     // ==========================================
     // Workshop-only: Route53 + ACM
@@ -42,23 +60,23 @@ export class IrlStack extends cdk.Stack {
     let hostedZone: route53.PublicHostedZone | undefined;
     let certificate: acm.Certificate | undefined;
 
-    if (isWorkshop) {
+    if (deploySite && domain) {
       hostedZone = new route53.PublicHostedZone(this, 'HostedZone', {
-        zoneName: DOMAIN_NAME,
+        zoneName: domain.apex,
       });
 
       certificate = new acm.Certificate(this, 'SiteCertificate', {
-        domainName: DOMAIN_NAME,
-        subjectAlternativeNames: [`*.${DOMAIN_NAME}`],
+        domainName: domain.apex,
+        subjectAlternativeNames: [`*.${domain.apex}`],
         validation: acm.CertificateValidation.fromDns(hostedZone),
       });
     }
 
     // ==========================================
-    // Workshop-only: static site (S3 + CloudFront)
+    // Static site (S3 + CloudFront) — gated by deploySite
     // ==========================================
 
-    if (isWorkshop) {
+    if (deploySite && domain) {
       const siteBucket = new s3.Bucket(this, 'SiteBucket', {
         bucketName: `irl-dev-${this.account}`,
         removalPolicy: cdk.RemovalPolicy.DESTROY,
@@ -79,7 +97,7 @@ export class IrlStack extends cdk.Stack {
           cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
         },
         defaultRootObject: 'index.html',
-        domainNames: [DOMAIN_NAME],
+        domainNames: [domain.apex],
         certificate: certificate!,
         errorResponses: [
           {
@@ -106,7 +124,7 @@ export class IrlStack extends cdk.Stack {
       });
 
       new cdk.CfnOutput(this, 'SiteUrl', {
-        value: `https://${DOMAIN_NAME}`,
+        value: `https://${domain.apex}`,
         description: 'Site URL',
       });
       new cdk.CfnOutput(this, 'CloudFrontUrl', {
@@ -128,12 +146,12 @@ export class IrlStack extends cdk.Stack {
     }
 
     // ==========================================
-    // Workshop-only: feedback bucket + Lambda
+    // Feedback bucket + Lambda — gated by deploySite (same scope as site)
     // ==========================================
 
     let feedbackBucket: s3.Bucket | undefined;
 
-    if (isWorkshop) {
+    if (deploySite) {
       feedbackBucket = new s3.Bucket(this, 'FeedbackBucket', {
         bucketName: `irl-feedback-${this.account}`,
         removalPolicy: cdk.RemovalPolicy.RETAIN,
@@ -465,13 +483,13 @@ export class IrlStack extends cdk.Stack {
     });
 
     // ==========================================
-    // Workshop-only: API custom domain (api.in-real.life)
+    // API custom domain (api.<apex>) — only when domain is configured
     // ==========================================
 
-    if (isWorkshop) {
+    if (apiDomain && certificate) {
       const apiDomainName = new apigwv2.DomainName(this, 'ApiDomain', {
-        domainName: API_DOMAIN,
-        certificate: certificate!,
+        domainName: apiDomain,
+        certificate,
       });
 
       new apigwv2.ApiMapping(this, 'ApiMapping', {
@@ -501,8 +519,8 @@ export class IrlStack extends cdk.Stack {
     });
 
     new cdk.CfnOutput(this, 'ApiUrl', {
-      value: isWorkshop ? `https://${API_DOMAIN}` : httpApi.apiEndpoint,
-      description: 'API URL (custom domain in workshop, raw API Gateway in test)',
+      value: apiDomain ? `https://${apiDomain}` : httpApi.apiEndpoint,
+      description: 'API URL (custom domain when configured, raw API Gateway otherwise)',
     });
 
     new cdk.CfnOutput(this, 'ApiGatewayUrl', {
