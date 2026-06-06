@@ -6,6 +6,23 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/styles.css">
 <title>in·real·life</title>
+
+<!--
+  Runtime configuration. The committed file contains placeholders; the
+  deploy tooling replaces this block with the values for whichever stack
+  is being deployed (from that stack's CDK outputs). For local dev, copy
+  this file to app.local.html and fill in real values from your stack.
+-->
+<script>
+  window.__IRL_CONFIG__ = {
+    apiBaseUrl: '__IRL_API_BASE_URL__',
+    cognitoRegion: '__IRL_COGNITO_REGION__',
+    cognitoUserPoolId: '__IRL_COGNITO_USER_POOL_ID__',
+    cognitoUserPoolClientId: '__IRL_COGNITO_USER_POOL_CLIENT_ID__',
+    feedbackUrl: '__IRL_FEEDBACK_URL__',
+  };
+</script>
+
 </head>
 <body>
 

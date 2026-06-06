@@ -17,43 +17,38 @@ This project is developed locally with normal tools (`Read`, `Edit`, `Write`, `B
 
 ### Editing the app
 
-The app is plain HTML/CSS/JS with ES modules — no build step. Edit files in `src/` directly. To preview locally:
+The app is plain HTML/CSS/JS with ES modules — no build step. Edit files in `src/` directly.
+
+To preview locally, copy `src/app.html` to `src/app.local.html` (gitignored) and replace the `__IRL_*__` placeholders in the `<script>` block at the top with real values from your stack. Then:
 
 ```bash
 cd src && python3 -m http.server 8000
-# open http://localhost:8000/
+# open http://localhost:8000/app.local.html
 ```
 
-### Deploying the static site
+### Deploying
 
-After editing files in `src/`, sync them to S3 and invalidate CloudFront:
+This repo is the public app source. Deployment is owned by the private ops repo (`in-real-life-ops`) which configures CDK context, runs `npx cdk deploy`, and invokes the runtime-config injection + S3 sync for each environment.
 
-```bash
-aws s3 sync src/ s3://irl-dev-656557768279/ --delete --exclude '*.test.mjs'
-aws cloudfront create-invalidation --distribution-id <DIST_ID> --paths "/*"
-```
-
-The `--exclude '*.test.mjs'` flag keeps colocated unit-test files (e.g. `js/auth.test.mjs`, `js/screens/auth-handlers.test.mjs`) from being published to the public bucket.
-
-The CloudFront distribution ID is in the CDK stack outputs (`DistributionId`). The `IrlStack` stack lives in **us-east-1**, so use `aws cloudformation describe-stacks --region us-east-1 --stack-name IrlStack ...` if your CLI default region is different.
-
-### Deploying infrastructure (CDK)
+For manual operator-driven deploys (until the deploy Lambda is in place):
 
 ```bash
+# Backend (CDK)
 cd infrastructure
 npm install        # first time only
-npx cdk deploy
+npx cdk deploy <stack>     # e.g. IrlStack, IrlStackTest
+
+# Frontend (substitute config, sync to S3, invalidate CloudFront)
+node infrastructure/scripts/inject-config.mjs <stack>
 ```
 
-The stack is defined in `infrastructure/lib/irl-stack.ts`. Region is `us-east-1`.
+`inject-config.mjs` reads CDK outputs from the named stack, replaces the `__IRL_*__` placeholders in `src/app.html`, writes to `dist/`, then syncs to the stack's bucket and invalidates the distribution. Use `--dry-run` to preview the substitution without uploading.
 
-## Infrastructure
+### Infrastructure
 
-- **S3 bucket**: `irl-dev-656557768279`
-- **Domain**: `https://in-real.life` (apex) — backend API at `https://api.in-real.life`
-- **CDK stack**: `IrlStack` in `infrastructure/`
-- **Region**: us-east-1
-- **Feedback Lambda**: writes JSON to `irl-feedback-656557768279` via Lambda function URL
+- **Stack construct**: `infrastructure/lib/irl-stack.ts` (parameterized by stage + optional domain)
+- **Default stacks**: `IrlStack` (workshop) and `IrlStackTest` (backend-only); both defined in `infrastructure/bin/app.ts`. Prod and named-workshop stacks are configured from the ops repo.
+- **Region**: `us-east-1`
 
 ## Design
 

@@ -3,3 +3,9 @@ infrastructure/cdk.out/
 .claude/
 .DS_Store
 *.log
+
+# Deploy-time substituted output of inject-config.mjs
+dist/
+
+# Local-only copy of app.html with real config values
+src/app.local.html

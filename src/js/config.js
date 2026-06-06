@@ -1,15 +1,30 @@
 // ─── App configuration ───
 //
-// Frontend is currently served from https://in-real.life and targets the
-// workshop stack. Values below come from the IrlStack CDK outputs. When we
-// deploy a separate prod stack, this file gets a per-environment build or
-// runtime config-loader.
+// Per-environment values come from a small inline <script> block in
+// app.html that sets window.__IRL_CONFIG__ before this module loads.
+// The deploy tooling (ops repo) generates that block from CDK outputs.
+//
+// For local development, copy app.html → app.local.html (or edit in
+// place if you don't mind not committing it) and paste the same inline
+// block with values pointing at whichever stack you're hitting. Defaults
+// below throw a loud error so a forgotten deploy step is obvious instead
+// of silently sending requests to ''.
 
-export const API_BASE_URL = 'https://api.in-real.life';
+const provided =
+  (typeof globalThis !== 'undefined' && globalThis.__IRL_CONFIG__) || null;
 
-export const COGNITO_REGION = 'us-east-1';
-export const COGNITO_USER_POOL_ID = 'us-east-1_qvoTBZvsh';
-export const COGNITO_USER_POOL_CLIENT_ID = '5mnkcdqqleb69sl83vqj2civhj';
+function required(key) {
+  if (!provided || !provided[key]) {
+    throw new Error(
+      `Missing runtime config "${key}". The deploy step did not inject ` +
+      `window.__IRL_CONFIG__ into app.html. See docs in the ops repo.`,
+    );
+  }
+  return provided[key];
+}
 
-// Feedback API endpoint (separate Lambda function URL — predates the API).
-export const FEEDBACK_URL = 'https://mkbdyhlfeojsi7b5xmmhyinzha0uibnc.lambda-url.us-east-1.on.aws/';
+export const API_BASE_URL = required('apiBaseUrl');
+export const COGNITO_REGION = provided?.cognitoRegion ?? 'us-east-1';
+export const COGNITO_USER_POOL_ID = required('cognitoUserPoolId');
+export const COGNITO_USER_POOL_CLIENT_ID = required('cognitoUserPoolClientId');
+export const FEEDBACK_URL = required('feedbackUrl');
