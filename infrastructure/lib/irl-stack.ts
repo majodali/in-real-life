@@ -116,17 +116,24 @@ export class IrlStack extends cdk.Stack {
         ),
       });
 
-      // Frontend deployment is split: CDK handles static assets (CSS,
-      // JS modules) but skips app.html — that file has __IRL_*__ runtime
-      // config placeholders that CDK can't substitute. Substitution +
-      // app.html upload + CloudFront invalidation live in
-      // infrastructure/scripts/inject-config.mjs. prune:false stops CDK
-      // from deleting the substituted app.html. retainOnDelete:true
-      // means we can later remove this resource without losing bucket
-      // contents.
+      // Frontend deployment is split. CDK handles static assets that
+      // don't depend on runtime config. inject-config.mjs owns the
+      // runtime-config pair:
+      //   - app.html: contains the inline window.__IRL_CONFIG__ block
+      //     with __IRL_*__ placeholders for substitution.
+      //   - js/config.js: reads window.__IRL_CONFIG__ at module-load
+      //     time and throws if it's missing.
+      // Both must travel together — if CDK pushed one without the
+      // other, the site would startup-crash. Excluding both here means
+      // `cdk deploy` is always safe to run on its own; inject-config.mjs
+      // is the only thing that touches the coupled pair.
+      // prune:false stops CDK from deleting files it doesn't know about
+      // (including app.html and config.js as uploaded by inject-config).
+      // retainOnDelete:true means we can later remove this resource
+      // without losing bucket contents.
       new s3deploy.BucketDeployment(this, 'DeploySite', {
         sources: [s3deploy.Source.asset(path.join(__dirname, '../../src'), {
-          exclude: ['app.html', '**/*.test.mjs'],
+          exclude: ['app.html', 'js/config.js', '**/*.test.mjs'],
         })],
         destinationBucket: siteBucket,
         prune: false,
