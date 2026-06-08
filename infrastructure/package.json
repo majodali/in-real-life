@@ -6,9 +6,9 @@
     "cdk": "cdk",
     "deploy": "cdk deploy --require-approval never",
     "destroy": "cdk destroy --force",
-    "test": "node --test lambda/api",
-    "test:functional": "node --test test/functional",
-    "test:all": "node --test lambda/api test/functional"
+    "test": "find lambda/api -name '*.test.mjs' -print0 | xargs -0 node --test",
+    "test:functional": "find test/functional -name '*.test.mjs' -print0 | xargs -0 node --test",
+    "test:all": "find lambda/api test/functional -name '*.test.mjs' -print0 | xargs -0 node --test"
   },
   "dependencies": {
     "aws-cdk-lib": "^2.170.0",
