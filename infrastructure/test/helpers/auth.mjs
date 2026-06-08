@@ -11,32 +11,30 @@ import {
   AdminSetUserPasswordCommand,
   AdminInitiateAuthCommand,
   AdminDeleteUserCommand,
-  AdminUpdateUserAttributesCommand,
 } from '@aws-sdk/client-cognito-identity-provider';
 
 const REGION = process.env.AWS_REGION || 'us-east-1';
 const cognito = new CognitoIdentityProviderClient({ region: REGION });
 
 export async function createTestUser({ userPoolId, userPoolClientId, email, password = 'TestPass1!', admin = false }) {
+  // Set custom:role at creation time rather than via a follow-up
+  // AdminUpdateUserAttributes call: the CI role is scoped to AdminCreateUser
+  // (among others) but not AdminUpdateUserAttributes, and custom:role is a
+  // mutable attribute that AdminCreateUser accepts directly.
+  const userAttributes = [
+    { Name: 'email', Value: email },
+    { Name: 'email_verified', Value: 'true' },
+  ];
+  if (admin) userAttributes.push({ Name: 'custom:role', Value: 'admin' });
+
   const create = await cognito.send(new AdminCreateUserCommand({
     UserPoolId: userPoolId,
     Username: email,
-    UserAttributes: [
-      { Name: 'email', Value: email },
-      { Name: 'email_verified', Value: 'true' },
-    ],
+    UserAttributes: userAttributes,
     MessageAction: 'SUPPRESS',
   }));
   const sub = create.User?.Attributes?.find((a) => a.Name === 'sub')?.Value;
   if (!sub) throw new Error('Cognito sub not returned from AdminCreateUser');
-
-  if (admin) {
-    await cognito.send(new AdminUpdateUserAttributesCommand({
-      UserPoolId: userPoolId,
-      Username: email,
-      UserAttributes: [{ Name: 'custom:role', Value: 'admin' }],
-    }));
-  }
 
   await cognito.send(new AdminSetUserPasswordCommand({
     UserPoolId: userPoolId,
