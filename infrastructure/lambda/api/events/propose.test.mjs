@@ -194,14 +194,40 @@ test('accepts source=external and source=platform', async () => {
   }
 });
 
-test('description and endTime are optional (omitted from data when absent)', async () => {
+test('description is optional (omitted from data when absent)', async () => {
   const body = { ...validBody };
   delete body.description;
-  delete body.endTime;
   await handler(makeEvent({ claims: validClaims, body }));
   const d = runner.runCommand.calls[0][0].events[0].data;
   assert.equal(d.description, undefined);
-  assert.equal(d.endTime, undefined);
+});
+
+test('400 when endTime is missing', async () => {
+  const { endTime, ...rest } = validBody;
+  const response = await handler(makeEvent({ claims: validClaims, body: rest }));
+  assert.equal(response.statusCode, 400);
+  assert.match(JSON.parse(response.body).error, /endTime/);
+});
+
+test('400 when endTime is not after startTime', async () => {
+  const body = { ...validBody, endTime: validBody.startTime };
+  const response = await handler(makeEvent({ claims: validClaims, body }));
+  assert.equal(response.statusCode, 400);
+  assert.match(JSON.parse(response.body).error, /endTime must be after startTime/);
+});
+
+test('timesApproximate defaults to false and is carried when true', async () => {
+  await handler(makeEvent({ claims: validClaims, body: validBody }));
+  assert.equal(runner.runCommand.calls[0][0].events[0].data.timesApproximate, false);
+
+  runner.runCommand.calls.length = 0;
+  await handler(makeEvent({ claims: validClaims, body: { ...validBody, timesApproximate: true } }));
+  assert.equal(runner.runCommand.calls[0][0].events[0].data.timesApproximate, true);
+});
+
+test('400 when timesApproximate is not a boolean', async () => {
+  const response = await handler(makeEvent({ claims: validClaims, body: { ...validBody, timesApproximate: 'yes' } }));
+  assert.equal(response.statusCode, 400);
 });
 
 test('minimumAttendance defaults to 3 when omitted', async () => {

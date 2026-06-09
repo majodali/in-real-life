@@ -1,23 +1,34 @@
 // Route handlers for the suggestion endpoints on an event.
-// Suggestions are open through proposed AND planned (closed for cancelled,
-// hidden by the frontend once endTime passes — "over" is computed).
+// Suggestions are open through the proposed AND planned phases. Once the
+// event is in-progress, over, or cancelled the surface closes — "in-progress"
+// and "over" are derived from the simulated clock (see lib/lifecycle-state),
+// so the gate computes the effective state rather than trusting the stored
+// lifecycleState column.
 //
 // See suggestion.test.mjs for the spec and docs/event-sourcing.md for
 // the aggregate model — suggestion#<suggestionId> for the suggestion's
 // lifecycle, suggestion-vote#<suggestionId>#<userId> per individual vote.
 
 import { GetCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
+import { computeEffectiveState, CHANGE_OPEN_STATES, simulatedNowIso } from '../lib/lifecycle-state.mjs';
 
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
 const TEXT_MAX = 200;
 const RESPONSE_MAX = 200;
 const VALID_TAGS = new Set(['time', 'place']);
 const VALID_VOTES = new Set(['support', 'object']);
-// Suggestions are open through the malleable AND committed phases.
-// Once the event is cancelled or its time window is over the surface
-// closes — but "over" is computed at read time, so we only block
-// cancelled here. The frontend hides the section past endTime.
-const SUGGESTION_OPEN_STATES = new Set(['proposed', 'planned']);
+
+// Resolve the event's effective state and 409 if it's no longer open to
+// suggestion activity. Returns the error reply (to be returned by the caller)
+// or null when the surface is open.
+async function suggestionGate(eventRow, getOffset) {
+  const offsetMs = getOffset ? (await getOffset()).offsetMs : 0;
+  const effective = computeEffectiveState(eventRow, simulatedNowIso(offsetMs));
+  if (!CHANGE_OPEN_STATES.has(effective)) {
+    return reply(409, { error: `suggestions are closed (event is ${effective})` });
+  }
+  return null;
+}
 
 function reply(statusCode, body) {
   return {
@@ -64,7 +75,7 @@ function parseBody(httpEvent) {
 // ─── POST /events/:id/suggestions ───
 
 export function createMakeSuggestionHandler({
-  runner, client, eventsTable, suggestionsTable, makeId,
+  runner, client, eventsTable, suggestionsTable, makeId, getOffset,
 }) {
   return async function handler(httpEvent) {
     const claims = httpEvent?.requestContext?.authorizer?.jwt?.claims;
@@ -91,9 +102,8 @@ export function createMakeSuggestionHandler({
 
     const eventRow = await readEventRow(client, eventsTable, eventId);
     if (!eventRow) return reply(404, { error: 'event not found' });
-    if (!SUGGESTION_OPEN_STATES.has(eventRow.lifecycleState)) {
-      return reply(409, { error: `suggestions are closed (event is ${eventRow.lifecycleState})` });
-    }
+    const closed = await suggestionGate(eventRow, getOffset);
+    if (closed) return closed;
 
     const suggestionId = makeId();
     const events = [{
@@ -182,7 +192,7 @@ export function createListSuggestionsHandler({
 // ─── PUT status ───
 
 export function createSetSuggestionStatusHandler({
-  runner, client, eventsTable, suggestionsTable,
+  runner, client, eventsTable, suggestionsTable, getOffset,
 }) {
   return async function handler(httpEvent) {
     const claims = httpEvent?.requestContext?.authorizer?.jwt?.claims;
@@ -211,9 +221,8 @@ export function createSetSuggestionStatusHandler({
 
     const eventRow = await readEventRow(client, eventsTable, eventId);
     if (!eventRow) return reply(404, { error: 'event not found' });
-    if (!SUGGESTION_OPEN_STATES.has(eventRow.lifecycleState)) {
-      return reply(409, { error: `suggestions are closed (event is ${eventRow.lifecycleState})` });
-    }
+    const closed = await suggestionGate(eventRow, getOffset);
+    if (closed) return closed;
 
     const suggestionRow = await readSuggestionRow(client, suggestionsTable, eventId, suggestionId);
     if (!suggestionRow) return reply(404, { error: 'suggestion not found' });
@@ -308,7 +317,7 @@ export function createSetSuggestionResponseHandler({
 // ─── PUT vote ───
 
 export function createVoteSuggestionHandler({
-  runner, client, eventsTable, suggestionsTable, suggestionVotesTable,
+  runner, client, eventsTable, suggestionsTable, suggestionVotesTable, getOffset,
 }) {
   return async function handler(httpEvent) {
     const claims = httpEvent?.requestContext?.authorizer?.jwt?.claims;
@@ -331,9 +340,8 @@ export function createVoteSuggestionHandler({
 
     const eventRow = await readEventRow(client, eventsTable, eventId);
     if (!eventRow) return reply(404, { error: 'event not found' });
-    if (!SUGGESTION_OPEN_STATES.has(eventRow.lifecycleState)) {
-      return reply(409, { error: 'suggestions only apply to proposed events' });
-    }
+    const closed = await suggestionGate(eventRow, getOffset);
+    if (closed) return closed;
 
     const suggestionRow = await readSuggestionRow(client, suggestionsTable, eventId, suggestionId);
     if (!suggestionRow) return reply(404, { error: 'suggestion not found' });

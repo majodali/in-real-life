@@ -211,6 +211,7 @@ const setInteractionHandler = createSetInteractionHandler({
   runner, client,
   eventsTable: tables.eventsTable,
   interactionsTable: tables.interactionsTable,
+  getOffset: getWorkshopOffset,
 });
 const withdrawInteractionHandler = createWithdrawInteractionHandler({
   runner, client,
@@ -228,16 +229,19 @@ const scheduleEventHandler = createScheduleEventHandler({
 });
 const cancelEventHandler = createCancelEventHandler({
   runner, client, eventsTable: tables.eventsTable,
+  getOffset: getWorkshopOffset,
 });
 const autoPlanHandler = createAutoPlanHandler({
   runner, client, eventsTable: tables.eventsTable,
 });
 const editEventHandler = createEditEventHandler({
   runner, client, eventsTable: tables.eventsTable,
+  getOffset: getWorkshopOffset,
 });
 const makeSuggestionHandler = createMakeSuggestionHandler({
   runner, client, makeId: ulid,
   eventsTable: tables.eventsTable, suggestionsTable: tables.suggestionsTable,
+  getOffset: getWorkshopOffset,
 });
 const listSuggestionsHandler = createListSuggestionsHandler({
   client,
@@ -247,6 +251,7 @@ const listSuggestionsHandler = createListSuggestionsHandler({
 const setSuggestionStatusHandler = createSetSuggestionStatusHandler({
   runner, client,
   eventsTable: tables.eventsTable, suggestionsTable: tables.suggestionsTable,
+  getOffset: getWorkshopOffset,
 });
 const setSuggestionResponseHandler = createSetSuggestionResponseHandler({
   runner, client,
@@ -257,6 +262,7 @@ const voteSuggestionHandler = createVoteSuggestionHandler({
   eventsTable: tables.eventsTable,
   suggestionsTable: tables.suggestionsTable,
   suggestionVotesTable: tables.suggestionVotesTable,
+  getOffset: getWorkshopOffset,
 });
 const retractSuggestionVoteHandler = createRetractSuggestionVoteHandler({
   runner, client,

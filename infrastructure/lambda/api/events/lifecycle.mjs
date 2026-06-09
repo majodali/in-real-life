@@ -7,6 +7,7 @@
 // caller, and emit one event on event#<eventId> with seq = current + 1.
 
 import { GetCommand } from '@aws-sdk/lib-dynamodb';
+import { computeEffectiveState, CHANGE_OPEN_STATES, simulatedNowIso } from '../lib/lifecycle-state.mjs';
 
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
 const REASON_MAX = 200;
@@ -83,14 +84,22 @@ export function createScheduleEventHandler({ runner, client, eventsTable }) {
   };
 }
 
-export function createCancelEventHandler({ runner, client, eventsTable }) {
+export function createCancelEventHandler({ runner, client, eventsTable, getOffset }) {
   return async function handler(httpEvent) {
     const ctx = await parseAndCheckOrganizer(httpEvent, client, eventsTable);
     if (ctx.error) return ctx.error;
     const { row, body, commandId, eventId } = ctx;
 
-    if (row.lifecycleState === 'cancelled') {
+    // Cancelling is the organizer's escape hatch right up until the event is
+    // over — including while it's in-progress (calling it off partway). Once
+    // it's already over (or cancelled) there's nothing left to cancel.
+    const offsetMs = getOffset ? (await getOffset()).offsetMs : 0;
+    const effective = computeEffectiveState(row, simulatedNowIso(offsetMs));
+    if (effective === 'cancelled') {
       return reply(409, { error: 'event is already cancelled' });
+    }
+    if (effective === 'over') {
+      return reply(409, { error: 'event is already over' });
     }
 
     const reason = typeof body.reason === 'string'
@@ -121,16 +130,20 @@ export function createCancelEventHandler({ runner, client, eventsTable }) {
 
 // Editable fields on an event. Sparse update — only the keys the
 // organizer touches make it into EventEdited.data.fields. All optional.
-const EDITABLE_FIELDS = ['title', 'description', 'startTime', 'endTime', 'location'];
+const EDITABLE_FIELDS = ['title', 'description', 'startTime', 'endTime', 'location', 'timesApproximate'];
 
-export function createEditEventHandler({ runner, client, eventsTable }) {
+export function createEditEventHandler({ runner, client, eventsTable, getOffset }) {
   return async function handler(httpEvent) {
     const ctx = await parseAndCheckOrganizer(httpEvent, client, eventsTable);
     if (ctx.error) return ctx.error;
     const { row, body, commandId, eventId } = ctx;
 
-    if (row.lifecycleState === 'cancelled') {
-      return reply(409, { error: 'event is cancelled' });
+    // Edits close once the event leaves the open phases — you can't rewrite
+    // an event that's already in-progress, over, or cancelled.
+    const offsetMs = getOffset ? (await getOffset()).offsetMs : 0;
+    const effective = computeEffectiveState(row, simulatedNowIso(offsetMs));
+    if (!CHANGE_OPEN_STATES.has(effective)) {
+      return reply(409, { error: `event is ${effective}; can no longer be edited` });
     }
 
     const fields = {};
@@ -142,7 +155,11 @@ export function createEditEventHandler({ runner, client, eventsTable }) {
       }
     }
     if (Object.keys(fields).length === 0) {
-      return reply(400, { error: 'at least one editable field required (title, description, startTime, endTime, location)' });
+      return reply(400, { error: 'at least one editable field required (title, description, startTime, endTime, location, timesApproximate)' });
+    }
+
+    if ('timesApproximate' in fields && typeof fields.timesApproximate !== 'boolean') {
+      return reply(400, { error: 'timesApproximate must be a boolean' });
     }
 
     // Per-field validation.
