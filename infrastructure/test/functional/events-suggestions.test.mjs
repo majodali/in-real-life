@@ -201,9 +201,9 @@ test('organizer can adopt; non-organizer cannot', async () => {
   assert.equal(ok.status, 201);
 });
 
-test('suggestions blocked once event leaves proposed (planned event → 409)', async () => {
+test('suggestions blocked once event is cancelled (closed → 409)', async () => {
   const eventId = await proposeEvent(organizer.idToken);
-  await fetch(`${config.apiUrl}/events/${eventId}/schedule`, {
+  await fetch(`${config.apiUrl}/events/${eventId}/cancel`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${organizer.idToken}` },
     body: JSON.stringify({ commandId: randomUUID() }),
