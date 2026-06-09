@@ -97,6 +97,16 @@ test('PUT: 409 when event is cancelled', async () => {
   assert.equal(res.statusCode, 409);
 });
 
+test('PUT: 409 once the event is over (planned + past endTime)', async () => {
+  eventRow = {
+    ...eventRow, lifecycleState: 'planned',
+    startTime: '2020-01-01T00:00:00Z', endTime: '2020-01-01T02:00:00Z',
+  };
+  const res = await handler(makeEvent({ claims: validClaims, body: validBody }));
+  assert.equal(res.statusCode, 409);
+  assert.match(JSON.parse(res.body).error, /over/);
+});
+
 // ─── Set level: happy paths ───
 
 test('PUT level=interested first time: emits InterestExpressed with previousLevel=null', async () => {

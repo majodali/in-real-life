@@ -50,9 +50,18 @@ export function renderPropose() {
         </div>
 
         <div class="profile-field">
-          <label class="profile-field-label" for="proposeEnd">End time <span class="auth-optional">(optional)</span></label>
+          <label class="profile-field-label" for="proposeEnd">End time</label>
           <input class="profile-field-input" id="proposeEnd" type="datetime-local">
         </div>
+
+        <label class="organizer-toggle">
+          <input type="checkbox" id="proposeApproxTimes">
+          <span>These times are approximate</span>
+        </label>
+        <small class="profile-field-hint" style="display:block; margin-bottom:14px;">
+          Tick this if the start/end aren't firm yet — they're shown as a
+          guide and can be refined later.
+        </small>
 
         <div class="profile-field">
           <label class="profile-field-label" for="proposeLocation">Where</label>
@@ -100,6 +109,7 @@ export function renderPropose() {
         organizerName: user.name,
         minimumAttendance: document.getElementById('proposeMin').value,
         autoPlanOnThreshold: document.getElementById('proposeAutoPlan').checked,
+        timesApproximate: document.getElementById('proposeApproxTimes').checked,
         commands,
         showToast,
         onSuccess: ({ eventId }) => {

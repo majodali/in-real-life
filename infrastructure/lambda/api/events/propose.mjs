@@ -38,6 +38,10 @@ export function createProposeEventHandler({ runner, makeEventId }) {
     if (!commandId) return reply(400, { error: 'commandId required' });
     if (!title) return reply(400, { error: 'title required' });
     if (!startTime) return reply(400, { error: 'startTime required' });
+    // endTime is required so the event can reach the "over" state (and thus
+    // become debriefable). When the organizer is unsure of exact times they
+    // flag timesApproximate; the lifecycle still keys off these timestamps.
+    if (!endTime) return reply(400, { error: 'endTime required' });
     if (!location) return reply(400, { error: 'location required' });
     if (!VALID_SOURCES.has(source)) {
       return reply(400, { error: 'source must be community, external, or platform' });
@@ -45,8 +49,14 @@ export function createProposeEventHandler({ runner, makeEventId }) {
     if (Number.isNaN(new Date(startTime).getTime())) {
       return reply(400, { error: 'startTime is not a parseable ISO datetime' });
     }
-    if (endTime != null && Number.isNaN(new Date(endTime).getTime())) {
+    if (Number.isNaN(new Date(endTime).getTime())) {
       return reply(400, { error: 'endTime is not a parseable ISO datetime' });
+    }
+    if (new Date(endTime) <= new Date(startTime)) {
+      return reply(400, { error: 'endTime must be after startTime' });
+    }
+    if (body.timesApproximate !== undefined && typeof body.timesApproximate !== 'boolean') {
+      return reply(400, { error: 'timesApproximate must be a boolean' });
     }
     if (!Number.isInteger(minimumAttendance) || minimumAttendance < 3) {
       return reply(400, { error: 'minimumAttendance must be an integer >= 3' });
@@ -60,12 +70,13 @@ export function createProposeEventHandler({ runner, makeEventId }) {
       source,
       title,
       startTime,
+      endTime,
       location,
       organizerId: claims.sub,
       organizerName: organizerName || (claims.email ? claims.email.split('@')[0] : 'someone'),
     };
     if (description !== undefined) data.description = description;
-    if (endTime !== undefined) data.endTime = endTime;
+    data.timesApproximate = body.timesApproximate === true;
     data.minimumAttendance = minimumAttendance;
     data.autoPlanOnThreshold = body.autoPlanOnThreshold === true;
 

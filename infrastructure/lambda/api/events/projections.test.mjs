@@ -54,6 +54,16 @@ test('projectEventProposed: starts in lifecycleState=proposed with zero counts',
   assert.equal(item.confirmedCount, 0);
 });
 
+test('projectEventProposed: timesApproximate defaults to false, carried when set', () => {
+  const dflt = projectEventProposed(proposed, { eventsTable: 't' }).Put.Item;
+  assert.equal(dflt.timesApproximate, false);
+  const approx = projectEventProposed(
+    { ...proposed, data: { ...proposed.data, timesApproximate: true } },
+    { eventsTable: 't' },
+  ).Put.Item;
+  assert.equal(approx.timesApproximate, true);
+});
+
 test('projectEventProposed: records seq and createdAt from the event envelope', () => {
   const item = projectEventProposed(proposed, { eventsTable: 't' }).Put.Item;
   assert.equal(item.seq, 1);

@@ -16,6 +16,7 @@ export async function handleProposeSubmit({
   organizerName,
   minimumAttendance,
   autoPlanOnThreshold,
+  timesApproximate,
   commands,
   showToast,
   onSuccess,
@@ -35,6 +36,11 @@ export async function handleProposeSubmit({
     showToast('Pick a start time.');
     return;
   }
+  if (!endTime) {
+    onValidationError?.('endTime');
+    showToast('Pick an end time — you can mark the times approximate if unsure.');
+    return;
+  }
   if (!trimmedLocation) {
     onValidationError?.('location');
     showToast('Where is this happening?');
@@ -48,19 +54,16 @@ export async function handleProposeSubmit({
     return;
   }
 
-  let endIso;
-  if (endTime) {
-    endIso = toIso(endTime);
-    if (!endIso) {
-      onValidationError?.('endTime');
-      showToast('That end time doesn’t look right.');
-      return;
-    }
-    if (new Date(endIso) <= new Date(startIso)) {
-      onValidationError?.('endTime');
-      showToast('End time needs to be after the start.');
-      return;
-    }
+  const endIso = toIso(endTime);
+  if (!endIso) {
+    onValidationError?.('endTime');
+    showToast('That end time doesn’t look right.');
+    return;
+  }
+  if (new Date(endIso) <= new Date(startIso)) {
+    onValidationError?.('endTime');
+    showToast('End time needs to be after the start.');
+    return;
   }
 
   const minAttendance = normaliseMinimum(minimumAttendance);
@@ -82,6 +85,7 @@ export async function handleProposeSubmit({
       organizerName: trimmedOrganizerName || undefined,
       minimumAttendance: minAttendance ?? undefined,
       autoPlanOnThreshold: autoPlanOnThreshold === true,
+      timesApproximate: timesApproximate === true,
     });
     onSuccess?.(result);
   } catch (err) {

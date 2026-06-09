@@ -51,7 +51,11 @@ export async function renderEventDetail(eventId) {
   const effective = event.effectiveState || event.lifecycleState;
   const lifecycleLabel = LIFECYCLE_LABELS[effective] || effective;
   const sourceLabel = SOURCE_LABELS[event.source] || event.source;
-  const showInteractionButtons = effective !== 'cancelled' && effective !== 'over';
+  // While the event is still open (proposed or planned) it accepts changes —
+  // interest, suggestions, polls. The backend rejects all of these once the
+  // event is in-progress, over, or cancelled, so the UI follows suit.
+  const openForChanges = effective === 'proposed' || effective === 'planned';
+  const showInteractionButtons = openForChanges;
 
   container.querySelector('.profile-body').innerHTML = `
     <div class="event-card-large">
@@ -66,7 +70,7 @@ export async function renderEventDetail(eventId) {
       <div class="event-facts">
         <div class="event-fact">
           <span class="event-fact-label">When</span>
-          <span class="event-fact-value">${escapeHtml(start)}</span>
+          <span class="event-fact-value">${escapeHtml(start)}${event.timesApproximate ? ' <span class="event-fact-approx">(approximate)</span>' : ''}</span>
         </div>
         <div class="event-fact">
           <span class="event-fact-label">Where</span>
@@ -106,10 +110,10 @@ export async function renderEventDetail(eventId) {
       ${effective === 'over' && event.myLevel === 'confirmed' ? renderDebriefSection(event) : ''}
       ${event.myDebrief && effective === 'over' ? renderMyDebrief(event) : ''}
 
-      ${event.lifecycleState === 'proposed' || event.lifecycleState === 'planned' ? `
+      ${openForChanges ? `
         <div class="event-suggestions" id="suggestionsSection"></div>
       ` : ''}
-      ${event.lifecycleState === 'proposed' ? `
+      ${effective === 'proposed' ? `
         <div class="event-suggestions" id="pollsSection"></div>
       ` : ''}
     </div>
@@ -121,12 +125,12 @@ export async function renderEventDetail(eventId) {
   if (iAmOrganizer) {
     bindOrganizerControls(container, event);
   }
-  if (event.lifecycleState === 'proposed' || event.lifecycleState === 'planned') {
+  if (openForChanges) {
     renderSuggestionsSection(container, event, {
       onChange: () => renderEventDetail(eventId),
     });
   }
-  if (event.lifecycleState === 'proposed') {
+  if (effective === 'proposed') {
     renderPollsSection(container, event, {
       onChange: () => renderEventDetail(eventId),
     });
