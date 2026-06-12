@@ -58,22 +58,39 @@ The transcript is held client-side during the interview and re-posted each turn;
 
 **SDK:** use the official `@anthropic-ai/sdk` (Node 20 Lambda). This adds a bundled dependency to the API Lambda, which today ships dependency-light (AWS SDK v3 only). Raw `fetch` to `/v1/messages` is a viable fallback to keep the Lambda dep-free, but the official SDK is preferred.
 
-## Structured-profile schema (straw man)
+## Extraction schema
+
+The conceptual model behind the extracted profile — the three layers, the comfort envelope, provenance rules, and the compatibility stance — is defined in `user-model.md`. The extraction call produces the onboarding slice of it:
 
 ```jsonc
 {
-  "interests": ["..."],
-  "strengths": ["..."],
-  "purposeOrientation": "useful | make/learn | connect | mixed",
-  "socialEnergy": "low | medium | high",
-  "comfort": { "newPeople": "...", "groupSize": "..." },
-  "goal": "string",
-  "challenge": "string?",   // optional, framed non-stigmatizingly
-  "provisional": true        // always — revisable by debriefs
+  // Layer 1 — narrative (source of truth; prose, user's words + faithful paraphrase)
+  "narrative": {
+    "selfDescription": "string",
+    "goal": "string",
+    "stories": [{ "prompt": "string", "told": "string" }]
+  },
+
+  // Layer 2 — derived index; every value carries provenance + confidence
+  "doors": [{ "door": "useful | make-learn | connect", "weight": 0.6, "provenance": "inferred", "confidence": "medium" }],
+  "interests": [{ "tag": "string", "weight": 0.8, "storyRef": 0, "provenance": "stated", "confidence": "high" }],
+  "strengthsToOffer": [{ "what": "string", "storyRef": 1, "provenance": "inferred", "confidence": "medium" }],
+  "envelope": {
+    "groupSize":   { "comfort": "intimate | small | large", "growthEdge": "string?", "provenance": "inferred", "confidence": "low" },
+    "structure":   { "comfort": "activity-anchored | open | either", "provenance": "inferred", "confidence": "low" },
+    "familiarity": { "comfort": "strangers-ok | needs-known-face", "provenance": "inferred", "confidence": "low" },
+    "role":        { "comfort": "wants-a-job | happy-to-attend | either", "provenance": "inferred", "confidence": "low" },
+    "energy":      { "frequency": "weekly | biweekly | monthly", "provenance": "stated", "confidence": "medium" }
+  },
+  "constraints": { "timeWindows": ["..."], "maxTravel": "string?", "accessibility": "string?" },
+  "barriers": [{ "what": "string", "provenance": "stated" }],   // situational, never deficits
+
+  // Layer 3 starts empty — populated only by lived signal (debriefs, attendance)
+  "provisional": true
 }
 ```
 
-The per-turn card schema is separate and minimal: `{ done, card?, closing? }` as shown in the flow above.
+The per-turn card schema is separate and minimal: `{ done, card?, closing? }` as shown in the flow above. Interview question style follows the elicitation table in `user-model.md` — episodes and externalized strengths, never trait ratings.
 
 ## Privacy
 
