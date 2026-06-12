@@ -84,12 +84,12 @@ Interview content is PII and is crypto-shredded in the event log per the event-s
 - Model: **Opus 4.8** as the starting default.
 - State: **ephemeral per-turn calls + a single `OnboardingCompleted` event** (transcript + structured profile), rather than per-turn `InterviewTurnRecorded` events.
 - Mechanism: **structured outputs**, not tool use.
+- Events: **`OnboardingCompleted` is a distinct event type**, separate from `UserProfileCreated`.
 - Streaming: **non-streaming** server-side.
 
 ## Open questions
 
 - Exact system-prompt content for the persona and the six principles (warm tone, multi-door detection, normalize challenge, motivate-not-catalogue, brevity for cards, end-on-next-step).
-- Whether `OnboardingCompleted` extends the existing `UserProfileCreated` event or is a distinct event type.
 - Anthropic data-retention posture for interview content.
 - How the structured-profile projection is stored and how debrief/event-reaction events mutate it (the "grow later" wiring — likely its own design note under Group 3).
 - Cold-start system-prompt token budget vs. the 4096-token cache floor.
