@@ -75,6 +75,16 @@ Alongside the envelope:
 
 Layer 3 is never populated at onboarding. It is exclusively earned.
 
+## Privacy & data controls
+
+Re-derivability commits us to storing narrative transcripts indefinitely, which widens the PII surface. That breadth is acceptable only alongside an explicit commitment and concrete controls.
+
+- **What is stored.** Layer 1 narrative (transcripts, paraphrases), Layer 2 derived index, Layer 3 relational signal. All are PII, all are crypto-shredded per `event-sourcing.md`.
+- **Data minimization where it counts.** Layer 1 is the only verbose store, and it holds what the user chose to say. Layer 2 stays small and coarse by design. No field is derived from protected or sensitive characteristics, even when the narrative contains them.
+- **Legibility.** The subject can see what IRL believes about them (Layer 2) and the stories it was drawn from (Layer 1), and can correct or delete any of it. Beliefs are never shown to anyone else.
+- **Export and deletion.** Full export and account deletion (Group 1) operate on all three layers and the underlying events; deletion is a genuine erasure via shredding, not a soft flag.
+- **The commitment, stated plainly.** We store this much because it lets the app understand and serve the user better over time — not to profile them for any other purpose. That promise is only as good as the controls above, so the controls ship with the model, not after it.
+
 ## Compatibility stance
 
 Predicting interpersonal compatibility is explicitly **not a goal**. Similarity-matching is weak science for friendship — perceived similarity emerges *from* good interactions more than it predicts them. Instead, three tiers with very different confidence:
@@ -88,6 +98,28 @@ Rules:
 - Compatibility is computed about **pairs-in-context** ("these two, at this event") — never as a standing person-to-person score.
 - It is **never surfaced** to users as a number, rank, or label. Users see good suggestions; beliefs stay backstage.
 - Negative signal is handled gently: "didn't click" soft-deprioritizes in ranking; it is distinct from blocks (Group 4) and never visible to either party.
+
+### Difference is not incompatibility
+
+A common request is to be "aware of incompatibility" — large age gaps, strong political views, cultural or ethnic difference. We treat this carefully and somewhat against the grain: **difference is something IRL bridges, not something it sorts by.** Breaking down conventional barriers to connection is a goal, not a risk to be managed away.
+
+Concretely:
+
+- **We never model or match on protected or sensitive characteristics.** No demographic similarity score, no "people like you" cohorting. Sorting by these would both betray the mission and build a discrimination engine.
+- **The legitimate concern is harm and discomfort, not difference** — and we address it without prediction, through three mechanisms that need no stereotyping: user-stated boundaries (private; see below), the activity-anchored design (a shared task lowers values-friction far more than pre-sorting would), and revealed signal (if a situation felt unwelcoming, a debrief teaches us — for that person, not for a category).
+- **Safety is the one place awareness is non-negotiable** — we never knowingly place someone in a situation they've flagged as unsafe or hostile for them. But we *learn* that from them; we never *infer* it from who they are.
+
+This stance is value-laden and worth explicit sign-off, especially given outside feedback pulling the other way. The default is to bridge; separation happens only from a user's own stated boundary or from revealed harm.
+
+## Boundaries and the anti-observation principle
+
+Users can name people they do not want to interact with (e.g. ex-spouses). This is distinct from a block (Group 4) and, like every barrier, **it does not reduce either person's visibility of events** — both can still see and attend anything.
+
+The hard constraint is asymmetric-information avoidance: **a do-not-interact relationship must never become a way to observe the other person.** If naming someone let me see when they RSVP, where they'll be, or that they're "hidden" from a given event, we would have built a stalking vector. So the rule is that such a relationship is information-symmetric — neither party gains any observational power over the other — and the feature is designed around what it must *prevent* (tracking), not what it enables (avoidance). Mechanism is Group 4 work; the principle is fixed now.
+
+## Sources of signal
+
+The model is fed by three conversational touchpoints, not one: **onboarding** (seeds priors), **event-selection** (browsing made lightly conversational — see `coaching-and-engagement.md`), and **debriefs** (the dominant source). Event-selection is new as a signal source: how someone reacts to options — what tempts them, what they bounce off, what they wish existed — is `inferred` signal about the envelope and doors, gathered without a single extra survey question.
 
 ## What onboarding gathers vs defers
 
@@ -116,12 +148,29 @@ How the interview elicits without trait questions:
 - Profile edits by the user emit events too; a user correction is `stated` but with a freshness that temporarily outranks stale observations.
 - All of this is PII under the crypto-shredding scheme in `event-sourcing.md`.
 
+## Model evolution
+
+The six dimensions are a starting hypothesis, not a fixed ontology. Two governance loops keep the model honest, both human-in-the-loop and run on aggregates (never by exposing individuals):
+
+- **Merge / correlation.** Periodic analysis checks whether two dimensions move together across users — or for sub-populations — strongly enough to collapse into one. For some users dimensions may correlate that don't for others; that itself is worth knowing.
+- **Discovery.** Debriefs and event-selection surface causes of friction and elements of success as free narrative. Recurring themes the six dimensions don't capture become *candidate* new dimensions. A common, useful candidate is promoted — by review, not automatically.
+
+This is an analytics/admin surface (Group 4 admin UI), and it must respect the privacy commitments above: it operates on de-identified aggregates and surfaces patterns, not people.
+
 ## What we deliberately do not build
 
 - Personality typologies or trait scores (Big Five, MBTI, or homegrown equivalents) — not stored, not displayed, not used.
 - A standing compatibility score between any two users.
+- Matching or sorting by demographic similarity ("people like you" cohorting) — see *Difference is not incompatibility*.
 - Any user-visible label about another person beyond first name, avatar, vibe, and shared context.
 - Inference about protected or sensitive characteristics. If a user volunteers something sensitive in narrative, it stays in narrative; Layer 2 never derives fields from it.
+
+## Decisions
+
+- **Barriers never filter visibility.** Events where a barrier applies are clearly identified, and the user may always choose to attend anyway. Prioritization should usually leave no-barrier options plentiful, but that is not guaranteed.
+- **Difference is bridged, not sorted by.** We never model or match on protected or sensitive characteristics. (See *Difference is not incompatibility*.)
+- **Anti-observation principle.** Do-not-interact relationships preserve full mutual visibility and must never become a way to observe or track the other person.
+- **Precedence accepted, mechanism deferred.** observed > inferred > stated, with a fresh user correction temporarily outranking stale observations. Conflicts are expected; resolution starts as per-contribution judgment calls and is otherwise TBD.
 
 ## Open questions
 
