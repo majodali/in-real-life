@@ -84,6 +84,7 @@ Re-derivability commits us to storing narrative transcripts indefinitely, which 
 - **Legibility.** The subject can see what IRL believes about them (Layer 2) and the stories it was drawn from (Layer 1), and can correct or delete any of it. Beliefs are never shown to anyone else.
 - **Export and deletion.** Full export and account deletion (Group 1) operate on all three layers and the underlying events; deletion is a genuine erasure via shredding, not a soft flag.
 - **The commitment, stated plainly.** We store this much because it lets the app understand and serve the user better over time — not to profile them for any other purpose. That promise is only as good as the controls above, so the controls ship with the model, not after it.
+- **Not-for-profit posture.** IRL will likely be registered not-for-profit. Members and their information are never a revenue source or a product, even when a fee is charged. This is core to the trust position, not a footnote — it underwrites every storage decision above.
 
 ## Compatibility stance
 
@@ -109,7 +110,7 @@ Concretely:
 - **The legitimate concern is harm and discomfort, not difference** — and we address it without prediction, through three mechanisms that need no stereotyping: user-stated boundaries (private; see below), the activity-anchored design (a shared task lowers values-friction far more than pre-sorting would), and revealed signal (if a situation felt unwelcoming, a debrief teaches us — for that person, not for a category).
 - **Safety is the one place awareness is non-negotiable** — we never knowingly place someone in a situation they've flagged as unsafe or hostile for them. But we *learn* that from them; we never *infer* it from who they are.
 
-This stance is value-laden and worth explicit sign-off, especially given outside feedback pulling the other way. The default is to bridge; separation happens only from a user's own stated boundary or from revealed harm.
+This stance is value-laden and worth explicit sign-off, especially given outside feedback pulling the other way. The default is to bridge; separation happens only from a user's own stated boundary or from revealed harm. We won't *act* on difference, but we must be able to *address* it when a member raises it — see `coaching-and-engagement.md` → *Answering the difference concern*.
 
 ## Boundaries and the anti-observation principle
 

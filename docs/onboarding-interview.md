@@ -92,6 +92,8 @@ The conceptual model behind the extracted profile — the three layers, the comf
 
 The per-turn card schema is separate and minimal: `{ done, card?, closing? }` as shown in the flow above. Interview question style follows the elicitation table in `user-model.md` — episodes and externalized strengths, never trait ratings.
 
+The exact JSON Schemas for both calls, the card skeleton, and the interviewer system prompt live in `onboarding-prompt.md` (the source of truth for those artifacts).
+
 ## Privacy
 
 Interview content is PII and is crypto-shredded in the event log per the event-sourcing design. Sending it to Claude is **external processing**. The API key is already in Secrets Manager and wired through the API Lambda, but the data-handling posture (e.g. whether this warrants an Anthropic zero-retention arrangement) is an explicit launch decision, not a default.

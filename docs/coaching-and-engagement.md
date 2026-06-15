@@ -37,6 +37,15 @@ Each is a two-way surface: signal flows in, guidance flows out.
 - **Event-selection.** Today this is passive browsing. Made *slightly* conversational, it becomes both a rich signal source — what tempts you, what you bounce off, what you wish existed (`inferred` signal on envelope and doors) — and a coaching moment, where a small stretch toward the growth edge can be offered when the user hesitates. The bar for friction here is high: most browsing should stay silent.
 - **Debriefs.** The dominant signal source (`user-model.md`), and the most natural coaching moment — reflecting on what actually happened is where "repetition over chemistry" and "barriers are situational" land best.
 
+## Answering the difference concern
+
+We don't act on difference (see `user-model.md` → *Difference is not incompatibility*), but members will sometimes raise it, and we answer honestly and warmly rather than deflect. Two real cases from Bainbridge (median age >50):
+
+- **Younger members wanting age-peers.** We don't sort by age, and on a thin, older island we can't promise a room of twenty-somethings. The honest, hopeful answer: we help you find things you'll genuinely enjoy; the pool grows as the community does; and shared activity tends to make an age mix matter far less than people expect (intergenerational connection is often a quiet gift).
+- **Women wary after bad experiences with men or dating apps.** This is mostly a safety concern, and safety is handled deliberately elsewhere (Group 4: reporting, blocks, contributor trust, no messaging, show-up-only). The answer leads with how events are kept safe, not with filtering men out.
+
+The throughline: never promise demographic matching, never imply anyone is incompatible, meet the worry with candor plus the genuine ways IRL helps.
+
 ## Active engagement
 
 Beyond choosing among existing events, IRL helps users shape the social opportunities themselves — carefully, because the cost of friction and noise here falls on *other* users too.
@@ -58,6 +67,16 @@ When a proposed event draws "suggest a change" responses (Group 2's currently-st
 - **For the proposer:** synthesize suggestions into a clear, low-load decision rather than a pile of individual asks. Protect them from feeling besieged by their own good deed.
 - **For suggesters:** help frame a change as a constructive option, and set the expectation that the proposer may decline.
 - **Toward a workable outcome:** favor convergence on one good event over fragmenting into several near-duplicates, while leaving room to spin off a genuinely distinct alternative.
+
+### Members as facilitators
+
+Some members don't just want to attend — they want to *help*: facilitate events, support others' skill-building, do outreach in the community. This is the **useful door at community scale**, and IRL should leave a path for it rather than treating everyone as a passive attendee.
+
+- Onboarding and debriefs can detect a strong contribution signal (`user-model.md` → strengths-to-offer) and, over time, surface facilitation as an option.
+- A facilitator role carries more trust than attending, so it connects to contributor rating and safety vetting (Group 4) — earned and supported, not self-assigned and forgotten.
+- The guardrails below apply doubly: facilitation should reduce load and noise for others, not generate it.
+
+The full volunteer/facilitator system is its own design (likely spanning Groups 2–4); captured here so onboarding and the model leave room for it.
 
 ### Guardrails
 
