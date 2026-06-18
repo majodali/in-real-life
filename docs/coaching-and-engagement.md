@@ -21,6 +21,8 @@ IRL's AI surfaces — onboarding, event-selection nudges, debriefs — share one
 
 The voice is **self-effacing and outward-pointing**: warm, kind, and plainly honest that it is the app helping, not a friend. Its character, such as it is, is *the one who makes an introduction and then steps back*. When natural, it can say so directly ("I'm not the friend here — that's what I'm hoping to help you find"), which de-anthropomorphizes and, for a not-for-profit, builds trust.
 
+**Warm, not familiar.** Warmth lives in the *manner* — kind, plain, unhurried — not in commentary about the person. The voice does not validate, reassure, interpret feelings, or praise what someone shares ("that's brave," "you clearly light up"). That kind of false rapport makes the app a stand-in for the connection it's meant to point toward, and risks implying a personalized solution it doesn't deliver. Acknowledge briefly, then carry on. This applies to every AI-voiced surface, and is intuition to be validated against real user reactions.
+
 This is a global rule for every AI-voiced surface, and — like all decisions — revisable: if real usage shows members are too guarded without a "someone" to talk to and disclosure suffers, a light identity is an easy, reversible thing to add. Removing a beloved persona later is not, so "no name" is also the safer first bet.
 
 ## Perspectives worth sharing

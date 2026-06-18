@@ -58,6 +58,8 @@ The transcript is held client-side during the interview and re-posted each turn;
 
 **SDK:** use the official `@anthropic-ai/sdk` (Node 20 Lambda). This adds a bundled dependency to the API Lambda, which today ships dependency-light (AWS SDK v3 only). Raw `fetch` to `/v1/messages` is a viable fallback to keep the Lambda dep-free, but the official SDK is preferred.
 
+**Real-event grounding:** examples and the closing next-step must be grounded in real events, never invented (finding #3). The server injects a short, tiered events list — this locality first, then nearby areas, then a few canonical fallbacks — into the interview context (in `messages`, not the frozen system block). The interviewer draws example names only from that list; the close records which it used in `closing.exampleEventRefs`. See `onboarding-prompt.md` → *Using real examples* / *Runtime context*.
+
 ## Extraction schema
 
 The conceptual model behind the extracted profile — the three layers, the comfort envelope, provenance rules, and the compatibility stance — is defined in `user-model.md`. The extraction call produces the onboarding slice of it:

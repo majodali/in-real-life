@@ -24,6 +24,9 @@ The canonical record of design decisions for IRL. Each entry is summarized here 
 | D14 | Coaching is circumspect: perspective not instruction, ≤1 per interaction, earned by context; active engagement (proposing/mediating) with guardrails | `coaching-and-engagement.md` |
 | D15 | The AI voice is warm but has no name, persona, or avatar; self-effacing and outward-pointing; a global rule across every AI-voiced surface | `coaching-and-engagement.md` |
 | D16 | Onboarding feels like a short, warm, guided flow with a clear end — adaptive per card, but not an open conversation | `onboarding-prompt.md` |
+| D17 | Warm, not familiar: warmth is in manner, not commentary; the voice never validates, reassures, or interprets the user's experience. Provisional — validate against real reactions | `coaching-and-engagement.md` |
+| D18 | Examples and the closing next-step are grounded only in real events provided to the interview (tiered: this locality → nearby areas → canonical fallback); the model never invents events | `onboarding-prompt.md`, `onboarding-interview.md` |
+| D19 | `role` is stored as a single scalar at onboarding (v1); per-context role is deferred to Layer 3 refinement | `onboarding-prompt.md` |
 
 ## Governance — to define later
 
