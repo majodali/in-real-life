@@ -28,7 +28,7 @@ The canonical record of design decisions for IRL. Each entry is summarized here 
 | D18 | Examples and the closing next-step are grounded only in real events provided to the interview (tiered: this locality → nearby areas → canonical fallback); the model never invents events | `onboarding-prompt.md`, `onboarding-interview.md` |
 | D19 | `role` is stored as a single scalar at onboarding (v1); per-context role is deferred to Layer 3 refinement | `onboarding-prompt.md` |
 | D20 | Debrief is tiered — fast tap core (no LLM) + optional AI depth (one call); outcome framed as repetition-intent ("worth another go?") and affinity, not star ratings | `debrief.md` |
-| D21 | People-affinity is backstage only — no "who liked you," negative invisible, mutual quietly shapes co-suggestion and seeds crews, bound by anti-observation | `debrief.md` |
+| D21 | People-affinity is backstage only — no "who liked you"; capture is positive-only (no per-person "no"); negative is inferred conservatively and never shown; mutual quietly shapes co-suggestion and seeds crews; bound by anti-observation | `debrief.md` |
 | D22 | A bad experience that is a safety concern routes to reporting and care (Group 4), never treated as preference signal | `debrief.md` |
 
 ## Governance — to define later

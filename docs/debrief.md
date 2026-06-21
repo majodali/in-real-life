@@ -58,7 +58,7 @@ The profile-projection store shape (single document vs. per-dimension items) is 
 "Want to see again" is the strongest signal and the most ethically loaded. Rules:
 
 - **Backstage only — no "who liked you."** Affinity is never surfaced to the other person as a like/score. A "who wants to see me again" feed would import exactly the dating-app dynamics IRL exists to avoid, and would be an observation vector (D11). Mutual affinity instead *quietly* raises the chance two people end up at the same suggested events — it influences ranking, it is never legible.
-- **Negative is invisible and soft.** "Didn't click" only soft-deprioritizes future co-suggestion; it is never shown to either party and is distinct from a block (Group 4).
+- **Positive-only capture; negative is never asked.** The debrief only ever offers a positive affordance ("anyone you'd want to see again?"); there is no per-person "no" to give — grading people is exactly the dynamic we avoid. Negative is inferred conservatively (e.g. repeated non-selection over time), never solicited, never shown to either party, and only soft-deprioritizes co-suggestion. It is distinct from a block (Group 4).
 - **Mutual seeds crews.** Repeated mutual affinity among 3–4 people is the seed of crew detection (Group 3) — surfaced as a gently strengthening cluster, not as "these people like each other."
 - **Anti-observation.** Affinity data must never let one user infer another's attendance, feelings, or movements. The feature is designed around preventing that inference.
 
@@ -81,6 +81,75 @@ The most natural coaching moment — but the same restraint (D14, D17): warm-not
 - A gentle prompt, **one** reminder at most, then it lapses. No nagging — IRL is not an engagement machine.
 - A lapsed debrief is itself mild signal (mild disengagement or a barrier), but absence is weak evidence; don't over-read it.
 
+## Flow in detail
+
+The loop has a **fast path** (taps only, no model call, instant) and a **deep path** (one extraction/follow-up call), with a **safety door** available throughout.
+
+```
+event over
+   │
+   ▼
+gentle prompt ──ignored──▶ one reminder ──ignored──▶ lapse (mild, weak signal)
+   │
+   ▼
+[0] Did you go?
+   ├─ No  ─▶ what got in the way? (optional chips/text) ─▶ brief close          ← no LLM
+   └─ Yes
+        ▼
+[1] Worth another go?   (yes / maybe / not for me)
+        ▼
+[1] Anyone you'd want to see again?   (tap attendees; positive-only)
+        │                              └ "did anything not feel right?" ─▶ SAFETY (Group 4)
+        ▼
+[1] (optional) a couple of texture chips   (too big / nothing to do / …)
+        ▼
+   depth worth it?  ──no──▶ close: templated, warm, real-event next step         ← no LLM
+        │ yes, or user taps "say more"
+        ▼
+[2] one or two adaptive follow-ups (free text) + ≤1 general aside ─▶ close        ← LLM
+        ▼
+   extract observed deltas ─▶ DebriefRecorded ─▶ projector (precedence)
+```
+
+### Steps (voice = warm, not familiar; no commentary on how it went)
+
+- **[0] Did you go?** — "Did you make it to the trail walk?" → *Yes* / *Couldn't make it*.
+  - **No** → "No worries — what got in the way?" optional chips (timing, distance, energy, nerves, plans changed) + optional text → brief close ("Got it, thanks — I'll keep that in mind."). No guilt. The reason is a situational barrier (`observed`).
+- **[1a] Worth another go?** — "Worth doing again?" → *Yes* / *Maybe* / *Not for me*. Outcome + repetition intent in one. ("Not for me" is fit, not a verdict on the event.)
+- **[1b] See again?** — "Anyone you'd want to cross paths with again?" Attendee chips (first names + avatars), tap to mark. **Positive-only** — untapped is just neutral, there is no "no" to give. Beside it, a quiet, separate door: *"Did anything not feel right?"* → routes to the safety/support path (Group 4), handled with care. Safety is never a per-person red flag inside the affinity UI; it's its own calm affordance.
+- **[1c] Texture (optional)** — "Anything stand out?" optional chips (too big / too small / nothing to do / liked having a role / hard to break in / great company). Maps to envelope hints deterministically.
+
+### When depth (Tier 2) is invited
+
+Only when it would yield real signal — otherwise skip straight to the close:
+
+- *Maybe* / *Not for me* → "what would've made it better?" (envelope / barrier)
+- a texture chip implying a mismatch ("too big," "nothing to do") → confirm and expand it
+- something worth a calibration check → "anything surprise you?"
+- the user taps **"say more"**
+
+Cap at one or two short follow-ups. **Don't probe *why* they liked a specific person** — that's intrusive, and the affinity tap is already enough.
+
+### The LLM boundary (cost/latency)
+
+- **Fast path: zero model calls.** Tiers 0–1 are taps; the structured answers map to updates deterministically, and the close is templated (warm, with a real-event next step pulled from the feed). This is the common case — instant and free.
+- **Deep path: one call (rarely two).** Tier 2 generates the follow-up, absorbs free text, may add a single general aside, and the same pass extracts the `observed` deltas and writes the close. Bounded on purpose.
+
+### Two walkthroughs
+
+**Fast path — after the pottery night.**
+- Did you go? → *Yes* · Worth another go? → *Yes* · See again? → taps *Priya* · texture → *great company*
+- Close (templated): "Thanks — that helps. I'll keep small, hands-on evenings like this near the top."
+- No model call. Deltas: affinity +Priya; repetition yes; envelope confirms small / activity-anchored.
+
+**Deep path — after a big mixer tried as a stretch.**
+- Did you go? → *Yes* · Worth another go? → *Maybe* · See again? → (none) · texture → *too big*, *hard to break in*
+- Depth triggered (maybe + mismatch). Follow-up: "What would've made it easier?" → "If I'd had a job to do. Standing around with a drink isn't me."
+- Close: "Got it. I'll steer you toward things with a task to them, and keep the big open ones off your list."
+- One call. Deltas (`observed`): role = wants-a-job (strengthen); groupSize comfort stays small, the big-group growth-edge isn't landing *yet*; barrier "open mingling"; useful door confirmed.
+
+The close earns "felt heard" through **action** ("I'll look for X next"), never through validation.
+
 ## Schema sketches
 
 Exact schemas live in the forthcoming `debrief-prompt.md`. Shape:
@@ -94,7 +163,7 @@ Exact schemas live in the forthcoming `debrief-prompt.md`. Shape:
   "again": "yes | maybe | no",               // repetition intent (not a star rating)
   "outcomeTexture": ["too-big", "nothing-to-do", "great-company"],  // optional chips/text
   "people": [
-    { "attendeeId": "string", "seeAgain": "yes | neutral | no" }    // neutral default
+    { "attendeeId": "string", "seeAgain": "yes | neutral" }          // positive-only; no per-person "no"
   ],
   "surprise": "string?",                     // optional
   "reflection": "string?",                   // optional free text → Tier 2
