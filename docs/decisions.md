@@ -39,3 +39,11 @@ Flagged as needed, deliberately not designed yet:
 
 - **Register review & change process** — how we review these decisions and modify the system in response to real-world results, from small tweaks to large pivots: cadence, who decides, and how a change propagates back through notes, prompts, and code.
 - **Prompt evaluation & testing** — how the onboarding prompt (and later the coaching and debrief prompts) are evaluated, modified, and regression-tested against real and simulated user interactions before changes ship.
+
+## Watch-items (emergent effects)
+
+Deliberately *not* solved now, but tracked — a reminder that a system like this always produces unintended consequences and modalities:
+
+- **Gaming via proxies.** Users may learn to use innocuous signals as proxies for an outcome we won't serve directly — e.g. choosing event types (book club, car maintenance) to bias the age/gender/ethnicity mix they encounter. Not addressed now; kept in mind.
+- **Creeping categorization.** The chip vocabulary, rules, and sequencing may grow sophisticated enough to amount to a quiet user-categorization system. Categorization itself is fine — *as long as it never dominates user outcomes*. Watch that it stays a tool, not a verdict.
+- **Steering dissonance.** The friction between user agency and the boundaries we hold (`debrief.md` → *When a user steers somewhere we won't go*) — needs careful wording and real-world validation.

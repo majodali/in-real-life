@@ -26,6 +26,17 @@ The debrief is framed to the user as *working together to tune what IRL suggests
 
 It is also, entirely at the user's option, a space for **self-reflection** — a quiet chance to notice what made something click, or what they're learning about how they like to spend time with people. We never require this; we make a little room for it and let the user decide whether to step in. The adaptive chip sequences (below) are how we open that room subtly — a light set first, a more reflective set only if they lean in — without turning it into homework.
 
+## When a user steers somewhere we won't go
+
+Collaboration grants agency, and agency invites friction: a user may try to steer toward something we don't support — most importantly, limiting who they meet by age, gender, or ethnicity. We hold the line (we don't sort by demographics, D9), but the *manner* is everything. This is handled gently and without judgment, while not compromising and while giving an honest, sturdy rationale — and, where there's an opening, treated as a chance for reflection rather than correction.
+
+Two design implications:
+
+- **Don't encode demographic steers as chips.** A fixed chip like "younger crowd" would both enable filtering and read as the system *inviting* it; its absence is correct. But fixed chips can also feel like ideological guardrails to someone genuinely working through these feelings — which tends to push them toward free text.
+- **Free text is the opening, not a problem.** When the steer arrives as free text, that's exactly where IRL can respond thoughtfully — name what we can and can't do, why, and gently widen the frame (often the real wish underneath is "don't feel like the odd one out," which we *can* help with). Non-judgmental, never preachy; a small reframe the user is free to ignore.
+
+This is genuinely hard to get right and is flagged as **work to do** — the wording needs real care and real-world validation. See `coaching-and-engagement.md` → *Answering the difference concern* for the adjacent passive case; this is its active, in-the-moment counterpart.
+
 ## Tiered structure
 
 | Tier | What | LLM? | Most users |
@@ -200,6 +211,17 @@ Exact schemas live in the forthcoming `debrief-prompt.md`. Shape:
   "narrativeAppend": "string"
 }
 ```
+
+## What flow-testing surfaced
+
+Hand-run against persona/event combos (fast positive, no-show, safety, a growth-edge stretch, and a demographic-steer case). Refinements to fold into `debrief-prompt.md`:
+
+- **Co-steer offers are occasional, not reflexive.** Ending *every* close with "want us to try Y?" becomes noise. Offer the steering choice only when there's a real fork (a mismatch, a stretch that half-worked); otherwise just close warmly.
+- **A safety-door use quarantines that event's preference signal.** If someone reports feeling unsafe, don't also read "maybe" on *worth another go?* as dislike of the event type — the signal is contaminated by the incident. Safety routes to care; preference inference for that event is suspended.
+- **Co-steering can come from accumulated patterns, not just one debrief.** Repeated evening no-shows → a gentle "evenings seem tough — want us to favour daytime?" The single debrief stays light; the pattern earns the offer.
+- **Capture the *condition* a stretch worked under, not a binary.** A small-group person who enjoyed a big dinner "because the food gave everyone something to talk about" teaches *bigger-with-a-shared-focus*, not *bigger-is-fine*. The growth-edge update carries the condition.
+- **Steering dissonance may warrant a brief, factual acknowledgment** — a bounded, deliberate exception to no-validation. Naming the situation ("being the only one in your bracket is hard") is plain fact, not gush, and keeps the no-compromise rationale from reading as cold or corporate. The rationale itself must stay short and non-preachy. This is the "work to do."
+- **"Where newer people gravitate" is okay; watch it as a possible proxy.** Offering newness-weighted options (not age-weighted) is legitimate, but it edges toward a backdoor demographic filter — see `decisions.md` → Watch-items.
 
 ## Decisions
 
