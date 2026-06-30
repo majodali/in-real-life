@@ -18,6 +18,13 @@ This note designs the loop and its signal model. The exact prompt and JSON Schem
 - **People-data is the most sensitive signal.** "Want to see again" is the single strongest thing the model ever learns *and* the most sensitive — it's about another real person. It stays backstage, bound by the anti-observation principle (D11).
 - **Safety is not signal.** "I didn't enjoy it" and "I felt unsafe" are different in kind. The second routes to reporting and care (Group 4), never into the preference model.
 - **Honest calibration.** People mispredict what they'll enjoy. Capturing surprise-vs-expectation is high-value precisely because it tells the model where this person's self-prediction is wrong.
+- **Collaboration, not extraction.** The debrief is joint tuning of the user's future suggestions — and an optional moment of self-reflection. That framing, not obligation, is what earns depth.
+
+## A collaboration, not a survey
+
+The debrief is framed to the user as *working together to tune what IRL suggests next* — not as data collection, and not as a chore. This framing is load-bearing: it's what makes going deeper worth the user's while. Every answer visibly adjusts their future experience, and the close often hands them the steering wheel ("want us to try smaller next time, or keep a mix?") rather than just reporting what we'll do. Felt-heard is the floor; **co-steering their own outcomes is the goal**, and it's what earns the occasional deeper answer.
+
+It is also, entirely at the user's option, a space for **self-reflection** — a quiet chance to notice what made something click, or what they're learning about how they like to spend time with people. We never require this; we make a little room for it and let the user decide whether to step in. The adaptive chip sequences (below) are how we open that room subtly — a light set first, a more reflective set only if they lean in — without turning it into homework.
 
 ## Tiered structure
 
@@ -114,10 +121,16 @@ gentle prompt ──ignored──▶ one reminder ──ignored──▶ lapse (
 ### Steps (voice = warm, not familiar; no commentary on how it went)
 
 - **[0] Did you go?** — "Did you make it to the trail walk?" → *Yes* / *Couldn't make it*.
-  - **No** → "No worries — what got in the way?" optional chips (timing, distance, energy, nerves, plans changed) + optional text → brief close ("Got it, thanks — I'll keep that in mind."). No guilt. The reason is a situational barrier (`observed`).
+  - **No** → "No worries — what got in the way?" optional chips (timing, distance, energy, nerves, plans changed) + optional text → brief close ("Got it, thanks — we'll keep that in mind."). No guilt. The reason is a situational barrier (`observed`).
 - **[1a] Worth another go?** — "Worth doing again?" → *Yes* / *Maybe* / *Not for me*. Outcome + repetition intent in one. ("Not for me" is fit, not a verdict on the event.)
 - **[1b] See again?** — "Anyone you'd want to cross paths with again?" Attendee chips (first names + avatars), tap to mark. **Positive-only** — untapped is just neutral, there is no "no" to give. Beside it, a quiet, separate door: *"Did anything not feel right?"* → routes to the safety/support path (Group 4), handled with care. Safety is never a per-person red flag inside the affinity UI; it's its own calm affordance.
-- **[1c] Texture (optional)** — "Anything stand out?" optional chips (too big / too small / nothing to do / liked having a role / hard to break in / great company). Maps to envelope hints deterministically.
+- **[1c] Texture (optional)** — "Anything stand out?" optional chips (too big / too small / nothing to do / liked having a role / hard to break in / great company). Maps to envelope hints deterministically, and is the first of an adaptive sequence of sets (below).
+
+### Adaptive chip sequences
+
+Chips are not one fixed set. They adapt to the event type and the user's prior taps, and can unfold as a **short sequence of sets, each opt-in**: a light texture set first; then, only if the user engages, a "what made the difference?" set; then, if they're still leaning in, a gently reflective one ("notice anything about what makes these click for you?"). Stopping is always the default — every set is skippable, and most users stop early.
+
+The sequencing is **rule-based for now** (event type + prior answers), so the fast path stays model-free; the LLM only enters at the free-text depth layer. The starting sets are the ones suggested above and **will evolve** — a chip people keep reaching for, or keep wishing existed, is a candidate new dimension (model-evolution, `user-model.md`).
 
 ### When depth (Tier 2) is invited
 
@@ -139,16 +152,16 @@ Cap at one or two short follow-ups. **Don't probe *why* they liked a specific pe
 
 **Fast path — after the pottery night.**
 - Did you go? → *Yes* · Worth another go? → *Yes* · See again? → taps *Priya* · texture → *great company*
-- Close (templated): "Thanks — that helps. I'll keep small, hands-on evenings like this near the top."
+- Close (templated): "Thanks — that helps. We'll keep small, hands-on evenings like this near the top."
 - No model call. Deltas: affinity +Priya; repetition yes; envelope confirms small / activity-anchored.
 
 **Deep path — after a big mixer tried as a stretch.**
 - Did you go? → *Yes* · Worth another go? → *Maybe* · See again? → (none) · texture → *too big*, *hard to break in*
 - Depth triggered (maybe + mismatch). Follow-up: "What would've made it easier?" → "If I'd had a job to do. Standing around with a drink isn't me."
-- Close: "Got it. I'll steer you toward things with a task to them, and keep the big open ones off your list."
+- Close: "Got it. We'll steer you toward things with a task to them, and keep the big open ones off your list — want us to keep nudging you toward the occasional bigger one, or leave those be?"
 - One call. Deltas (`observed`): role = wants-a-job (strengthen); groupSize comfort stays small, the big-group growth-edge isn't landing *yet*; barrier "open mingling"; useful door confirmed.
 
-The close earns "felt heard" through **action** ("I'll look for X next"), never through validation.
+The close earns trust through **collaboration** — co-steering what comes next ("we'll look for X; want us to try Y?") — not through validation. Felt-heard is the floor; tuning their own outcomes together is the point.
 
 ## Schema sketches
 
