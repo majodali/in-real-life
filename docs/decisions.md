@@ -31,7 +31,7 @@ The canonical record of design decisions for IRL. Each entry is summarized here 
 | D21 | People-affinity is backstage only — no "who liked you"; capture is positive-only (no per-person "no"); negative is inferred conservatively and never shown; mutual quietly shapes co-suggestion and seeds crews; bound by anti-observation | `debrief.md` |
 | D22 | A bad experience that is a safety concern routes to reporting and care (Group 4), never treated as preference signal | `debrief.md` |
 | D23 | IRL speaks as "we" (the community/organisation), never "I" (an individual) — global across all AI-voiced surfaces; reinforces D15 | `coaching-and-engagement.md` |
-| D24 | The debrief is framed as collaboration to tune the user's future suggestions (plus optional self-reflection), not data collection — this is what earns depth; chips are adaptive, opt-in sequences of sets | `debrief.md` |
+| D24 | The debrief is **information**, kept separate from reflection (optional) and coaching (conditional) — it opens a door to them but never performs them inline; closes are minimal, and the user is asked to help refine only after a poor experience; chips are adaptive, opt-in sequences | `debrief.md` |
 
 ## Governance — to define later
 

@@ -47,7 +47,7 @@ Each is a two-way surface: signal flows in, guidance flows out.
 
 - **Onboarding.** Signal: seeds the model (`onboarding-interview.md`). Guidance: reframes social anxiety up front (side-by-side, contribution), and sets an open-minded tone for everything after.
 - **Event-selection.** Today this is passive browsing. Made *slightly* conversational, it becomes both a rich signal source — what tempts you, what you bounce off, what you wish existed (`inferred` signal on envelope and doors) — and a coaching moment, where a small stretch toward the growth edge can be offered when the user hesitates. The bar for friction here is high: most browsing should stay silent.
-- **Debriefs.** The dominant signal source (`user-model.md`), and the most natural coaching moment — reflecting on what actually happened is where "repetition over chemistry" and "barriers are situational" land best.
+- **Debriefs.** The dominant signal source (`user-model.md`), but kept as *information* — crisp capture, not counsel (`debrief.md`). Reflection and coaching are **separate, opt-in modes** the debrief can open a door to but never performs inline: reflection is where "repetition over chemistry" and "barriers are situational" can land, and coaching follows only if a user stays fixed on the negative rather than the learning.
 
 ## Answering the difference concern
 

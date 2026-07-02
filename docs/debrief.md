@@ -4,50 +4,54 @@
 
 The debrief is the **dominant source of signal** in IRL. Onboarding seeds priors; debriefs are where the model actually learns, because they carry `observed` evidence — what happened, not what someone guessed about themselves. Every key projection (the comfort envelope, door weights, people affinities, crews) is refined here.
 
-The central tension: debriefs must be **rich** (they feed the whole model) yet **low-friction** (they fire after every event, so a long one nobody finishes teaches nothing). The resolution is a **tiered** debrief — a fast, mostly tap-based core with a high completion rate, plus an optional conversational layer that goes deeper only when there's real signal to chase or the user wants to reflect.
+The central tension: debriefs must be **useful** (they feed the whole model) yet **low-friction** (they fire after every event, so a long one nobody finishes teaches nothing). The resolution is a **tiered** debrief — a fast, mostly tap-based core with a high completion rate, plus an optional deeper layer.
 
-A debrief is also three things at once: a **signal source**, a **coaching touchpoint** (the most natural one — reflecting on what happened is where the evidence-based perspectives land best), and a **safety surface** (a bad experience may be a report, not a preference).
+The most important framing: **the debrief is *information*.** It is deliberately kept distinct from two deeper, optional activities — **reflection** and **coaching** — which the debrief can open a door to but never performs inline. Merging them is what makes an interaction chatty, falsely familiar, and prone to over-promising. The debrief's job is to capture crisply, notice when a door to reflection has opened, and otherwise get out of the way. It is also a **safety surface** (a bad experience may be a report, not a preference).
 
-This note designs the loop and its signal model. The exact prompt and JSON Schemas are a follow-up artifact (`debrief-prompt.md`), mirroring how `onboarding-interview.md` preceded `onboarding-prompt.md`. It extends the prototype debrief (`src/js/screens/debrief.js`).
+This note designs the loop and its signal model. The exact prompt and JSON Schemas are a follow-up artifact (`debrief-prompt.md`). It extends the prototype debrief (`src/js/screens/debrief.js`).
+
+## Three activities, kept separate
+
+| Activity | When | Character |
+|---|---|---|
+| **Debrief** (information) | after every event | crisp, factual, minimal; captures what happened; no empathy, no counsel, no over-promising |
+| **Reflection** (optional) | only if the user pulls, or is clearly dwelling | a distinct conversational space where feelings, motivations, and challenges are natural; warm and understanding, but no manufactured connection |
+| **Coaching** (conditional) | only from reflection, if appropriate | reached when a user stays fixed on negatives rather than learnings/outcomes; home of the evidence-based perspectives |
+
+The debrief **recognises the doorway** to reflection but never walks the user through it uninvited. This separation is what keeps the debrief honest and light: information here, feelings there, guidance only if earned.
 
 ## Principles
 
 - **Completion rate is the asset.** A debrief that's skipped teaches nothing. Default to the shortest thing that captures real signal; earn depth, never demand it.
-- **Observed signal dominates.** This is where the model learns. Debrief evidence is `observed` provenance and outranks `stated`/`inferred` under the precedence rules (`user-model.md`, D7).
-- **Warm, not familiar.** Same voice as everywhere (D17): warmth is in the manner. The user feels heard because their input visibly changes what they're shown next — not because the agent performs empathy. No validation of how the event went.
-- **People-data is the most sensitive signal.** "Want to see again" is the single strongest thing the model ever learns *and* the most sensitive — it's about another real person. It stays backstage, bound by the anti-observation principle (D11).
+- **Information first.** The debrief captures; it does not counsel. Warmth is in the manner — brief and plain — not in empathy performance, validation, or narrating what we'll do with the answer.
+- **Observed signal dominates.** Debrief evidence is `observed` provenance and outranks `stated`/`inferred` under the precedence rules (`user-model.md`, D7).
+- **Ask to refine only after a poor experience.** When something didn't land, we may ask the user to help us aim better. A good or pleasantly-surprising outcome we simply acknowledge — no refine-question, no steering negotiation.
+- **People-data is the most sensitive signal.** "Want to see again" is the strongest thing the model learns *and* the most sensitive — it's about another real person. Backstage, bound by the anti-observation principle (D11).
 - **Safety is not signal.** "I didn't enjoy it" and "I felt unsafe" are different in kind. The second routes to reporting and care (Group 4), never into the preference model.
-- **Honest calibration.** People mispredict what they'll enjoy. Capturing surprise-vs-expectation is high-value precisely because it tells the model where this person's self-prediction is wrong.
-- **Collaboration, not extraction.** The debrief is joint tuning of the user's future suggestions — and an optional moment of self-reflection. That framing, not obligation, is what earns depth.
+- **Honest calibration.** People mispredict what they'll enjoy. Capturing surprise-vs-expectation tells the model where this person's self-prediction is wrong.
 
-## A collaboration, not a survey
+## What the debrief signals about matching
 
-The debrief is framed to the user as *working together to tune what IRL suggests next* — not as data collection, and not as a chore. This framing is load-bearing: it's what makes going deeper worth the user's while. Every answer visibly adjusts their future experience, and the close often hands them the steering wheel ("want us to try smaller next time, or keep a mix?") rather than just reporting what we'll do. Felt-heard is the floor; **co-steering their own outcomes is the goal**, and it's what earns the occasional deeper answer.
-
-It is also, entirely at the user's option, a space for **self-reflection** — a quiet chance to notice what made something click, or what they're learning about how they like to spend time with people. We never require this; we make a little room for it and let the user decide whether to step in. The adaptive chip sequences (below) are how we open that room subtly — a light set first, a more reflective set only if they lean in — without turning it into homework.
-
-## When a user steers somewhere we won't go
-
-Collaboration grants agency, and agency invites friction: a user may try to steer toward something we don't support — most importantly, limiting who they meet by age, gender, or ethnicity. We hold the line (we don't sort by demographics, D9), but the *manner* is everything. This is handled gently and without judgment, while not compromising and while giving an honest, sturdy rationale — and, where there's an opening, treated as a chance for reflection rather than correction.
-
-Two design implications:
-
-- **Don't encode demographic steers as chips.** A fixed chip like "younger crowd" would both enable filtering and read as the system *inviting* it; its absence is correct. But fixed chips can also feel like ideological guardrails to someone genuinely working through these feelings — which tends to push them toward free text.
-- **Free text is the opening, not a problem.** When the steer arrives as free text, that's exactly where IRL can respond thoughtfully — name what we can and can't do, why, and gently widen the frame (often the real wish underneath is "don't feel like the odd one out," which we *can* help with). Non-judgmental, never preachy; a small reframe the user is free to ignore.
-
-This is genuinely hard to get right and is flagged as **work to do** — the wording needs real care and real-world validation. See `coaching-and-engagement.md` → *Answering the difference concern* for the adjacent passive case; this is its active, in-the-moment counterpart.
+The user should understand, *lightly*, that their input helps IRL find better matches — but the debrief never narrates what it will do about it. Closes are minimal ("Thanks — we'll keep that in mind."). The one time we invite the user to help us refine is **after a poor experience**, and even then briefly, without promising specifics. Deeper collaboration on what they want belongs in reflection, not here.
 
 ## Tiered structure
 
 | Tier | What | LLM? | Most users |
 |---|---|---|---|
 | 0 | Did you go? (and, if not, a light "what got in the way?") | No | always |
-| 1 | Fast core: how was it (worth another go?) + anyone you'd want to see again | No — deterministic taps | usually stop here |
-| 2 | Optional depth: one or two adaptive follow-ups when there's signal to chase or the user wants to reflect; free text; at most one coaching aside | Yes — one extraction+follow-up call | sometimes |
+| 1 | Fast core: worth another go? · who did you meet / want to see again · optional texture | No — deterministic taps | usually stop here |
+| 2 | Optional depth: a follow-up to capture *better information*, or the **doorway to reflection** | Yes — one call | sometimes |
 
-Tier 0–1 is taps and needs no model call; the structured choices map directly to updates. Tier 2 is where an LLM call earns its keep: it generates a worthwhile follow-up (only when one exists), absorbs free text, extracts `observed` deltas, and may offer a single general perspective. Most debriefs are Tier 1; depth is voluntary or lightly invited, never forced.
+Tier 0–1 is taps and needs no model call. Tier 2 spends a call to capture better information (a targeted follow-up after a poor result), or to open reflection if the user wants it. Coaching is not a "Tier-2 aside" — it lives in its own mode (below). Most debriefs are Tier 1.
 
-**Outcome framing.** Not a 1–5 star. Stars anchor and teach little. Capture **repetition intent** — "worth another go?" — which is both more humane and directly actionable (it drives re-surfacing and is the seed of repetition-over-chemistry), plus per-person affinity. Texture ("too big," "nothing to do," "great company") is optional chips/text, not required.
+**Outcome framing.** Not a 1–5 star — stars anchor and teach little. Capture **repetition intent** ("worth another go?"), which is humane and directly actionable (it drives re-surfacing and is the seed of repetition-over-chemistry).
+
+## The people step — who you met, and who you'd see again
+
+Two light taps over the attendee list, and it does real work:
+
+- **Who did you actually meet?** Tap the people you connected or spent time with. This makes the debrief feel complete (especially at a large gathering where you met 3 of 20, or when someone didn't show), grounds affinity (you can only want to see again someone you met), and cross-validates who was really there.
+- **Anyone you'd want to see again?** A positive-only second mark on the people you met. Untapped is neutral; there is no per-person "no."
 
 ## What it captures → how the model changes
 
@@ -55,143 +59,157 @@ Tier 0–1 is taps and needs no model call; the structured choices map directly 
 |---|---|---|
 | Attendance / no-show + light reason | reliability; if no-show, a situational barrier | L2 barriers (`observed`) |
 | Worth another go? | door confirmation; event-type outcome; re-surfacing | L2 doors, L3 outcomes (`observed`) |
-| Want to see again (per attendee) | people-affinity edge; mutual = strongest, seeds crews | L3 relational (`observed`) |
-| What worked / didn't (size, things-to-do, role, energy) | envelope nudges — comfort and growth-edge | L2 envelope (`observed`, higher confidence) |
-| Surprise vs expectation | forecast-error calibration — where they mispredict | L2/L3 calibration |
-| Free reflection | narrative append + LLM-extracted deltas | L1 + L2/L3 |
+| Who you met | grounds affinity; attendance cross-check | L3 relational |
+| Want to see again | people-affinity edge; mutual = strongest, seeds crews | L3 relational (`observed`) |
+| Texture (size, things-to-do, role, energy) | envelope nudges — comfort and growth-edge | L2 envelope (`observed`) |
+| Surprise vs expectation | forecast-error calibration | L2/L3 calibration |
+| Free reflection (if the user opens that door) | narrative append + LLM-extracted deltas | L1 + L2/L3 |
 
-Because debrief evidence is `observed`, it dominates and decays the `stated`/`inferred` values onboarding set — e.g. someone who *said* "small groups only" but reports a big trivia night was great gets their `groupSize` comfort widened, and the growth-edge confirmed as working.
+Because debrief evidence is `observed`, it dominates and decays the `stated`/`inferred` values onboarding set — someone who *said* "small groups only" but reports a big trivia night worked gets their `groupSize` comfort widened, with the **condition** attached (see calibration below).
 
 ## Projection-update mechanism
 
-A debrief emits a **`DebriefRecorded`** event on the `interaction#{userId}#{eventId}` aggregate (`event-sourcing.md`), carrying the raw debrief plus, when Tier 2 ran, the extracted deltas. A **projector** applies those deltas to the user's profile projection under the precedence rules (`observed > inferred > stated`, with decay and a `sourceRef` back to the event). Per D7, the conflict-resolution mechanism starts as **per-contribution judgment calls** and is otherwise TBD.
+A debrief emits a **`DebriefRecorded`** event on the `interaction#{userId}#{eventId}` aggregate (`event-sourcing.md`), carrying the raw debrief plus, when Tier 2 ran, extracted deltas. A **projector** applies them under the precedence rules (`observed > inferred > stated`, with decay and a `sourceRef` back to the event). Per D7, conflict-resolution starts as **per-contribution judgment calls**.
 
 - **Per-debrief** updates the individual's projection (Tier-2 extraction is one cheap call; Tier-0/1 maps deterministically).
-- **Batched, aggregate** analysis across users is a *separate* loop — the model-evolution governance (`user-model.md` → Model evolution): de-identified, surfaces new candidate dimensions, never per-person.
+- **Batched, aggregate** analysis across users is a *separate* loop — model-evolution governance (`user-model.md`): de-identified, surfaces candidate dimensions, never per-person.
 
-The profile-projection store shape (single document vs. per-dimension items) is the open question shared with `user-model.md`; it most affects how cleanly these deltas apply.
+The profile-projection store shape (single document vs. per-dimension items) is the open question shared with `user-model.md`.
 
 ## People affinity & the anti-observation principle
 
-"Want to see again" is the strongest signal and the most ethically loaded. Rules:
-
-- **Backstage only — no "who liked you."** Affinity is never surfaced to the other person as a like/score. A "who wants to see me again" feed would import exactly the dating-app dynamics IRL exists to avoid, and would be an observation vector (D11). Mutual affinity instead *quietly* raises the chance two people end up at the same suggested events — it influences ranking, it is never legible.
-- **Positive-only capture; negative is never asked.** The debrief only ever offers a positive affordance ("anyone you'd want to see again?"); there is no per-person "no" to give — grading people is exactly the dynamic we avoid. Negative is inferred conservatively (e.g. repeated non-selection over time), never solicited, never shown to either party, and only soft-deprioritizes co-suggestion. It is distinct from a block (Group 4).
-- **Mutual seeds crews.** Repeated mutual affinity among 3–4 people is the seed of crew detection (Group 3) — surfaced as a gently strengthening cluster, not as "these people like each other."
-- **Anti-observation.** Affinity data must never let one user infer another's attendance, feelings, or movements. The feature is designed around preventing that inference.
+- **Backstage only — no "who liked you."** Affinity is never surfaced to the other person. A "who wants to see me again" feed would import the dating-app dynamics IRL exists to avoid, and would be an observation vector (D11). Mutual affinity instead *quietly* raises the chance two people land at the same suggested events — it influences ranking, never legibly.
+- **Positive-only capture; negative is never asked.** No per-person "no." Negative is inferred conservatively (repeated non-selection over time), never solicited, never shown, and only soft-deprioritizes co-suggestion. Distinct from a block (Group 4).
+- **Mutual seeds crews.** Repeated mutual affinity among 3–4 people seeds crew detection (Group 3) — a gently strengthening cluster, never "these people like each other."
+- **Anti-observation.** Affinity data must never let one user infer another's attendance, feelings, or movements.
 
 ## Safety surface
 
-A debrief can surface harm, not just disappointment. The loop must **distinguish "I didn't enjoy it" from "I felt unsafe,"** and route the second to the reporting and support path (Group 4) with care — never fold it into preference signal, never treat a person who behaved badly as merely "didn't click." This is a first-class branch of the debrief, handled gently and without making the user do investigative work. (Mechanism is Group 4; the branch is fixed here.)
+A debrief can surface harm, not just disappointment. The loop **distinguishes "I didn't enjoy it" from "I felt unsafe,"** and routes the second to the reporting and support path (Group 4) with care — never folding it into preference signal, never treating a person who behaved badly as merely "didn't click." A first-class branch, handled gently, without making the user do investigative work.
 
-## Coaching at the debrief
+> **Wording is under discussion.** The affordance must read as clearly-about-conduct/safety without being alarmist or setting a high "report" bar. Options in the open questions; not yet decided.
 
-The most natural coaching moment — but the same restraint (D14, D17): warm-not-familiar, no validation, at most one *general* perspective, only when it fits.
+## Reflection & coaching (the separate modes)
 
-- **Lukewarm event:** a general aside, not advice — "the second time is often easier than the first."
-- **Good event:** usually nothing; occasionally a light "things like this tend to be worth a repeat."
-- **No-show:** no guilt, no lecture. Normalize and move on; the barrier is signal, not a failing.
-- **Never** "you should…", never a reaction to their feelings.
+These are where feelings, motivations, and challenges belong — not the debrief.
+
+- **Reflection** is entered only by the user's pull ("say more"), or offered gently when the user is clearly dwelling on something. In it, discussing how an event felt, what they're after, or what's getting in the way is natural. Tone: warm and understanding, **grounded and honest, with no manufactured connection** — we don't construct rapport or empathise theatrically. A plain acknowledgment is enough.
+- **Coaching** progresses from reflection *only if appropriate* — when a user stays fixed on negatives rather than learnings or outcomes. This is the home of the evidence-based perspectives (repetition over chemistry, side-by-side, contribution, we-mispredict, situational barriers), offered as general observations, ≤1, never as "you should…" (D14, D17).
+
+The debrief's role toward these is only to **notice the doorway and open it**, never to drag the user through.
+
+## When a user steers somewhere we won't go
+
+Agency invites friction: a user may try to steer toward something we don't support — most importantly, limiting who they meet by age, gender, or ethnicity. This is **handled in reflection, not the debrief**. We hold the line (we don't sort by demographics, D9); the manner is everything:
+
+- **A brief, plain acknowledgment — nothing more.** "That's fair to raise." Not "that's its own kind of hard" — we don't interpret, empathise, or manufacture a connection.
+- **An honest, *grounded* rationale — no unprovable claims.** We can truthfully say it isn't how IRL works and that we couldn't promise it on an island this size. We do **not** assert empirical claims we can't back yet (e.g. "a filter misses the people you'd click with") — until we have real evidence to ground such statements ("in our experience…"), we don't make them.
+- **Point back to what worked, from their own signal.** If the activity landed, that's the honest, concrete thing to lean on — not a demographic offer. (We explicitly do *not* offer "where newer people are landing": new people are any age, and it doesn't address the wish.)
+- **No compromise, no judgment, no lecture.** A small reframe the user is free to ignore; if they stay stuck on the negative, that — and only that — is the opening to coaching.
+
+Getting this wording right is **work to do**, and needs real-world validation.
 
 ## Timing & triggering
 
 - Fires when the event is **over** (event lifecycle, Group 2; workshop mode can simulate the clock).
-- A gentle prompt, **one** reminder at most, then it lapses. No nagging — IRL is not an engagement machine.
-- A lapsed debrief is itself mild signal (mild disengagement or a barrier), but absence is weak evidence; don't over-read it.
+- A **last-minute "can't make it"** affordance exists before/at event time — cleaner signal than a silent skip (it separates "intended, dropped last-minute" from "forgot" or "never committed"). But a silent skip is fine too; the debrief will ask.
+- A gentle prompt, **one** reminder at most, then it lapses. No nagging.
+- A lapsed debrief is mild signal (disengagement or a barrier), but absence is weak evidence; don't over-read it.
 
 ## Flow in detail
 
-The loop has a **fast path** (taps only, no model call, instant) and a **deep path** (one extraction/follow-up call), with a **safety door** available throughout.
+Fast path (taps, no model call, instant) and a deep path (one call), with a safety door available throughout.
 
 ```
-event over
+event over  (or: last-minute "can't make it" beforehand)
    │
    ▼
 gentle prompt ──ignored──▶ one reminder ──ignored──▶ lapse (mild, weak signal)
    │
    ▼
 [0] Did you go?
-   ├─ No  ─▶ what got in the way? (optional chips/text) ─▶ brief close          ← no LLM
+   ├─ No  ─▶ what got in the way? (optional chips/text) ─▶ minimal close        ← no LLM
    └─ Yes
         ▼
 [1] Worth another go?   (yes / maybe / not for me)
         ▼
-[1] Anyone you'd want to see again?   (tap attendees; positive-only)
-        │                              └ "did anything not feel right?" ─▶ SAFETY (Group 4)
+[1] Who did you meet?  →  anyone you'd want to see again?   (positive-only)
+        │                              └ [conduct/safety affordance] ─▶ SAFETY (Group 4)
         ▼
-[1] (optional) a couple of texture chips   (too big / nothing to do / …)
+[1] (optional) texture chips   (adaptive sequence)
         ▼
-   depth worth it?  ──no──▶ close: templated, warm, real-event next step         ← no LLM
-        │ yes, or user taps "say more"
+   poor experience?  ──no──▶ minimal close ("thanks, we'll keep it in mind")     ← no LLM
+        │ yes → one follow-up to aim better;  or user taps "say more"
         ▼
-[2] one or two adaptive follow-ups (free text) + ≤1 general aside ─▶ close        ← LLM
+[2] capture better info  ── or ──▶  open REFLECTION (feelings/motivations)  ← LLM
+        │                                        └─(if user stays on negatives)─▶ COACHING
         ▼
    extract observed deltas ─▶ DebriefRecorded ─▶ projector (precedence)
 ```
 
-### Steps (voice = warm, not familiar; no commentary on how it went)
+### Steps (voice = warm, brief, plain; no commentary on how it went)
 
-- **[0] Did you go?** — "Did you make it to the trail walk?" → *Yes* / *Couldn't make it*.
-  - **No** → "No worries — what got in the way?" optional chips (timing, distance, energy, nerves, plans changed) + optional text → brief close ("Got it, thanks — we'll keep that in mind."). No guilt. The reason is a situational barrier (`observed`).
-- **[1a] Worth another go?** — "Worth doing again?" → *Yes* / *Maybe* / *Not for me*. Outcome + repetition intent in one. ("Not for me" is fit, not a verdict on the event.)
-- **[1b] See again?** — "Anyone you'd want to cross paths with again?" Attendee chips (first names + avatars), tap to mark. **Positive-only** — untapped is just neutral, there is no "no" to give. Beside it, a quiet, separate door: *"Did anything not feel right?"* → routes to the safety/support path (Group 4), handled with care. Safety is never a per-person red flag inside the affinity UI; it's its own calm affordance.
-- **[1c] Texture (optional)** — "Anything stand out?" optional chips (too big / too small / nothing to do / liked having a role / hard to break in / great company). Maps to envelope hints deterministically, and is the first of an adaptive sequence of sets (below).
+- **[0] Did you go?** — "Did you make it?" → *Yes* / *Couldn't make it*.
+  - **No** → "No worries — what got in the way?" optional chips (timing, distance, energy, nerves, plans changed) + optional text → minimal close ("Got it, thanks."). No guilt. The reason is a situational barrier (`observed`).
+- **[1a] Worth another go?** — → *Yes* / *Maybe* / *Not for me*. Outcome + repetition intent in one.
+- **[1b] People** — "Who'd you end up meeting?" tap attendees you connected with; then a second, positive-only mark for "want to see again." Beside it, a separate, calm **conduct/safety affordance** (wording TBD) → routes to Group 4 with care. Never a per-person red flag inside the affinity UI.
+- **[1c] Texture (optional)** — "Anything stand out?" optional chips; first of an adaptive sequence (below).
 
 ### Adaptive chip sequences
 
-Chips are not one fixed set. They adapt to the event type and the user's prior taps, and can unfold as a **short sequence of sets, each opt-in**: a light texture set first; then, only if the user engages, a "what made the difference?" set; then, if they're still leaning in, a gently reflective one ("notice anything about what makes these click for you?"). Stopping is always the default — every set is skippable, and most users stop early.
+Chips are not one fixed set. They adapt to the event type and prior taps, and can unfold as a **short sequence of sets, each opt-in**: a light texture set first; then, only if the user engages, a "what made the difference?" set. Deeper reflective prompts do **not** live in the chip sequence — if the user is leaning in that far, that's the doorway to reflection, handled as a conversation, not a chip. Stopping is always the default.
 
-The sequencing is **rule-based for now** (event type + prior answers), so the fast path stays model-free; the LLM only enters at the free-text depth layer. The starting sets are the ones suggested above and **will evolve** — a chip people keep reaching for, or keep wishing existed, is a candidate new dimension (model-evolution, `user-model.md`).
+Sequencing is **rule-based for now** (event type + prior answers), so the fast path stays model-free. Sets **will evolve** — a chip people keep reaching for is a candidate new dimension (`user-model.md`).
 
 ### When depth (Tier 2) is invited
 
-Only when it would yield real signal — otherwise skip straight to the close:
+Only when it yields real signal — otherwise go straight to the minimal close:
 
-- *Maybe* / *Not for me* → "what would've made it better?" (envelope / barrier)
-- a texture chip implying a mismatch ("too big," "nothing to do") → confirm and expand it
+- *Maybe* / *Not for me* → one follow-up to aim better ("what would've made it easier?")
+- a texture chip implying a mismatch → confirm and expand it
 - something worth a calibration check → "anything surprise you?"
-- the user taps **"say more"**
+- the user taps **"say more"** → this may open reflection
 
-Cap at one or two short follow-ups. **Don't probe *why* they liked a specific person** — that's intrusive, and the affinity tap is already enough.
+**Don't probe *why* they liked a specific person** — intrusive, and the affinity tap already carries it.
 
 ### The LLM boundary (cost/latency)
 
-- **Fast path: zero model calls.** Tiers 0–1 are taps; the structured answers map to updates deterministically, and the close is templated (warm, with a real-event next step pulled from the feed). This is the common case — instant and free.
-- **Deep path: one call (rarely two).** Tier 2 generates the follow-up, absorbs free text, may add a single general aside, and the same pass extracts the `observed` deltas and writes the close. Bounded on purpose.
+- **Fast path: zero model calls.** Tiers 0–1 map deterministically; the close is templated and minimal.
+- **Deep path: one call (rarely two).** A follow-up to capture better information, plus delta extraction and the close; or the entry into a reflective conversation.
 
-### Two walkthroughs
+### Walkthroughs
 
-**Fast path — after the pottery night.**
-- Did you go? → *Yes* · Worth another go? → *Yes* · See again? → taps *Priya* · texture → *great company*
-- Close (templated): "Thanks — that helps. We'll keep small, hands-on evenings like this near the top."
-- No model call. Deltas: affinity +Priya; repetition yes; envelope confirms small / activity-anchored.
+**Fast, positive (pottery).** Go? *Yes* · Again? *Yes* · met *Priya* → see again *Priya* · texture *great company*.
+→ Close: **"Thanks — we'll keep that in mind."** No model call. Deltas: met/affinity +Priya; repetition yes; envelope confirms small / activity-anchored.
 
-**Deep path — after a big mixer tried as a stretch.**
-- Did you go? → *Yes* · Worth another go? → *Maybe* · See again? → (none) · texture → *too big*, *hard to break in*
-- Depth triggered (maybe + mismatch). Follow-up: "What would've made it easier?" → "If I'd had a job to do. Standing around with a drink isn't me."
-- Close: "Got it. We'll steer you toward things with a task to them, and keep the big open ones off your list — want us to keep nudging you toward the occasional bigger one, or leave those be?"
-- One call. Deltas (`observed`): role = wants-a-job (strengthen); groupSize comfort stays small, the big-group growth-edge isn't landing *yet*; barrier "open mingling"; useful door confirmed.
+**Poor-ish, growth-edge (big mixer, tried as a stretch).** Go? *Yes* · Again? *Maybe* · met (a couple), see again (none) · texture *too big*, *hard to break in*.
+→ Poor result → one follow-up: "What would've made it easier?" → "If I'd had a job to do." → Close: **"Got it — that helps us aim better."** One call. Deltas (`observed`): role = wants-a-job (strengthen); big-group growth-edge not landing *yet*; barrier "open mingling."
 
-The close earns trust through **collaboration** — co-steering what comes next ("we'll look for X; want us to try Y?") — not through validation. Felt-heard is the floor; tuning their own outcomes together is the point.
+**Positive surprise (big community dinner, a stretch for a small-group person).** Go? *Yes* · Again? *Yes* · texture *bigger than I'd like* + *great company* · surprise: "figured it'd be too much, but the food gave everyone something to talk about."
+→ Close: **"Good to know — thanks."** (A good outcome; we don't refine or negotiate.) Deltas: forecastError captured; the growth-edge lands **with the condition** *shared focus*, not "bigger is fine."
+
+**Steering, via reflection (pottery, Mara).** Go? *Yes* · Again? *Maybe* · met (none marked) · texture *loved the activity*. She taps "say more": "the clay was great. it's just — everyone was 60+. can you find me ones with people my age?"
+→ This opens **reflection**, handled per *When a user steers…*: **"That's fair to raise. We don't match by age, though — it's not how IRL works, and on an island this size we couldn't promise it anyway. The clay part landed, going by your answers — that's the kind of thing we'll lean on."** Plain acknowledgment, grounded rationale, no manufactured connection, no over-promise, no demographic offer. If she stays fixed on the age point, *that* is the opening to a gentle coaching perspective — not before.
 
 ## Schema sketches
 
-Exact schemas live in the forthcoming `debrief-prompt.md`. Shape:
+Exact schemas live in the forthcoming `debrief-prompt.md`.
 
-**Capture** (mostly deterministic; most fields optional — Tier 1 is `attended` + `outcome`/`again` + `people`):
+**Capture** (mostly deterministic; Tier 1 is `attended` + `again` + `people`):
 
 ```jsonc
 {
   "attended": true,
+  "lastMinuteCantMake": false,               // set via the pre-event affordance
   "noShowReason": "string?",                 // light, situational
   "again": "yes | maybe | no",               // repetition intent (not a star rating)
   "outcomeTexture": ["too-big", "nothing-to-do", "great-company"],  // optional chips/text
   "people": [
-    { "attendeeId": "string", "seeAgain": "yes | neutral" }          // positive-only; no per-person "no"
+    { "attendeeId": "string", "met": true, "seeAgain": "yes | neutral" }  // met grounds affinity; positive-only
   ],
   "surprise": "string?",                     // optional
-  "reflection": "string?",                   // optional free text → Tier 2
-  "feltUnsafe": false                        // routes to safety, NOT signal
+  "reflection": "string?",                   // optional free text → may open reflection
+  "conductConcern": false                    // routes to safety/care, NOT signal
 }
 ```
 
@@ -200,42 +218,35 @@ Exact schemas live in the forthcoming `debrief-prompt.md`. Shape:
 ```jsonc
 {
   "envelopeUpdates": [
-    { "dimension": "groupSize", "observation": "string", "direction": "widen | confirm | narrow",
-      "confidence": "low | medium | high", "sourceEventId": "string" }
+    { "dimension": "groupSize", "observation": "string", "condition": "string?",
+      "direction": "widen | confirm | narrow", "confidence": "low | medium | high", "sourceEventId": "string" }
   ],
   "doorUpdates": [ /* … */ ],
   "interestUpdates": [ /* … */ ],
-  "affinityEdges": [ { "attendeeId": "string", "valence": "positive | negative", "sourceEventId": "string" } ],
+  "affinityEdges": [ { "attendeeId": "string", "valence": "positive", "sourceEventId": "string" } ],
   "eventTypeOutcome": { "eventType": "string", "energized": true },
   "forecastError": { "predicted": "string", "actual": "string" },
   "narrativeAppend": "string"
 }
 ```
 
-## What flow-testing surfaced
-
-Hand-run against persona/event combos (fast positive, no-show, safety, a growth-edge stretch, and a demographic-steer case). Refinements to fold into `debrief-prompt.md`:
-
-- **Co-steer offers are occasional, not reflexive.** Ending *every* close with "want us to try Y?" becomes noise. Offer the steering choice only when there's a real fork (a mismatch, a stretch that half-worked); otherwise just close warmly.
-- **A safety-door use quarantines that event's preference signal.** If someone reports feeling unsafe, don't also read "maybe" on *worth another go?* as dislike of the event type — the signal is contaminated by the incident. Safety routes to care; preference inference for that event is suspended.
-- **Co-steering can come from accumulated patterns, not just one debrief.** Repeated evening no-shows → a gentle "evenings seem tough — want us to favour daytime?" The single debrief stays light; the pattern earns the offer.
-- **Capture the *condition* a stretch worked under, not a binary.** A small-group person who enjoyed a big dinner "because the food gave everyone something to talk about" teaches *bigger-with-a-shared-focus*, not *bigger-is-fine*. The growth-edge update carries the condition.
-- **Steering dissonance may warrant a brief, factual acknowledgment** — a bounded, deliberate exception to no-validation. Naming the situation ("being the only one in your bracket is hard") is plain fact, not gush, and keeps the no-compromise rationale from reading as cold or corporate. The rationale itself must stay short and non-preachy. This is the "work to do."
-- **"Where newer people gravitate" is okay; watch it as a possible proxy.** Offering newness-weighted options (not age-weighted) is legitimate, but it edges toward a backdoor demographic filter — see `decisions.md` → Watch-items.
-
 ## Decisions
 
-- **Tiered debrief** — fast tap core (no LLM) + optional AI depth (one call); outcome framed as repetition-intent and affinity, not star ratings.
-- **People-affinity is backstage only** — no "who liked you," negative invisible, mutual quietly shapes co-suggestion and seeds crews, bound by anti-observation.
-- **Safety ≠ signal** — unsafe experiences route to reporting/care (Group 4), never into the preference model.
-- **Debrief evidence is `observed`** and dominates `stated`/`inferred` (applies D7; debrief is the main observed source).
+- **Debrief is information, kept separate from reflection and coaching.** It captures crisply and opens a door to the deeper modes, but never performs them inline.
+- **Tiered debrief** — fast tap core (no LLM) + optional depth (one call); outcome = repetition-intent + affinity, not star ratings.
+- **Minimal closes; refine only after a poor experience.** A good or pleasantly-surprising outcome is simply acknowledged.
+- **People step captures "who you met" then positive-only "see again."**
+- **People-affinity is backstage only** — no "who liked you"; positive-only; negative inferred, never shown; mutual seeds crews; anti-observation.
+- **Safety ≠ signal** — routes to reporting/care (Group 4); the event's preference signal is quarantined when a conduct concern is raised.
+- **Steering handled in reflection** — plain acknowledgment, grounded (no unprovable claims), no compromise, no demographic offer.
 
 ## Open questions
 
-- Exactly how mutual affinity shapes ranking/co-attendance while staying illegible — needs care; Group 3 matching.
-- Whether to capture *predicted* enjoyment at RSVP (to measure forecast error precisely) — real calibration value vs. added friction.
-- Profile-projection store shape (shared with `user-model.md`) — single doc vs. per-dimension items; affects delta application.
-- Per-debrief vs. batched projection updates at scale — start per-debrief; revisit if volume bites.
-- Reminder cadence and how much (if anything) to infer from a lapsed debrief.
-- Crew-detection threshold and surfacing (Group 3) — its own design.
-- `debrief-prompt.md` — the exact follow-up prompt + JSON Schemas, once this design is agreed.
+- **Conduct/safety affordance wording** — clearly-about-conduct without alarmism. Candidates: "Was there a problem with someone?" · "Something felt off with someone?" · "Anything you want to flag privately?" · a neutral entry that clarifies on tap. To decide.
+- How the debrief *detects* that reflection's door has opened (explicit "say more" only, or also gentle offer when a user is dwelling) — and how the reflective conversation is structured. Its own follow-on design.
+- How mutual affinity shapes ranking/co-attendance while staying illegible — Group 3.
+- Whether to capture *predicted* enjoyment at RSVP (precise forecast error vs. friction).
+- When we can honestly *ground* the difference rationale in real experience ("in our experience…") — needs data; until then, policy + practical constraint + the user's own signal only.
+- Profile-projection store shape (shared with `user-model.md`).
+- Reminder cadence; how much to infer from a lapse.
+- `debrief-prompt.md` — exact prompt + schemas (debrief) and the reflection/coaching handling, once agreed.
