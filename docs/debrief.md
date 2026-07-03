@@ -87,7 +87,7 @@ The profile-projection store shape (single document vs. per-dimension items) is 
 
 A debrief can surface harm, not just disappointment. The loop **distinguishes "I didn't enjoy it" from "I felt unsafe,"** and routes the second to the reporting and support path (Group 4) with care — never folding it into preference signal, never treating a person who behaved badly as merely "didn't click." A first-class branch, handled gently, without making the user do investigative work.
 
-> **Wording is under discussion.** The affordance must read as clearly-about-conduct/safety without being alarmist or setting a high "report" bar. Options in the open questions; not yet decided.
+> **Affordance (two-tier).** Entry — a calm, conduct-focused line: *"Did you have any concerns with anyone's conduct?"* On tap it becomes explicit and caring: *"If someone made you feel unsafe or uncomfortable, you can tell us what happened, or just talk to someone — whatever you prefer."* Calm on the surface; unambiguously the safety channel the moment it's engaged. Conduct-focused, not person-focused, so it reads as being about behaviour rather than "a problem with a person."
 
 ## Reflection & coaching (the separate modes)
 
@@ -134,7 +134,7 @@ gentle prompt ──ignored──▶ one reminder ──ignored──▶ lapse (
 [1] Worth another go?   (yes / maybe / not for me)
         ▼
 [1] Who did you meet?  →  anyone you'd want to see again?   (positive-only)
-        │                              └ [conduct/safety affordance] ─▶ SAFETY (Group 4)
+        │                    └ "any concerns with anyone's conduct?" ─▶ SAFETY (Group 4)
         ▼
 [1] (optional) texture chips   (adaptive sequence)
         ▼
@@ -152,7 +152,7 @@ gentle prompt ──ignored──▶ one reminder ──ignored──▶ lapse (
 - **[0] Did you go?** — "Did you make it?" → *Yes* / *Couldn't make it*.
   - **No** → "No worries — what got in the way?" optional chips (timing, distance, energy, nerves, plans changed) + optional text → minimal close ("Got it, thanks."). No guilt. The reason is a situational barrier (`observed`).
 - **[1a] Worth another go?** — → *Yes* / *Maybe* / *Not for me*. Outcome + repetition intent in one.
-- **[1b] People** — "Who'd you end up meeting?" tap attendees you connected with; then a second, positive-only mark for "want to see again." Beside it, a separate, calm **conduct/safety affordance** (wording TBD) → routes to Group 4 with care. Never a per-person red flag inside the affinity UI.
+- **[1b] People** — "Who'd you end up meeting?" tap attendees you connected with; then a second, positive-only mark for "want to see again." Beside it, a separate, calm conduct affordance — *"Did you have any concerns with anyone's conduct?"* → routes to Group 4 with care (see *Safety surface*). Never a per-person red flag inside the affinity UI.
 - **[1c] Texture (optional)** — "Anything stand out?" optional chips; first of an adaptive sequence (below).
 
 ### Adaptive chip sequences
@@ -242,7 +242,6 @@ Exact schemas live in the forthcoming `debrief-prompt.md`.
 
 ## Open questions
 
-- **Conduct/safety affordance wording** — clearly-about-conduct without alarmism. Candidates: "Was there a problem with someone?" · "Something felt off with someone?" · "Anything you want to flag privately?" · a neutral entry that clarifies on tap. To decide.
 - How the debrief *detects* that reflection's door has opened (explicit "say more" only, or also gentle offer when a user is dwelling) — and how the reflective conversation is structured. Its own follow-on design.
 - How mutual affinity shapes ranking/co-attendance while staying illegible — Group 3.
 - Whether to capture *predicted* enjoyment at RSVP (precise forecast error vs. friction).
