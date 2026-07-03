@@ -91,7 +91,7 @@ A debrief can surface harm, not just disappointment. The loop **distinguishes "I
 
 ## Reflection & coaching (the separate modes)
 
-These are where feelings, motivations, and challenges belong — not the debrief.
+These are where feelings, motivations, and challenges belong — not the debrief. Designed in full in `reflection-and-coaching.md`; summarised here for the boundary.
 
 - **Reflection** is entered only by the user's pull ("say more"), or offered gently when the user is clearly dwelling on something. In it, discussing how an event felt, what they're after, or what's getting in the way is natural. Tone: warm and understanding, **grounded and honest, with no manufactured connection** — we don't construct rapport or empathise theatrically. A plain acknowledgment is enough.
 - **Coaching** progresses from reflection *only if appropriate* — when a user stays fixed on negatives rather than learnings or outcomes. This is the home of the evidence-based perspectives (repetition over chemistry, side-by-side, contribution, we-mispredict, situational barriers), offered as general observations, ≤1, never as "you should…" (D14, D17).

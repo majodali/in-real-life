@@ -32,6 +32,9 @@ The canonical record of design decisions for IRL. Each entry is summarized here 
 | D22 | A bad experience that is a safety concern routes to reporting and care (Group 4), never treated as preference signal | `debrief.md` |
 | D23 | IRL speaks as "we" (the community/organisation), never "I" (an individual) — global across all AI-voiced surfaces; reinforces D15 | `coaching-and-engagement.md` |
 | D24 | The debrief is **information**, kept separate from reflection (optional) and coaching (conditional) — it opens a door to them but never performs them inline; closes are minimal, and the user is asked to help refine only after a poor experience; chips are adaptive, opt-in sequences | `debrief.md` |
+| D25 | Reflection and coaching are distinct, optional, **user-led** modes reached (v1) only from the debrief; reflection = IRL listens/asks and grounds patterns in the user's own words (no interpretation, advice, or claims); a `ReflectionRecorded` event carries the transcript + `observed` deltas | `reflection-and-coaching.md` |
+| D26 | Coaching is **conditional** — only when a user is stuck on the negative; ≤1 perspective, offered not instructed, frequency-capped (never repeat one), yields immediately; holds the no-demographic line without forcing a reframe | `reflection-and-coaching.md` |
+| D27 | Perspectives are framed **modestly** (general "a lot of people…"), never as empirical IRL-data claims, until real outcomes can ground them | `reflection-and-coaching.md`, `debrief.md` |
 
 ## Governance — to define later
 
