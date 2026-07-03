@@ -1,31 +1,101 @@
-# Organizer Engagement — Design (seed)
+# Organizer Engagement — Design
 
-Organisers are a first-class participant we haven't yet examined. For some events IRL will need to engage the organiser — on a spectrum from light-touch help to serious responsibility — and organisers need their own debrief. **This note seeds the area; it is not yet a full design.**
+Organisers are a first-class participant. IRL engages them across an event's life — from light help framing a listing to firm responsibility gates for sensitive events — and gives them their own debrief. This layer sits **on top of the event lifecycle that already exists** (`propose → planned → in-progress/over/cancelled`, organiser-gated edits, `minimumAttendance`, time/date polls, change-suggestions, attendee debriefs — `infrastructure/lambda/api/events/`).
 
-## Why organisers need engaging
+It is also **load-bearing for the demographic reframe**: "demographic affinity lives on the event" (`user-model.md`) only works if organisers can create well-framed themed events and if the orientation/exclusion gate is handled here.
 
-- **Event quality.** A clear title, description, and intent make an event discoverable and set the right expectations. IRL can help organisers frame these well.
-- **Unstructured events are a special case.** "Just come and chat" events are rare and hard for most attendees — conversation is the hardest on-ramp (`reflection-and-coaching.md` → Skills development). When an event has no structure, either the organiser supplies some purpose / on-ramp, or IRL prepares attendees for the fact that mingling *is* the task. We never surface a structureless event as if it were low-effort.
-- **Demographic-oriented events.** *Orientation* ("women's hike", "20s & 30s welcome") is inclusive and freely allowed; active *exclusion* ("no men") is a higher bar needing organiser responsibility, platform policy, and sometimes legal care (`user-model.md` → *Demographic affinity lives on the event*). Engaging the organiser is how that gate is handled.
-- **Safety & conduct.** Organisers carry some responsibility for what happens at their events; the conduct/safety path (`debrief.md`; Group 4) intersects here.
+## Who is the organizer? (event sources)
 
-## The engagement spectrum (light → heavy)
+The event `source` field decides how much of this applies:
 
-- **Framing feedback** — gentle help on title / description / intent so the event reads clearly and sets expectations.
-- **Structure prompting** — for unstructured events, nudging toward an on-ramp, or flagging that attendees will be prepared.
-- **Policy & responsibility** — for oriented / exclusive or otherwise sensitive events, surfacing the organiser's responsibilities.
-- **Legal care** — the heavy end, in specific cases (exclusionary events, regulated activities): making legal considerations explicit.
+| `source` | Who runs it | Organizer engagement |
+|---|---|---|
+| `community` | a member proposes and runs it | **Full** — framing, structure, responsibility gates, organiser debrief. The main case. |
+| `external` | a third-party event happening in the world that IRL surfaces | **Minimal** — there's no IRL member to coach. Shifts from *organiser engagement* to *source/operator vetting* (the register of event types / operators / venues, Group 3) + attendee prep. |
+| `platform` | IRL itself runs it (seed / official / workshop) | IRL is the organiser; engagement is internal. |
 
-## Organiser debriefs
+The rest of this note is about **`community`** events unless noted. A separate axis — *is the current user the organiser?* — governs which UI they see, but doesn't change the engagement model.
 
-Organisers need their own post-event debrief — distinct from attendee debriefs — covering how it went from the running-it side: did the format work, attendance vs. expectation, what to change next time. This feeds the register of event types / operators / venues (Group 3), and can surface structure/activity mismatches that are about the *event* rather than the attendee.
+## The organizer journey
+
+Mapped onto the real lifecycle:
+
+| Stage | Lifecycle | IRL's engagement |
+|---|---|---|
+| **Propose** | `EventProposed` (`POST /events`) | Framing help (title / description / intent); structure prompting; orientation/exclusion + legal gates |
+| **Firm up** | `proposed → planned` (schedule / auto-plan on `minimumAttendance`); time/date **polls**; **change-suggestions** | Realistic-expectations framing (a quiet turnout isn't failure); suggestion **mediation** (`coaching-and-engagement.md`) |
+| **Run** | `in-progress` (time-derived) | Mostly hands-off; facilitation support for unstructured events |
+| **After** | `over` | **Organiser debrief** (new; distinct from attendee debrief) |
+| **Manage** (throughout) | `EventEdited`, `EventCancelled`, notify attendees | Light help; cancellation handled with care for attendees |
+
+## IRL's role: invited vs. required
+
+Two modes, and keeping them distinct matters:
+
+- **Invited (collaborative) — the common case.** Framing feedback, structure suggestions, expectation-setting. Offered in the we-voice like a helpful co-host; the organiser can take or leave it. This is most of the engagement.
+- **Required (gating) — rare but firm.** Exclusion policy, legal considerations, conduct/safety responsibility. These are not optional, but they're delivered with care and always pair the "you can't / you must" with a "here's how" (the framing principle, `coaching-and-engagement.md`).
+
+**Trust-graduated.** A first-time organiser gets the most support and a light touch of scrutiny; an organiser with a track record (contributor rating, Group 4) gets a lighter, faster path. Engagement scales *down* as trust is earned — we don't hover over someone who's run ten good events.
+
+## Framing help (the light, common case)
+
+A clear title, description, and intent make an event discoverable and set attendee expectations — and mismatched expectations are exactly what shows up as a poor attendee debrief. So helping an organiser frame well is high-leverage and low-friction:
+
+- Gentle feedback on whether the title/description conveys what the event actually is and who it's for.
+- Surfacing an implied audience so it's stated plainly ("sounds like this is aimed at folks new to hiking — want to say so?").
+- All collaborative, all skippable. Never bureaucratic.
+
+## Structure & the unstructured-event special case
+
+Unstructured "just come and chat" events are rare and hard for most attendees — conversation is the hardest on-ramp (`reflection-and-coaching.md` → Skills development). When an event has little structure, IRL either:
+
+- prompts the organiser to add an on-ramp or purpose (an opening activity, a prompt, a role for early arrivals), or
+- flags that attendees will be **prepared** for the fact that mingling is the task (skills-development, attendee side).
+
+We never surface a structureless event as if it were low-effort — that sets attendees up to fail. Organisers who want to run these well are candidates for **facilitation** skills support (the useful door at community scale).
+
+## Responsibility gates (required)
+
+- **Orientation vs. exclusion.** *Orientation* — an event welcoming a crowd ("women's hike", "20s & 30s welcome") — is inclusive and only needs clear framing. *Exclusion* — actively turning people away ("no men") — is a higher bar. It triggers a responsibility conversation: the organiser must understand what they're taking on, IRL surfaces the considerations (and, in specific cases, legal ones), and some exclusionary events may not be supportable at all. **This is the gate the demographic reframe depends on** (`user-model.md`). *Decision needed — see below on how far v1 goes.*
+- **Conduct & safety.** Organisers carry some responsibility for what happens at their events. The conduct/safety path (`debrief.md`; Group 4) feeds back to organisers and their contributor rating — a pattern of concerns at one organiser's events is a signal.
+- **Legal.** The heavy end — regulated activities, exclusionary events — where legal considerations are made explicit. Per-community, and likely needs real counsel before launch in any community.
+
+## Organizer debrief
+
+Distinct from the attendee debrief (`debrief.md`), from the running-it side. Same principles — tiered, low-friction, we-voice, information-first with an optional reflection door. Captures:
+
+- Did it happen; attendance vs. expectation.
+- Did the format / structure work.
+- Anything to change next time.
+- Any conduct/safety issues from the organiser's vantage.
+
+Feeds:
+
+- The **register of event types / operators / venues** (Group 3).
+- The organiser's **contributor rating** (Group 4).
+- **Aggregated attendee signal back to the organiser** — when several attendees report the same structural miss ("nothing to do", "too big"), that becomes constructive feedback for the organiser, not just user-model updates. A genuinely useful loop, handled gently (it's feedback, not a report card).
+- A **facilitation-coaching** doorway for organisers who want to get better at running things.
+
+Emitting it: an `OrganizerDebriefRecorded` event, parallel to `DebriefRecorded`, on the event/interaction aggregate.
+
+## Voice
+
+- **Invited engagement:** warm-not-familiar, "we", collaborative — a helpful co-host, never a bureaucrat.
+- **Required gates:** still warm and caring, but firm; always pair the boundary with a path ("we can't host it as men-excluded, but here's how to run it as a women's group that's welcoming…").
+- Trust-graduated, as above.
+
+## Decisions
+
+- **Organizer engagement applies fully to `community` events**; `external` shifts to source/operator vetting; `platform` is internal.
+- **Two modes — invited (collaborative, most of it) and required (gating, rare)** — kept distinct; required gates always pair boundary with a path.
+- **Trust-graduated:** support and scrutiny scale down as an organiser earns a track record.
+- **Organiser debrief is its own flow/event** (`OrganizerDebriefRecorded`), and aggregates attendee signal back as constructive feedback.
 
 ## Open questions
 
-- The full organiser flow (create → frame → run → debrief) and where IRL's help is *invited* vs. *required*.
-- The orientation-vs-exclusion policy and its legal contours per community.
-- How much responsibility organisers carry for conduct/safety, and how it's communicated.
-- Relationship to contributor rating / the facilitator path (Group 4; `coaching-and-engagement.md` → Members as facilitators).
-- Whether organiser engagement uses the same we-voice / coaching machinery.
-
-This is a recognised area to develop, not yet designed.
+- **Exclusion policy for v1 (needs sign-off).** Do we (a) allow *orientation* only and not support truly *exclusionary* events for now; (b) allow exclusion case-by-case with a responsibility/legal gate; or (c) defer entirely? My lean: **(a) for v1** — orientation freely, steer would-be-exclusionary events toward an inclusive framing, and defer real exclusion until we have the policy + legal grounding per community. Value- and legal-laden — your call.
+- How much framing help is proactive vs. only-on-request, without feeling like a gate on posting an event.
+- The contributor-rating model that trust-graduation keys off (Group 4) — not yet designed.
+- Organiser debrief triggering/timing and how attendee-signal aggregation is thresholded before it's surfaced as feedback.
+- External-event vetting (operator/venue register, safety ratings) — its own Group 3/4 design.
+- Whether framing help and gates use the same prompt/coaching machinery as the attendee side, or a distinct organiser prompt.

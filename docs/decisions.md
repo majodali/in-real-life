@@ -38,7 +38,7 @@ The canonical record of design decisions for IRL. Each entry is summarized here 
 | D28 | Demographic affinity lives on the **event** (organiser-defined, self-selected), never the user; IRL never collects/infers/matches user demographics; user-level demographic matching stays a firmly-closed door. Event *orientation* is allowed; *exclusion* is gated to organiser-engagement/legal | `user-model.md`, `organizer-engagement.md` |
 | D29 | Skills development (conversation-starting first; also empathy, conflict resolution, facilitation) is a first-class capability backing reflection/coaching. Conversation is a growth *destination*, structured events are *scaffolding*; unstructured events are a special case needing prep / organiser structure | `reflection-and-coaching.md`, `organizer-engagement.md` |
 | D30 | Framing principle — every "IRL doesn't do X" is paired with "here's what we do / the path that serves you"; never a bare refusal, never implying the user is biased | `coaching-and-engagement.md` |
-| D31 | Organisers are a first-class participant with their own engagement flow (framing → structure → policy → legal) and their own debrief — recognised area, seeded | `organizer-engagement.md` |
+| D31 | Organisers are first-class. Engagement applies fully to `community` events (`external` → source/operator vetting; `platform` → internal); two modes — **invited** (collaborative, most of it) and **required** (gating: exclusion/legal/conduct), kept distinct, boundaries always paired to a path; **trust-graduated** (scales down with track record); organiser debrief is its own flow (`OrganizerDebriefRecorded`) that also aggregates attendee signal back as constructive feedback | `organizer-engagement.md` |
 
 ## Governance — to define later
 
