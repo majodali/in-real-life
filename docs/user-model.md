@@ -137,7 +137,7 @@ This is how associational life already works, and it sidesteps the whole risk su
 
 It also makes the in-the-moment answer **constructive rather than stonewalling** — "IRL doesn't match by age, but events organised around all sorts of things come up, and you could start one" — which feeds propose-your-own and the facilitator path.
 
-**Orientation vs. exclusion.** An event *for / welcoming* an audience ("women's hike", "20s & 30s welcome") is inclusive and freely allowed. An event that actively *excludes* ("no men") is a higher bar — some are legitimate (e.g. survivor spaces), but it needs deliberate organiser responsibility, a platform policy, and sometimes legal care. That gating is organiser-engagement work (`organizer-engagement.md`).
+**Orientation, not enforcement.** IRL has no user demographic data, so it can never *enforce* who attends — for oriented events or any others. Welcoming framing ("women's hike", "20s & 30s welcome") is freely allowed and does its work through self-selection. Any real-world gatekeeping ("women-only") is the organiser's own, done in person; IRL builds **no attendee-verification** — that would reintroduce every risk above and make IRL the arbiter of who counts as a category. Genuinely closed groups run as **invite-only / private events** (access by explicit invitation, no demographics). IRL's only levers are the listing's language and honest attendee expectation-setting — see `organizer-engagement.md`.
 
 **User-level demographic matching stays a firmly-closed door.** The event-level path meets real demand without any of the above risks; user-matching would reintroduce nearly all of them, so the bar to ever revisit it is very high.
 

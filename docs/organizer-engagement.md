@@ -56,7 +56,10 @@ We never surface a structureless event as if it were low-effort — that sets at
 
 ## Responsibility gates (required)
 
-- **Orientation vs. exclusion.** *Orientation* — an event welcoming a crowd ("women's hike", "20s & 30s welcome") — is inclusive and only needs clear framing. *Exclusion* — actively turning people away ("no men") — is a higher bar. It triggers a responsibility conversation: the organiser must understand what they're taking on, IRL surfaces the considerations (and, in specific cases, legal ones), and some exclusionary events may not be supportable at all. **This is the gate the demographic reframe depends on** (`user-model.md`). *Decision needed — see below on how far v1 goes.*
+- **IRL never enforces or verifies demographic membership.** It has no user demographic data and won't collect any (D28), so it structurally *cannot* enforce who attends — for oriented events or any others. Any real-world gatekeeping ("women-only") is the organiser's, done in person; IRL builds **no attendee-verification flow** — that would reintroduce the entire risk surface (demographic data, self-designation disputes, gaming, trans-exclusion) and make IRL the arbiter of who "counts." IRL's only levers are two, neither of them enforcement:
+  - **Listing language / content policy** — welcoming, oriented framing ("women's hike") is fine; unlawful or hostile exclusionary advertising is not.
+  - **Attendee protection** — if the organiser will turn people away in person, the listing must say so plainly, so nobody travels to be rejected at the door (the real harm exclusion causes).
+  - **Genuinely closed groups run as invite-only / private events** — access by explicit invitation, controlled by the organiser, needing zero demographic data. That's the clean primitive for a closed group, not a demographic check.
 - **Conduct & safety.** Organisers carry some responsibility for what happens at their events. The conduct/safety path (`debrief.md`; Group 4) feeds back to organisers and their contributor rating — a pattern of concerns at one organiser's events is a signal.
 - **Legal.** The heavy end — regulated activities, exclusionary events — where legal considerations are made explicit. Per-community, and likely needs real counsel before launch in any community.
 
@@ -93,7 +96,8 @@ Emitting it: an `OrganizerDebriefRecorded` event, parallel to `DebriefRecorded`,
 
 ## Open questions
 
-- **Exclusion policy for v1 (needs sign-off).** Do we (a) allow *orientation* only and not support truly *exclusionary* events for now; (b) allow exclusion case-by-case with a responsibility/legal gate; or (c) defer entirely? My lean: **(a) for v1** — orientation freely, steer would-be-exclusionary events toward an inclusive framing, and defer real exclusion until we have the policy + legal grounding per community. Value- and legal-laden — your call.
+- **Listing-language / content policy for v1 (needs sign-off).** Oriented framing and invite-only closed groups are both fine and need no verification. The narrow remaining question is content policy: what exclusionary *listing language* (if any) is permitted, and do we list events whose organiser will gatekeep in person (with honest attendee disclosure) or decline them for v1? Lean: allow oriented framing + invite-only; require honest disclosure; decline unlawful/hostile exclusionary listings; build no verification. Legal-laden per community.
+- **Invite-only / private events** as a general access-control primitive (no demographics) — needed for closed groups; connects to the referral/invite backlog item. Its own small design.
 - How much framing help is proactive vs. only-on-request, without feeling like a gate on posting an event.
 - The contributor-rating model that trust-graduation keys off (Group 4) — not yet designed.
 - Organiser debrief triggering/timing and how attendee-signal aggregation is thresholded before it's surfaced as feedback.
