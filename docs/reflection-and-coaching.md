@@ -64,6 +64,22 @@ Home of the five evidence-based perspectives — repetition over chemistry, side
 
 Until we have real usage data, perspectives are offered as **general, modestly-framed ways of seeing** — not as empirical claims about IRL's own results. The five theses are research-grounded, but we present them humbly ("a lot of people find…", "often…"), not as data-backed promises. The day we can honestly say *"in our experience on IRL…"* is a future capability that needs real outcomes behind it (shared open question with `debrief.md`). Saying it before then would be exactly the unprovable claim we've committed to avoid.
 
+## Skills development
+
+Reflection and coaching are only worth having if IRL can back them with real help building the skills that make showing up and connecting easier. This is a **first-class capability family**, not an afterthought — the substance behind coaching. Likely areas:
+
+- **Starting and entering conversations** — plausibly the #1 challenge users raise. Most people find it a genuine *challenge* (surmountable with practice), not an intractable difficulty. Pre-event preparation and a few practised ways-in help people arrive more confident.
+- **Empathy, listening, reading a room.**
+- **Conflict resolution** — handling friction gracefully.
+- **Event organisation & facilitation** — for members who want to host or help (the useful door at community scale; `coaching-and-engagement.md` → Members as facilitators).
+
+Design stance:
+
+- **Conversation is a destination, not an entry point.** It's the substance of friendship, so it's never the wrong goal — but open mingling is the hardest on-ramp for many. Structured / activity events are *scaffolding* that lowers the entry barrier; conversation is a skill to grow *into*, not around. The one unhealthy pattern is permanent avoidance — parallel activity forever, never talking, never deepening.
+- **Coaching connects to practice, not just perspective.** Where the five perspectives *reframe*, skills work builds *capability* — the difference between "the second time is easier" and actually being readier for it.
+
+A capability family to design in its own right (its own note when we get there); captured here because it's what makes reflection and coaching honest.
+
 ## Signal & event-sourcing
 
 Reflection/coaching is rich narrative, and produces the same kind of `observed` evidence as a Tier-2 debrief.
@@ -76,6 +92,36 @@ Reflection/coaching is rich narrative, and produces the same kind of `observed` 
 
 - Reflection is a genuine (short) conversation — a handful of turns, Opus 4.8, non-streaming, one call per turn; extraction of deltas at the close (as with debrief Tier 2). It's **cheap because it's rare** — only a minority of debriefs open this door.
 - Turns are conversational text in the we-voice, not cards. Structured output is used only for the closing extraction, not the conversation itself.
+
+## Reframe library (working copy)
+
+Provisional response copy for the hardest moments, in the we-voice (warm-not-familiar, grounded, no unprovable claims, every "don't" paired with a "do"). To be validated against real reactions.
+
+**Age steer (reflection guidance).** *User wants people their own age.*
+> "IRL doesn't match by age. Aside from wanting more people your own age, what would've made the evening easier?"
+
+Sets the demographic aside without denying the feeling or asserting a cause; invites an addressable reflection *if* they volunteer it. The constructive "here's how this happens on IRL" (themed events, propose-your-own) is available if they want a path — see `user-model.md` → *Demographic affinity lives on the event*.
+
+**"I'm bad at this" (reflection → conversation-skills coaching).**
+> (reflection) "What part was hardest — walking in, or once you were there?"
+> (coaching) "Joining a conversation is a genuine challenge for most people — honestly the most common thing we hear, and it gets easier with a bit of practice. Want to talk through a couple of ways in before your next one?"
+
+"Challenge" (surmountable), not "hard" (intractable); opens the growth path (skills), not just easier events.
+
+**Lukewarm-but-fixable (reflection stays reflection).**
+> "That's useful — sounds like the ones with something actually happening suit you more. We'll keep that in mind."
+
+She diagnosed it herself; nothing to coach. Reflects her own insight back as structure; minimal close.
+
+**Gender-comfort steer (constructive, event-level).**
+> "Understood. IRL doesn't match people by gender — but plenty of events here are organised for a particular crowd, women's groups included, so those can show up in your feed, and you could start one. What would make an evening feel easier — the group itself, or things like size and knowing a face or two?"
+
+Respects the preference, offers a real path, doesn't imply bias, still opens reflection.
+
+**Fixation that won't move (the exit).**
+> "Fair enough — we won't sort by age, but we'll keep finding the things you actually enjoy."
+
+Holds the line once, points to what we do, stops. No pushing, no guilt.
 
 ## Decisions
 

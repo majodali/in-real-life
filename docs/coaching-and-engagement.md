@@ -14,6 +14,7 @@ The whole surface is governed by one tonal rule: **circumspect, never didactic.*
 - **Respects autonomy.** Every nudge is trivially ignorable. The user's choice always stands; coaching never gates an action.
 - **Aimed at the growth edge.** Guidance nudges toward the edge of the comfort envelope (`user-model.md`) — a small stretch, never a shove.
 - **Honest, not manipulative.** We share these perspectives because the evidence supports them and they help the user, not to drive engagement metrics.
+- **Pair every "don't" with a "do".** When IRL won't do something a user asks for, it names what it *does* instead and the path that serves them — never a bare refusal, and never an implication that the user is biased. This is the antidote to stonewalling.
 
 ## Voice & identity
 
@@ -56,7 +57,7 @@ We don't act on difference (see `user-model.md` → *Difference is not incompati
 - **Younger members wanting age-peers.** We don't sort by age, and on a thin, older island we can't promise a room of twenty-somethings. The honest, hopeful answer: we help you find things you'll genuinely enjoy; the pool grows as the community does; and shared activity tends to make an age mix matter far less than people expect (intergenerational connection is often a quiet gift).
 - **Women wary after bad experiences with men or dating apps.** This is mostly a safety concern, and safety is handled deliberately elsewhere (Group 4: reporting, blocks, contributor trust, no messaging, show-up-only). The answer leads with how events are kept safe, not with filtering men out.
 
-The throughline: never promise demographic matching, never imply anyone is incompatible, meet the worry with candor plus the genuine ways IRL helps.
+The throughline: never promise demographic matching, never imply anyone is incompatible, and pair candor with a *real path* — the constructive answer is that demographic affinity lives on the **event** (themed events come up; you could start one — `user-model.md` → *Demographic affinity lives on the event*), not a bare "we don't do that."
 
 ## Active engagement
 

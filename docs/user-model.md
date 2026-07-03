@@ -112,6 +112,35 @@ Concretely:
 
 This stance is value-laden and worth explicit sign-off, especially given outside feedback pulling the other way. The default is to bridge; separation happens only from a user's own stated boundary or from revealed harm. We won't *act* on difference, but we must be able to *address* it when a member raises it — see `coaching-and-engagement.md` → *Answering the difference concern*.
 
+### Demographic affinity lives on the event, not the user
+
+Some desire for same-age, same-gender, or same-culture company is entirely healthy and normal — in a large community it's unremarkable. We honour those cases *without* matching people by demographics, through one reframe: **demographic affinity is a property of the event, never of the user.**
+
+- IRL never infers, stores, or matches a *user's* demographics.
+- **Organisers** can create real events with a described theme or audience — a women's hiking group, a 20s/30s game night, a cultural potluck — and IRL surfaces them like any real event. Users **self-select** in.
+
+This is how associational life already works, and it sidesteps the whole risk surface of user-level demographic matching:
+
+| Risk of matching *users* by demographics | Why the event-level reframe avoids it |
+|---|---|
+| Compounds implicit / supports explicit bias | IRL isn't categorising anyone; a themed event is public and self-selected |
+| The filtering choice may not be mutual | Self-selection is mutual by definition |
+| Filter functionality can be gamed | There is no user-demographic filter to game |
+| Users may reject another's self-designation; people may lie (esp. age) | We never verify, assign, or match on anyone's demographics |
+| A sensitive demographic-data trove (breach / subpoena / misuse) | No user demographic data is collected as matchable fields |
+| Visible exclusion feels like rejection | Orientation is opt-in; nobody is filtered *out* of the general pool |
+| Community self-segregation | The default feed still bridges; themed events are ordinary civic life on top |
+| Reductive, misrepresentative categories | The event names its own theme in its own words; no system buckets |
+| Legal / anti-discrimination exposure | Sits with the organiser running a community group, where it belongs |
+| Optics of a "filter by ethnicity" feature | We host community events; we don't sort people |
+| An unholdable line across gender / age / ethnicity / religion | One clean rule: events can have themes; user-matching never uses demographics |
+
+It also makes the in-the-moment answer **constructive rather than stonewalling** — "IRL doesn't match by age, but events organised around all sorts of things come up, and you could start one" — which feeds propose-your-own and the facilitator path.
+
+**Orientation vs. exclusion.** An event *for / welcoming* an audience ("women's hike", "20s & 30s welcome") is inclusive and freely allowed. An event that actively *excludes* ("no men") is a higher bar — some are legitimate (e.g. survivor spaces), but it needs deliberate organiser responsibility, a platform policy, and sometimes legal care. That gating is organiser-engagement work (`organizer-engagement.md`).
+
+**User-level demographic matching stays a firmly-closed door.** The event-level path meets real demand without any of the above risks; user-matching would reintroduce nearly all of them, so the bar to ever revisit it is very high.
+
 ## Boundaries and the anti-observation principle
 
 Users can name people they do not want to interact with (e.g. ex-spouses). This is distinct from a block (Group 4) and, like every barrier, **it does not reduce either person's visibility of events** — both can still see and attend anything.
@@ -163,6 +192,7 @@ This is an analytics/admin surface (Group 4 admin UI), and it must respect the p
 - Personality typologies or trait scores (Big Five, MBTI, or homegrown equivalents) — not stored, not displayed, not used.
 - A standing compatibility score between any two users.
 - Matching or sorting by demographic similarity ("people like you" cohorting) — see *Difference is not incompatibility*.
+- Collecting, storing, inferring, or matching on a *user's* demographic attributes (age, gender, ethnicity, …). Demographic affinity lives on the event, not the user — see *Demographic affinity lives on the event*.
 - Any user-visible label about another person beyond first name, avatar, vibe, and shared context.
 - Inference about protected or sensitive characteristics. If a user volunteers something sensitive in narrative, it stays in narrative; Layer 2 never derives fields from it.
 

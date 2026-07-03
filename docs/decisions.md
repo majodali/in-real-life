@@ -35,6 +35,10 @@ The canonical record of design decisions for IRL. Each entry is summarized here 
 | D25 | Reflection and coaching are distinct, optional, **user-led** modes reached (v1) only from the debrief; reflection = IRL listens/asks and grounds patterns in the user's own words (no interpretation, advice, or claims); a `ReflectionRecorded` event carries the transcript + `observed` deltas | `reflection-and-coaching.md` |
 | D26 | Coaching is **conditional** — only when a user is stuck on the negative; ≤1 perspective, offered not instructed, frequency-capped (never repeat one), yields immediately; holds the no-demographic line without forcing a reframe | `reflection-and-coaching.md` |
 | D27 | Perspectives are framed **modestly** (general "a lot of people…"), never as empirical IRL-data claims, until real outcomes can ground them | `reflection-and-coaching.md`, `debrief.md` |
+| D28 | Demographic affinity lives on the **event** (organiser-defined, self-selected), never the user; IRL never collects/infers/matches user demographics; user-level demographic matching stays a firmly-closed door. Event *orientation* is allowed; *exclusion* is gated to organiser-engagement/legal | `user-model.md`, `organizer-engagement.md` |
+| D29 | Skills development (conversation-starting first; also empathy, conflict resolution, facilitation) is a first-class capability backing reflection/coaching. Conversation is a growth *destination*, structured events are *scaffolding*; unstructured events are a special case needing prep / organiser structure | `reflection-and-coaching.md`, `organizer-engagement.md` |
+| D30 | Framing principle — every "IRL doesn't do X" is paired with "here's what we do / the path that serves you"; never a bare refusal, never implying the user is biased | `coaching-and-engagement.md` |
+| D31 | Organisers are a first-class participant with their own engagement flow (framing → structure → policy → legal) and their own debrief — recognised area, seeded | `organizer-engagement.md` |
 
 ## Governance — to define later
 

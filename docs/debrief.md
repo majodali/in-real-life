@@ -105,6 +105,7 @@ Agency invites friction: a user may try to steer toward something we don't suppo
 - **A brief, plain acknowledgment — nothing more.** "That's fair to raise." Not "that's its own kind of hard" — we don't interpret, empathise, or manufacture a connection.
 - **An honest, *grounded* rationale — no unprovable claims.** We can truthfully say it isn't how IRL works and that we couldn't promise it on an island this size. We do **not** assert empirical claims we can't back yet (e.g. "a filter misses the people you'd click with") — until we have real evidence to ground such statements ("in our experience…"), we don't make them.
 - **Point back to what worked, from their own signal.** If the activity landed, that's the honest, concrete thing to lean on — not a demographic offer. (We explicitly do *not* offer "where newer people are landing": new people are any age, and it doesn't address the wish.)
+- **Offer the real path, not a refusal.** Demographic affinity lives on the *event*, not the user (`user-model.md` → *Demographic affinity lives on the event*): themed events organised for a crowd do come up, and the user could start one. Pairing the "don't" with this "do" is what keeps it from stonewalling.
 - **No compromise, no judgment, no lecture.** A small reframe the user is free to ignore; if they stay stuck on the negative, that — and only that — is the opening to coaching.
 
 Getting this wording right is **work to do**, and needs real-world validation.
