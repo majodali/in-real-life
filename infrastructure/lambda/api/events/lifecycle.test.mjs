@@ -274,6 +274,8 @@ test('edit: emits EventEdited with only the changed fields, seq=current+1', asyn
 
 test('edit: works while planned (the common case)', async () => {
   eventRow.lifecycleState = 'planned';
+  // Future start so the effective state stays 'planned' (not in-progress).
+  eventRow.startTime = '2099-01-01T00:00:00Z';
   eventRow.seq = 2;
   const res = await edit(makeEvent({
     claims: organizerClaims, body: { commandId: 'c', title: 'New' },
