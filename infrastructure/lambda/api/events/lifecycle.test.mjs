@@ -133,6 +133,23 @@ test('cancel: works from planned', async () => {
   assert.equal(args.events[0].seq, 3);
 });
 
+test('cancel: works while in-progress (calling it off partway)', async () => {
+  eventRow.lifecycleState = 'planned';
+  eventRow.startTime = '2020-01-01T00:00:00Z';
+  eventRow.endTime = '2099-01-01T00:00:00Z';
+  const res = await cancel(makeEvent({ claims: organizerClaims, body: { commandId: 'c' } }));
+  assert.equal(res.statusCode, 201);
+});
+
+test('cancel: 409 once the event is over', async () => {
+  eventRow.lifecycleState = 'planned';
+  eventRow.startTime = '2020-01-01T00:00:00Z';
+  eventRow.endTime = '2020-01-01T02:00:00Z';
+  const res = await cancel(makeEvent({ claims: organizerClaims, body: { commandId: 'c' } }));
+  assert.equal(res.statusCode, 409);
+  assert.match(JSON.parse(res.body).error, /over/);
+});
+
 test('cancel: passes reason through when provided', async () => {
   await cancel(makeEvent({
     claims: organizerClaims,
@@ -263,6 +280,32 @@ test('edit: works while planned (the common case)', async () => {
   }));
   assert.equal(res.statusCode, 201);
   assert.equal(runner.runCommand.calls[0][0].events[0].seq, 3);
+});
+
+test('edit: 409 once the event is over', async () => {
+  eventRow.lifecycleState = 'planned';
+  eventRow.startTime = '2020-01-01T00:00:00Z';
+  eventRow.endTime = '2020-01-01T02:00:00Z';
+  const res = await edit(makeEvent({
+    claims: organizerClaims, body: { commandId: 'c', title: 'New' },
+  }));
+  assert.equal(res.statusCode, 409);
+  assert.match(JSON.parse(res.body).error, /over/);
+});
+
+test('edit: can set timesApproximate', async () => {
+  const res = await edit(makeEvent({
+    claims: organizerClaims, body: { commandId: 'c', timesApproximate: true },
+  }));
+  assert.equal(res.statusCode, 201);
+  assert.equal(runner.runCommand.calls[0][0].events[0].data.fields.timesApproximate, true);
+});
+
+test('edit: 400 when timesApproximate is not a boolean', async () => {
+  const res = await edit(makeEvent({
+    claims: organizerClaims, body: { commandId: 'c', timesApproximate: 'yes' },
+  }));
+  assert.equal(res.statusCode, 400);
 });
 
 test('edit: 400 when startTime is not a parseable ISO', async () => {

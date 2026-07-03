@@ -6,6 +6,7 @@
 // (sub-thousand events per locality).
 
 import { ScanCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
+import { computeEffectiveState } from '../lib/lifecycle-state.mjs';
 
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
 
@@ -77,10 +78,6 @@ export function createListEventsHandler({ client, eventsTable, interactionsTable
   };
 }
 
-export function computeEffectiveState(row, nowIso) {
-  if (row.lifecycleState === 'cancelled') return 'cancelled';
-  if (row.lifecycleState !== 'planned') return row.lifecycleState;
-  if (row.endTime && nowIso >= row.endTime) return 'over';
-  if (row.startTime && nowIso >= row.startTime) return 'in-progress';
-  return 'planned';
-}
+// Re-exported for backward compatibility; the canonical definition now lives
+// in lib/lifecycle-state.mjs so every reader shares one rule.
+export { computeEffectiveState } from '../lib/lifecycle-state.mjs';

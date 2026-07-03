@@ -6,9 +6,10 @@
 //   PUT    /events/:id/suggestions/:sid/vote     (any authenticated user)
 //   DELETE /events/:id/suggestions/:sid/vote
 //
-// Suggestions only make sense on proposed events — create/withdraw/adopt/
-// reject all 409 once the event has been scheduled or cancelled. The
-// organizer response slot stays writable as long as the event is proposed.
+// Suggestions are open through the proposed AND planned phases — create/
+// withdraw/adopt/reject/vote all 409 once the event is cancelled or, by the
+// simulated clock, in-progress or over. The organizer response slot stays
+// writable regardless of phase.
 
 import { test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
@@ -172,6 +173,17 @@ test('POST: 409 when event is cancelled', async () => {
     claims: otherClaims, body: { commandId: 'c', text: 'hi' },
   }));
   assert.equal(res.statusCode, 409);
+});
+
+test('POST: 409 once the event is over (planned + past endTime)', async () => {
+  eventRow.lifecycleState = 'planned';
+  eventRow.startTime = '2020-01-01T00:00:00Z';
+  eventRow.endTime = '2020-01-01T02:00:00Z';
+  const res = await makeMakeHandler()(makeEvent({
+    claims: otherClaims, body: { commandId: 'c', text: 'too late' },
+  }));
+  assert.equal(res.statusCode, 409);
+  assert.match(JSON.parse(res.body).error, /over/);
 });
 
 test('POST: still allowed once the event is planned', async () => {

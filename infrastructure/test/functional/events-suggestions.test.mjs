@@ -90,7 +90,8 @@ async function proposeEvent(token) {
   const body = {
     commandId: randomUUID(),
     title: `Coffee walk ${randomUUID().slice(0, 6)}`,
-    startTime: '2026-06-01T16:00:00.000Z',
+    startTime: '2026-12-01T16:00:00.000Z',
+    endTime: '2026-12-01T17:30:00.000Z',
     location: 'Blackbird Bakery',
     organizerName: 'Organizer',
   };
@@ -201,9 +202,9 @@ test('organizer can adopt; non-organizer cannot', async () => {
   assert.equal(ok.status, 201);
 });
 
-test('suggestions blocked once event leaves proposed (planned event → 409)', async () => {
+test('suggestions blocked once event is cancelled (closed → 409)', async () => {
   const eventId = await proposeEvent(organizer.idToken);
-  await fetch(`${config.apiUrl}/events/${eventId}/schedule`, {
+  await fetch(`${config.apiUrl}/events/${eventId}/cancel`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${organizer.idToken}` },
     body: JSON.stringify({ commandId: randomUUID() }),

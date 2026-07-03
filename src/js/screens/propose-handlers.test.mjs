@@ -128,14 +128,34 @@ test('optional fields omitted from the API call when blank', async () => {
   await handleProposeSubmit({
     title: 'x',
     startTime: '2026-06-01T16:00:00Z',
+    endTime: '2026-06-01T17:30:00Z',
     location: 'l',
     organizerName: 'n',
     commands, showToast, onSuccess, onValidationError,
   });
   const args = commands.proposeEvent.calls[0][0];
   assert.equal(args.description, undefined);
-  assert.equal(args.endTime, undefined);
   assert.equal(args.minimumAttendance, undefined);
+});
+
+test('missing endTime: toast + onValidationError(endTime), no API call', async () => {
+  await handleProposeSubmit({
+    title: 'x',
+    startTime: '2026-06-01T16:00:00Z',
+    location: 'l',
+    commands, showToast, onSuccess, onValidationError,
+  });
+  assert.equal(commands.proposeEvent.calls.length, 0);
+  assert.equal(onValidationError.calls[0][0], 'endTime');
+});
+
+test('timesApproximate passed through to the API (true/false)', async () => {
+  await handleProposeSubmit({ ...valid, timesApproximate: true, commands, showToast, onSuccess, onValidationError });
+  assert.equal(commands.proposeEvent.calls[0][0].timesApproximate, true);
+
+  commands.proposeEvent.calls.length = 0;
+  await handleProposeSubmit({ ...valid, commands, showToast, onSuccess, onValidationError });
+  assert.equal(commands.proposeEvent.calls[0][0].timesApproximate, false);
 });
 
 test('on API error: toast, no onSuccess', async () => {

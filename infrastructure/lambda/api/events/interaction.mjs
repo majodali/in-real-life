@@ -7,6 +7,7 @@
 // count math via atomic ADD on the event row.
 
 import { GetCommand } from '@aws-sdk/lib-dynamodb';
+import { computeEffectiveState, simulatedNowIso, CHANGE_OPEN_STATES } from '../lib/lifecycle-state.mjs';
 
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
 const VALID_LEVELS = new Set(['interested', 'confirmed']);
@@ -38,7 +39,9 @@ function userNameFor(claims, override) {
   return 'someone';
 }
 
-export function createSetInteractionHandler({ runner, client, eventsTable, interactionsTable }) {
+export function createSetInteractionHandler({
+  runner, client, eventsTable, interactionsTable, getOffset,
+}) {
   return async function handler(httpEvent) {
     const claims = httpEvent?.requestContext?.authorizer?.jwt?.claims;
     if (!claims || !claims.sub) return reply(401, { error: 'unauthorized' });
@@ -61,8 +64,13 @@ export function createSetInteractionHandler({ runner, client, eventsTable, inter
 
     const eventRow = await readEventRow(client, eventsTable, eventId);
     if (!eventRow) return reply(404, { error: 'event not found' });
-    if (eventRow.lifecycleState === 'cancelled') {
-      return reply(409, { error: 'event is cancelled' });
+    // Registering interest/confirmation closes once the event leaves the
+    // open phases — you can't newly commit to an event that's already
+    // in-progress, over, or cancelled. (Withdrawing stays permissive.)
+    const offsetMs = getOffset ? (await getOffset()).offsetMs : 0;
+    const effective = computeEffectiveState(eventRow, simulatedNowIso(offsetMs));
+    if (!CHANGE_OPEN_STATES.has(effective)) {
+      return reply(409, { error: `event is ${effective}; can no longer change interest` });
     }
 
     const userId = claims.sub;
@@ -176,13 +184,9 @@ export function createSubmitDebriefHandler({
       return reply(409, { error: 'event was cancelled' });
     }
 
-    // The event needs to be over (computed): planned + simulatedTime past endTime.
+    // The event needs to be over (computed from the simulated clock vs endTime).
     const offsetMs = getOffset ? (await getOffset()).offsetMs : 0;
-    const nowIso = new Date(Date.now() + offsetMs).toISOString();
-    const isOver = eventRow.lifecycleState === 'planned'
-      && eventRow.endTime
-      && nowIso >= eventRow.endTime;
-    if (!isOver) {
+    if (computeEffectiveState(eventRow, simulatedNowIso(offsetMs)) !== 'over') {
       return reply(409, { error: 'event is not over yet' });
     }
 

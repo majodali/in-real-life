@@ -82,8 +82,8 @@ async function proposeEvent(token) {
   const body = {
     commandId: randomUUID(),
     title: `Coffee walk ${randomUUID().slice(0, 6)}`,
-    startTime: '2026-07-01T16:00:00.000Z',
-    endTime: '2026-07-01T17:30:00.000Z',
+    startTime: '2026-12-01T16:00:00.000Z',
+    endTime: '2026-12-01T17:30:00.000Z',
     location: 'Blackbird Bakery',
     organizerName: 'Organizer',
   };
