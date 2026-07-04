@@ -205,7 +205,7 @@ This is an analytics/admin surface (Group 4 admin UI), and it must respect the p
 
 ## Open questions
 
-- Layer 2 storage shape: single projection document per user vs. per-dimension items (affects partial-update ergonomics and the Group 3 projection design).
+- Layer 2/3 storage — **resolved in `projection-store.md`** (async Streams projection into a per-item `irl-user-model` store).
 - Decay function specifics: how fast `stated` confidence fades, what counts as "enough" observations to flip a dimension.
 - Legibility UX: where the user sees/edits "what IRL believes about me" (profile screen extension; Group 1 `Profile view + edit` item).
 - Cold start for ranking: with empty Layer 3, how heavily to lean on soft priors vs. near-random exposure with good situational fit (connects to Group 3 cold-start item).

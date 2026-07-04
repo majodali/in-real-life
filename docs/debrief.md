@@ -74,7 +74,7 @@ A debrief emits a **`DebriefRecorded`** event on the `interaction#{userId}#{even
 - **Per-debrief** updates the individual's projection (Tier-2 extraction is one cheap call; Tier-0/1 maps deterministically).
 - **Batched, aggregate** analysis across users is a *separate* loop — model-evolution governance (`user-model.md`): de-identified, surfaces candidate dimensions, never per-person.
 
-The profile-projection store shape (single document vs. per-dimension items) is the open question shared with `user-model.md`.
+The profile-projection store is the async per-item `irl-user-model` store (`projection-store.md`); debrief deltas ride in the `DebriefRecorded` event and the Streams projector applies them under precedence/decay.
 
 ## People affinity & the anti-observation principle
 
@@ -251,6 +251,5 @@ Exact schemas live in the forthcoming `debrief-prompt.md`.
 - How mutual affinity shapes ranking/co-attendance while staying illegible — Group 3.
 - Whether to capture *predicted* enjoyment at RSVP (precise forecast error vs. friction).
 - When we can honestly *ground* the difference rationale in real experience ("in our experience…") — needs data; until then, policy + practical constraint + the user's own signal only.
-- Profile-projection store shape (shared with `user-model.md`).
 - Reminder cadence; how much to infer from a lapse.
 - `debrief-prompt.md` — exact prompt + schemas (debrief) and the reflection/coaching handling, once agreed.

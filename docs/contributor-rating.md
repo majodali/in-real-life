@@ -46,7 +46,7 @@ Newcomers start at neutral defaults on every facet.
 
 ## Mechanism / event-sourcing
 
-A per-user projection built by a projector from the events above — recomputed on new signal, decayed over time, `sourceRef`s for auditability. Backstage, PII, crypto-shredded. It's another projection alongside the user-model profile, so it shares the **projection-store shape** open question (`user-model.md`). Consequential and safety actions are **human-in-the-loop** (Group 4 admin), never fully automated.
+A per-user projection built by a projector from the events above — recomputed on new signal, decayed over time, `sourceRef`s for auditability. Backstage, PII, crypto-shredded. It's another projection in the `irl-user-model` store (`projection-store.md`) — `rating#core` items, access-gated. Consequential and safety actions are **human-in-the-loop** (Group 4 admin), never fully automated.
 
 ## What we deliberately don't build
 
@@ -62,12 +62,11 @@ A per-user projection built by a projector from the events above — recomputed 
 - It **informs but never dominates** outcomes, and is **never a visible score or leaderboard**.
 - **Safety facet is human-reviewed with due process**; consequential actions always carry a reason + recourse.
 - **Positive participation is not popularity** — reliability and absence-of-concerns outweigh affinity-received.
+- **Legibility:** a member can see all of their own **history** (events attended, hosted, reliability), but **not the evaluation scores**. Scores are stored **with the most pertinent supporting data** — to give rationale for consequential actions and so we can continually review and improve the approach.
 
 ## Open questions
 
-- **Legibility (needs sign-off).** How much of their own standing does a member see? My lean: their own *activity* (events attended, hosted, reliability) yes; an evaluative *score* no; consequential actions always explained. The tension: transparency vs. gaming/status-anxiety.
 - Facet weightings and decay curves — tune against real data (no empirical grounding yet).
 - The "informs, never dominates" guarantee needs a concrete mechanism in composition (Group 3) — a cap on how much it can move an outcome.
 - Avoiding double-counting popularity between the positive facet and mutual-affinity/crews.
 - Escalation ladder + due process specifics (Group 4 admin).
-- Projection-store shape (shared with `user-model.md`).
