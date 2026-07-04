@@ -96,8 +96,8 @@ Emitting it: an `OrganizerDebriefRecorded` event, parallel to `DebriefRecorded`,
 
 ## Open questions
 
-- **Listing-language / content policy for v1 (needs sign-off).** Oriented framing and invite-only closed groups are both fine and need no verification. The narrow remaining question is content policy: what exclusionary *listing language* (if any) is permitted, and do we list events whose organiser will gatekeep in person (with honest attendee disclosure) or decline them for v1? Lean: allow oriented framing + invite-only; require honest disclosure; decline unlawful/hostile exclusionary listings; build no verification. Legal-laden per community.
-- **Invite-only / private events** as a general access-control primitive (no demographics) — needed for closed groups; connects to the referral/invite backlog item. Its own small design.
+- **Event policy** — the organiser flow is the primary enforcement surface for what kinds of events belong on IRL (no dating-primary, no business/sales, grey areas TBD). Designed in `event-policy.md`; the demographic listing-language piece lives there too.
+- **Invite-only / continuity events** — deferred for v1. When revisited, the framing is **crew/group continuity** (privacy-preserving follow-ups for people who met openly on IRL — the repetition engine), not general private events; see the discussion under crew detection (Group 3). Guardrail: continuity deepens connections that formed openly, never a way to start a hidden group from scratch.
 - How much framing help is proactive vs. only-on-request, without feeling like a gate on posting an event.
 - The contributor-rating model that trust-graduation keys off (Group 4) — not yet designed.
 - Organiser debrief triggering/timing and how attendee-signal aggregation is thresholded before it's surfaced as feedback.
