@@ -89,6 +89,10 @@ A debrief can surface harm, not just disappointment. The loop **distinguishes "I
 
 > **Affordance (two-tier).** Entry — a calm, conduct-focused line: *"Did you have any concerns with anyone's conduct?"* On tap it becomes explicit and caring: *"If someone made you feel unsafe or uncomfortable, you can tell us what happened, or just talk to someone — whatever you prefer."* Calm on the surface; unambiguously the safety channel the moment it's engaged. Conduct-focused, not person-focused, so it reads as being about behaviour rather than "a problem with a person."
 
+## Policy feedback
+
+Separate from safety *and* from preference: the debrief lets an attendee flag that an event was **not as described** or involved **high-pressure recruitment or sales** (`event-policy.md`). This is the reactive detector that lets IRL stay lenient about event *topics* while still catching deception and coercion. It routes to policy follow-up / admin (Group 4) and feeds the organiser's contributor rating — it is not preference signal, and not the same as the conduct/safety door (though a single event could trigger both).
+
 ## Reflection & coaching (the separate modes)
 
 These are where feelings, motivations, and challenges belong — not the debrief. Designed in full in `reflection-and-coaching.md`; summarised here for the boundary.
