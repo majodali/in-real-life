@@ -30,9 +30,9 @@ The leniency is deliberate: gatekeeping viewpoints would betray the bridging mis
 
 ## Money
 
-- **Cost-recovery is fine** — donations, a suggested donation, or a fee that plausibly covers real costs (venue, food, materials).
-- **The line is purpose, not price** — connection with an incidental fee is fine; a transaction/profit/recruitment wrapped in a gathering is not. A $10 sales pitch is still banned (the pitch, not the price); an honest $15 cost-recovery dinner is fine.
-- **Soft heuristic** — small fixed prices (~$5–$10, more where real material costs justify it) are presumed cost-recovery; higher prices invite a gentle "what's the fee covering?" The number is a flag, not a rule; the exact threshold is open.
+- **Suggested cost-covering donations** are allowed up to **$20**. Fixed-price events are gated by a threshold **set per community, with community feedback** — deferred, no fixed number now.
+- **The line is purpose, not price** — connection with an incidental cost is fine; a transaction/profit/recruitment wrapped in a gathering is not. A $10 sales pitch is still banned (the pitch, not the price); an honest cost-recovery dinner is fine.
+- **Watch: covert commercialisation.** Even "suggested donations" can become a backdoor to monetising IRL events. We watch for it via the attendee-debrief detector (not-as-described / high-pressure) and organiser cost-collection patterns.
 - **External / third-party ticketed events** get more leniency — IRL is *listing* what exists (a community-theatre ticket, a paid class at a real venue), not the seller. Still no pure commercial promotion.
 
 ## Enforcement
@@ -47,7 +47,7 @@ Lenient and reactive, not gatekeeping — the (a)–(e) model:
 
 ## Open questions
 
-- The exact paid-event threshold, and how much more leniency external/ticketed events get.
+- The per-community fixed-price threshold and the community-feedback mechanism that sets it; how much more leniency external/ticketed events get.
 - The escalation ladder for repeated / serious violations (warn → restrict → remove) — Group 4 admin.
 - Relationship to the user agreement / terms (Group 1).
 - Whether policy adapts per community.
