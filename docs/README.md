@@ -43,6 +43,9 @@ Understanding of a person is **seeded** at onboarding and **grown** from what th
 - `reflection-and-coaching.md` — the optional deeper modes the debrief opens a door to; skills development; the reframe library.
 - `coaching-and-engagement.md` — the global AI voice (warm-not-familiar, "we", no persona), the coaching model, active engagement.
 
+**Matching & recommendation (Group 3)**
+- `matching.md` — how fit, affinity, rating, crews, constraints, avoidance, and newcomer status combine into what a member sees; fit-first, bounded soft nudges, exploration/inclusion floor; the definitions + influence map; the gaming/negative-scenario register.
+
 **Trust & safety (Group 4)**
 - `contributor-rating.md` — a private, backstage, multi-faceted trust read; informs, never dominates.
 
@@ -57,4 +60,4 @@ Understanding of a person is **seeded** at onboarding and **grown** from what th
 
 ## Status
 
-Conceptual design across Groups 0–4 is substantially complete; nothing here is built beyond the Group 2 event-lifecycle code already on `main`. Known gaps and open risks are tracked in `decisions.md` (watch-items) and the *Open questions* section of each note.
+Conceptual design across Groups 0–4 is substantially complete; nothing here is built beyond the Group 2 event-lifecycle code already on `main`. Known weaknesses, gaps, and inconsistencies are tracked in `open-risks.md` (the consolidation-critique defect list, with status), alongside `decisions.md` watch-items and each note's *Open questions*.
