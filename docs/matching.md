@@ -60,15 +60,7 @@ This is the deep version of "positive ≠ popularity": popularity must confer ne
 
 ## Success & progress (what we optimise and evolve toward)
 
-**Named gap:** we have been designing an algorithm without defining what it's *for*. It can't be evaluated or evolved without success criteria, and we've said evolution is driven by **long-term results, not first takes** — which presupposes those results are defined. A first cut, to develop properly:
-
-- **Real repeated connection** — people returning to the same gatherings and each other (repetition-over-chemistry made measurable).
-- **Crews forming** — 3–4 people who keep choosing each other.
-- **Newcomers included** — new members reaching a first good experience and a second.
-- **Progress along the growth edge** — members doing slightly braver things over time, by their own signals.
-- **Low harm** — conduct/safety incidents rare and well-handled.
-
-Short-term proxies (RSVP→attend→return rates, want-to-see-again reciprocity, newcomer second-event rate) vs. long-term outcomes (durable friendships, crews, retention-for-the-right-reasons). **Defining "progress" rigorously is its own piece of work** — flagged, not finished here. Crucially, none of these is engagement-for-its-own-sake (the not-for-profit / honesty principle).
+Now designed in full in **`success-and-progress.md`** — the keystone this note depends on. In brief: success is **real-world connection and belonging, not engagement or attendance**; it's **distributional** (the least-served reached, not the average); it's measured as **indicators, not targets** (Goodhart); and the algorithm **evolves on long-term outcomes**, optimising the *floor*. Reduced need can itself be success (the graduation paradox), so retention is never an objective.
 
 ## Test scenarios (to evaluate against)
 

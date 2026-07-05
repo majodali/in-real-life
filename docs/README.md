@@ -44,6 +44,7 @@ Understanding of a person is **seeded** at onboarding and **grown** from what th
 - `coaching-and-engagement.md` — the global AI voice (warm-not-familiar, "we", no persona), the coaching model, active engagement.
 
 **Matching & recommendation (Group 3)**
+- `success-and-progress.md` — **the keystone: what IRL is *for*.** Success = real-world connection & belonging, not engagement; distributional; indicators-not-targets. Everything downstream is evaluated against this.
 - `matching.md` — how fit, affinity, rating, crews, constraints, avoidance, and newcomer status combine into what a member sees; fit-first, bounded soft nudges, exploration/inclusion floor; the definitions + influence map; the gaming/negative-scenario register.
 
 **Trust & safety (Group 4)**
