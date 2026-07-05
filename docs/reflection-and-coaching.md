@@ -62,7 +62,7 @@ Home of the five evidence-based perspectives — repetition over chemistry, side
 
 ## Grounding
 
-Until we have real usage data, perspectives are offered as **general, modestly-framed ways of seeing** — not as empirical claims about IRL's own results. The five theses are research-grounded, but we present them humbly ("a lot of people find…", "often…"), not as data-backed promises. The day we can honestly say *"in our experience on IRL…"* is a future capability that needs real outcomes behind it (shared open question with `debrief.md`). Saying it before then would be exactly the unprovable claim we've committed to avoid.
+Until we have real usage data, perspectives are offered as **general, modestly-framed ways of seeing** — not as empirical claims about IRL's own results. The five theses are research-grounded, but we present them humbly ("a lot of people find…", "often…"), not as data-backed promises. The day we can honestly say *"in our experience on IRL…"* is a future capability that needs real outcomes behind it (shared open question with `debrief.md`). Saying it before then would be exactly the unprovable claim we've committed to avoid. This explicitly includes **first-person-plural data claims** — "the most common thing we hear", "most of our members…" — which are forbidden in hand-authored copy *and* in the prompt guardrails until grounded (open-risks #13).
 
 ## Skills development
 
@@ -104,7 +104,7 @@ Sets the demographic aside without denying the feeling or asserting a cause; inv
 
 **"I'm bad at this" (reflection → conversation-skills coaching).**
 > (reflection) "What part was hardest — walking in, or once you were there?"
-> (coaching) "Joining a conversation is a genuine challenge for most people — honestly the most common thing we hear, and it gets easier with a bit of practice. Want to talk through a couple of ways in before your next one?"
+> (coaching) "Joining a conversation is a genuine challenge for most people — you're far from alone — and it gets easier with a bit of practice. Want to talk through a couple of ways in before your next one?"
 
 "Challenge" (surmountable), not "hard" (intractable); opens the growth path (skills), not just easier events.
 

@@ -87,6 +87,8 @@ The profile-projection store is the async per-item `irl-user-model` store (`proj
 
 A debrief can surface harm, not just disappointment. The loop **distinguishes "I didn't enjoy it" from "I felt unsafe,"** and routes the second to the reporting and support path (Group 4) with care — never folding it into preference signal, never treating a person who behaved badly as merely "didn't click." A first-class branch, handled gently, without making the user do investigative work.
 
+**Quarantine mechanism (open-risks #11):** when the conduct affordance is used, the command emits the `DebriefRecorded` event with *that event's* preference deltas suppressed, and the async projector treats a conduct-flagged debrief as **non-model-bearing** — so a bad experience can never masquerade as a preference. Attendance/reliability still counts; only the preference signal (worth-another-go, affinity, texture) for that event is dropped.
+
 > **Affordance (two-tier).** Entry — a calm, conduct-focused line: *"Did you have any concerns with anyone's conduct?"* On tap it becomes explicit and caring: *"If someone made you feel unsafe or uncomfortable, you can tell us what happened, or just talk to someone — whatever you prefer."* Calm on the surface; unambiguously the safety channel the moment it's engaged. Conduct-focused, not person-focused, so it reads as being about behaviour rather than "a problem with a person."
 
 ## Policy feedback

@@ -39,12 +39,15 @@ Every item carries: the value(s) with `provenance` / `confidence` / `asOf` / `so
 A Streams-consuming Lambda. For each model-bearing event (`OnboardingCompleted`, `DebriefRecorded` with its extracted deltas, `ReflectionRecorded`, `interaction` attendance, `OrganizerDebriefRecorded`, policy feedback):
 
 1. **Idempotency** — Streams can deliver more than once; each target item records `lastEventId`, and the projector skips an event already applied (conditional write).
-2. **Precedence & decay (D7 lives here)** — read the target item, apply the delta under `observed > inferred > stated`, with decay of stale `stated`/`inferred` and a fresh user-correction temporarily outranking; write back conditional on `version`. On `ConditionalCheckFailed`, re-read and retry.
+2. **Precedence & decay (D7 lives here)** — read the target item, apply the delta under `observed > inferred > stated`, with decay of stale `stated`/`inferred` and a fresh user-correction temporarily outranking; write back conditional on `version`. On `ConditionalCheckFailed`, re-read and retry. **All decay/recency is a function of the event's `simulatedTime` (data in the log), never wall-clock `now`** (open-risks #4) — otherwise replay wouldn't be deterministic and a workshop time-advance would silently age everyone's priors. This is what keeps the projector pure.
 3. **LLM stays out of the projector.** Debrief Tier-2 extraction happens at *command* time (the one call), and its deltas are carried *in* the `DebriefRecorded` event; the projector is pure precedence/decay logic — cheap, deterministic, replayable.
 
 ## Re-derivability & replay
 
-Because it's a pure projection over the immutable log, the whole store rebuilds by wiping `irl-user-model` and replaying events through the same projector (the ES replay mechanism). This delivers the model's core promise — *re-derive Layer 2 from Layer 1 + history* — and lets us evolve the schema (add/merge a dimension; retune weights) without re-interviewing anyone. It's also the production↔workshop user-copy path.
+Two distinct operations, easily conflated — separating them was a real fix (open-risks #1):
+
+- **Projector replay (deterministic, LLM-free).** Wipe `irl-user-model` and re-run the projector over the log; it re-applies the **frozen** deltas already baked into each event, reproducing the *same* Layer 2/3 the live system produced. This is the ES replay mechanism and the production↔workshop user-copy path.
+- **Re-extraction (batched, LLM, separate job).** To actually *evolve* the model — a new or merged dimension, a better prompt — replay is **not** enough: it only reproduces the *old* extraction. We must re-run the Opus extraction over the Layer-1 narrative in the log to regenerate deltas under the new schema. This is a distinct, batched, non-deterministic, **costed** job (not the projector), and it is what makes "re-derive Layer 2 from Layer 1 without re-interviewing" actually true. Its cost/latency/throughput story is TBD.
 
 ## Consistency
 
@@ -53,7 +56,7 @@ Because it's a pure projection over the immutable log, the whole store rebuilds 
 
 ## Privacy, shredding, access-gating
 
-- Every item is PII, encrypted under the per-user key; `UserKeyShredded` (`event-sourcing.md`) destroys the key → the store's items become unreadable and are deleted. The projector handles shred/deletion events.
+- Every item is PII, encrypted under the per-user key; `UserKeyShredded` (`event-sourcing.md`) destroys the key → the store's items become unreadable and are deleted. The projector handles shred/deletion events. **Replay therefore reproduces state exactly only for non-shredded aggregates** (open-risks #3); a shredded user's PII-derived model can't be — and shouldn't be — rebuilt, so the projector yields an empty tombstone for them rather than choking on unreadable fields.
 - **`rating#*` is backstage** — read only by internal matching / admin / enforcement paths, never returned to a member (legibility: a member sees their *history* from events, not their scores — `contributor-rating.md`).
 - Legibility reads (a member's own history) come from the **event log / interaction state**, not from this derived store.
 

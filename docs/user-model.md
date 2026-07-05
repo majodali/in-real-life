@@ -33,7 +33,7 @@ Two consequences anchor everything below: the **debrief loop, not onboarding, is
 
 Prose, in the user's own words and Claude's faithful paraphrases: their self-description, the stories they told at onboarding, their goal, what they're navigating. Stored as text that Claude re-reads when reasoning about the user — not coerced into fields.
 
-This is the layer that survives schema changes. When we improve the structured model, we re-derive Layer 2 from Layer 1 plus the event history; we never need to re-interview.
+This is the layer that survives schema changes. When we improve the structured model, we re-derive Layer 2 from Layer 1 plus the event history; we never need to re-interview. Note this "re-derive" is a **batched LLM re-extraction** over the stored narrative, not deterministic projector replay — see `projection-store.md` → *Re-derivability & replay* (open-risks #1).
 
 ### Layer 2 — Structured dimensions (derived, lossy index)
 

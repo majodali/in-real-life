@@ -27,6 +27,8 @@ Cross-aggregate effects (e.g. RSVP count on an event) are derived at read time. 
 
 System-level events that don't naturally belong to a domain aggregate (e.g. `WorkshopTimeAdvanced`) use a synthetic aggregate ID like `system#workshop-time`.
 
+> **AI-flow events (added since this note was first written).** The AI experience introduces `OnboardingCompleted` (`user#`), `DebriefRecorded` and `ReflectionRecorded` (`interaction#`), and `OrganizerDebriefRecorded` (`event#`/`interaction#`) — carrying LLM-extracted deltas that feed the async user-model projection (`projection-store.md`). **Open (open-risks #2):** how `OnboardingCompleted` relates to the existing `UserProfileCreated` (which today carries scripted `interviewResponses[]` + avatar/vibe), and whether cross-env import copies these events or accepts a model-empty imported user.
+
 ## Event log
 
 ### Table: `irl-events-log`
@@ -142,7 +144,7 @@ Time manipulation in workshop mode is itself a command — `WorkshopTimeAdvanced
 1. Provision empty state tables (or wipe existing ones)
 2. Read events from `irl-events-log` ordered by `wallTime` via the GSI
 3. For each event, dispatch to the same projection function the live system uses
-4. State is rebuilt
+4. State is rebuilt — **exactly, for non-shredded aggregates.** A user whose key was shredded (`UserKeyShredded`) has unreadable PII, so their PII-derived state cannot be rebuilt; projection functions must tolerate this and produce a tombstone rather than fail (open-risks #3).
 
 This is exactly the import/export mechanism for the eventual production↔workshop user-copy story: export a user's events, import them into the other env.
 
@@ -291,7 +293,7 @@ The replay path and any consumer reads the event through the upcast pipeline.
 ## Out of scope (initial)
 
 - Pure event sourcing (deriving state from log on every read)
-- Async-only projections via Streams or EventBridge
+- Async-only projections via Streams or EventBridge — *for the initial synchronous core.* The rich user-model + contributor-rating projection (`projection-store.md`) is the first **planned** async-Streams consumer — a later phase built on the day-one Streams hook, not part of the initial slice (open-risks #12).
 - Snapshots — the state tables *are* the snapshot
 - UI/behavioral telemetry — separate system if added
 - A separate read database (Postgres, OpenSearch)
@@ -332,4 +334,4 @@ After this slice lands, every subsequent command (`UserProfileUpdated`, `EventPr
 
 2. **Event payload size limits** — Deferred. DynamoDB's 400 KB item limit hasn't been hit. When we approach it (likely with debrief notes or event descriptions), spill payloads to S3 with a reference in the event. No design needed now.
 
-3. **PII in events** — Crypto-shredding adopted. PII fields in events are encrypted with per-user keys; deletion shreds the key, rendering historical PII unreadable while keeping the event log structurally intact. The `UserKeyShredded` event records the shredding for audit. Detailed key-management design is TBD before the first PII-bearing event ships.
+3. **PII in events** — Crypto-shredding adopted. PII fields in events are encrypted with per-user keys; deletion shreds the key, rendering historical PII unreadable while keeping the event log structurally intact. The `UserKeyShredded` event records the shredding for audit. Detailed key-management design is TBD before the first PII-bearing event ships — and `OnboardingCompleted` (transcript + extraction) is essentially that event, so key management is a **blocker for the onboarding flow**, not a later detail (open-risks #3).
