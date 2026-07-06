@@ -106,7 +106,7 @@ Interview content is PII and is crypto-shredded in the event log per the event-s
 - Model: **Opus 4.8** as the starting default.
 - State: **ephemeral per-turn calls + a single `OnboardingCompleted` event** (transcript + structured profile), rather than per-turn `InterviewTurnRecorded` events.
 - Mechanism: **structured outputs**, not tool use.
-- Events: **`OnboardingCompleted` is a distinct event type**, separate from `UserProfileCreated`.
+- Events: **`OnboardingCompleted` is a distinct event type**, separate from `UserProfileCreated` — which is **basics-only** (name, avatar, vibe, collected in a small step at the interview's close; the interview itself never asks form questions). `OnboardingCompleted` is the sole carrier of transcript + extraction (D42).
 - Streaming: **non-streaming** server-side.
 
 ## Open questions

@@ -27,7 +27,7 @@ Cross-aggregate effects (e.g. RSVP count on an event) are derived at read time. 
 
 System-level events that don't naturally belong to a domain aggregate (e.g. `WorkshopTimeAdvanced`) use a synthetic aggregate ID like `system#workshop-time`.
 
-> **AI-flow events (added since this note was first written).** The AI experience introduces `OnboardingCompleted` (`user#`), `DebriefRecorded` and `ReflectionRecorded` (`interaction#`), and `OrganizerDebriefRecorded` (`event#`/`interaction#`) — carrying LLM-extracted deltas that feed the async user-model projection (`projection-store.md`). **Open (open-risks #2):** how `OnboardingCompleted` relates to the existing `UserProfileCreated` (which today carries scripted `interviewResponses[]` + avatar/vibe), and whether cross-env import copies these events or accepts a model-empty imported user.
+> **AI-flow events (added since this note was first written).** The AI experience introduces `OnboardingCompleted` (`user#`), `DebriefRecorded` and `ReflectionRecorded` (`interaction#`), and `OrganizerDebriefRecorded` (`event#`/`interaction#`) — carrying LLM-extracted deltas that feed the async user-model projection (`projection-store.md`). **Resolved (open-risks #2, D42):** `UserProfileCreated` is basics-only (name/avatar/vibe); `OnboardingCompleted` is the sole carrier of interview content; cross-env import stays no-history but emits a `ProfileImported` model *snapshot* — see §Import.
 
 ## Event log
 
@@ -154,7 +154,9 @@ The User aggregate (`user#{userId}`) has these events:
 
 - `UserInvited` — admin path only, precursor
 - `UserRegistered` — agreement signed, account exists in IRL
-- `UserProfileCreated` — interview responses + avatar + vibe
+- `UserProfileCreated` — profile **basics only**: name, avatar, vibe (projects the synchronous `irl-users` row; collected in a small basics step, e.g. at the interview's close)
+- `OnboardingCompleted` — the AI interview: full transcript (Layer 1) + extracted structured-profile seed (Layer 2); consumed by the async user-model projector (`projection-store.md`)
+- `ProfileImported` — import path only: Layer 1 narrative + as-of-export Layer 2 snapshot (see §Import)
 - `LocalityVerificationRequested`
 - `LocalityVerified` / `LocalityRejected`
 - `UserActivated` — emitted when prerequisites are met; lets us hook side effects (welcome flow) and audit the activation moment
@@ -169,10 +171,11 @@ Three registration paths produce a registered user. All three converge on the sa
 2. Cognito sends verification email; user confirms
 3. Client calls `POST /me/register` with JWT (carries `userId`, `email`, `email_verified`)
 4. `RegisterUser` command → `UserRegistered` event (`path: 'self'`)
-5. Onboarding interview UI → `POST /me/profile` → `UserProfileCreated`
-6. Locality submission → `LocalityVerificationRequested`
-7. Admin approves → `LocalityVerified`
-8. Prereqs met → `UserActivated`
+5. Profile basics (name, avatar, vibe — a small step at the interview's close) → `POST /me/profile` → `UserProfileCreated`
+6. AI onboarding interview (`POST /me/interview/turn`, per turn — `onboarding-interview.md`) → on completion → `OnboardingCompleted`. Required by default in production (the model is the product), but **structurally decoupled from activation** so workshop/robot paths can run the canned-LLM seam or skip it (D37)
+7. Locality submission → `LocalityVerificationRequested`
+8. Admin approves → `LocalityVerified`
+9. Prereqs met (agreement + profile basics + locality) → `UserActivated`
 
 Cognito-first, then `UserRegistered`. Orphan risk (Cognito user with no event) is benign — `RegisterUser` is idempotent on `commandId`; abandoned Cognito users are cleanable via a periodic job.
 
@@ -200,7 +203,7 @@ A copy is admin-initiated in the target env with a signed payload from the sourc
 | `name`, `avatar`, `vibeMessage` | profile basics |
 | `agreementVersion`, `agreementAcceptedAt` | agreement step (re-prompt if target requires a higher version) |
 | `locality`, `localityVerifiedAt` | locality verification |
-| `interviewResponses[]` | onboarding interview |
+| `layer1Narrative`, `layer2Snapshot` (as-of-export) | onboarding interview + the accumulated user model, via `ProfileImported` (below) |
 | `optionalAttributes`, `preferences` (when those exist) | preferences setup |
 | `dateOfBirth` or `ageBand` (when minors land) | age confirmation |
 
@@ -209,12 +212,15 @@ A copy is admin-initiated in the target env with a signed payload from the sourc
 1. `AdminCreateUser` in target Cognito
 2. Single `ImportUser` command emits, in one `TransactWriteItems` on `user#newSub`:
    - `UserRegistered` (seq 1, `path: 'imported'`, `sourceEnv`)
-   - `UserProfileCreated` (seq 2)
-   - `LocalityVerified` (seq 3, `originallyVerifiedAt`)
-   - `UserActivated` (seq 4)
+   - `UserProfileCreated` (seq 2 — basics: name, avatar, vibe)
+   - `ProfileImported` (seq 3 — Layer 1 narrative + as-of-export Layer 2 snapshot; the async projector seeds the user model from it, so an imported user is **not** model-empty)
+   - `LocalityVerified` (seq 4, `originallyVerifiedAt`)
+   - `UserActivated` (seq 5)
+
+**What never crosses environments:** Layer 3 (affinity, crews) and contributor rating — relational data references *other users* and is env-local by design; imported users start relationally fresh with newcomer benefit-of-the-doubt, and the model grows again from target-env debriefs on top of the imported seed.
 3. User receives a temp password and sets it on first login
 
-All events have target-env `wallTime` and `simulatedTime`. Replay rebuilds state exactly: imported users look identical to any other user during replay. The only marker is `path: 'imported'` on `UserRegistered` — audit-only, nothing in the system behaves differently because of it.
+All events have target-env `wallTime` and `simulatedTime`. Replay rebuilds state exactly: imported users look identical to any other user during replay. The markers are `path: 'imported'` on `UserRegistered` and the `ProfileImported` event — audit-only; nothing else in the system behaves differently because of them.
 
 The signed import payload is short-lived and bound to the source env via a pre-shared key. Forgery is rejected at command validation. (Implementation detail of the import endpoint, not of the event-sourcing layer.)
 
