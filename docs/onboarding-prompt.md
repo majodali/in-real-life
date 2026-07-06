@@ -156,6 +156,8 @@ concrete suggestion.
 
 Returned on every interview turn via `output_config.format`. Semantics — `card` present when `done: false`, `closing` present when `done: true` — are **prompt-enforced**, because the supported JSON-Schema subset has no `if/then` to express it. Structured outputs guarantee the *shape* is valid; the prompt guarantees the right branch is filled.
 
+**Server-side fallback (open-risks #18):** because the branch is only prompt-enforced, the handler validates after parse — if `done` with no `closing`, or `!done` with no `card`, it retries the turn once and then falls back to a templated card/close, so a malformed branch never reaches the client.
+
 ```json
 {
   "type": "object",
@@ -289,7 +291,17 @@ Runs once over the full transcript at `done`. Produces the onboarding slice of t
         "familiarity": { "$ref": "#/$defs/dim" },
         "role":        { "$ref": "#/$defs/dim" },
         "novelty":     { "$ref": "#/$defs/dim" },
-        "energy":      { "$ref": "#/$defs/dim" }
+        "energy":      {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "capacity":   { "type": "string" },
+            "frequency":  { "type": "string", "enum": ["weekly", "biweekly", "monthly", "occasional"] },
+            "provenance": { "type": "string", "enum": ["stated", "inferred"] },
+            "confidence": { "type": "string", "enum": ["low", "medium", "high"] }
+          },
+          "required": ["provenance", "confidence"]
+        }
       }
     },
     "constraints": {

@@ -46,10 +46,13 @@ Where mode matters and what each side does:
 | Locality verification | Real flow (manual admin → automated later) | Auto-approve, or admin-approve via workshop UI |
 | Billing gates (Group 5) | Real | Bypassed entirely |
 | Age verification (Group 6) | Real | Bypassed |
+| LLM / Claude API (onboarding, debrief, reflection, coaching, organiser framing) | Real Opus calls | Injected client → deterministic stub / canned provider; robots use canned transcripts |
 
 The route-registration seams are the highest-confidence safety: workshop-only routes are wrapped in `if (mode === 'workshop')` in `index.mjs`. They literally don't exist on the production Lambda's route table.
 
 Domain seams (locality, billing, age) are guarded inside their handlers with mode checks. The production branch is the default; workshop branches are explicit exceptions.
+
+**The LLM seam (open-risks #5).** Every AI surface — onboarding interview, debrief Tier-2 extraction, reflection/coaching, organiser framing — calls Claude *at command time*: live, paid, non-deterministic, wall-clock-slow. That cannot run in the test stack (which must be fast and deterministic and has no API key) or for robot users. So the Claude client is **injected**, with a deterministic stub / canned provider in workshop and test mode and the real provider in production — a first-class seam alongside time, locality, and billing. Robot users produce interview/debrief content from canned scripts, not live model calls. This is a Group-0 foundation seam, not a detail: it must be defined before any AI flow is testable.
 
 ## Workshop time
 

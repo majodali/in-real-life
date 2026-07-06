@@ -14,6 +14,7 @@ The whole surface is governed by one tonal rule: **circumspect, never didactic.*
 - **Respects autonomy.** Every nudge is trivially ignorable. The user's choice always stands; coaching never gates an action.
 - **Aimed at the growth edge.** Guidance nudges toward the edge of the comfort envelope (`user-model.md`) — a small stretch, never a shove.
 - **Honest, not manipulative.** We share these perspectives because the evidence supports them and they help the user, not to drive engagement metrics.
+- **Pair every "don't" with a "do".** When IRL won't do something a user asks for, it names what it *does* instead and the path that serves them — never a bare refusal, and never an implication that the user is biased. This is the antidote to stonewalling.
 
 ## Voice & identity
 
@@ -33,13 +34,13 @@ The evidence behind the user model (see `user-model.md` → *What the evidence s
 
 | Perspective | Why it helps the user | Where it surfaces naturally |
 |---|---|---|
-| Repetition over chemistry | Lowers the stakes of any single event; encourages return | Debrief ("worth another go?"), event-selection (recurring events) |
+| Repetition over chemistry | Lowers the stakes of any single event; encourages return | Reflection entered from a lukewarm debrief; event-selection (recurring events) |
 | Side-by-side over face-to-face | Makes "I'm not good at mingling" a non-issue | Onboarding (reframes anxiety), event-selection (activity-anchored options) |
 | Contribution as a way in | Gives a role, removes "why am I here" | Onboarding (the useful door), proposing events |
-| We mispredict what we'll enjoy | Loosens the grip of "that's not for me" | Event-selection (gentle stretch), debrief (surprise vs. expectation) |
-| Barriers are situational | Reframes "I'm bad at this" as "that setup was hard" | Debrief (what actually got in the way), onboarding |
+| We mispredict what we'll enjoy | Loosens the grip of "that's not for me" | Event-selection (gentle stretch); reflection (a surprise worth noticing) |
+| Barriers are situational | Reframes "I'm bad at this" as "that setup was hard" | Reflection (what actually got in the way), onboarding |
 
-These are offered as observations, occasionally, when they fit — not delivered as a curriculum.
+These are offered as observations, occasionally, when they fit — not delivered as a curriculum. **Note the debrief itself never delivers them** (D24 — the debrief is information); where a row says "reflection", the perspective lands in the reflection/coaching modes the debrief opens a door to (`reflection-and-coaching.md`). The debrief *captures* surprise-vs-expectation; the *perspective about* mispredicting is shared later, if at all.
 
 ## The three touchpoints
 
@@ -47,7 +48,7 @@ Each is a two-way surface: signal flows in, guidance flows out.
 
 - **Onboarding.** Signal: seeds the model (`onboarding-interview.md`). Guidance: reframes social anxiety up front (side-by-side, contribution), and sets an open-minded tone for everything after.
 - **Event-selection.** Today this is passive browsing. Made *slightly* conversational, it becomes both a rich signal source — what tempts you, what you bounce off, what you wish existed (`inferred` signal on envelope and doors) — and a coaching moment, where a small stretch toward the growth edge can be offered when the user hesitates. The bar for friction here is high: most browsing should stay silent.
-- **Debriefs.** The dominant signal source (`user-model.md`), but kept as *information* — crisp capture, not counsel (`debrief.md`). Reflection and coaching are **separate, opt-in modes** the debrief can open a door to but never performs inline: reflection is where "repetition over chemistry" and "barriers are situational" can land, and coaching follows only if a user stays fixed on the negative rather than the learning.
+- **Debriefs.** The dominant signal source (`user-model.md`), but kept as *information* — crisp capture, not counsel (`debrief.md`). Reflection and coaching are **separate, opt-in modes** the debrief can open a door to but never performs inline (designed in `reflection-and-coaching.md`): reflection is where "repetition over chemistry" and "barriers are situational" can land, and coaching follows only if a user stays fixed on the negative rather than the learning.
 
 ## Answering the difference concern
 
@@ -56,7 +57,7 @@ We don't act on difference (see `user-model.md` → *Difference is not incompati
 - **Younger members wanting age-peers.** We don't sort by age, and on a thin, older island we can't promise a room of twenty-somethings. The honest, hopeful answer: we help you find things you'll genuinely enjoy; the pool grows as the community does; and shared activity tends to make an age mix matter far less than people expect (intergenerational connection is often a quiet gift).
 - **Women wary after bad experiences with men or dating apps.** This is mostly a safety concern, and safety is handled deliberately elsewhere (Group 4: reporting, blocks, contributor trust, no messaging, show-up-only). The answer leads with how events are kept safe, not with filtering men out.
 
-The throughline: never promise demographic matching, never imply anyone is incompatible, meet the worry with candor plus the genuine ways IRL helps.
+The throughline: never promise demographic matching, never imply anyone is incompatible, and pair candor with a *real path* — the constructive answer is that demographic affinity lives on the **event** (themed events come up; you could start one — `user-model.md` → *Demographic affinity lives on the event*), not a bare "we don't do that."
 
 ## Active engagement
 

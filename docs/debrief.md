@@ -74,7 +74,7 @@ A debrief emits a **`DebriefRecorded`** event on the `interaction#{userId}#{even
 - **Per-debrief** updates the individual's projection (Tier-2 extraction is one cheap call; Tier-0/1 maps deterministically).
 - **Batched, aggregate** analysis across users is a *separate* loop — model-evolution governance (`user-model.md`): de-identified, surfaces candidate dimensions, never per-person.
 
-The profile-projection store shape (single document vs. per-dimension items) is the open question shared with `user-model.md`.
+The profile-projection store is the async per-item `irl-user-model` store (`projection-store.md`); debrief deltas ride in the `DebriefRecorded` event and the Streams projector applies them under precedence/decay.
 
 ## People affinity & the anti-observation principle
 
@@ -87,11 +87,17 @@ The profile-projection store shape (single document vs. per-dimension items) is 
 
 A debrief can surface harm, not just disappointment. The loop **distinguishes "I didn't enjoy it" from "I felt unsafe,"** and routes the second to the reporting and support path (Group 4) with care — never folding it into preference signal, never treating a person who behaved badly as merely "didn't click." A first-class branch, handled gently, without making the user do investigative work.
 
+**Quarantine mechanism (open-risks #11):** when the conduct affordance is used, the command emits the `DebriefRecorded` event with *that event's* preference deltas suppressed, and the async projector treats a conduct-flagged debrief as **non-model-bearing** — so a bad experience can never masquerade as a preference. Attendance/reliability still counts; only the preference signal (worth-another-go, affinity, texture) for that event is dropped.
+
 > **Affordance (two-tier).** Entry — a calm, conduct-focused line: *"Did you have any concerns with anyone's conduct?"* On tap it becomes explicit and caring: *"If someone made you feel unsafe or uncomfortable, you can tell us what happened, or just talk to someone — whatever you prefer."* Calm on the surface; unambiguously the safety channel the moment it's engaged. Conduct-focused, not person-focused, so it reads as being about behaviour rather than "a problem with a person."
+
+## Policy feedback
+
+Separate from safety *and* from preference: the debrief lets an attendee flag that an event was **not as described** or involved **high-pressure recruitment or sales** (`event-policy.md`). This is the reactive detector that lets IRL stay lenient about event *topics* while still catching deception and coercion. It routes to policy follow-up / admin (Group 4) and feeds the organiser's contributor rating — it is not preference signal, and not the same as the conduct/safety door (though a single event could trigger both).
 
 ## Reflection & coaching (the separate modes)
 
-These are where feelings, motivations, and challenges belong — not the debrief.
+These are where feelings, motivations, and challenges belong — not the debrief. Designed in full in `reflection-and-coaching.md`; summarised here for the boundary.
 
 - **Reflection** is entered only by the user's pull ("say more"), or offered gently when the user is clearly dwelling on something. In it, discussing how an event felt, what they're after, or what's getting in the way is natural. Tone: warm and understanding, **grounded and honest, with no manufactured connection** — we don't construct rapport or empathise theatrically. A plain acknowledgment is enough.
 - **Coaching** progresses from reflection *only if appropriate* — when a user stays fixed on negatives rather than learnings or outcomes. This is the home of the evidence-based perspectives (repetition over chemistry, side-by-side, contribution, we-mispredict, situational barriers), offered as general observations, ≤1, never as "you should…" (D14, D17).
@@ -103,8 +109,9 @@ The debrief's role toward these is only to **notice the doorway and open it**, n
 Agency invites friction: a user may try to steer toward something we don't support — most importantly, limiting who they meet by age, gender, or ethnicity. This is **handled in reflection, not the debrief**. We hold the line (we don't sort by demographics, D9); the manner is everything:
 
 - **A brief, plain acknowledgment — nothing more.** "That's fair to raise." Not "that's its own kind of hard" — we don't interpret, empathise, or manufacture a connection.
-- **An honest, *grounded* rationale — no unprovable claims.** We can truthfully say it isn't how IRL works and that we couldn't promise it on an island this size. We do **not** assert empirical claims we can't back yet (e.g. "a filter misses the people you'd click with") — until we have real evidence to ground such statements ("in our experience…"), we don't make them.
+- **An honest, *grounded* rationale — no unprovable claims, no over-justifying.** We can truthfully say it isn't how IRL works; we leave it at that. We do **not** assert empirical claims we can't back yet ("a filter misses the people you'd click with"), and we don't reach for situational justifications that won't generalise across communities ("on an island this size…"). Until we have real evidence to ground a statement ("in our experience…"), we don't make it.
 - **Point back to what worked, from their own signal.** If the activity landed, that's the honest, concrete thing to lean on — not a demographic offer. (We explicitly do *not* offer "where newer people are landing": new people are any age, and it doesn't address the wish.)
+- **Offer the real path, not a refusal.** Demographic affinity lives on the *event*, not the user (`user-model.md` → *Demographic affinity lives on the event*): themed events organised for a crowd do come up, and the user could start one. Pairing the "don't" with this "do" is what keeps it from stonewalling.
 - **No compromise, no judgment, no lecture.** A small reframe the user is free to ignore; if they stay stuck on the negative, that — and only that — is the opening to coaching.
 
 Getting this wording right is **work to do**, and needs real-world validation.
@@ -189,7 +196,7 @@ Only when it yields real signal — otherwise go straight to the minimal close:
 → Close: **"Good to know — thanks."** (A good outcome; we don't refine or negotiate.) Deltas: forecastError captured; the growth-edge lands **with the condition** *shared focus*, not "bigger is fine."
 
 **Steering, via reflection (pottery, Mara).** Go? *Yes* · Again? *Maybe* · met (none marked) · texture *loved the activity*. She taps "say more": "the clay was great. it's just — everyone was 60+. can you find me ones with people my age?"
-→ This opens **reflection**, handled per *When a user steers…*: **"That's fair to raise. We don't match by age, though — it's not how IRL works, and on an island this size we couldn't promise it anyway. The clay part landed, going by your answers — that's the kind of thing we'll lean on."** Plain acknowledgment, grounded rationale, no manufactured connection, no over-promise, no demographic offer. If she stays fixed on the age point, *that* is the opening to a gentle coaching perspective — not before.
+→ This opens **reflection**, handled per *When a user steers…*, with the canonical copy from the reframe library (`reflection-and-coaching.md` — the single source of truth for this wording): **"IRL doesn't match by age. Aside from wanting more people your own age, what would've made the evening easier?"** Plain, no over-justification, no manufactured connection, no demographic offer — and it hands the reflection back to her rather than asserting what she felt. If she stays fixed on the age point, *that* is the opening to a gentle coaching perspective — not before.
 
 ## Schema sketches
 
@@ -246,6 +253,5 @@ Exact schemas live in the forthcoming `debrief-prompt.md`.
 - How mutual affinity shapes ranking/co-attendance while staying illegible — Group 3.
 - Whether to capture *predicted* enjoyment at RSVP (precise forecast error vs. friction).
 - When we can honestly *ground* the difference rationale in real experience ("in our experience…") — needs data; until then, policy + practical constraint + the user's own signal only.
-- Profile-projection store shape (shared with `user-model.md`).
 - Reminder cadence; how much to infer from a lapse.
 - `debrief-prompt.md` — exact prompt + schemas (debrief) and the reflection/coaching handling, once agreed.

@@ -33,7 +33,7 @@ Two consequences anchor everything below: the **debrief loop, not onboarding, is
 
 Prose, in the user's own words and Claude's faithful paraphrases: their self-description, the stories they told at onboarding, their goal, what they're navigating. Stored as text that Claude re-reads when reasoning about the user — not coerced into fields.
 
-This is the layer that survives schema changes. When we improve the structured model, we re-derive Layer 2 from Layer 1 plus the event history; we never need to re-interview.
+This is the layer that survives schema changes. When we improve the structured model, we re-derive Layer 2 from Layer 1 plus the event history; we never need to re-interview. Note this "re-derive" is a **batched LLM re-extraction** over the stored narrative, not deterministic projector replay — see `projection-store.md` → *Re-derivability & replay* (open-risks #1).
 
 ### Layer 2 — Structured dimensions (derived, lossy index)
 
@@ -112,6 +112,35 @@ Concretely:
 
 This stance is value-laden and worth explicit sign-off, especially given outside feedback pulling the other way. The default is to bridge; separation happens only from a user's own stated boundary or from revealed harm. We won't *act* on difference, but we must be able to *address* it when a member raises it — see `coaching-and-engagement.md` → *Answering the difference concern*.
 
+### Demographic affinity lives on the event, not the user
+
+Some desire for same-age, same-gender, or same-culture company is entirely healthy and normal — in a large community it's unremarkable. We honour those cases *without* matching people by demographics, through one reframe: **demographic affinity is a property of the event, never of the user.**
+
+- IRL never infers, stores, or matches a *user's* demographics.
+- **Organisers** can create real events with a described theme or audience — a women's hiking group, a 20s/30s game night, a cultural potluck — and IRL surfaces them like any real event. Users **self-select** in.
+
+This is how associational life already works, and it sidesteps the whole risk surface of user-level demographic matching:
+
+| Risk of matching *users* by demographics | Why the event-level reframe avoids it |
+|---|---|
+| Compounds implicit / supports explicit bias | IRL isn't categorising anyone; a themed event is public and self-selected |
+| The filtering choice may not be mutual | Self-selection is mutual by definition |
+| Filter functionality can be gamed | There is no user-demographic filter to game |
+| Users may reject another's self-designation; people may lie (esp. age) | We never verify, assign, or match on anyone's demographics |
+| A sensitive demographic-data trove (breach / subpoena / misuse) | No user demographic data is collected as matchable fields |
+| Visible exclusion feels like rejection | Orientation is opt-in; nobody is filtered *out* of the general pool |
+| Community self-segregation | The default feed still bridges; themed events are ordinary civic life on top |
+| Reductive, misrepresentative categories | The event names its own theme in its own words; no system buckets |
+| Legal / anti-discrimination exposure | Sits with the organiser running a community group, where it belongs |
+| Optics of a "filter by ethnicity" feature | We host community events; we don't sort people |
+| An unholdable line across gender / age / ethnicity / religion | One clean rule: events can have themes; user-matching never uses demographics |
+
+It also makes the in-the-moment answer **constructive rather than stonewalling** — "IRL doesn't match by age, but events organised around all sorts of things come up, and you could start one" — which feeds propose-your-own and the facilitator path.
+
+**Orientation, not enforcement.** IRL has no user demographic data, so it can never *enforce* who attends — for oriented events or any others. Welcoming framing ("women's hike", "20s & 30s welcome") is freely allowed and does its work through self-selection. Any real-world gatekeeping ("women-only") is the organiser's own, done in person; IRL builds **no attendee-verification** — that would reintroduce every risk above and make IRL the arbiter of who counts as a category. Genuinely closed groups run as **invite-only / private events** (access by explicit invitation, no demographics). IRL's only levers are the listing's language and honest attendee expectation-setting — see `organizer-engagement.md`.
+
+**User-level demographic matching stays a firmly-closed door.** The event-level path meets real demand without any of the above risks; user-matching would reintroduce nearly all of them, so the bar to ever revisit it is very high.
+
 ## Boundaries and the anti-observation principle
 
 Users can name people they do not want to interact with (e.g. ex-spouses). This is distinct from a block (Group 4) and, like every barrier, **it does not reduce either person's visibility of events** — both can still see and attend anything.
@@ -163,6 +192,7 @@ This is an analytics/admin surface (Group 4 admin UI), and it must respect the p
 - Personality typologies or trait scores (Big Five, MBTI, or homegrown equivalents) — not stored, not displayed, not used.
 - A standing compatibility score between any two users.
 - Matching or sorting by demographic similarity ("people like you" cohorting) — see *Difference is not incompatibility*.
+- Collecting, storing, inferring, or matching on a *user's* demographic attributes (age, gender, ethnicity, …). Demographic affinity lives on the event, not the user — see *Demographic affinity lives on the event*.
 - Any user-visible label about another person beyond first name, avatar, vibe, and shared context.
 - Inference about protected or sensitive characteristics. If a user volunteers something sensitive in narrative, it stays in narrative; Layer 2 never derives fields from it.
 
@@ -175,7 +205,7 @@ This is an analytics/admin surface (Group 4 admin UI), and it must respect the p
 
 ## Open questions
 
-- Layer 2 storage shape: single projection document per user vs. per-dimension items (affects partial-update ergonomics and the Group 3 projection design).
+- Layer 2/3 storage — **resolved in `projection-store.md`** (async Streams projection into a per-item `irl-user-model` store).
 - Decay function specifics: how fast `stated` confidence fades, what counts as "enough" observations to flip a dimension.
 - Legibility UX: where the user sees/edits "what IRL believes about me" (profile screen extension; Group 1 `Profile view + edit` item).
 - Cold start for ranking: with empty Layer 3, how heavily to lean on soft priors vs. near-random exposure with good situational fit (connects to Group 3 cold-start item).

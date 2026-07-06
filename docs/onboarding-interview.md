@@ -52,7 +52,7 @@ The transcript is held client-side during the interview and re-posted each turn;
 | Thinking | `thinking: { type: "adaptive" }` + `output_config: { effort: "low" }` (tune to `medium`) | Keeps turns snappy. Leave adaptive *on* — with thinking disabled, Opus 4.8 can leak reasoning into the visible response. Structured outputs are compatible with adaptive thinking. |
 | `max_tokens` | ~1024 | Each card is small. Keeps every turn well inside the Lambda 30s / API Gateway 29s ceiling. |
 | Streaming | **Non-streaming** | Outputs are tiny and the UI reveals one finished card at a time. True browser streaming would require Lambda response-streaming (Function URLs) for no real benefit. |
-| Caching | `cache_control: { type: "ephemeral" }` on the system block | Turns within a session are seconds apart, so turns 2..N read the system prompt from cache (~0.1× cost); shared across concurrent users. Verify via `usage.cache_read_input_tokens`. |
+| Caching | `cache_control: { type: "ephemeral" }` on the system block | The prompt is ~900 tokens — **below Opus 4.8's 4096-token cache floor, so this is currently inert** (open-risks #15; see caveat below). It only pays off (~0.1× on turns 2..N) once the prompt clears 4096. Today's per-onboarding cost is uncached reads of a growing transcript — small in absolute terms, but *not* "cheap because cached." |
 
 **Caching caveat:** the minimum cacheable prefix on Opus 4.8 is **4096 tokens**. If the system prompt lands under that, it silently won't cache (no error, just `cache_creation_input_tokens: 0`). Either keep the prompt rich enough to clear the floor or accept uncached reads — it's small and cheap either way.
 
@@ -82,7 +82,8 @@ The conceptual model behind the extracted profile — the three layers, the comf
     "structure":   { "comfort": "activity-anchored | open | either", "provenance": "inferred", "confidence": "low" },
     "familiarity": { "comfort": "strangers-ok | needs-known-face", "provenance": "inferred", "confidence": "low" },
     "role":        { "comfort": "wants-a-job | happy-to-attend | either", "provenance": "inferred", "confidence": "low" },
-    "energy":      { "frequency": "weekly | biweekly | monthly", "provenance": "stated", "confidence": "medium" }
+    "novelty":     { "comfort": "seeks-new | prefers-ritual | either", "provenance": "inferred", "confidence": "low" },
+    "energy":      { "capacity": "string", "frequency": "weekly | biweekly | monthly | occasional", "provenance": "stated", "confidence": "medium" }
   },
   "constraints": { "timeWindows": ["..."], "maxTravel": "string?", "accessibility": "string?" },
   "barriers": [{ "what": "string", "provenance": "stated" }],   // situational, never deficits
