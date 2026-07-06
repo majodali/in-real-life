@@ -98,6 +98,26 @@ The full volunteer/facilitator system is its own design (likely spanning Groups 
 - **Don't fragment the pool.** Many near-identical events split attendance and undermine the repetition that makes connection work.
 - **The human decides.** IRL drafts, suggests, and synthesizes; proposers and attendees choose.
 
+## Member-to-member encouragement (kudos)
+
+Members encouraging and supporting each other is wanted — and the **primary venue for it is in person**: IRL's job is to occasion warmth, not to host conversations. For the member who'd never say it face-to-face but would tap it afterward, there is one narrow channel, designed so the moderation problem dissolves by construction:
+
+**Structured kudos** — a small, fixed, well-written vocabulary of tappable gestures ("glad you came", "thanks for hosting", "hope you make the next one"). **No free text, ever** — nothing harmful can be composed because nothing is composed. The value is that a specific person sent it.
+
+The five structural rules (all load-bearing):
+
+1. **Event-scoped** — sendable only to people who shared an event, within a short window after it.
+2. **Rate-limited** — one per person per event.
+3. **No replies, ever** — a gesture, not a thread. The moment a kudos can be answered, we've built messaging.
+4. **Recipient off-switch** — kudos can be disabled entirely; senders never know.
+5. **Silent non-delivery** — blocks and do-not-interact swallow them invisibly, and senders get no delivery confirmation at all (non-delivery is indistinguishable; the anti-observation principle holds).
+
+Placement, deliberately:
+
+- **Never in the debrief.** Kudos live on the past-event surface as a separate, voluntary act — both for tone and for *signal hygiene*: if kudos and the see-again affinity tap shared a flow, reciprocity norms would contaminate the affinity signal (`debrief.md`).
+- **Captured, not used, in contributor rating v1** (capture ≠ use) — a sent gesture is socially performative in a way the quiet affinity tap isn't; any future use goes through the hypothesis register.
+- **A v-next feature, not v1.** The free-text "gratitude relay" stays deferred — revisited only if kudos demonstrably isn't enough.
+
 ## Relationship to other notes
 
 - `user-model.md` — what each touchpoint feeds, and the growth edge coaching aims at.

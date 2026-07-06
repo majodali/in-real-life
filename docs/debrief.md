@@ -53,6 +53,8 @@ Two light taps over the attendee list, and it does real work:
 - **Who did you actually meet?** Tap the people you connected or spent time with. This makes the debrief feel complete (especially at a large gathering where you met 3 of 20, or when someone didn't show), grounds affinity (you can only want to see again someone you met), and cross-validates who was really there.
 - **Anyone you'd want to see again?** A positive-only second mark on the people you met. Untapped is neutral; there is no per-person "no."
 
+**Kudos are deliberately not here.** Structured encouragement gestures (D45, `coaching-and-engagement.md`) live on the past-event surface as a separate act — if they shared a flow with the affinity tap, reciprocity norms would contaminate the observed signal.
+
 ## What it captures → how the model changes
 
 | Captured | Model effect | Layer / provenance |

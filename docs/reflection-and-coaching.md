@@ -57,7 +57,7 @@ Reflection produces material with three distinct destinations, each with its own
 
 The consent rule is load-bearing: reflection only works as a safe space if the member controls, item by item, what leaves it. IRL may *offer* to route something ("that sounds like feedback the organiser could actually use — want us to share it?"), but the member decides.
 
-**Member-to-member feedback (beyond organisers) is deferred and delicate.** Passing along even a consented appreciation ("Priya made the evening for me") collides with two principles at once — no-messaging (a relay is a covert message channel) and backstage affinity (D21). A narrow, consented "gratitude relay" may be worth designing one day; it is explicitly *not* designed now.
+**Member-to-member feedback (beyond organisers) does not flow through reflection.** Encouragement between members now has its own designed shape — **structured kudos** (fixed vocabulary, no free text, no replies; D45, `coaching-and-engagement.md`) — living on the past-event surface, outside both debrief and reflection. A free-text relay of reflection material ("Priya made the evening for me") stays deferred: it collides with no-messaging and backstage affinity (D21) at once.
 
 ## Reflection → coaching (the conditional)
 
@@ -148,7 +148,7 @@ Holds the line once, points to what we do, stops. No pushing, no guilt.
 ## Open questions
 
 - Detection of "stuck on the negative" for the reflection→coaching handoff (in-conversation, so a model is already in the loop — cheaper than the deferred debrief-side dwelling detection, but still needs tuning against real reactions).
-- Whether/when to design the consented member-to-member "gratitude relay" — deferred (no-messaging + D21 tension).
+- The free-text "gratitude relay" — still deferred; encouragement's designed shape is structured kudos (D45), revisit the relay only if kudos proves insufficient.
 - The exact wording of the steering reframe (shared work-to-do with `debrief.md`) — the single most delicate piece of copy in the product.
 - Whether reflection is ever reachable outside the debrief (profile check-in, proactive) — deferred.
 - `ReflectionRecorded` vs. extending `DebriefRecorded`; and the frequency-cap store shape (ties to the projection-store open question).

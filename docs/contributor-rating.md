@@ -34,6 +34,8 @@ Kept distinct because different consumers need different things — mashing them
 - **Organiser debrief + aggregated attendee feedback** → organising quality (`organizer-engagement.md`).
 - **Welcomer signal** → positive participation. Not raw affinity-received (raw tap-counts measure magnetism, not welcome — hypotheses H1–H3, `hypotheses.md`): each tap is **generosity-normalized** (weighted inversely to the tapper's overall tap rate) and **newcomer-weighted** (taps from first/second-timers and rare tappers count most). Composition-only — never feeds facilitator, organiser, or enforcement gates. Raw affinity-received stays captured in the log (**capture ≠ use**); the transformation is interpretation-layer and tunable, including to zero.
 
+- **Kudos** (structured encouragement gestures, D45) — **captured, not used** in rating v1 (capture ≠ use); a sent gesture is socially performative in a way the quiet affinity tap isn't. Any future use goes through the hypothesis register.
+
 Newcomers start at neutral defaults on every facet.
 
 ## Uses
