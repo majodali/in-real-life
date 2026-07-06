@@ -30,9 +30,10 @@ The leniency is deliberate: gatekeeping viewpoints would betray the bridging mis
 
 ## Money
 
-- **Suggested cost-covering donations** are allowed up to **$20**. Fixed-price events are gated by a threshold **set per community, with community feedback** — deferred, no fixed number now.
+- **Suggested cost-covering donations** are allowed up to **$20 per attendee, per event occurrence** (each meeting of a recurring event is its own occurrence — a weekly dinner asking $15 each time is legitimate cost recovery). Fixed-price events are gated by a threshold **set per community, with community feedback** — deferred, no fixed number now.
+- **Cost disclosure is required at propose time.** Any event with money involved states the amount and *what it covers* in the listing; the organiser flow's framing help asks "what's the fee covering?" up front. This is the proactive edge of enforcement — and it sharpens the reactive detector, since a mismatch between disclosed purpose and experienced reality is exactly what "not as described" catches.
 - **The line is purpose, not price** — connection with an incidental cost is fine; a transaction/profit/recruitment wrapped in a gathering is not. A $10 sales pitch is still banned (the pitch, not the price); an honest cost-recovery dinner is fine.
-- **Watch: covert commercialisation.** Even "suggested donations" can become a backdoor to monetising IRL events. We watch for it via the attendee-debrief detector (not-as-described / high-pressure) and organiser cost-collection patterns.
+- **Watch: covert commercialisation — by pattern, not a dollar ceiling.** There is deliberately no hard per-organiser aggregate cap (that would punish someone legitimately running three supper clubs). Instead the watch monitors *patterns* — collection frequency × amount × attendance across an organiser's events — and flags outliers for human review, alongside the attendee-debrief detector (not-as-described / high-pressure).
 - **External / third-party ticketed events** get more leniency — IRL is *listing* what exists (a community-theatre ticket, a paid class at a real venue), not the seller. Still no pure commercial promotion.
 
 ## Enforcement
@@ -40,7 +41,7 @@ The leniency is deliberate: gatekeeping viewpoints would betray the bridging mis
 Lenient and reactive, not gatekeeping — the (a)–(e) model:
 
 - **(a) Clear policy** — organisers see it plainly at propose time.
-- **(b) Encourage honesty** — the organiser flow nudges clear, accurate wording, and stating any cost upfront (the framing principle: help, don't lecture).
+- **(b) Encourage honesty** — the organiser flow nudges clear, accurate wording (the framing principle: help, don't lecture); cost disclosure (amount + what it covers) is the one *required* element (see *Money*).
 - **(c) Lenient by default** — we don't pre-police topic; most events just go.
 - **(d) Attendee feedback** — the debrief lets attendees flag an event that was **not as described** or involved **high-pressure recruitment/sales** (`debrief.md` → *Policy feedback*). This is the real detector.
 - **(e) Follow-up** — organisers are told this feedback is encouraged and that we'll follow up / act if policy isn't followed; repeated violations feed contributor rating (Group 4).

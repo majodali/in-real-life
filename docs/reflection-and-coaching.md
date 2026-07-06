@@ -4,7 +4,7 @@
 
 The debrief is *information* (`debrief.md`). This note designs the two deeper, optional activities it can open a door to:
 
-- **Reflection** — a calm, user-led space to think about how something felt, what they're hoping for, or what's getting in the way. IRL mostly listens and asks; the user does the thinking.
+- **Reflection** — a calm, user-led space to think about how something went, in **both directions**: inward (how it felt, what they're hoping for, what's getting in the way) *and* outward (the event itself, its structure, the venue, how IRL is doing). IRL mostly listens and asks; the user does the thinking.
 - **Coaching** — a *conditional* next step, reached only when a user stays fixed on a negative or a stuck frame rather than a learning. Here IRL may offer a single perspective that might help them see it differently.
 
 Both exist to help the user engage with a more open mindset and understand themselves better — never to extract data, never to fill session time. The signal they produce is a **byproduct**; the interaction is for the user. They are entered only from the debrief (in v1), always opt-in, and exitable at any point.
@@ -23,18 +23,18 @@ The hardest tone work in the whole product lives here — especially the steerin
 
 ## When the door opens (entry)
 
-Reflection is reached **from the debrief**, two ways:
+Reflection is reached **from the debrief**, two ways (resolves open-risks #10, D44):
 
 - **The user pulls** — taps "say more," or keeps writing.
-- **A gentle, declinable offer** — when the user is clearly *dwelling*: a charged free-text answer, an attempt to steer somewhere we won't go, a strongly negative outcome they elaborate on. The offer is light ("want to say a bit more about that?") and easy to wave off.
+- **A standing door** — every debrief close carries a quiet, *static* affordance: "anything else worth saying — about the event, the people, or how we're doing?" It costs nothing (no model call), it's always there, and its wording deliberately spans both self- and process-reflection.
 
-Detecting "dwelling" is rule-assisted plus model judgment, and must **under-trigger by default** — most debriefs simply end. We would rather miss an opening than pester someone who just wanted to log a tap.
+**Proactive, model-judged offers ("you seem to be dwelling — want to talk?") are deferred.** Detecting "dwelling" would require a classifier call on ordinary debriefs, which the zero-LLM fast path forbids — and a door that is *always visibly open* serves the need without the surveillance feel of being watched for emotional cues. Most debriefs simply end, and that's correct. Revisit with evidence if the standing door goes unused by people who clearly had something to say.
 
 Reflection reachable from *outside* the debrief (a profile check-in, say) is deferred; v1 is debrief-initiated only.
 
 ## Reflection mode
 
-A calm space where feelings, motivations, and what's-getting-in-the-way are natural to talk about. IRL's moves are deliberately small:
+A calm space where feelings, motivations, and what's-getting-in-the-way are natural to talk about — and equally, where a member can reflect on the *process*: the event's structure, the venue, the organiser's choices, IRL's own suggestions. IRL's moves are deliberately small:
 
 - **Open, gentle questions** — "What were you hoping it'd be like?" / "What's the part that's not landing?"
 - **Light follow-ups** that stay with the user's own thread.
@@ -44,6 +44,20 @@ A calm space where feelings, motivations, and what's-getting-in-the-way are natu
 What reflection deliberately does **not** do: interpret or validate feelings, give advice (that's coaching), make claims, or entertain a demographic steer. On that last point, the handling from `debrief.md` applies here in full — a plain acknowledgment, an honest and grounded rationale, no compromise, no demographic offer, treated as a chance for reflection rather than correction.
 
 Reflection ends when the user is done — a plain, warm close, no over-promise. It hands to coaching **only** if the user is stuck (below).
+
+## Routing & consent (what reflection material becomes)
+
+Reflection produces material with three distinct destinations, each with its own privacy posture:
+
+| Direction | Goes to | Posture |
+|---|---|---|
+| **Inward** (self-reflection) | the user model — `ReflectionRecorded` deltas | Private, always. Never shared with anyone. |
+| **Process** (the event, venue, structure, IRL itself) | evaluation & improvement: hypothesis-register evidence (`hypotheses.md`), model-evolution discovery (`user-model.md`), the event/operator/venue register (Group 3), app improvement | Feedback *to us* — telling us is the consent. Used in aggregate; handled under the same privacy commitments as everything else. |
+| **Outward-shareable** (feedback for another member — mainly organisers) | the organiser's aggregated-feedback channel (`organizer-engagement.md`) | **Nothing is shared with another member without explicit, in-the-moment consent** — "want us to pass that along to the organiser — with your name, or without?" Opt-in per item, never ambient. |
+
+The consent rule is load-bearing: reflection only works as a safe space if the member controls, item by item, what leaves it. IRL may *offer* to route something ("that sounds like feedback the organiser could actually use — want us to share it?"), but the member decides.
+
+**Member-to-member feedback (beyond organisers) does not flow through reflection.** Encouragement between members now has its own designed shape — **structured kudos** (fixed vocabulary, no free text, no replies; D45, `coaching-and-engagement.md`) — living on the past-event surface, outside both debrief and reflection. A free-text relay of reflection material ("Priya made the evening for me") stays deferred: it collides with no-messaging and backstage affinity (D21) at once.
 
 ## Reflection → coaching (the conditional)
 
@@ -84,7 +98,7 @@ A capability family to design in its own right (its own note when we get there);
 
 Reflection/coaching is rich narrative, and produces the same kind of `observed` evidence as a Tier-2 debrief.
 
-- A **`ReflectionRecorded`** event (linked to the triggering debrief/event) carries the reflection transcript, the `observed` L2/L3 deltas extracted from it, and a light record of any coaching perspective offered (which one, whether it landed). Keeping it a distinct event preserves the debrief-is-information separation.
+- A **`ReflectionRecorded`** event (linked to the triggering debrief/event) carries the reflection transcript, the `observed` L2/L3 deltas extracted from it, a light record of any coaching perspective offered (which one, whether it landed), and any **routed feedback items** — process feedback for IRL, and consent-gated organiser feedback with the member's sharing choice (attributed / anonymous / declined) recorded. Keeping it a distinct event preserves the debrief-is-information separation.
 - **Coaching frequency-cap store** — a per-user record of perspectives already offered, so we never repeat one. Small, but load-bearing for the "never nag" promise.
 - All of it is PII under the crypto-shredding scheme (`event-sourcing.md`), and — like everything — the interaction serves the user; the signal is a byproduct.
 
@@ -133,7 +147,8 @@ Holds the line once, points to what we do, stops. No pushing, no guilt.
 
 ## Open questions
 
-- Reliable, low-false-positive detection of "dwelling" / "stuck on the negative" — rule + model judgment, needs tuning against real reactions.
+- Detection of "stuck on the negative" for the reflection→coaching handoff (in-conversation, so a model is already in the loop — cheaper than the deferred debrief-side dwelling detection, but still needs tuning against real reactions).
+- The free-text "gratitude relay" — still deferred; encouragement's designed shape is structured kudos (D45), revisit the relay only if kudos proves insufficient.
 - The exact wording of the steering reframe (shared work-to-do with `debrief.md`) — the single most delicate piece of copy in the product.
 - Whether reflection is ever reachable outside the debrief (profile check-in, proactive) — deferred.
 - `ReflectionRecorded` vs. extending `DebriefRecorded`; and the frequency-cap store shape (ties to the projection-store open question).

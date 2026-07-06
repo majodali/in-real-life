@@ -43,7 +43,8 @@ A clear title, description, and intent make an event discoverable and set attend
 
 - Gentle feedback on whether the title/description conveys what the event actually is and who it's for.
 - Surfacing an implied audience so it's stated plainly ("sounds like this is aimed at folks new to hiking — want to say so?").
-- All collaborative, all skippable. Never bureaucratic.
+- For events with money involved, the one required element: **cost disclosure** — amount and what it covers, stated in the listing; the flow asks "what's the fee covering?" up front (`event-policy.md` → Money).
+- Otherwise all collaborative, all skippable. Never bureaucratic.
 
 ## Structure & the unstructured-event special case
 
@@ -76,7 +77,7 @@ Feeds:
 
 - The **register of event types / operators / venues** (Group 3).
 - The organiser's **contributor rating** (Group 4).
-- **Aggregated attendee signal back to the organiser** — when several attendees report the same structural miss ("nothing to do", "too big"), that becomes constructive feedback for the organiser, not just user-model updates. A genuinely useful loop, handled gently (it's feedback, not a report card).
+- **Aggregated attendee signal back to the organiser** — when several attendees report the same structural miss ("nothing to do", "too big"), that becomes constructive feedback for the organiser, not just user-model updates. A genuinely useful loop, handled gently (it's feedback, not a report card). Richer, reflection-sourced feedback joins this channel too — but **only with the member's explicit, in-the-moment consent**, attributed or anonymous at their choice (`reflection-and-coaching.md` → Routing & consent).
 - A **facilitation-coaching** doorway for organisers who want to get better at running things.
 
 Emitting it: an `OrganizerDebriefRecorded` event, parallel to `DebriefRecorded`, on the event/interaction aggregate.

@@ -53,6 +53,8 @@ Two light taps over the attendee list, and it does real work:
 - **Who did you actually meet?** Tap the people you connected or spent time with. This makes the debrief feel complete (especially at a large gathering where you met 3 of 20, or when someone didn't show), grounds affinity (you can only want to see again someone you met), and cross-validates who was really there.
 - **Anyone you'd want to see again?** A positive-only second mark on the people you met. Untapped is neutral; there is no per-person "no."
 
+**Kudos are deliberately not here.** Structured encouragement gestures (D45, `coaching-and-engagement.md`) live on the past-event surface as a separate act — if they shared a flow with the affinity tap, reciprocity norms would contaminate the observed signal.
+
 ## What it captures → how the model changes
 
 | Captured | Model effect | Layer / provenance |
@@ -175,7 +177,7 @@ Only when it yields real signal — otherwise go straight to the minimal close:
 - *Maybe* / *Not for me* → one follow-up to aim better ("what would've made it easier?")
 - a texture chip implying a mismatch → confirm and expand it
 - something worth a calibration check → "anything surprise you?"
-- the user taps **"say more"** → this may open reflection
+- the user taps **"say more"** — a standing, *static* affordance on every debrief close ("anything else worth saying — about the event, the people, or how we're doing?"). Always present, no model call; opens reflection for anything inward or outward (D44)
 
 **Don't probe *why* they liked a specific person** — intrusive, and the affinity tap already carries it.
 
@@ -249,7 +251,7 @@ Exact schemas live in the forthcoming `debrief-prompt.md`.
 
 ## Open questions
 
-- How the debrief *detects* that reflection's door has opened (explicit "say more" only, or also gentle offer when a user is dwelling) — and how the reflective conversation is structured. Its own follow-on design.
+- Reflection entry is settled (D44): a standing static door + explicit pull; proactive dwelling-detection deferred. How the reflective conversation itself is structured lives in `reflection-and-coaching.md`.
 - How mutual affinity shapes ranking/co-attendance while staying illegible — Group 3.
 - Whether to capture *predicted* enjoyment at RSVP (precise forecast error vs. friction).
 - When we can honestly *ground* the difference rationale in real experience ("in our experience…") — needs data; until then, policy + practical constraint + the user's own signal only.
