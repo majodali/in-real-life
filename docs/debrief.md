@@ -175,7 +175,7 @@ Only when it yields real signal — otherwise go straight to the minimal close:
 - *Maybe* / *Not for me* → one follow-up to aim better ("what would've made it easier?")
 - a texture chip implying a mismatch → confirm and expand it
 - something worth a calibration check → "anything surprise you?"
-- the user taps **"say more"** → this may open reflection
+- the user taps **"say more"** — a standing, *static* affordance on every debrief close ("anything else worth saying — about the event, the people, or how we're doing?"). Always present, no model call; opens reflection for anything inward or outward (D44)
 
 **Don't probe *why* they liked a specific person** — intrusive, and the affinity tap already carries it.
 
@@ -249,7 +249,7 @@ Exact schemas live in the forthcoming `debrief-prompt.md`.
 
 ## Open questions
 
-- How the debrief *detects* that reflection's door has opened (explicit "say more" only, or also gentle offer when a user is dwelling) — and how the reflective conversation is structured. Its own follow-on design.
+- Reflection entry is settled (D44): a standing static door + explicit pull; proactive dwelling-detection deferred. How the reflective conversation itself is structured lives in `reflection-and-coaching.md`.
 - How mutual affinity shapes ranking/co-attendance while staying illegible — Group 3.
 - Whether to capture *predicted* enjoyment at RSVP (precise forecast error vs. friction).
 - When we can honestly *ground* the difference rationale in real experience ("in our experience…") — needs data; until then, policy + practical constraint + the user's own signal only.

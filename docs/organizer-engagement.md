@@ -76,7 +76,7 @@ Feeds:
 
 - The **register of event types / operators / venues** (Group 3).
 - The organiser's **contributor rating** (Group 4).
-- **Aggregated attendee signal back to the organiser** — when several attendees report the same structural miss ("nothing to do", "too big"), that becomes constructive feedback for the organiser, not just user-model updates. A genuinely useful loop, handled gently (it's feedback, not a report card).
+- **Aggregated attendee signal back to the organiser** — when several attendees report the same structural miss ("nothing to do", "too big"), that becomes constructive feedback for the organiser, not just user-model updates. A genuinely useful loop, handled gently (it's feedback, not a report card). Richer, reflection-sourced feedback joins this channel too — but **only with the member's explicit, in-the-moment consent**, attributed or anonymous at their choice (`reflection-and-coaching.md` → Routing & consent).
 - A **facilitation-coaching** doorway for organisers who want to get better at running things.
 
 Emitting it: an `OrganizerDebriefRecorded` event, parallel to `DebriefRecorded`, on the event/interaction aggregate.
