@@ -46,7 +46,7 @@ A Streams-consuming Lambda. For each model-bearing event (`OnboardingCompleted`,
 
 Two distinct operations, easily conflated — separating them was a real fix (open-risks #1):
 
-- **Projector replay (deterministic, LLM-free).** Wipe `irl-user-model` and re-run the projector over the log; it re-applies the **frozen** deltas already baked into each event, reproducing the *same* Layer 2/3 the live system produced. This is the ES replay mechanism and the production↔workshop user-copy path.
+- **Projector replay (deterministic, LLM-free).** Wipe `irl-user-model` and re-run the projector over the log; it re-applies the **frozen** deltas already baked into each event, reproducing the *same* Layer 2/3 the live system produced. This is the ES replay mechanism — *within* an environment. Cross-env user copy is **not** full-history replay: the import emits a `ProfileImported` snapshot event (Layer 1 narrative + as-of-export Layer 2) that this projector seeds from, and Layer 3 / contributor rating never cross environments (`event-sourcing.md` → Import; D42).
 - **Re-extraction (batched, LLM, separate job).** To actually *evolve* the model — a new or merged dimension, a better prompt — replay is **not** enough: it only reproduces the *old* extraction. We must re-run the Opus extraction over the Layer-1 narrative in the log to regenerate deltas under the new schema. This is a distinct, batched, non-deterministic, **costed** job (not the projector), and it is what makes "re-derive Layer 2 from Layer 1 without re-interviewing" actually true. Its cost/latency/throughput story is TBD.
 
 ## Consistency
