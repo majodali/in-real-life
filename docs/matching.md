@@ -49,7 +49,7 @@ A guaranteed share of recommendations are exploratory, and **newcomers are injec
 A real, undesirable consequence of the strawman: more attractive, charismatic (and, unfairly, wealthier) members naturally accrue more "likes." We must ensure that does **not** convert into greater power over how *others* are recommended.
 
 - **Being liked a lot never increases the weight of your own choices.** A member's outgoing affinity influences *their own* recommendations meaningfully, but *others'* recommendations only weakly and under a **per-member cap that does not grow with popularity.**
-- **Incoming popularity never boosts contributor rating** (already D35 / open-risks #9) — reinforced here.
+- **Incoming popularity must never boost contributor rating.** *Note an unresolved tension (open-risks #9):* `contributor-rating.md` currently still lists affinity-received as a *weak* input to positive participation; the pending call is whether to remove it entirely (which this note's logic argues for) or floor it at a fixed number. Until decided, this line states the direction, not the implemented rule.
 - The result: a charismatic connector shapes their *own* social life, not the network's. The people who accrue likes for reasons orthogonal to community-building don't get to steer how everyone else socialises.
 
 This is the deep version of "positive ≠ popularity": popularity must confer neither *standing* (rating) nor *routing power* (influence over others' feeds).

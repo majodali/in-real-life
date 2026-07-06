@@ -34,13 +34,13 @@ The evidence behind the user model (see `user-model.md` → *What the evidence s
 
 | Perspective | Why it helps the user | Where it surfaces naturally |
 |---|---|---|
-| Repetition over chemistry | Lowers the stakes of any single event; encourages return | Debrief ("worth another go?"), event-selection (recurring events) |
+| Repetition over chemistry | Lowers the stakes of any single event; encourages return | Reflection entered from a lukewarm debrief; event-selection (recurring events) |
 | Side-by-side over face-to-face | Makes "I'm not good at mingling" a non-issue | Onboarding (reframes anxiety), event-selection (activity-anchored options) |
 | Contribution as a way in | Gives a role, removes "why am I here" | Onboarding (the useful door), proposing events |
-| We mispredict what we'll enjoy | Loosens the grip of "that's not for me" | Event-selection (gentle stretch), debrief (surprise vs. expectation) |
-| Barriers are situational | Reframes "I'm bad at this" as "that setup was hard" | Debrief (what actually got in the way), onboarding |
+| We mispredict what we'll enjoy | Loosens the grip of "that's not for me" | Event-selection (gentle stretch); reflection (a surprise worth noticing) |
+| Barriers are situational | Reframes "I'm bad at this" as "that setup was hard" | Reflection (what actually got in the way), onboarding |
 
-These are offered as observations, occasionally, when they fit — not delivered as a curriculum.
+These are offered as observations, occasionally, when they fit — not delivered as a curriculum. **Note the debrief itself never delivers them** (D24 — the debrief is information); where a row says "reflection", the perspective lands in the reflection/coaching modes the debrief opens a door to (`reflection-and-coaching.md`). The debrief *captures* surprise-vs-expectation; the *perspective about* mispredicting is shared later, if at all.
 
 ## The three touchpoints
 

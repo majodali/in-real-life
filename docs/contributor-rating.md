@@ -67,6 +67,6 @@ A per-user projection built by a projector from the events above — recomputed 
 ## Open questions
 
 - Facet weightings and decay curves — tune against real data (no empirical grounding yet).
-- The "informs, never dominates" guarantee needs a concrete mechanism in composition (Group 3) — a cap on how much it can move an outcome.
+- The "informs, never dominates" mechanism is now specified in `matching.md` (nudges capped below fit + the exploration floor); what remains open here is the *tuning* — the actual cap values, against real data.
 - Avoiding double-counting popularity between the positive facet and mutual-affinity/crews.
 - Escalation ladder + due process specifics (Group 4 admin).

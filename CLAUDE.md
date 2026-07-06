@@ -4,6 +4,10 @@
 
 A mobile-first web app for a local community meetup platform. Users go through an AI-guided onboarding interview, discover nearby events and people, and coordinate real-world meetups. Privacy-focused: only first names shared, no messaging — just show up.
 
+## Design documentation
+
+`docs/README.md` is the index to the design notes; `docs/decisions.md` is the canonical decision register (D1–D39) and `docs/open-risks.md` the known-gaps tracker. Read those before extending any designed area — most conceptual decisions (user model, onboarding, debrief, matching, policy, trust) are already made and recorded there.
+
 ## Architecture
 
 - **Multi-file static app** — HTML + separate CSS/JS modules in `src/`

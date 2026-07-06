@@ -95,7 +95,7 @@ Reflection/coaching is rich narrative, and produces the same kind of `observed` 
 
 ## Reframe library (working copy)
 
-Provisional response copy for the hardest moments, in the we-voice (warm-not-familiar, grounded, no unprovable claims, every "don't" paired with a "do"). To be validated against real reactions.
+Provisional response copy for the hardest moments, in the we-voice (warm-not-familiar, grounded, no unprovable claims, every "don't" paired with a "do"). To be validated against real reactions. **This library is the single source of truth for this copy** — other notes reference it rather than duplicating it, so a refinement here doesn't leave stale variants elsewhere.
 
 **Age steer (reflection guidance).** *User wants people their own age.*
 > "IRL doesn't match by age. Aside from wanting more people your own age, what would've made the evening easier?"
