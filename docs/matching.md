@@ -49,7 +49,7 @@ A guaranteed share of recommendations are exploratory, and **newcomers are injec
 A real, undesirable consequence of the strawman: more attractive, charismatic (and, unfairly, wealthier) members naturally accrue more "likes." We must ensure that does **not** convert into greater power over how *others* are recommended.
 
 - **Being liked a lot never increases the weight of your own choices.** A member's outgoing affinity influences *their own* recommendations meaningfully, but *others'* recommendations only weakly and under a **per-member cap that does not grow with popularity.**
-- **Incoming popularity must never boost contributor rating.** *Note an unresolved tension (open-risks #9):* `contributor-rating.md` currently still lists affinity-received as a *weak* input to positive participation; the pending call is whether to remove it entirely (which this note's logic argues for) or floor it at a fixed number. Until decided, this line states the direction, not the implemented rule.
+- **Incoming popularity never boosts contributor rating — resolved (open-risks #9).** Raw affinity-received is no longer a rating input; what feeds positive participation is the **welcomer signal** — generosity-normalized, newcomer-weighted taps that measure *welcome*, not magnetism (`hypotheses.md` H1–H3). A charismatic tap-magnet and a quiet welcomer now separate cleanly; raw counts stay captured but unused (capture ≠ use).
 - The result: a charismatic connector shapes their *own* social life, not the network's. The people who accrue likes for reasons orthogonal to community-building don't get to steer how everyone else socialises.
 
 This is the deep version of "positive ≠ popularity": popularity must confer neither *standing* (rating) nor *routing power* (influence over others' feeds).
@@ -57,6 +57,15 @@ This is the deep version of "positive ≠ popularity": popularity must confer ne
 ## Avoidance as soft-de-weight only — #17
 
 `do-not-interact` and `didn't-click` **only ever soft-de-weight** co-placement through the same noisy ranking; they never hard-remove and are information-symmetric. We accept that a determined observer can infer *something* from the real world (as with all affinity) — what we refuse to build is a hard, legible avoidance mechanism that turns into either a stalking vector or a visible snub.
+
+## The ranking spec is explicit, versioned, and hypothesis-tuned
+
+How recommendations are ranked is never implicit or emergent-from-code:
+
+- **Every input, transformation, weight, and cap is a named tunable** with a documented default — configuration, not constants. Tunable includes tunable to zero.
+- **The spec is versioned**; a change to any input or weight flows through the hypothesis register (`hypotheses.md` — hypothesis, evidence plan, kill criteria) and, when consequential, the decision register.
+- **Raw signals are always captured even when unused** (capture ≠ use) — so future refinements are never foreclosed by an earlier simplification.
+- **Continuous tuning aims at reducing anti-pattern impact** — the gaming register below is not a one-time checklist but the standing agenda: each entry names its detection signal, and tuning priorities follow the anti-patterns we actually observe.
 
 ## Success & progress (what we optimise and evolve toward)
 
@@ -69,6 +78,7 @@ The algorithm is judged by how it behaves on scenarios, not by its internal eleg
 - **New vs. known** — frequency of recommending new people vs. familiar ones; is the balance healthy or does it silo?
 - **Affinity influence** — does one person's taps visibly over-steer others?
 - **Charisma concentration** — do a few popular members dominate routing? (should not — see normalisation)
+- **Tap-magnet vs. quiet welcomer** — a charismatic member who accrues broad taps vs. a quiet one whose taps come from newcomers and rare tappers: does the welcomer signal separate them, and does composition follow the welcomer?
 - **Cold-start** — does a brand-new member get good, well-fitting first recommendations *and* real exposure?
 - **Crew vs. newcomer** — do crews strengthen without ossifying / crowding out new people?
 - **Avoidance** — does a do-not-interact relationship stay symmetric and non-legible?
@@ -82,8 +92,8 @@ Systematically tracked (this is *the* challenge). Each pairs a risk with its mit
 
 | Scenario | Risk | Mitigation |
 |---|---|---|
-| Charisma/wealth influence concentration | Popular members steer the network | Per-member influence cap that doesn't grow with popularity |
-| Tap-spam ("see again" on everyone) | Bias one's own event overlap; inflate reciprocity | Diminishing returns on outgoing affinity; caps; it mostly only affects *your own* feed anyway |
+| Charisma/wealth influence concentration | Popular members steer the network | Per-member influence cap that doesn't grow with popularity; rating uses the **welcomer signal**, never raw tap-counts (H1–H3) |
+| Tap-spam ("see again" on everyone) | Bias one's own event overlap; inflate reciprocity | Generosity normalization self-discounts a spammer's taps toward zero; caps; it mostly only affects *your own* feed anyway |
 | Popularity feedback loop | Liked → recommended more → liked more | Fit-first base; exploration floor; popularity doesn't boost rating or routing |
 | Crew ossification | Established crews crowd out newcomers | Newcomer injection floor; crew boost capped |
 | Avoidance as covert exclusion | Naming people to shape a room | Soft de-weight only; symmetric; never hard-remove |

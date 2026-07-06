@@ -47,12 +47,14 @@ The canonical record of design decisions for IRL. Each entry is summarized here 
 | D37 | Workshop/test mode has an **injected LLM seam** — deterministic stub/canned Claude provider in workshop & test, real provider in production; robots use canned transcripts. A Group-0 foundation seam, required before any AI flow is testable | `workshop-mode.md` |
 | D38 | Matching = **fit-first base** (works cold, from onboarding) + **bounded soft nudges** (affinity/rating/crews, each capped *below* fit) + a preserved **exploration / newcomer-injection floor** into *well-fitting* rooms; nothing gates except hard constraints and explicit earned thresholds; **popularity confers neither standing nor routing power**; numerical scoring is a strawman evolved on long-term results (success now defined — D39) | `matching.md` |
 | D39 | **Success = real-world connection & belonging, not engagement/retention/attendance.** Retention is not a goal (reduced need can be success — the graduation paradox); success is **distributional** (reach the least-served, not the average); measured as **indicators not targets** (Goodhart), evolving on long-term outcomes; measurement is consented, gentle, opt-in, backstage — caring, never surveillance | `success-and-progress.md` |
+| D40 | Rating uses the **welcomer signal**, not raw affinity-received: taps generosity-normalized (inverse to tapper's tap rate) and newcomer-weighted; composition-only, never facilitator/organiser/enforcement gates. Raw affinity-received stays captured (**capture ≠ use** — reversible at the interpretation layer). Resolves open-risks #9; tracked as hypotheses H1–H3 with kill criteria | `contributor-rating.md`, `matching.md`, `hypotheses.md` |
+| D41 | **Hypothesis-driven tuning methodology.** Every embedded analysis/scoring adjustment is documented as a falsifiable hypothesis with named tunable parameters (incl. to zero), an evidence/counter-evidence plan, kill criteria, and its anti-patterns — in the hypothesis register. Raw signals are always captured even when unused; the ranking spec is **explicit and versioned**; continuous tuning targets observed anti-patterns; evidence is observational-first, small-N-honest, Goodhart-disciplined | `hypotheses.md`, `matching.md` |
 
 ## Governance — to define later
 
 Flagged as needed, deliberately not designed yet:
 
-- **Register review & change process** — how we review these decisions and modify the system in response to real-world results, from small tweaks to large pivots: cadence, who decides, and how a change propagates back through notes, prompts, and code.
+- **Register review & change process** — how we review these decisions (and the hypothesis register, `hypotheses.md`) and modify the system in response to real-world results, from small tweaks to large pivots: cadence, who decides, and how a change propagates back through notes, prompts, and code.
 - **Prompt evaluation & testing** — how the onboarding prompt (and later the coaching and debrief prompts) are evaluated, modified, and regression-tested against real and simulated user interactions before changes ship.
 
 ## Watch-items (emergent effects)

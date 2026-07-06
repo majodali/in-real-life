@@ -22,7 +22,7 @@ Kept distinct because different consumers need different things — mashing them
 | Facet | What it reads | Fed by | Used by |
 |---|---|---|---|
 | **Reliability** | Confirms-then-shows vs. no-shows / late cancels | attendance (`interaction` events) | composition; organiser expectations |
-| **Positive participation** | A good person to have in the room — contributes, kind, others at ease | *weakly* affinity-received; more from reliability + absence of concerns | composition, crews |
+| **Positive participation** | A good person to have in the room — contributes, kind, others at ease | reliability + absence of concerns + the **welcomer signal** (generosity-normalized, newcomer-weighted taps — H1–H3) | composition, crews |
 | **Organising quality** | Did their events go well | organiser debrief + aggregated attendee structural feedback + policy compliance | organiser trust-graduation |
 | **Trust / safety flag** | Conduct concerns, policy violations | debrief conduct path; policy feedback | safety escalation; enforcement |
 
@@ -32,7 +32,7 @@ Kept distinct because different consumers need different things — mashing them
 - **Debrief conduct concerns** → trust/safety flag (`debrief.md` → conduct affordance).
 - **Policy feedback** (not-as-described / high-pressure) → organising quality + trust (`debrief.md` → Policy feedback; `event-policy.md`).
 - **Organiser debrief + aggregated attendee feedback** → organising quality (`organizer-engagement.md`).
-- **Affinity received** → positive participation, *weak and careful* (bias-prone; never the dominant input).
+- **Welcomer signal** → positive participation. Not raw affinity-received (raw tap-counts measure magnetism, not welcome — hypotheses H1–H3, `hypotheses.md`): each tap is **generosity-normalized** (weighted inversely to the tapper's overall tap rate) and **newcomer-weighted** (taps from first/second-timers and rare tappers count most). Composition-only — never feeds facilitator, organiser, or enforcement gates. Raw affinity-received stays captured in the log (**capture ≠ use**); the transformation is interpretation-layer and tunable, including to zero.
 
 Newcomers start at neutral defaults on every facet.
 
@@ -68,5 +68,5 @@ A per-user projection built by a projector from the events above — recomputed 
 
 - Facet weightings and decay curves — tune against real data (no empirical grounding yet).
 - The "informs, never dominates" mechanism is now specified in `matching.md` (nudges capped below fit + the exploration floor); what remains open here is the *tuning* — the actual cap values, against real data.
-- Avoiding double-counting popularity between the positive facet and mutual-affinity/crews.
+- Double-counting between the positive facet and mutual-affinity/crews is much reduced by the welcomer transformation (it discounts exactly the broad-popularity component crews already carry), but verify against real data.
 - Escalation ladder + due process specifics (Group 4 admin).
