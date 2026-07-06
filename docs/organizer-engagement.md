@@ -43,7 +43,8 @@ A clear title, description, and intent make an event discoverable and set attend
 
 - Gentle feedback on whether the title/description conveys what the event actually is and who it's for.
 - Surfacing an implied audience so it's stated plainly ("sounds like this is aimed at folks new to hiking — want to say so?").
-- All collaborative, all skippable. Never bureaucratic.
+- For events with money involved, the one required element: **cost disclosure** — amount and what it covers, stated in the listing; the flow asks "what's the fee covering?" up front (`event-policy.md` → Money).
+- Otherwise all collaborative, all skippable. Never bureaucratic.
 
 ## Structure & the unstructured-event special case
 
