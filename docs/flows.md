@@ -95,7 +95,7 @@ stateDiagram-v2
     end note
 ```
 
-**TBD around the event lifecycle** (recognised, not yet designed): recurring events (Group 7) · richer cancellation flow — what happens to RSVPs and how attendees are notified (Group 2) · interest-before-commitment surfacing (Group 2) · richer event data — images, descriptions, co-organisers (Group 2) · in-progress interaction between confirm and debrief (Group 2) · the real time/place picker behind "suggest change" (Group 2).
+**TBD around the event lifecycle** (recognised, not yet designed): **time/place-less proposals — "Anyone into scrabble?" as an idea stage before `proposed`, graduating once time/place firm up; likely a common case** (Group 2) · **overlapping same-time RSVPs/confirmations — surface gently, interest-overlap is fine, double-confirm is a reliability problem; scenario-based (accident / indecision / co-located / spam)** (Group 2) · recurring events (Group 7) · richer cancellation flow — what happens to RSVPs and how attendees are notified (Group 2) · interest-before-commitment surfacing (Group 2) · richer event data — images, descriptions, co-organisers (Group 2) · in-progress interaction between confirm and debrief (Group 2) · the real time/place picker behind "suggest change" (Group 2).
 
 ---
 
@@ -238,6 +238,8 @@ flowchart LR
 | Event/operator/venue register | 6 | Group 3 |
 | Escalation ladder / admin & support UI | 6 | Group 4 |
 | Account deletion / export mechanism + key management | 2 | Group 1 — key management **blocks onboarding** (open-risks #3) |
+| Time/place-less "idea" proposals ("Anyone into scrabble?") | 3 | Group 2 — likely common |
+| Overlapping same-time RSVP/confirm handling (by scenario) | 3 | Group 2 |
 | Recurring events, cancellation flow, interest surfacing, richer event data, suggest-change picker | 3 | Group 2 / 7 |
 | Crew detection & continuity events | (matching) | Group 3; continuity deferred (D33) |
 | Robot users / automated workshop activity | (workshop) | Deferred until needed (D2/D37) |
