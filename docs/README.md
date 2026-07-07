@@ -46,6 +46,7 @@ Understanding of a person is **seeded** at onboarding and **grown** from what th
 **Matching & recommendation (Group 3)**
 - `success-and-progress.md` — **the keystone: what IRL is *for*.** Success = real-world connection & belonging, not engagement; distributional; indicators-not-targets. Everything downstream is evaluated against this.
 - `matching.md` — how fit, affinity, rating, crews, constraints, avoidance, and newcomer status combine into what a member sees; fit-first, bounded soft nudges, exploration/inclusion floor; the definitions + influence map; the gaming/negative-scenario register.
+- `scenario-walkthroughs.md` — the matching + success test scenarios run concretely through the design as written; verdicts per scenario and a findings register (F1–F12) of gaps awaiting promotion.
 
 **Trust & safety (Group 4)**
 - `contributor-rating.md` — a private, backstage, multi-faceted trust read; informs, never dominates.

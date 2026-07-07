@@ -84,7 +84,7 @@ The algorithm is judged by how it behaves on scenarios, not by its internal eleg
 - **Avoidance** — does a do-not-interact relationship stay symmetric and non-legible?
 - **Gaming attempts** — see the register below.
 
-We'll expand these together; they're the real specification.
+We'll expand these together; they're the real specification. First full pass: `scenario-walkthroughs.md` — each scenario traced through the design as written, with verdicts and a findings register.
 
 ## Negative-outcome / gaming register
 
