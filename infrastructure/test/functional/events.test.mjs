@@ -7,6 +7,7 @@ import { DeleteCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
 import { loadTestConfig } from '../helpers/config.mjs';
 import { createTestUser, deleteTestUser } from '../helpers/auth.mjs';
 import { ddb } from '../helpers/cleanup.mjs';
+import { isoFromNow, DAY, MINUTE } from '../helpers/time.mjs';
 
 let config;
 let organizer;
@@ -58,8 +59,8 @@ const sampleBody = () => ({
   commandId: randomUUID(),
   title: `Coffee walk ${randomUUID().slice(0, 6)}`,
   description: 'Easy walk along the waterfront, coffee after.',
-  startTime: '2026-12-01T16:00:00.000Z',
-  endTime: '2026-12-01T17:30:00.000Z',
+  startTime: isoFromNow(30 * DAY),
+  endTime: isoFromNow(30 * DAY + 90 * MINUTE),
   location: 'Blackbird Bakery',
   organizerName: 'Test Organizer',
   minimumAttendance: 3,
