@@ -2,7 +2,7 @@
 
 Design notes for **in·real·life** — a local community meetup app: AI-guided onboarding, discover nearby events and people, coordinate real-world meetups. Privacy-focused (first names only, no messaging — just show up).
 
-These notes are **living and provisional** — current best decisions, revisable as real usage teaches us. `decisions.md` is the map: a register of every decision (D1–D36) with a one-line pointer to the note that holds the reasoning, plus watch-items for emergent effects we're tracking.
+These notes are **living and provisional** — current best decisions, revisable as real usage teaches us. `decisions.md` is the map: a register of every decision (D1–D46) with a one-line pointer to the note that holds the reasoning, plus watch-items for emergent effects we're tracking.
 
 ## How the pieces fit
 

@@ -18,7 +18,7 @@ The single place each term is defined *and* its effect on ranking/outcomes made 
 |---|---|---|---|
 | **Hard constraints** | schedule overlap, distance / travel willingness, blocks, adults-only, capacity | **Filter** — removes infeasible events/people entirely | The *only* hard gate |
 | **Fit** | match between the member's comfort envelope + doors + interests and the event's shape (size, structure, activity, role) | The **base** ranking signal and the majority of the score; **works from onboarding with zero history** | Dominant by design |
-| **Affinity — outgoing** | who this member tapped "want to see again" | Boosts co-suggestion with those people (their events, shared events) — mainly in *this member's own* feed | Capped; normalised per-member (see below) |
+| **Affinity — outgoing** | who this member tapped "want to see again" | Boosts co-suggestion with those people (their events, shared events) — in *this member's own* feed **only**; a one-sided tap never alters the tapped person's or any third party's ranking (cross-member effects require mutuality) | Capped; normalised per-member (see below) |
 | **Affinity — mutual** | both tapped each other | Stronger co-suggestion; seeds crews | Capped |
 | **Contributor rating** | backstage facets (reliability / positive participation / organising / trust-safety) | Gentle: weave reliable, positive contributors into groups; graduate organiser trust. **Not a feed gate.** Safety facet routes to admin, never to ranking | Capped; never dominates |
 | **Crews** | 3–4 people repeatedly together with mutual affinity | Gentle boost to co-suggesting the cluster; supports continuity | Capped; **must not ossify** (newcomer injection) |
@@ -58,6 +58,8 @@ This is the deep version of "positive ≠ popularity": popularity must confer ne
 
 `do-not-interact` and `didn't-click` **only ever soft-de-weight** co-placement through the same noisy ranking; they never hard-remove and are information-symmetric. We accept that a determined observer can infer *something* from the real world (as with all affinity) — what we refuse to build is a hard, legible avoidance mechanism that turns into either a stalking vector or a visible snub.
 
+Soft-only has a member-facing consequence we owe honesty about **at capture time**: naming someone reduces co-placement, it does not — and cannot — prevent co-attendance. The wording that sets that expectation is Group-1 UX work; the commitment that it exists is made here.
+
 ## The ranking spec is explicit, versioned, and hypothesis-tuned
 
 How recommendations are ranked is never implicit or emergent-from-code:
@@ -88,17 +90,18 @@ We'll expand these together; they're the real specification. First full pass: `s
 
 ## Negative-outcome / gaming register
 
-Systematically tracked (this is *the* challenge). Each pairs a risk with its mitigation:
+Systematically tracked (this is *the* challenge). Each pairs a risk with its **detection signal** (how we'd notice it happening — aggregate, de-identified reads per `user-model.md` → Model evolution) and its mitigation:
 
-| Scenario | Risk | Mitigation |
-|---|---|---|
-| Charisma/wealth influence concentration | Popular members steer the network | Per-member influence cap that doesn't grow with popularity; rating uses the **welcomer signal**, never raw tap-counts (H1–H3) |
-| Tap-spam ("see again" on everyone) | Bias one's own event overlap; inflate reciprocity | Generosity normalization self-discounts a spammer's taps toward zero; caps; it mostly only affects *your own* feed anyway |
-| Popularity feedback loop | Liked → recommended more → liked more | Fit-first base; exploration floor; popularity doesn't boost rating or routing |
-| Crew ossification | Established crews crowd out newcomers | Newcomer injection floor; crew boost capped |
-| Avoidance as covert exclusion | Naming people to shape a room | Soft de-weight only; symmetric; never hard-remove |
-| Rating gaming | Behave to inflate standing | Rating is backstage, multi-faceted, decaying; consequential actions human-reviewed |
-| Demographic proxy via event-type | Book-club-etc. as a demographic filter | Watch-item (`decisions.md`); event-level affinity + reactive detection |
+| Scenario | Risk | Detection signal | Mitigation |
+|---|---|---|---|
+| Charisma/wealth influence concentration | Popular members steer the network | Any single member's share of nudge-influence over others' feeds (must stay ≤ cap); taps-received concentrating on a few members without outcome lift in their rooms (H1) | Per-member influence cap that doesn't grow with popularity; rating uses the **welcomer signal**, never raw tap-counts (H1–H3) |
+| Tap-spam ("see again" on everyone) | Bias one's own event overlap; inflate reciprocity; **manufacture mutual edges** (open-risks #19) | Tapper tap-rate outliers (taps ≈ people met, sustained) | Generosity normalization self-discounts a spammer's taps toward zero; caps; it mostly only affects *your own* feed anyway. Raw mutuals feeding co-suggestion/crews is an open gap — open-risks #19 |
+| Popularity feedback loop | Liked → recommended more → liked more | Correlation between a member's taps-received and their feed-impression share trending upward | Fit-first base; exploration floor; popularity doesn't boost rating or routing |
+| Feed siloing (new vs. known) | Established members' feeds narrow to already-familiar people | Breadth-vs-depth read (`success-and-progress.md`) trending depth-only for established members | Nudges capped below fit; exploration floor |
+| Crew ossification | Established crews crowd out newcomers | Newcomer share of a recurring event's attendance trending down; injection placements not converting to repeat attendance | Newcomer injection floor; crew boost capped |
+| Avoidance as covert exclusion | Naming people to shape a room | Do-not-interact naming-rate outliers (one member naming many) | Soft de-weight only; symmetric; never hard-remove |
+| Rating gaming | Behave to inflate standing | Facet climbs decoupled from the raw signals beneath them (surfaced to human review) | Rating is backstage, multi-faceted, decaying; consequential actions human-reviewed |
+| Demographic proxy via event-type | Book-club-etc. as a demographic filter | Not directly detectable — IRL holds no user demographics, by design; reactive only (debrief/reflection narratives, listing-language review) | Watch-item (`decisions.md`); event-level affinity + reactive detection |
 
 ## Decisions & open questions
 

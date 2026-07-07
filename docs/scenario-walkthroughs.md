@@ -6,7 +6,7 @@ Each walkthrough: **setup** (concrete members and events) → **trace** (what th
 
 - **holds** — the design produces the intended behaviour by construction.
 - **holds — tuning open** — the shape is right; the outcome depends on parameter values we've already said need real data.
-- **gap** — the walkthrough exposes something unspecified or inconsistent. Gaps are collected in the findings register at the end (candidates for `open-risks.md` / the hypothesis register — promotion is a register decision, not made here).
+- **gap** — the walkthrough exposes something unspecified or inconsistent. Gaps are collected in the findings register at the end; the register has since been **triaged** — simple fixes applied to the notes, substantive gaps promoted to `open-risks.md` #19–22.
 
 ## Cast (reused across walkthroughs)
 
@@ -130,25 +130,25 @@ Each walkthrough: **setup** (concrete members and events) → **trace** (what th
 
 ---
 
-## Findings register
+## Findings register — triaged
 
-Candidates for promotion into `open-risks.md` / `hypotheses.md` / note fixes — recorded here, not promoted unilaterally. Severity: how much the design's own promises depend on closing it.
+All twelve findings triaged (2026-07-07): the substantive ones promoted into `open-risks.md` (#19–22), the simple ones fixed directly in the notes, two absorbed as watch-item / open-question updates. Severity: how much the design's own promises depend on closing it.
 
-| # | Finding | Type | Files touched | Severity |
+| # | Finding | Type | Severity | Outcome |
 |---|---|---|---|---|
-| F8 | Tap-spam manufactures mutual edges: generosity normalisation exists only at the rating layer; co-suggestion and crew seeding consume raw mutuals | design gap | `matching.md`, `debrief.md`, `hypotheses.md` | **high** |
-| F9 | Graduation must be read per-member, not per-group — the member a graduating crew leaves behind is the least-served, masked by a group-level success read | design gap | `success-and-progress.md` | **high** |
-| F6 | Nudge-stack priority unspecified: guaranteed floors (newcomer injection, exploration) vs. soft de-weights (avoidance, didn't-click) — which wins on collision | underspecified | `matching.md` | medium |
-| F5 | Injection floor is unsatisfiable when no well-fitting rooms exist; no fallback defined, and the real lever (event creation / organiser demand signal) is unlinked to the ranker | design gap | `matching.md`, `organizer-engagement.md` | medium |
-| F4 | Welcomer signal unstable at small N: tapper generosity is inestimable exactly where the newcomer multiplier weights it highest; H2 needs a shrinkage prior / minimum-history floor | hypothesis refinement | `hypotheses.md`, `contributor-rating.md` | medium |
-| F1 | `matching.md` promises every gaming-register entry "names its detection signal"; the register has no detection-signal column (e.g. ossification and siloing have mitigations but no defined *noticing*) | internal inconsistency | `matching.md` | medium |
-| F11 | Goodhart defences are procedural and depend wholly on the undefined governance cadence; governance design should include indicator rotation + force-production review | dependency (known) | `decisions.md`, `success-and-progress.md` | medium |
-| F12 | Declining self-report/measurement must be declared non-signal, symmetric to safety ≠ signal (D22) | policy gap | `success-and-progress.md` | low |
-| F2 | One-sided affinity "mainly in this member's own feed" — the non-own-feed pathway is unnamed; specify it or delete "mainly" | wording/spec | `matching.md` | low |
-| F3 | Aggregate demand concentration on a popular member's events via many individually-capped own-feed nudges; interacts with capacity/composition; likely fine — watch | watch-item candidate | `matching.md` | low |
-| F7 | Do-not-interact expectation-setting: soft-only means co-attendance still happens; capture-time wording owed | UX/copy | `user-model.md`, `matching.md` | low |
-| F10 | "Optimise the floor" needs computable least-served cohorts; envelope-derived cohorts brush the creeping-categorization watch-item | definition owed | `success-and-progress.md`, `user-model.md` | low |
+| F8 | Tap-spam manufactures mutual edges: generosity normalisation exists only at the rating layer; co-suggestion and crew seeding consume raw mutuals | design gap | **high** | **promoted → open-risks #19** (`design`); flagged in the gaming register |
+| F9 | Graduation must be read per-member, not per-group — the member a graduating crew leaves behind is the least-served, masked by a group-level success read | design gap | **high** | **promoted → open-risks #20** (`design`); per-member rule stated in `success-and-progress.md`, mechanics open |
+| F6 | Nudge-stack priority unspecified: guaranteed floors (newcomer injection, exploration) vs. soft de-weights (avoidance, didn't-click) — which wins on collision | underspecified | medium | **promoted → open-risks #21** (`design`) |
+| F5 | Injection floor is unsatisfiable when no well-fitting rooms exist; no fallback defined, and the real lever (event creation / organiser demand signal) is unlinked to the ranker | design gap | medium | **promoted → open-risks #22** (`design`) |
+| F4 | Welcomer signal unstable at small N: tapper generosity is inestimable exactly where the newcomer multiplier weights it highest | hypothesis refinement | medium | **fixed** — H2 gains named tunables: generosity shrinkage prior + minimum-history floor (`hypotheses.md`) |
+| F1 | Gaming register promised detection signals but had no detection-signal column | internal inconsistency | medium | **fixed** — detection-signal column added to the register, plus a feed-siloing row (`matching.md`) |
+| F11 | Goodhart defences are procedural and depend wholly on the undefined governance cadence | dependency (known) | medium | **fixed** — indicator rotation + force-production review named as required governance scope (`decisions.md` → Governance) |
+| F12 | Declining self-report/measurement must be declared non-signal, symmetric to safety ≠ signal (D22) | policy gap | low | **fixed** — rule stated in `success-and-progress.md`; recorded as **D46** |
+| F2 | One-sided affinity "mainly in this member's own feed" — the non-own-feed pathway unnamed | wording/spec | low | **fixed** — clarified to own-feed **only**; cross-member effects require mutuality (`matching.md`) |
+| F3 | Aggregate demand concentration on a popular member's events via many individually-capped own-feed nudges | watch-item candidate | low | **watch-item added** (`decisions.md` → Watch-items) |
+| F7 | Do-not-interact expectation-setting: soft-only means co-attendance still happens; capture-time wording owed | UX/copy | low | **fixed** — commitment stated in `matching.md` → Avoidance; the copy itself is Group-1 UX work |
+| F10 | "Optimise the floor" needs computable least-served cohorts; envelope-derived cohorts brush the creeping-categorization watch-item | definition owed | low | **fixed** — open question expanded with cohort constraints (`success-and-progress.md`) |
 
 ## What this note is and isn't
 
-These walkthroughs test the design *as written* against its own scenario specification; they change nothing. Promotion of findings (open-risk entries, hypothesis-register entries, wording fixes, new decisions) is register work to do deliberately. The matching scenario set itself remains living — `matching.md` expects it to be expanded, and walkthroughs should be re-run when caps, floors, or the welcomer parameters get real values.
+These walkthroughs test the design *as written* against its own scenario specification. The findings above have been triaged: simple fixes applied to the notes directly, substantive gaps promoted to `open-risks.md` #19–22 where they await their own design work. The matching scenario set itself remains living — `matching.md` expects it to be expanded, and walkthroughs should be re-run when caps, floors, or the welcomer parameters get real values.
