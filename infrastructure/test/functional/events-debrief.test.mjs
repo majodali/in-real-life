@@ -8,11 +8,18 @@ import { DeleteCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
 import { loadTestConfig } from '../helpers/config.mjs';
 import { createTestUser, deleteTestUser } from '../helpers/auth.mjs';
 import { ddb } from '../helpers/cleanup.mjs';
+import { isoFromNow, HOUR } from '../helpers/time.mjs';
 
 let config;
 let admin;
 let other;
 let createdEventIds;
+
+// Relative to real now so fixtures never rot: the event runs +1h..+2h, and
+// AFTER_END is where the workshop clock jumps to make it debriefable.
+const START = isoFromNow(1 * HOUR);
+const END = isoFromNow(2 * HOUR);
+const AFTER_END = isoFromNow(3 * HOUR);
 
 before(async () => {
   config = await loadTestConfig();
@@ -78,7 +85,7 @@ afterEach(async () => {
   admin = null; other = null;
 });
 
-async function proposeEvent(token, startIn = '2026-07-01T16:00:00.000Z', endAt = '2026-07-01T17:30:00.000Z') {
+async function proposeEvent(token, startIn = START, endAt = END) {
   const body = {
     commandId: randomUUID(),
     title: `Coffee walk ${randomUUID().slice(0, 6)}`,
@@ -132,7 +139,7 @@ test('debrief: confirmed attendee can debrief once event is over', async () => {
   await setLevel(other.idToken, eventId, 'confirmed');
 
   // Advance the clock past endTime.
-  const jump = await jumpClockTo('2026-07-02T00:00:00.000Z');
+  const jump = await jumpClockTo(AFTER_END);
   assert.equal(jump.status, 201);
 
   const res = await fetch(`${config.apiUrl}/events/${eventId}/debrief`, {
@@ -155,7 +162,7 @@ test('debrief: 409 if user was not confirmed', async () => {
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${admin.idToken}` },
     body: JSON.stringify({ commandId: randomUUID() }),
   });
-  await jumpClockTo('2026-07-02T00:00:00.000Z');
+  await jumpClockTo(AFTER_END);
 
   const res = await fetch(`${config.apiUrl}/events/${eventId}/debrief`, {
     method: 'POST',

@@ -11,16 +11,19 @@ import { DeleteCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
 import { loadTestConfig } from '../helpers/config.mjs';
 import { createTestUser, deleteTestUser } from '../helpers/auth.mjs';
 import { ddb } from '../helpers/cleanup.mjs';
+import { isoFromNow, HOUR, MINUTE } from '../helpers/time.mjs';
 
 let config;
 let admin;
 let other;
 let createdEventIds;
 
-const START = '2026-07-01T16:00:00.000Z';
-const END = '2026-07-01T17:30:00.000Z';
-const DURING = '2026-07-01T16:45:00.000Z';
-const AFTER = '2026-07-01T18:00:00.000Z';
+// The event sits an hour in the (real) future so it is genuinely planned at
+// test time; the clock jumps land inside and after it. Relative, never pinned.
+const START = isoFromNow(1 * HOUR);
+const END = isoFromNow(2 * HOUR + 30 * MINUTE);
+const DURING = isoFromNow(1 * HOUR + 45 * MINUTE);
+const AFTER = isoFromNow(3 * HOUR);
 
 before(async () => {
   config = await loadTestConfig();

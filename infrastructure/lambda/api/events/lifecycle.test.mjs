@@ -44,7 +44,9 @@ beforeEach(() => {
     autoPlanOnThreshold: false,
     title: 'Original title',
     location: 'Original location',
-    startTime: '2026-07-01T10:00:00Z',
+    // Far-future sentinel — never a near-future date, which rots as the
+    // calendar passes it and silently flips planned rows to in-progress/over.
+    startTime: '2099-01-01T10:00:00Z',
   };
   client = {
     send: spy(async () => ({ Item: eventRow })),
@@ -274,8 +276,6 @@ test('edit: emits EventEdited with only the changed fields, seq=current+1', asyn
 
 test('edit: works while planned (the common case)', async () => {
   eventRow.lifecycleState = 'planned';
-  // Future start so the effective state stays 'planned' (not in-progress).
-  eventRow.startTime = '2099-01-01T00:00:00Z';
   eventRow.seq = 2;
   const res = await edit(makeEvent({
     claims: organizerClaims, body: { commandId: 'c', title: 'New' },
@@ -318,7 +318,7 @@ test('edit: 400 when startTime is not a parseable ISO', async () => {
 });
 
 test('edit: 400 when endTime <= startTime (merging with current row)', async () => {
-  // Current startTime is '2026-07-01T10:00:00Z'; new endTime earlier → 400.
+  // Current startTime is '2099-01-01T10:00:00Z'; new endTime earlier → 400.
   const res = await edit(makeEvent({
     claims: organizerClaims, body: { commandId: 'c', endTime: '2026-07-01T09:00:00Z' },
   }));
