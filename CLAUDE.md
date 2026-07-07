@@ -169,6 +169,8 @@ Extends the prototype's RSVP→confirm→attend→debrief flow into a full propo
 - [ ] Three event types: external/third-party, user-organized, this-user-organized
 - [ ] Track interest before commitment — see who's interested before an event becomes confirmed
 - [ ] Time/date suggestion handling for proposed events
+- [ ] Time/place-less proposals — "Anyone into scrabble?" as a first-class early stage (idea → proposed once time/place firm up, e.g. via the existing polls); likely a common case. Note: propose currently *requires* startTime/endTime/location
+- [ ] Overlapping RSVPs — members RSVP'd/confirmed to same-time events: surface the conflict gently, distinguish interest (overlapping is fine) from double-confirmation (a reliability problem), handle by scenario (accident, can't decide, co-located events, spam); never auto-cancel
 - [ ] General event management — edit, cancel, notify attendees
 - [ ] Richer event data — images, descriptions, organisers
 - [ ] User interaction during event — what happens between confirm and debrief while in-progress
