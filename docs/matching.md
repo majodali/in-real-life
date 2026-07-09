@@ -19,12 +19,12 @@ The single place each term is defined *and* its effect on ranking/outcomes made 
 | **Hard constraints** | schedule overlap, distance / travel willingness, blocks, adults-only, capacity | **Filter** — removes infeasible events/people entirely | The *only* hard gate |
 | **Fit** | match between the member's comfort envelope + doors + interests and the event's shape (size, structure, activity, role) | The **base** ranking signal and the majority of the score; **works from onboarding with zero history** | Dominant by design |
 | **Affinity — outgoing** | who this member tapped "want to see again" | Boosts co-suggestion with those people (their events, shared events) — in *this member's own* feed **only**; a one-sided tap never alters the tapped person's or any third party's ranking (cross-member effects require mutuality) | Capped; normalised per-member (see below) |
-| **Affinity — mutual** | both tapped each other | Stronger co-suggestion; seeds crews | Capped |
+| **Affinity — mutual** | both tapped each other | Stronger co-suggestion; seeds crews — consumed **strength-weighted**, never boolean (see *Affinity edge strength*) | Capped; strength-weighted (D47) |
 | **Contributor rating** | backstage facets (reliability / positive participation / organising / trust-safety) | Gentle: weave reliable, positive contributors into groups; graduate organiser trust. **Not a feed gate.** Safety facet routes to admin, never to ranking | Capped; never dominates |
 | **Crews** | 3–4 people repeatedly together with mutual affinity | Gentle boost to co-suggesting the cluster; supports continuity | Capped; **must not ossify** (newcomer injection) |
 | **Avoidance (do-not-interact)** | a person the member named to avoid | **Soft de-weight** of co-placement; never hard-remove; information-symmetric | Soft only |
 | **Didn't-click (negative affinity)** | conservatively inferred non-selection over time | Soft de-weight of co-suggestion; never shown | Soft only |
-| **Newcomer status** | little/no history | Triggers **injection into well-fitting rooms** + exploration; benefit-of-the-doubt on rating | Guaranteed floor |
+| **Newcomer / re-inclusion status** | little/no history — or a previously-active member gone quiet without evidence of connection (*probable left-behind*, D48) | Triggers **injection into well-fitting rooms** + exploration; benefit-of-the-doubt on rating | Guaranteed floor |
 | **Exploration** | deliberate variation / novelty | A guaranteed share of recommendations are exploratory | Fixed floor |
 
 ## Strawman ranking (provisional)
@@ -44,6 +44,8 @@ A guaranteed share of recommendations are exploratory, and **newcomers are injec
 
 **The crux (and the easy thing to get wrong):** injection means *into well-fitting rooms for that newcomer* — never scattering an anxious new member into a poorly-matched event, which is the exact bad first experience we most want to avoid. Inclusion is "a floor of exposure in rooms that suit you," not "random exposure." Fit gates *quality*; the floor guarantees *quantity of chances*.
 
+The floor's cohort is **newcomers and the re-entering**: a member classified *probable left-behind* after a group wind-down (D48, `success-and-progress.md` → *Reading graduation*) re-enters through the same injection — ordinary good matching, never win-back messaging, and never a surfaced inference.
+
 ## Influence normalisation — the charisma / wealth problem
 
 A real, undesirable consequence of the strawman: more attractive, charismatic (and, unfairly, wealthier) members naturally accrue more "likes." We must ensure that does **not** convert into greater power over how *others* are recommended.
@@ -53,6 +55,16 @@ A real, undesirable consequence of the strawman: more attractive, charismatic (a
 - The result: a charismatic connector shapes their *own* social life, not the network's. The people who accrue likes for reasons orthogonal to community-building don't get to steer how everyone else socialises.
 
 This is the deep version of "positive ≠ popularity": popularity must confer neither *standing* (rating) nor *routing power* (influence over others' feeds).
+
+## Affinity edge strength — mutuals are weighted, never boolean (#19, D47)
+
+The scenario walkthroughs exposed the gap (open-risks #19): if mutual = a boolean "both tapped," then tapping everyone converts every tap *received* into the strongest signal the system has — manufactured mutuals, cheap crew seeds. The fix lives at the **interpretation layer**; capture stays raw and positive-only in the debrief (capture ≠ use).
+
+- **Every consumer of an affinity edge consumes strength, not a boolean.** Each directed tap carries its tapper's **generosity weight** — the same shared transform as the welcomer signal (H2), including the small-N shrinkage prior — so a tap from someone who taps everyone weighs ≈ 0, and a tap from a selective tapper weighs high.
+- **A mutual edge's initial strength is its weaker side** (combiner = min, tunable). A spammer's "mutuals" therefore carry ≈ 0 strength into co-suggestion and crew seeding; a genuine selective pair's carry full strength.
+- **Behaviour confirms what taps can't.** Repeated *chosen* co-attendance after the mutual raises edge strength regardless of the initial weights — observed beats inferred (D7). This protects the genuinely enthusiastic frequent tapper: their real connections recover strength through actual shared showing-up. A spammer can't fake it without repeatedly attending with that person — which is just real repetition; any predatory version of it is a conduct/safety matter (D22), never a preference-signal problem.
+- **Crew detection accumulates weighted strength over co-attendances**, not tap counts or boolean mutuals.
+- All parameters (generosity transform, combiner, confirmation gain, crew thresholds) are named tunables per the versioned spec, **tunable to zero** — which restores raw mutuals. Tracked as hypothesis **H4** with kill criteria.
 
 ## Avoidance as soft-de-weight only — #17
 
@@ -95,7 +107,7 @@ Systematically tracked (this is *the* challenge). Each pairs a risk with its **d
 | Scenario | Risk | Detection signal | Mitigation |
 |---|---|---|---|
 | Charisma/wealth influence concentration | Popular members steer the network | Any single member's share of nudge-influence over others' feeds (must stay ≤ cap); taps-received concentrating on a few members without outcome lift in their rooms (H1) | Per-member influence cap that doesn't grow with popularity; rating uses the **welcomer signal**, never raw tap-counts (H1–H3) |
-| Tap-spam ("see again" on everyone) | Bias one's own event overlap; inflate reciprocity; **manufacture mutual edges** (open-risks #19) | Tapper tap-rate outliers (taps ≈ people met, sustained) | Generosity normalization self-discounts a spammer's taps toward zero; caps; it mostly only affects *your own* feed anyway. Raw mutuals feeding co-suggestion/crews is an open gap — open-risks #19 |
+| Tap-spam ("see again" on everyone) | Bias one's own event overlap; inflate reciprocity; **manufacture mutual edges** (open-risks #19) | Tapper tap-rate outliers (taps ≈ people met, sustained) | Generosity normalization self-discounts a spammer's taps toward zero; caps; **edge strength** (D47/H4) — a spammer's "mutuals" carry ≈ 0 weight into co-suggestion and crew seeding, recoverable only through real repeated co-attendance |
 | Popularity feedback loop | Liked → recommended more → liked more | Correlation between a member's taps-received and their feed-impression share trending upward | Fit-first base; exploration floor; popularity doesn't boost rating or routing |
 | Feed siloing (new vs. known) | Established members' feeds narrow to already-familiar people | Breadth-vs-depth read (`success-and-progress.md`) trending depth-only for established members | Nudges capped below fit; exploration floor |
 | Crew ossification | Established crews crowd out newcomers | Newcomer share of a recurring event's attendance trending down; injection placements not converting to repeat attendance | Newcomer injection floor; crew boost capped |
