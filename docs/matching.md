@@ -16,13 +16,13 @@ The single place each term is defined *and* its effect on ranking/outcomes made 
 
 | Term | Definition | How it influences ranking / outcomes | Bound |
 |---|---|---|---|
-| **Hard constraints** | schedule overlap, distance / travel willingness, blocks, adults-only, capacity | **Filter** — removes infeasible events/people entirely | The *only* hard gate |
+| **Hard constraints** | schedule overlap, distance / travel willingness, **protective blocks (D50 — victim-initiated, immediate, override everything including the floor)**, adults-only, capacity | **Filter** — removes infeasible events/people entirely | The *only* hard gate |
 | **Fit** | match between the member's comfort envelope + doors + interests and the event's shape (size, structure, activity, role) | The **base** ranking signal and the majority of the score; **works from onboarding with zero history** | Dominant by design |
 | **Affinity — outgoing** | who this member tapped "want to see again" | Boosts co-suggestion with those people (their events, shared events) — in *this member's own* feed **only**; a one-sided tap never alters the tapped person's or any third party's ranking (cross-member effects require mutuality) | Capped; normalised per-member (see below) |
 | **Affinity — mutual** | both tapped each other | Stronger co-suggestion; seeds crews — consumed **strength-weighted**, never boolean (see *Affinity edge strength*) | Capped; strength-weighted (D47) |
 | **Contributor rating** | backstage facets (reliability / positive participation / organising / trust-safety) | Gentle: weave reliable, positive contributors into groups; graduate organiser trust. **Not a feed gate.** Safety facet routes to admin, never to ranking | Capped; never dominates |
 | **Crews** | 3–4 people repeatedly together with mutual affinity | Gentle boost to co-suggesting the cluster; supports continuity | Capped; **must not ossify** (newcomer injection) |
-| **Avoidance (do-not-interact)** | a person the member named to avoid | **Soft de-weight** of co-placement; never hard-remove; information-symmetric | Soft only |
+| **Avoidance (do-not-interact)** | a person the member named to avoid | **Soft de-weight** of co-placement; never hard-remove; information-symmetric | Soft only; graduated by surface (D49) |
 | **Didn't-click (negative affinity)** | conservatively inferred non-selection over time | Soft de-weight of co-suggestion; never shown | Soft only |
 | **Newcomer / re-inclusion status** | little/no history — or a previously-active member gone quiet without evidence of connection (*probable left-behind*, D48) | Triggers **injection into well-fitting rooms** + exploration; benefit-of-the-doubt on rating | Guaranteed floor |
 | **Exploration** | deliberate variation / novelty | A guaranteed share of recommendations are exploratory | Fixed floor |
@@ -73,6 +73,25 @@ The scenario walkthroughs exposed the gap (open-risks #19): if mutual = a boolea
 
 Soft-only has a member-facing consequence we owe honesty about **at capture time**: naming someone reduces co-placement, it does not — and cannot — prevent co-attendance. The wording that sets that expectation is Group-1 UX work; the commitment that it exists is made here.
 
+### Precedence when avoidance meets the floor (#21, D49)
+
+**Scope: the comfort tier only.** Everything in this section is about `do-not-interact` — "I'd rather not share a table with him." It does **not** apply to **blocks** (D50, Group 4): a protective block is a **hard constraint** (see the definitions table — the only hard gate), and hard constraints sit *above* the floor by construction: the floor injects within the feasible set, so a blocked pairing is never a candidate at all. Someone whose need is safety — stalking, abuse, fear — belongs in the block tier, immediately and without proof; the comfort tier's softness is defensible *only because* that hard tier exists and is frictionless to reach.
+
+The walkthroughs exposed the collision (open-risks #21): the inclusion floor is a *guarantee*, comfort-tier avoidance a *de-weight* — which wins when the newcomer being injected is someone another attendee named? The resolution is **graduated, never a hard override**: avoidance weight scales with how actively IRL is engineering the co-presence.
+
+| Surface | What IRL is doing | Avoidance weight |
+|---|---|---|
+| **Feed suggestion** | listing an event both could see and attend anyway (D10) | Soft de-weight; on a thin calendar the floor wins |
+| **Injection into open rooms** | choosing *which* well-fitting room | Steers room choice whenever alternatives exist (so collisions are naturally rare); the floor wins when only one room does |
+| **Intimate composition** (weaving a 3–4 person group) | actively engineering close contact | Maximum de-weight — in practice the pair is never composed together — but stated as the strongest de-weight, **never an advertised guarantee**, so no clean negative-space signal exists to probe |
+
+Two supporting rules:
+
+- **The floor is windowed.** Injection guarantees chances *over a period*, not per event — deferring one week to route around a collision is soft cost, not floor failure.
+- **Sustained collision accrues floor-debt.** If the avoided person is omnipresent (say, an organiser at half the events), the named member's deferred injections accumulate visibly and route to human review; the honest fix is usually more rooms — the thin-calendar lever (open-risks #22).
+
+Why not the simpler "avoidance always wins": a hard override would re-open #17's negative-space leak (a guarantee makes your own feed a reliable detector of the other's plans), convert a comfort feature into a free block (hard separation is the block tier's job — Group 4, where reporting and due process live), and charge the cost to the *named* person's inclusion — someone who did nothing and never knows. Tracked as hypothesis **H6**.
+
 ## The ranking spec is explicit, versioned, and hypothesis-tuned
 
 How recommendations are ranked is never implicit or emergent-from-code:
@@ -112,7 +131,7 @@ Systematically tracked (this is *the* challenge). Each pairs a risk with its **d
 | Popularity feedback loop | Liked → recommended more → liked more | Correlation between a member's taps-received and their feed-impression share trending upward | Fit-first base; exploration floor; popularity doesn't boost rating or routing |
 | Feed siloing (new vs. known) | Established members' feeds narrow to already-familiar people | Breadth-vs-depth read (`success-and-progress.md`) trending depth-only for established members | Nudges capped below fit; exploration floor |
 | Crew ossification | Established crews crowd out newcomers | Newcomer share of a recurring event's attendance trending down; injection placements not converting to repeat attendance | Newcomer injection floor; crew boost capped |
-| Avoidance as covert exclusion | Naming people to shape a room | Do-not-interact naming-rate outliers (one member naming many) | Soft de-weight only; symmetric; never hard-remove |
+| Avoidance as covert exclusion | Naming people to shape a room | Do-not-interact naming-rate outliers (one member naming many) | Soft de-weight only; symmetric; never hard-remove; graduated precedence keeps the named person's floor intact (D49) |
 | Rating gaming | Behave to inflate standing | Facet climbs decoupled from the raw signals beneath them (surfaced to human review) | Rating is backstage, multi-faceted, decaying; consequential actions human-reviewed |
 | Demographic proxy via event-type | Book-club-etc. as a demographic filter | Not directly detectable — IRL holds no user demographics, by design; reactive only (debrief/reflection narratives, listing-language review) | Watch-item (`decisions.md`); event-level affinity + reactive detection |
 
