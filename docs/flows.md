@@ -95,7 +95,7 @@ stateDiagram-v2
     end note
 ```
 
-**TBD around the event lifecycle** (recognised, not yet designed): **time/place-less proposals — "Anyone into scrabble?" as an idea stage before `proposed`, graduating once time/place firm up; likely a common case** (Group 2) · **overlapping same-time RSVPs/confirmations — surface gently, interest-overlap is fine, double-confirm is a reliability problem; scenario-based (accident / indecision / co-located / spam)** (Group 2) · recurring events (Group 7) · richer cancellation flow — what happens to RSVPs and how attendees are notified (Group 2) · interest-before-commitment surfacing (Group 2) · richer event data — images, descriptions, co-organisers (Group 2) · in-progress interaction between confirm and debrief (Group 2) · the real time/place picker behind "suggest change" (Group 2).
+**TBD around the event lifecycle** (recognised, not yet designed): **time/place-less proposals — "Anyone into scrabble?" as an idea stage before `proposed`; now first-class in design as the supply loop's bar-free entry point (D51, diagram 9), graduation mechanics still Group 2** (Group 2) · **overlapping same-time RSVPs/confirmations — surface gently, interest-overlap is fine, double-confirm is a reliability problem; scenario-based (accident / indecision / co-located / spam)** (Group 2) · recurring events (Group 7) · richer cancellation flow — what happens to RSVPs and how attendees are notified (Group 2) · interest-before-commitment surfacing (Group 2) · richer event data — images, descriptions, co-organisers (Group 2) · in-progress interaction between confirm and debrief (Group 2) · the real time/place picker behind "suggest change" (Group 2).
 
 ---
 
@@ -209,21 +209,88 @@ flowchart TB
 
 ## 8. Matching pipeline
 
-Fit-first, bounded soft nudges, a preserved exploration/injection floor; nothing gates except hard constraints and explicit earned thresholds. The loop closes through success indicators and hypothesis-driven tuning. (`matching.md`, `success-and-progress.md`, `hypotheses.md`)
+Fit-first, bounded soft nudges, a preserved exploration/injection floor; nothing gates except hard constraints and explicit earned thresholds. Affinity nudges consume strength-weighted edges (D47); de-weights are graduated by surface (D49); the floor covers newcomers *and* the re-entering (D48) and, when no well-fitting room exists, routes demand to the supply loop rather than relaxing fit (D51). (`matching.md`, `success-and-progress.md`, `hypotheses.md`)
 
 ```mermaid
 flowchart LR
-    CAND["Candidate events<br/>and rooms"] --> HC["HARD CONSTRAINTS — filter:<br/>schedule, distance, blocks, capacity"]
+    classDef req fill:#fdf1f0,stroke:#b05959
+
+    CAND["Candidate events<br/>and rooms"] --> HC["HARD CONSTRAINTS — filter:<br/>schedule, distance, capacity,<br/>protective blocks (D50)"]:::req
     HC --> FIT["FIT — base score, dominant:<br/>comfort envelope + doors + interests<br/>(works cold, from onboarding)"]
-    FIT --> NUD["+ capped nudges:<br/>affinity, crews, welcomer signal"]
-    NUD --> DW["− soft de-weights:<br/>avoidance, didn't-click<br/>(never hard-remove)"]
-    DW --> EXP["Blend: exploration floor +<br/>newcomer injection into<br/>well-fitting rooms"]
+    FIT --> NUD["+ capped nudges:<br/>affinity & crews — edge strength,<br/>never boolean (D47);<br/>welcomer signal"]
+    NUD --> DW["− graduated de-weights (D49):<br/>avoidance, didn't-click —<br/>suggestion &lt; injection &lt; composition;<br/>never hard-remove"]
+    DW --> EXP["Blend: exploration floor +<br/>injection into well-fitting rooms<br/>(newcomers + re-entering, D48);<br/>floor windowed; debt → human review"]
     EXP --> OUT["Feed / suggestions /<br/>group composition"]
     OUT --> RES["Real-world outcomes:<br/>attend, return, see-again, crews"]
     RES --> IND["Success indicators —<br/>never targets (D39)"]
     IND --> TUNE["Hypothesis-driven tuning (D41):<br/>named tunables, kill criteria"]
     TUNE -.-> NUD
     TUNE -.-> EXP
+    EXP -- "fit-gap read: no well-fitting<br/>rooms for a segment —<br/>never relax fit" --> SUP["Supply loop<br/>(diagram 9, D51)"]
+```
+
+---
+
+## 9. The supply loop — where events come from
+
+Matching allocates supply; it cannot create it. A standing function at every scale, never a thin-calendar fallback: demand sensed continuously (aggregate, de-identified, minimum-cohort-gated), a bar-free idea stage, bounded invitations, and a quality loop grounded in community signal. (`organizer-engagement.md` → The supply loop, `matching.md`, D51/H7)
+
+```mermaid
+flowchart TB
+    classDef tbd stroke-dasharray: 6 4
+
+    FG["Fit-gap read (diagram 8) —<br/>segments with scarce<br/>well-fitting rooms"] --> DS["Demand sensing — aggregate,<br/>de-identified, surfaced only above<br/>a minimum-cohort threshold"]
+    ES["Event-selection signal —<br/>what tempts, what's missing"] --> DS
+    DT["Debrief texture —<br/>'what would've made it easier'"] --> DS
+    PRF["Process reflections (D43)<br/>+ explicit wishes"] --> DS
+    DS --> ORG["Surfaced to trust-graduated organisers:<br/>'several members are looking for…'<br/>— never who"]
+    DS --> INV["Bounded invitation to affected members:<br/>'nothing this week fits — start something?'<br/>(D14/D30: ≤1, earned, never pressure)"]
+    INV --> IDEA["Idea stage — bar-free:<br/>'Anyone into scrabble?'<br/>quality bar applies to events, not ideas<br/>(mechanics: Group 2)"]:::tbd
+    ORG --> PRO["Propose (diagram 6) —<br/>framing help at firm-up"]
+    IDEA -- "interest firms<br/>time/place" --> PRO
+    PRO --> EVT(["Events happen"])
+    EVT --> QL["Quality loop: aggregated attendee<br/>signal → organiser; event/operator/venue<br/>register; propose-time help grounded in<br/>community outcomes (D27 modesty)"]
+    QL --> PRO
+```
+
+---
+
+## 10. Avoidance & protection — two tiers, drawn by need
+
+The tier line is drawn by **need, never relationship type** ("ex-spouse" can be an awkwardness or a danger — nobody proves which). Comfort tier is soft and graduated (D49); the safety tier is hard, instant, and above everything (D50 — a commitment, not a hypothesis). (`matching.md`, `user-model.md`)
+
+```mermaid
+flowchart TB
+    classDef req fill:#fdf1f0,stroke:#b05959
+    classDef tbd stroke-dasharray: 6 4
+
+    NEED{"Member names a person —<br/>routed by need"} -->|"comfort:<br/>'rather not share a table'"| DNI["DO-NOT-INTERACT (D49)<br/>soft · graduated · symmetric ·<br/>zeroes the pair's affinity nudge"]
+    NEED -->|"safety: stalking,<br/>abuse, fear — proof-free"| BLK["PROTECTIVE BLOCK (D50)<br/>hard · instant · silent"]:::req
+    DNI --> G1["Feed suggestion: soft de-weight —<br/>floor wins on a thin calendar"]
+    DNI --> G2["Injection: steers room choice<br/>when alternatives exist"]
+    DNI --> G3["Intimate composition: maximum<br/>de-weight — in practice never composed;<br/>never an advertised guarantee"]
+    BLK --> B1["Presence-shielding everywhere:<br/>blocker vanishes from blocked's view;<br/>blocked's event visibility never<br/>conditionally altered — no leak"]:::req
+    BLK --> B2["Hard co-placement filter —<br/>above the floor by construction<br/>(diagram 8 hard constraints)"]:::req
+    BLK -.-> B3["Full mechanism — Group 4, open-risks #23:<br/>attendee counts, blocker-side visibility,<br/>contested blocks, capture-time routing"]:::tbd
+    MIS["Misuse watch: naming-rate outliers →<br/>human review of consequences only;<br/>the protection itself is never weakened"] --- BLK
+```
+
+---
+
+## 11. Reading graduation — per member, never per group
+
+Fires only for a member gone quiet *entirely*; classification uses their own signal, never the group's; indicators feed human review, never automated verdicts. (`success-and-progress.md` → Reading graduation, D48/H5)
+
+```mermaid
+flowchart TB
+    classDef tbd stroke-dasharray: 6 4
+
+    Q["Member goes quiet entirely<br/>(still active elsewhere =<br/>diversified — no read)"] --> CLS{"Per-member classification:<br/>mutuality density · trajectory<br/>completeness · exit pattern"}
+    CLS -->|"probable<br/>graduation"| G["Get out of the way.<br/>Never win-back."]
+    CLS -->|"probable<br/>left-behind"| LB["Joins the inclusion floor —<br/>re-entry via ordinary matching<br/>(diagram 8); inference never surfaced"]
+    CLS -->|ambiguous| AMB["At most: the gentle self-report door —<br/>declining is never signal (D46)"]
+    CLS --> HR["Indicators → human review,<br/>never automated verdicts (D39)"]
+    G -.-> CI["Contribution invitation — ambient<br/>give-back path, never triggered by<br/>the read (deferred)"]:::tbd
 ```
 
 ---
@@ -238,9 +305,11 @@ flowchart LR
 | Event/operator/venue register | 6 | Group 3 |
 | Escalation ladder / admin & support UI | 6 | Group 4 |
 | Account deletion / export mechanism + key management | 2 | Group 1 — key management **blocks onboarding** (open-risks #3) |
-| Time/place-less "idea" proposals ("Anyone into scrabble?") | 3 | Group 2 — likely common |
+| Time/place-less "idea" proposals ("Anyone into scrabble?") | 3, 9 | First-class in design (D51 — bar-free); mechanics Group 2 |
 | Overlapping same-time RSVP/confirm handling (by scenario) | 3 | Group 2 |
 | Recurring events, cancellation flow, interest surfacing, richer event data, suggest-change picker | 3 | Group 2 / 7 |
 | Crew detection & continuity events | (matching) | Group 3; continuity deferred (D33) |
+| Protective-block mechanism (counts, blocker-side visibility, contested blocks, routing) | 10 | Group 4 — open-risks #23, safety-critical |
+| Contribution invitation (ambient give-back path for graduates) | 11 | Deferred (`success-and-progress.md`) |
 | Robot users / automated workshop activity | (workshop) | Deferred until needed (D2/D37) |
 | Billing gates · automated locality · minors | — | Groups 5 / 1 / 6 |

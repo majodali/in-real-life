@@ -149,6 +149,62 @@ All twelve findings triaged (2026-07-07): the substantive ones promoted into `op
 | F7 | Do-not-interact expectation-setting: soft-only means co-attendance still happens; capture-time wording owed | UX/copy | low | **fixed** — commitment stated in `matching.md` → Avoidance; the copy itself is Group-1 UX work |
 | F10 | "Optimise the floor" needs computable least-served cohorts; envelope-derived cohorts brush the creeping-categorization watch-item | definition owed | low | **fixed** — open question expanded with cohort constraints (`success-and-progress.md`) |
 
+---
+
+# Second pass — 2026-07-10, after D46–D51
+
+Re-run of all twelve scenarios against the design with the triage fixes and D46–D51 in place, plus **three new walkthroughs probing the machinery those decisions added** — new mechanisms deserve the same adversarial treatment that exposed the original gaps. Two new findings (F13, F14), both fixed during this pass.
+
+## Original scenarios, re-traced
+
+| # | Scenario | First pass | Second pass |
+|---|---|---|---|
+| 1 | New vs. known | holds — tuning open | **holds — tuning open**; feed-siloing now has a named detection signal in the gaming register |
+| 2 | Affinity influence | holds, underspecified | **holds** — one-sided taps are own-feed only; cross-member effects require mutuality, now strength-weighted (D47) |
+| 3 | Charisma concentration | holds, residual | **holds** — the aggregate-attention residual is a tracked watch-item |
+| 4 | Tap-magnet vs. welcomer | holds — tuning open | **holds — tuning open**; small-N shrinkage prior + minimum-history floor are named H2 tunables |
+| 5 | Cold-start | holds — supply gap | **holds** — a thin calendar now routes demand into the supply loop (D51) instead of silently failing; the floor is windowed; H7 carries the burden of proof |
+| 6 | Crew vs. newcomer | holds — tuning open | **holds — tuning open**; ossification has a detection signal, and crew seeding now accumulates *weighted* strength (harder to game) |
+| 7 | Avoidance | holds, two loose ends | **holds** — precedence graduated (D49); the tier line redrawn by need with the hard block tier above it (D50); capture-time honesty committed |
+| 8 | Tap-spam | **gap** | **holds** — edge strength (D47): Sam's "mutuals" carry ≈ 0 weight; crew seeds require weighted accumulation; recovery only through real, guarded co-attendance |
+| 9 | Graduation vs. disengagement | **gap** | **holds** — per-member read (D48); Priya classifies *probable left-behind* on her own signal and re-enters via the inclusion floor; H5 carries the burden of proof |
+| 10 | Optimise the floor | holds — definition owed | **holds — definition owed**; cohort constraints recorded, computable definitions still future work |
+| 11 | Goodhart | holds on paper | **holds on paper** — indicator rotation + force-production review are now named governance scope; the cadence itself remains the open dependency |
+| 12 | Declining measurement | **gap** | **holds** — D46 |
+
+## New walkthroughs (probing D47–D51)
+
+### 13 · Protective block (D50)
+
+**Setup.** Sana blocks a former partner — proof-free, instant, silent.
+
+**Trace.** The pairing leaves the feasible set entirely: never co-suggested, co-injected, or co-composed; the floor is irrelevant because hard constraints bound it by construction. Presence-shielding: Sana never appears to him on any surface. The leak check that killed hard *avoidance* passes here: his event visibility is never conditionally altered, so his feed carries no negative-space signal about her plans — unconditional invisibility destroys the differential rather than encoding it.
+
+**Verdict: holds at principle level.** The mechanism is the deliberately open item (#23): attendee counts vs. heads in the room, what Sana may see of him, contested blocks, capture-time routing.
+
+### 14 · The follower (probing D47's confirmation rule)
+
+**Setup.** Early on, Priya taps Sam once — a weak mutual forms (Sam taps everyone). Sam then attends everything Priya attends.
+
+**Trace, as first drafted.** Co-attendance above the calendar's chance rate "confirms" the edge and raises its strength — but the *choice* here is unilateral. A follower could strengthen an edge the other party no longer wants, and the resulting co-suggestion boost would help him predict her events: the signal layer laundering pursuit into affinity.
+
+**Finding F13 — fixed this pass.** Confirmation is now guarded: do-not-interact zeroes the pair's affinity nudge outright (a boost never fights a de-weight), and one-sided engagement — she never re-taps, never marks him met — caps confirmation gain. Persistent following is conduct/safety territory (D22, blocks), never preference signal. **Verdict: holds after fix.**
+
+### 15 · Supply-loop privacy (probing D51)
+
+**Setup.** A 40-member community. Demand surfacing tells organisers: "several members are looking for small, quiet, weekday-morning things."
+
+**Trace.** In a community that size, a tight segment description plus local knowledge ("who's been saying they want quieter mornings?") can de-anonymise the "several members" — aggregate in form, identifying in fact. Invitation pressure and quality-glut were already covered by H7's kill criteria; this wasn't.
+
+**Finding F14 — fixed this pass.** Demand surfacing now requires a **minimum-cohort threshold** (tunable) before any segment is shown to organisers; below it, sensing stays internal and surfaces nothing. **Verdict: holds after fix.**
+
+## Second-pass findings
+
+| # | Finding | Outcome |
+|---|---|---|
+| F13 | D47's co-attendance confirmation exploitable by a one-sided follower; do-not-interact vs. affinity-boost conflict unspecified | **fixed** — confirmation guard: do-not-interact zeroes the pair nudge; one-sided engagement caps gain (`matching.md`, D47, H4) |
+| F14 | D51's aggregate demand surfacing can de-anonymise members in a small community | **fixed** — minimum-cohort threshold before surfacing (`organizer-engagement.md`, D51, H7) |
+
 ## What this note is and isn't
 
-These walkthroughs test the design *as written* against its own scenario specification. The findings above have been triaged: simple fixes applied to the notes directly, substantive gaps promoted to `open-risks.md` #19–22 where they await their own design work. The matching scenario set itself remains living — `matching.md` expects it to be expanded, and walkthroughs should be re-run when caps, floors, or the welcomer parameters get real values.
+These walkthroughs test the design *as written* against its own scenario specification. After two passes, **all twelve original scenarios read `holds`**; the deliberately open items are the protective-block mechanism (open-risks #23) and the tuning/validation burden carried by hypotheses H1–H7. The scenario set remains living — new mechanisms get walked through adversarially when they land (passes 13–15 exist because D47–D51 did), and everything gets re-run when caps, floors, and the welcomer parameters take real values.
