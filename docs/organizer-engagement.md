@@ -28,6 +28,17 @@ Mapped onto the real lifecycle:
 | **After** | `over` | **Organiser debrief** (new; distinct from attendee debrief) |
 | **Manage** (throughout) | `EventEdited`, `EventCancelled`, notify attendees | Light help; cancellation handled with care for attendees |
 
+## The supply loop — where events come from (#22, D51)
+
+Matching **allocates** supply; it cannot create it. Passively receiving and attending an existing calendar is not a healthy end-state at any scale — the events have to come from somewhere, and a richer proposal stream (of reasonable quality) is a richer experience for everyone. So helping members create events is a **standing function**, running continuously, not a thin-calendar emergency measure. Four parts:
+
+- **Demand sensing (continuous, aggregate).** The signals are already captured: the **fit-gap read** — envelope segments whose well-fitting rooms are scarce (`matching.md`; floor-debt is its acute, per-member case); event-selection reactions — what tempts, what they bounce off, what they wish existed (`user-model.md` → Sources of signal); debrief texture ("what would've made it easier"); process reflections (D43); and explicit wishes. Always surfaced **aggregate and de-identified** — "several members are looking for small, weekday-morning, activity-anchored things" — never who.
+- **The idea stage is deliberately bar-free.** Throwing a suggestion out is welcome and cheap — the time/place-less proposal ("Anyone into scrabble?") is the entry point, and interest-tracking is what firms an idea into a proposal. **The quality bar applies to events, not ideas**; framing help does its work when an idea firms up, not at the door.
+- **Invitations to propose, bounded.** When a member's own thin feed *is* a fit-gap — nothing this week suits small-and-structured — the honest response pairs the don't with a do (D30): say so plainly and offer the start-something path. Bounded by the coaching guardrails (D14: ≤1, earned by context, never pressure — we are not an engagement machine). Demand is also surfaced to **proven organisers** (trust-graduated) who've run similar things well.
+- **The quality loop.** All members' signal continually improves all members' events: aggregated attendee structural feedback flows back to organisers (the existing D31 channel); the register of event types / operators / venues accumulates what works where; and propose-time framing help becomes grounded in *this community's* observed outcomes — under D27 modesty: no "what works here" claims until real data backs them.
+
+The ranker-side rule stays fixed (`matching.md`): **never relax fit to fill the floor** — supply, not standards, is the corrective lever.
+
 ## IRL's role: invited vs. required
 
 Two modes, and keeping them distinct matters:
@@ -94,6 +105,7 @@ Emitting it: an `OrganizerDebriefRecorded` event, parallel to `DebriefRecorded`,
 - **Two modes — invited (collaborative, most of it) and required (gating, rare)** — kept distinct; required gates always pair boundary with a path.
 - **Trust-graduated:** support and scrutiny scale down as an organiser earns a track record.
 - **Organiser debrief is its own flow/event** (`OrganizerDebriefRecorded`), and aggregates attendee signal back as constructive feedback.
+- **The supply loop is a standing function** (D51): continuous aggregate demand sensing, a bar-free idea stage, bounded invitations to propose, and a quality loop grounded in community signal — never a thin-calendar fallback, and never fit-relaxation.
 
 ## Open questions
 

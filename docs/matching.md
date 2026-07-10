@@ -46,6 +46,10 @@ A guaranteed share of recommendations are exploratory, and **newcomers are injec
 
 The floor's cohort is **newcomers and the re-entering**: a member classified *probable left-behind* after a group wind-down (D48, `success-and-progress.md` → *Reading graduation*) re-enters through the same injection — ordinary good matching, never win-back messaging, and never a surfaced inference.
 
+## The supply side — matching allocates, it cannot create (#22, D51)
+
+When no well-fitting room exists for a member, every ranker-side move is wrong: relaxing fit manufactures the bad first experience the floor exists to prevent, and deferring silently is floor failure. So the ranker holds the line — **never relax fit to fill the floor** — and the corrective lever lives outside it: the **supply loop** (`organizer-engagement.md`), a standing function at every scale, not a thin-calendar fallback. The link between the two is the **fit-gap read**: a continuous, aggregate measure of which envelope segments have scarce well-fitting rooms. Floor-debt (D49) is its acute per-member case; both route demand into the supply loop — surfaced de-identified to proven organisers, and as bounded start-something invitations (D14/D30) to the affected members themselves. Tracked as hypothesis **H7**.
+
 ## Influence normalisation — the charisma / wealth problem
 
 A real, undesirable consequence of the strawman: more attractive, charismatic (and, unfairly, wealthier) members naturally accrue more "likes." We must ensure that does **not** convert into greater power over how *others* are recommended.
