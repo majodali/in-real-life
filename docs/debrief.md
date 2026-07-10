@@ -82,7 +82,7 @@ The profile-projection store is the async per-item `irl-user-model` store (`proj
 
 - **Backstage only — no "who liked you."** Affinity is never surfaced to the other person. A "who wants to see me again" feed would import the dating-app dynamics IRL exists to avoid, and would be an observation vector (D11). Mutual affinity instead *quietly* raises the chance two people land at the same suggested events — it influences ranking, never legibly.
 - **Positive-only capture; negative is never asked.** No per-person "no." Negative is inferred conservatively (repeated non-selection over time), never solicited, never shown, and only soft-deprioritizes co-suggestion. Distinct from a block (Group 4).
-- **Mutual seeds crews.** Repeated mutual affinity among 3–4 people seeds crew detection (Group 3) — a gently strengthening cluster, never "these people like each other."
+- **Mutual seeds crews.** Repeated mutual affinity among 3–4 people seeds crew detection (Group 3) — a gently strengthening cluster, never "these people like each other." Downstream, edges are consumed **strength-weighted** (tapper-generosity; D47, `matching.md`) — capture here stays raw and positive-only.
 - **Anti-observation.** Affinity data must never let one user infer another's attendance, feelings, or movements.
 
 ## Safety surface

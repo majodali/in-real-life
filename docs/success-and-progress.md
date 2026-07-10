@@ -28,7 +28,24 @@ Much of the real outcome is **off-platform and in people's inner lives**, so we 
 
 - **Behavioural proxies** (already-captured `observed` signal): RSVP→attend→return; repeated co-attendance with the *same* people; mutual want-to-see-again; crew formation; **newcomer second-event rate**; breadth (meeting new people) vs. depth (deepening with some).
 - **Gentle, consented self-report** — occasionally, in the debrief/reflection register (low-friction, user-led, opt-in, never clinical or pressured): "did you meet someone worth seeing again?", and rarely, "how's your social life feeling lately?" Validated loneliness instruments (e.g. UCLA-3) are powerful *and* sensitive — a careful, opt-in future option, never the default, never surveillance.
-- **Reading the invisible majority.** When a former crew stops co-attending *through IRL*, the likeliest story is **success** — they became friends and now meet on their own — not churn. We must read reduced IRL-mediated activity among people who clearly connected as *probable graduation*, and never as a retention problem to "win back."
+- **Reading the invisible majority.** When a former crew stops co-attending *through IRL*, the likeliest story is **success** — they became friends and now meet on their own — not churn. We must read reduced IRL-mediated activity among people who clearly connected as *probable graduation*, and never as a retention problem to "win back." **The read is per-member, never per-group** (open-risks #20): a graduating crew can leave one member behind — no mutual taps, trajectory stopped mid-ladder — and that person is exactly the least-served member the distributional stance exists for. Group-level "they graduated" must never mask them — see *Reading graduation, per member* below (D48).
+- **Declining is never signal.** Symmetric to safety ≠ signal (D22): a skipped or declined self-report, check-in, or wellbeing instrument is recorded only as a non-response for response-rate accounting. It never feeds the user model, success reads, or cohort comparisons — otherwise the consent mechanism itself becomes the measurement, which is surveillance by another door.
+
+### Reading graduation — per member, never per group (D48)
+
+The read fires only for a member who has gone quiet **entirely** — someone still active elsewhere has diversified, not disengaged. For each quiet member of a winding-down cluster, classify from *their own* signal, never the group's:
+
+| Read | The evidence looks like | Response |
+|---|---|---|
+| **Probable graduation** | dense mutual edges with the departing cluster; trajectory reached the persistence markers; wind-down gradual and simultaneous with the group's | Get out of the way. Never win-back. |
+| **Probable left-behind** | one-sided or absent mutuals; trajectory stopped mid-ladder; their exit *trails* the others'; debriefs trending "maybe / not for me" or barrier-flavoured no-shows beforehand | They join the **inclusion floor** (`matching.md`): re-entry via ordinary good matching — injection into well-fitting rooms, welcomer composition. Never a "we miss you" nudge; the inference is **never surfaced**. |
+| **Ambiguous** | mixed signal | At most, the gentle self-report door decides — occasional, opt-in, easy to decline (and declining is never signal, D46). |
+
+These are indicators feeding human review, never automated verdicts (D39). Backstage and anti-observation throughout: the read never reveals to anyone that a group now meets independently, and a left-behind member experiences nothing but ordinary good recommendations — the response is deliberately indistinguishable from matching just working. Tracked as hypothesis **H5** with kill criteria.
+
+### The graduation trade-off (noted, deferred)
+
+Graduation has a real cost to the community even as it's success for the member: every graduate thins the web the *next* newcomers arrive into, and graduates are disproportionately the proven connectors (often exactly who the welcomer signal identifies). The stance does not change — retention is not a goal, and we never win back. But there is an honest response worth designing later: a **contribution invitation** — "you don't need us anymore, but newcomers could use you" — pointing at the paths that already exist (welcomer presence, organising, facilitating; the graduation-paradox caveat already recognises members whose success *is* ongoing participation). It differs from win-back in whose interest it serves, and the copy must be unembarrassed about that. Design constraint when taken up: if the invitation is *triggered by* the graduation read, sending it reveals the read ("we noticed you stopped coming") — so the likelier shape is **ambient, not triggered**: a standing, visible give-back path any established member encounters, with no disclosure that IRL noticed their wind-down. Deferred; not v1.
 
 ## Progress
 
@@ -53,12 +70,15 @@ Success data is among the most sensitive we hold (loneliness, friendship, wellbe
 - **Success is distributional** — judged by whether the least-served (new, shy, isolated) are reached, not by averages.
 - **Measured as indicators, never targets** (Goodhart); the system evolves on **long-term outcomes**, triangulating gentle self-report with behavioural proxies.
 - **Measurement is consented, gentle, opt-in, and backstage** — caring, never surveillance.
+- **Declining measurement is never signal** (D46) — a decline records only non-response; it never feeds the user model, success reads, or cohorts.
+- **Graduation is read per-member, never per-group** (D48) — probable-graduation / left-behind / ambiguous from the member's own signal; left-behind joins the inclusion floor, never win-back, never surfaced (H5).
 
 ## Open questions
 
 - The exact proxy set and how "durable connection" is operationally read from `observed` signal.
 - Whether/how far to use validated wellbeing instruments — real power vs. clinical/surveillance feel.
-- Operationalising "reduced IRL activity among a connected group = graduation, not churn" without mis-reading genuine disengagement.
+- Operationalising "reduced IRL activity among a connected group = graduation, not churn" — now shaped by the per-member read (D48); what remains open is threshold tuning and validating H5 against self-report.
 - Cadence and wording of self-report so it feels like care, not monitoring.
-- How the distributional ("optimise the floor") objective is concretely expressed in the evolution loop.
+- How the distributional ("optimise the floor") objective is concretely expressed in the evolution loop — including **named, computable least-served cohorts**. Newcomer status is clean (a system fact); envelope-derived cohorts ("small rooms + needs a known face") are legitimate and non-demographic but brush the creeping-categorization watch-item: evaluation cohorts must stay de-identified, aggregate-only, and never route back into individual outcomes.
 - The definition of community- and mission-level success rigorous enough to actually track (the north-star metric problem).
+- The contribution invitation (*The graduation trade-off*, above): ambient vs. triggered, its wording, and how it stays distinguishable — in fact, not just in copy — from win-back.
