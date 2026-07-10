@@ -43,6 +43,10 @@ The read fires only for a member who has gone quiet **entirely** — someone sti
 
 These are indicators feeding human review, never automated verdicts (D39). Backstage and anti-observation throughout: the read never reveals to anyone that a group now meets independently, and a left-behind member experiences nothing but ordinary good recommendations — the response is deliberately indistinguishable from matching just working. Tracked as hypothesis **H5** with kill criteria.
 
+### The graduation trade-off (noted, deferred)
+
+Graduation has a real cost to the community even as it's success for the member: every graduate thins the web the *next* newcomers arrive into, and graduates are disproportionately the proven connectors (often exactly who the welcomer signal identifies). The stance does not change — retention is not a goal, and we never win back. But there is an honest response worth designing later: a **contribution invitation** — "you don't need us anymore, but newcomers could use you" — pointing at the paths that already exist (welcomer presence, organising, facilitating; the graduation-paradox caveat already recognises members whose success *is* ongoing participation). It differs from win-back in whose interest it serves, and the copy must be unembarrassed about that. Design constraint when taken up: if the invitation is *triggered by* the graduation read, sending it reveals the read ("we noticed you stopped coming") — so the likelier shape is **ambient, not triggered**: a standing, visible give-back path any established member encounters, with no disclosure that IRL noticed their wind-down. Deferred; not v1.
+
 ## Progress
 
 "Progress" = a member moving along **their own** trajectory toward the social life they want — per-member, not a universal scale. It's the longitudinal read of the markers above, anchored to the **growth edge** (`user-model.md`): for those who want to stretch, doing slightly braver things over time, by their own signals. Progress is something the app quietly notices and gets out of the way of — never a score shown back, never a pressure.
@@ -77,3 +81,4 @@ Success data is among the most sensitive we hold (loneliness, friendship, wellbe
 - Cadence and wording of self-report so it feels like care, not monitoring.
 - How the distributional ("optimise the floor") objective is concretely expressed in the evolution loop — including **named, computable least-served cohorts**. Newcomer status is clean (a system fact); envelope-derived cohorts ("small rooms + needs a known face") are legitimate and non-demographic but brush the creeping-categorization watch-item: evaluation cohorts must stay de-identified, aggregate-only, and never route back into individual outcomes.
 - The definition of community- and mission-level success rigorous enough to actually track (the north-star metric problem).
+- The contribution invitation (*The graduation trade-off*, above): ambient vs. triggered, its wording, and how it stays distinguishable — in fact, not just in copy — from win-back.
