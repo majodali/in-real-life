@@ -29,7 +29,7 @@ The hard tension: a victim needs *awareness* (never unknowingly walk into a room
 
 > **A block grants the blocker no observational power beyond what any ordinary member already has.**
 
-Attendee lists are already visible to members browsing an event; the blocker keeps exactly that — no more. **No proactive flags, no notifications, no aggregated "where is he" view in v1.** Awareness comes from the same browsing any member can do; the marginal power a false victim gains from blocking is therefore zero. (The active-placement filter does condition the blocker's *suggestions* on the blocked's confirmations — but it reveals nothing that opening the attendee list wouldn't already show, and removes rather than adds exposure.)
+Attendee lists are already visible to members browsing an event; the blocker keeps exactly that — no more. **No proactive flags, no notifications, no aggregated "where is he" view — with one narrow exception:** the **itinerary alert** — for an event the blocker is *already confirmed to*, awareness mode alerts her if the blocked person confirms. Scoped to her own itinerary it is not a tracking tool: it reveals only what she would otherwise discover at the door, at the worst possible moment, and it is what makes yielding (displacement, below) forewarned rather than ambushed. Everything broader stays excluded from v1. Awareness otherwise comes from the same browsing any member can do; the marginal power a false victim gains from blocking is therefore ≈ zero. (The active-placement filter does condition the blocker's *suggestions* on the blocked's confirmations — but it reveals nothing that opening the attendee list wouldn't already show, and removes rather than adds exposure.)
 
 Within that bound, the blocker chooses at capture time how their **own** view renders the blocked:
 
@@ -47,6 +47,20 @@ The block is a **hard constraint** (`matching.md` definitions table): the pair i
 ## The blocked-organiser case
 
 If the blocker RSVPs to an event *organised by* the person she blocked, presence-shielding cannot meaningfully hold — an organiser cannot run an event with a ghost on the roster, and physical presence reveals everything anyway. V1 rule: **informed choice.** Her RSVP flow states privately, "this event is organised by someone you've blocked"; if she confirms anyway, she appears on *that event's* roster to *that organiser* — scoped to the event, chosen with eyes open. Everywhere else the shielding holds.
+
+Expected to be vanishingly rare (though real: the blocked person may organise the only book club in town) — and deliberately **never a legitimacy test.** Proof-free means no behaviour of the blocker's is ever read as invalidating her block: victim behaviour in coercive dynamics is non-linear, and treating approach as fraud would be exactly the proof demand we refuse. Repeated approach is a *care* signal for the proximity watch (below), nothing more.
+
+## Same room anyway — co-presence is the fiction's limit
+
+Between her informed choices, his unknowing commits, and peace mode's chosen blindness, they will sometimes share a room — and **the fiction cannot survive an attentive co-present blocked person.** His eyes say she was there; his app says she wasn't; pre-event counts said one fewer. We keep the rendered world consistent anyway — she stays absent from his post-event surfaces, people step included — rather than "correcting" the roster after co-presence: the correction variant hands him her name as a tappable surface and affirmatively confirms her IRL activity, while the pre-event count still betrays the hiding retrospectively. The leak is bounded and we state it plainly: co-presence can reveal that a block **exists** — never her **plans**. The rendered world protects the future, not a past he witnessed. Capture-time honesty covers it ("if you end up at the same event, they may work out they've been blocked"), and block-discovery as an escalation risk is on the advocate agenda.
+
+## Displacement — when the blocked fences the blocker out
+
+The ugly pattern, well known to advocates: the blocked person — guessing from real-world knowledge, since the rendered world gives him no aim — commits to events she'd likely attend, to encounter her or to fence her out of community life. Commit-order doesn't even matter: **he always wins the room, because she is always the one who must move.** That asymmetry is inherent to avoidance everywhere; what IRL removes is the cost, the blindness, and the invisibility:
+
+- **Yielding is free.** A blocker's withdrawal after the blocked person committed never counts against her reliability facet — quarantined automatically, backstage, no explanation asked.
+- **She is forewarned.** Awareness mode plus the itinerary alert mean she learns before travelling, not at the door.
+- **The pattern is visible to us.** Repeated displacement sequences (his commit → her withdrawal; her confirmation → his commit) accrue in the event log and route to safety review — care-first toward her (an offer of support, never a demand for paperwork), and pattern evidence alongside any report she chooses to file. It never auto-punishes him (due process, D35) — but a person systematically shadowing a member who blocked them is exactly what the safety facet and human review exist for.
 
 ## Block ≠ accusation (what makes proof-free defensible)
 
@@ -73,19 +87,20 @@ Capture-time honesty (the same commitment as D49's, held tighter): what the bloc
 
 - Events: `UserBlockRecorded` / `UserBlockLifted` — among the most sensitive PII IRL holds; crypto-shredded, access-gated to need-to-know even within admin (Group 4).
 - **No decay, no expiry, no review-to-retain.** Only the blocker lifts it. Safety signal never decays (D22's spirit: safety is not preference).
-- **Blocks cross environments — the safety exception to D42.** Layer 3 and ratings stay env-local, but a protection must travel with the person; if the blocked party doesn't exist in the target environment, the block lies dormant and applies if they ever appear.
+- **Blocks are environment-local — D42 stays unqualified.** Migration's only path is workshop→production onboarding, and workshop blocking is demonstrated on fictional members, so there is no real-on-real block to carry; the capture flow is reachable immediately at first production login, before any event interaction. Tripwire: revisit if migration semantics ever widen (e.g. community-to-community moves) — a person moving must never silently lose protections.
 - Workshop/test: fully exercisable via the standard seams (D37); robot scenarios must include block coverage before build ships.
 
 ## Misuse watch
 
 - **Naming-rate outliers** (one member blocking many) surface to human review — of *consequences and support*, never of the protective effect. The likeliest explanation for an outlier is a person in real trouble; review starts from care, not suspicion.
-- The **false-victim** case is bounded by design: ordinary-power rule (no new observational capability), block ≠ accusation (no reputational harm), rendered-world cost to the blocked ≈ zero. What remains is monitored, not pre-emptively restricted.
+- **Proximity patterns route to human review — in both directions.** The blocked repeatedly landing where the blocker is (or was about to be) reads as displacement; the blocker repeatedly attending the blocked's events is the reverse-surveillance shape the ordinary-power rule otherwise bounds. Review starts from care in both readings — approach-the-blocked is far more often a coercive-cycle signal than fraud, and is **never** treated as evidence against the block's legitimacy.
+- The **false-victim** case is bounded by design: ordinary-power rule (no new observational capability; the itinerary alert conditions on her own confirmed commitments, which carry real reliability cost to fake at scale), block ≠ accusation (no reputational harm), rendered-world cost to the blocked ≈ zero. What remains is monitored, not pre-emptively restricted.
 
 ## Accepted limits (stated, not solved)
 
-- **The physical world.** He can go where he likes; she may be seen. IRL shields its surfaces, not the town.
+- **The physical world.** He can go where he likes; she may be seen. IRL shields its surfaces, not the town — and displacement (above) can only be made costless and visible, not prevented.
 - **Social leakage.** Mutual acquaintances talk; a shared crew noticing her "disappearance" may infer. Indistinguishable-from-leaving is the ceiling of what software can promise.
-- **Tiny-event arithmetic.** At an event of three, an adjusted count plus heads in the room does the math. Disclosed at capture, not pretended away.
+- **Co-presence collapses the fiction.** Once they share a room, an attentive blocked person can infer the block exists — absence from his surfaces, adjusted counts vs. heads in the room. Bounded to the block's *existence*, never her *plans*; disclosed at capture, not pretended away.
 
 ## Not a hypothesis
 
@@ -94,8 +109,9 @@ Block hardness and the rendered-world rule carry **no kill criteria** (D50). Thi
 ## Open questions (the advocate agenda)
 
 - **Awareness vs. peace as the default** — awareness-default is our read of "surprise is the danger"; validate with advocates.
-- **Proactive flags/notifications** ("someone you've blocked has confirmed for an event you're going to") — real safety value vs. building a tracking convenience; excluded from v1, revisit with advocate guidance.
-- **Tiny-event handling** — is disclosure enough, or does sub-threshold shielding need a different behaviour?
+- **The itinerary alert** — included in v1 as the single narrow notification (own confirmed events only); validate its scope, wording, and peace-mode behaviour with advocates. Anything broader stays excluded pending their guidance.
+- **Block discovery as an escalation risk** — co-presence can reveal the block exists; is there handling advocates would add for the moment of discovery?
+- **Tiny-event handling** — is capture-time disclosure enough, or does sub-threshold shielding need a different behaviour?
 - **Support-resource integration** — which resources, per community; how presented without presuming.
 - **Emergency escalation** — when a block interaction suggests imminent danger, what does IRL do beyond the app?
 - **Legal review per community** before launch — duty-of-care exposure and evidence-preservation obligations (the log retains raw history; retention/handover policy needs counsel).

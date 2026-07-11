@@ -272,7 +272,7 @@ flowchart TB
     BLK --> B1["Presence-shielding everywhere:<br/>blocker vanishes from blocked's view;<br/>blocked's event visibility never<br/>conditionally altered — no leak"]:::req
     BLK --> B2["Hard co-placement filter —<br/>above the floor by construction<br/>(diagram 8 hard constraints)"]:::req
     BLK --> B3["Mechanism v1 (D52, protective-blocks.md):<br/>rendered-world rule — counts adjusted,<br/>indistinguishable from leaving;<br/>ordinary-power blocker view,<br/>awareness / peace choice;<br/>block ≠ accusation"]:::req
-    B3 -.-> B4["Advocate validation before build;<br/>open: flags/notifications, tiny events,<br/>support resources, emergency escalation"]:::tbd
+    B3 -.-> B4["Advocate validation before build;<br/>open: itinerary-alert scope, discovery<br/>escalation, tiny events, support<br/>resources, emergency escalation"]:::tbd
     MIS["Misuse watch: naming-rate outliers →<br/>human review of consequences only;<br/>the protection itself is never weakened"] --- BLK
 ```
 
