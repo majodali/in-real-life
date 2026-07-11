@@ -19,6 +19,7 @@ import { createProjector } from './lib/projection.mjs';
 import { createWorkshopOffsetLoader } from './lib/workshop-time.mjs';
 import { createKeyStore } from './lib/key-store.mjs';
 import { piiFieldsFor } from './lib/pii-registry.mjs';
+import { createTracer } from './lib/tracing.mjs';
 import { createRealLlmProvider, createStubLlmProvider } from './lib/llm.mjs';
 import {
   projectUserRegistered,
@@ -190,6 +191,9 @@ const projector = createProjector({
   tables,
 });
 
+// Reads _X_AMZN_TRACE_ID per call, so one instance serves every invocation.
+const tracer = createTracer();
+
 const runner = createCommandRunner({
   client,
   commandsTable: process.env.COMMANDS_TABLE,
@@ -198,6 +202,7 @@ const runner = createCommandRunner({
   getOffset: getWorkshopOffset,
   keyStore,
   piiFieldsFor,
+  tracer,
 });
 
 const registerHandler = createRegisterHandler({ runner });

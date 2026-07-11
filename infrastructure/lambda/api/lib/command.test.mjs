@@ -48,8 +48,22 @@ beforeEach(() => {
     eventsLogTable: EVENTS_LOG_TABLE,
     projector,
     getOffset: async () => workshopOffset,
+    log: () => {},
   });
 });
+
+function buildRunner(overrides = {}) {
+  const client = DynamoDBDocumentClient.from(new DynamoDBClient({ region: 'us-east-1' }));
+  return createCommandRunner({
+    client,
+    commandsTable: COMMANDS_TABLE,
+    eventsLogTable: EVENTS_LOG_TABLE,
+    projector,
+    getOffset: async () => workshopOffset,
+    log: () => {},
+    ...overrides,
+  });
+}
 
 function baseInput(overrides = {}) {
   return {
@@ -380,6 +394,7 @@ function shreddingRunner(keyStore) {
     getOffset: async () => workshopOffset,
     keyStore,
     piiFieldsFor,
+    log: () => {},
   });
 }
 
@@ -464,4 +479,120 @@ test('no key is created for aggregates whose events carry no PII', async () => {
   assert.deepEqual(keyStore.created, []);
   const [item] = loggedEventItems();
   assert.deepEqual(item.data, { offsetMs: 1000 });
+});
+
+// ─── Observability (event-sourcing.md → Tracing & observability) ───
+
+function spyLog() {
+  const lines = [];
+  return { lines, log: (line) => lines.push(line) };
+}
+
+function fakeTracer(traceId = '1-abc-def') {
+  const names = [];
+  return {
+    names,
+    traceId: () => traceId,
+    subsegment: async (name, fn) => { names.push(name); return fn(); },
+  };
+}
+
+test('emits one structured log line per successful command', async () => {
+  ddbMock.on(GetCommand).resolves({});
+  ddbMock.on(TransactWriteCommand).resolves({});
+  const { lines, log } = spyLog();
+  const runner2 = buildRunner({ log, tracer: fakeTracer() });
+
+  await runner2.runCommand(baseInput({ actorId: 'user#abc' }));
+
+  assert.equal(lines.length, 1);
+  const [line] = lines;
+  assert.equal(line.level, 'info');
+  assert.equal(line.status, 'ok');
+  assert.equal(line.traceId, '1-abc-def');
+  assert.equal(line.commandId, 'cmd-1');
+  assert.equal(line.eventType, 'UserRegistered');
+  assert.equal(line.actorId, 'user#abc');
+  assert.equal(line.aggregateId, 'user#abc');
+  assert.equal(line.seq, 1);
+  assert.match(line.eventId, /^[0-9A-HJKMNP-TV-Z]{26}$/);
+  assert.equal(typeof line.durationMs, 'number');
+});
+
+test('logs status cached with the prior eventId on an idempotent hit', async () => {
+  ddbMock.on(GetCommand).resolves({
+    Item: { commandId: 'cmd-1', result: { userId: 'cached' }, eventId: '01HXCACHED0000000000000000' },
+  });
+  const { lines, log } = spyLog();
+  const runner2 = buildRunner({ log });
+
+  const out = await runner2.runCommand(baseInput());
+
+  assert.equal(out.cached, true);
+  assert.equal(out.priorEventId, undefined, 'internal field must not leak to callers');
+  assert.equal(lines[0].status, 'cached');
+  assert.equal(lines[0].eventId, '01HXCACHED0000000000000000');
+});
+
+test('logs an error line with errorType and stack, then rethrows', async () => {
+  ddbMock.on(GetCommand).resolves({});
+  const boom = new Error('transact failed');
+  boom.name = 'TransactionCanceledException';
+  ddbMock.on(TransactWriteCommand).rejects(boom);
+  const { lines, log } = spyLog();
+  const runner2 = buildRunner({ log });
+
+  await assert.rejects(() => runner2.runCommand(baseInput()), /transact failed/);
+
+  const [line] = lines;
+  assert.equal(line.level, 'error');
+  assert.equal(line.status, 'error');
+  assert.equal(line.errorType, 'TransactionCanceledException');
+  assert.equal(line.error, 'transact failed');
+  assert.equal(typeof line.stack, 'string');
+});
+
+test('stamps the tracer traceId on event records; an explicit traceId wins', async () => {
+  ddbMock.on(GetCommand).resolves({});
+  ddbMock.on(TransactWriteCommand).resolves({});
+  const runner2 = buildRunner({ tracer: fakeTracer('1-from-env') });
+
+  await runner2.runCommand(baseInput());
+  await runner2.runCommand(baseInput({ commandId: 'cmd-2', traceId: '1-explicit' }));
+
+  const calls = ddbMock.commandCalls(TransactWriteCommand);
+  const itemOf = (call) => call.args[0].input.TransactItems
+    .find(i => i.Put?.TableName === EVENTS_LOG_TABLE).Put.Item;
+  assert.equal(itemOf(calls[0]).traceId, '1-from-env');
+  assert.equal(itemOf(calls[1]).traceId, '1-explicit');
+});
+
+test('leaves traceId off event records when untraced', async () => {
+  ddbMock.on(GetCommand).resolves({});
+  ddbMock.on(TransactWriteCommand).resolves({});
+  const runner2 = buildRunner({ tracer: { traceId: () => undefined, subsegment: (n, fn) => fn() } });
+
+  await runner2.runCommand(baseInput());
+
+  const txn = ddbMock.commandCalls(TransactWriteCommand)[0].args[0].input;
+  const item = txn.TransactItems.find(i => i.Put?.TableName === EVENTS_LOG_TABLE).Put.Item;
+  assert.equal('traceId' in item, false);
+});
+
+test('wraps the command phases in subsegments', async () => {
+  ddbMock.on(GetCommand).resolves({});
+  ddbMock.on(TransactWriteCommand).resolves({});
+  const tracer = fakeTracer();
+  const runner2 = buildRunner({ tracer, keyStore: fakeKeyStore(), piiFieldsFor });
+
+  await runner2.runCommand(baseInput());
+
+  assert.deepEqual(tracer.names, ['idempotency-check', 'encrypt-pii', 'transact-write']);
+});
+
+test('runs unchanged without a tracer', async () => {
+  ddbMock.on(GetCommand).resolves({});
+  ddbMock.on(TransactWriteCommand).resolves({});
+  const out = await buildRunner().runCommand(baseInput());
+  assert.equal(out.cached, false);
 });

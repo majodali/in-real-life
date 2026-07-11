@@ -242,10 +242,9 @@ At sign-in, the API checks `user.acceptedAgreementVersion` against `required_use
 
 ### X-Ray
 
-- API Lambda: `tracing: lambda.Tracing.ACTIVE` in CDK
-- HTTP API Gateway stage: tracing enabled
-- AWS SDK calls auto-instrumented via the X-Ray SDK (DynamoDB, Cognito, Secrets Manager all traced)
-- Custom subsegments around `validate`, `appendEvent`, `applyProjection`
+- API + projector Lambdas: `tracing: lambda.Tracing.ACTIVE` in CDK
+- HTTP APIs (v2) don't support X-Ray stage tracing — that's REST-API-only — so the trace root is the Lambda function segment. The stage contributes structured JSON access logs instead (one line per request: requestId, route, status, gateway vs integration latency split), correlated with the Lambda's per-command log line via requestId/timestamps.
+- Custom subsegments (`lib/tracing.mjs`) around the command phases — `idempotency-check`, `encrypt-pii`, `transact-write` — emitted over the X-Ray daemon wire protocol directly, so no X-Ray SDK dependency; the transact-write subsegment times the DynamoDB transaction that appends events and applies projections atomically. Tracing never breaks a request: emission is fire-and-forget, and untraced/unsampled invocations pass straight through.
 
 ### Structured logs
 

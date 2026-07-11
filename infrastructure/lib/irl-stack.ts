@@ -12,6 +12,7 @@ import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as cognito from 'aws-cdk-lib/aws-cognito';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import * as sqs from 'aws-cdk-lib/aws-sqs';
+import * as logs from 'aws-cdk-lib/aws-logs';
 import { DynamoEventSource, SqsDlq } from 'aws-cdk-lib/aws-lambda-event-sources';
 import * as apigwv2 from 'aws-cdk-lib/aws-apigatewayv2';
 import * as apigwv2int from 'aws-cdk-lib/aws-apigatewayv2-integrations';
@@ -526,6 +527,35 @@ export class IrlStack extends cdk.Stack {
         maxAge: cdk.Duration.hours(1),
       },
     });
+
+    // HTTP APIs (v2) don't support X-Ray stage tracing — that's REST-only —
+    // so the trace root is the Lambda function segment. The stage's
+    // contribution to observability is structured JSON access logs: one
+    // line per request with latency split (gateway vs integration) and the
+    // requestId for correlation with the Lambda's per-command log line.
+    const accessLogGroup = new logs.LogGroup(this, 'HttpApiAccessLogs', {
+      retention: logs.RetentionDays.ONE_MONTH,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
+
+    const defaultStage = httpApi.defaultStage!.node.defaultChild as apigwv2.CfnStage;
+    defaultStage.accessLogSettings = {
+      destinationArn: accessLogGroup.logGroupArn,
+      format: JSON.stringify({
+        requestId: '$context.requestId',
+        requestTime: '$context.requestTime',
+        httpMethod: '$context.httpMethod',
+        routeKey: '$context.routeKey',
+        path: '$context.path',
+        status: '$context.status',
+        responseLatency: '$context.responseLatency',
+        integrationLatency: '$context.integrationLatency',
+        integrationErrorMessage: '$context.integrationErrorMessage',
+        errorMessage: '$context.error.message',
+        ip: '$context.identity.sourceIp',
+        userAgent: '$context.identity.userAgent',
+      }),
+    };
 
     const jwtAuthorizer = new apigwv2auth.HttpJwtAuthorizer('JwtAuthorizer', `https://cognito-idp.${this.region}.amazonaws.com/${userPool.userPoolId}`, {
       jwtAudience: [userPoolClient.userPoolClientId],
