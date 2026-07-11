@@ -44,7 +44,6 @@ beforeEach(async () => {
       name: 'Matthew',
       avatar: '\u{1F33F}',
       vibeMessage: 'walking',
-      interviewResponses: [],
     }),
   });
   assert.equal(profile.status, 201);

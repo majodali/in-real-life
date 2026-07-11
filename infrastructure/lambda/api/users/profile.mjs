@@ -1,7 +1,9 @@
 // Route handler for POST /me/profile.
 //
-// Called after registration to set the user's name, avatar, vibe message, and
-// initial interview responses. See profile.test.mjs for the spec.
+// Called after registration to set the user's profile basics — name, avatar,
+// vibe message. Basics only (D42): interview content never rides on
+// UserProfileCreated; the onboarding flow emits OnboardingCompleted as its
+// sole carrier. See profile.test.mjs for the spec.
 
 import { GetCommand } from '@aws-sdk/lib-dynamodb';
 
@@ -40,7 +42,6 @@ export function createProfileHandler({ runner, client, usersTable }) {
     const userId = claims.sub;
     const avatar = body.avatar ?? DEFAULT_AVATAR;
     const vibeMessage = body.vibeMessage ?? '';
-    const interviewResponses = body.interviewResponses ?? [];
 
     // Read the current state row to determine the next seq.
     const userRow = await client.send(new GetCommand({
@@ -61,7 +62,6 @@ export function createProfileHandler({ runner, client, usersTable }) {
         name,
         avatar,
         vibeMessage,
-        interviewResponses,
       },
     }];
 

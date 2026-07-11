@@ -19,9 +19,14 @@
 
 const PII_FIELDS = {
   UserRegistered: ['email'],
-  UserProfileCreated: ['name', 'avatar', 'vibeMessage', 'interviewResponses'],
+  UserProfileCreated: ['name', 'avatar', 'vibeMessage'],
   UserProfileUpdated: ['name', 'avatar', 'vibeMessage'],
   LocalityVerificationRequested: ['city', 'postalCode', 'country'],
+  // The interview carrier (D42): transcript is Layer-1 narrative, extraction
+  // the Layer-2 seed — the heaviest PII any event carries.
+  OnboardingCompleted: ['transcript', 'extraction'],
+  // UserKeyShredded is intentionally absent: it's the post-shred audit
+  // record and must carry no PII (its aggregate's key no longer exists).
 };
 
 export function piiFieldsFor(eventType) {

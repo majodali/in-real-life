@@ -13,6 +13,7 @@ const PROFILE_UPDATE_KEY = 'irl_cmd_profile_update';
 const LOCALITY_KEY = 'irl_cmd_locality';
 const NOTIFY_KEY = 'irl_cmd_notify';
 const DELETE_KEY = 'irl_cmd_delete';
+const ONBOARDING_KEY = 'irl_cmd_onboarding';
 const PROPOSE_EVENT_KEY = 'irl_cmd_propose_event';
 
 export function createCommands({
@@ -36,17 +37,33 @@ export function createCommands({
     return result;
   }
 
+  // Profile basics only (D42): name, avatar, vibe. Interview content rides
+  // on completeOnboarding, never here.
   async function createProfile({
     name,
     avatar,
     vibeMessage = '',
-    interviewResponses = [],
   }) {
     const commandId = getOrMakeCommandId(PROFILE_KEY);
-    const body = { commandId, name, vibeMessage, interviewResponses };
+    const body = { commandId, name, vibeMessage };
     if (avatar !== undefined) body.avatar = avatar;
     const result = await api.post('/me/profile', body);
     storage.removeItem(PROFILE_KEY);
+    return result;
+  }
+
+  // One interview turn (POST /me/interview/turn). Ephemeral — no commandId:
+  // the server persists nothing per turn (D5), so a repeat is harmless.
+  async function interviewTurn({ transcript }) {
+    return await api.post('/me/interview/turn', { transcript });
+  }
+
+  // Close the interview: the server runs the extraction call and emits
+  // OnboardingCompleted — the sole interview carrier (D42).
+  async function completeOnboarding({ transcript }) {
+    const commandId = getOrMakeCommandId(ONBOARDING_KEY);
+    const result = await api.post('/me/onboarding', { commandId, transcript });
+    storage.removeItem(ONBOARDING_KEY);
     return result;
   }
 
@@ -262,6 +279,8 @@ export function createCommands({
   return {
     register,
     createProfile,
+    interviewTurn,
+    completeOnboarding,
     updateProfile,
     verifyLocality,
     checkLocality,

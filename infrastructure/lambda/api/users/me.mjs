@@ -45,7 +45,7 @@ export function createGetMeHandler({ client, usersTable }) {
       name: item.name,
       avatar: item.avatar,
       vibeMessage: item.vibeMessage,
-      interviewResponses: item.interviewResponses,
+      onboardingCompletedAt: item.onboardingCompletedAt,
       city: item.city,
       postalCode: item.postalCode,
       country: item.country,

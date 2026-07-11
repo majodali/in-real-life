@@ -118,6 +118,10 @@ test('writes events with generated eventId, wallTime, and simulatedTime', async 
 
   // simulatedTime defaults to wallTime (no offset support yet)
   assert.equal(item.simulatedTime, item.wallTime);
+
+  // bucket = the simulated day, PK of the events-by-time-bucket GSI
+  assert.equal(item.bucket, item.simulatedTime.slice(0, 10));
+  assert.match(item.bucket, /^\d{4}-\d{2}-\d{2}$/);
 });
 
 test('events copy aggregateId, eventType, version, seq, data, and commandId from input', async () => {

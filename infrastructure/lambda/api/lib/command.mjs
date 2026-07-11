@@ -53,6 +53,9 @@ async function runCommand(
     actorId,
     wallTime,
     simulatedTime,
+    // PK of the events-by-time-bucket GSI: one partition per simulated day,
+    // for cross-aggregate replay and analytics (docs/event-sourcing.md).
+    bucket: simulatedTime.slice(0, 10),
     data: e.data,
     ...(traceId !== undefined && { traceId }),
   }));

@@ -80,12 +80,11 @@ test('register: accepts a custom agreementVersion', async () => {
 
 // ─── createProfile ───
 
-test('createProfile: posts to /me/profile with commandId and the provided fields', async () => {
+test('createProfile: posts basics only to /me/profile with commandId (D42)', async () => {
   await commands.createProfile({
     name: 'Mat',
     avatar: '\u{1F331}',
     vibeMessage: 'morning walks',
-    interviewResponses: [{ questionId: 'name', response: 'Mat' }],
   });
 
   assert.equal(api.post.calls[0][0], '/me/profile');
@@ -94,8 +93,34 @@ test('createProfile: posts to /me/profile with commandId and the provided fields
     name: 'Mat',
     avatar: '\u{1F331}',
     vibeMessage: 'morning walks',
-    interviewResponses: [{ questionId: 'name', response: 'Mat' }],
   });
+});
+
+// ─── interviewTurn / completeOnboarding ───
+
+test('interviewTurn: posts the transcript with no commandId (ephemeral, D5)', async () => {
+  const transcript = [{ role: 'member', text: 'hi' }];
+  await commands.interviewTurn({ transcript });
+
+  assert.equal(api.post.calls[0][0], '/me/interview/turn');
+  assert.deepEqual(api.post.calls[0][1], { transcript });
+});
+
+test('completeOnboarding: posts transcript with a persisted commandId, cleared on success', async () => {
+  const transcript = [{ role: 'member', text: 'hi' }];
+  await commands.completeOnboarding({ transcript });
+
+  assert.equal(api.post.calls[0][0], '/me/onboarding');
+  assert.deepEqual(api.post.calls[0][1], { commandId: 'cmd-1', transcript });
+  assert.equal(storage.getItem('irl_cmd_onboarding'), null);
+});
+
+test('completeOnboarding: keeps the commandId when the call throws, for an idempotent retry', async () => {
+  api.post = spy(async () => { throw Object.assign(new Error('boom'), { status: 500 }); });
+  commands = createCommands({ api, storage, makeId: () => 'cmd-1' });
+
+  await assert.rejects(() => commands.completeOnboarding({ transcript: [] }));
+  assert.equal(storage.getItem('irl_cmd_onboarding'), 'cmd-1');
 });
 
 test('createProfile: clears the saved commandId on success', async () => {

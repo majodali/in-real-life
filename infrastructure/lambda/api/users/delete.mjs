@@ -9,6 +9,9 @@
 //      else; same TransactWriteItems.
 //   2. Delete the per-aggregate crypto-shred key. From this moment, the
 //      user's PII in the event log is permanently unrecoverable.
+//   2b. Append the UserKeyShredded audit event (D42) — log-only, no PII,
+//      emitted after the physical key destruction it records. Best-effort:
+//      a concurrent retry writing it first is fine.
 //   3. AdminDeleteUser on Cognito so the email is freed for re-signup.
 //   4. Reply 200 { status: 'deleted' }.
 //
@@ -84,6 +87,28 @@ export function createDeleteHandler({ runner, client, usersTable, keyStore, cogn
 
     // Step 2 — point of no return for PII.
     await keyStore.deleteKey(aggregateId);
+
+    // Step 2b — audit record of the shred (D42). Carries no PII (the key it
+    // records the destruction of is gone). seq + 2: UserDeleted took seq + 1.
+    if (userRow.Item) {
+      try {
+        await runner.runCommand({
+          commandId: `${commandId}#shred`,
+          aggregateId,
+          actorId: 'system',
+          events: [{
+            eventType: 'UserKeyShredded',
+            version: 1,
+            seq: userRow.Item.seq + 2,
+            data: { userId },
+          }],
+          result: { status: 'key-shredded' },
+        });
+      } catch (err) {
+        if (err?.name !== 'TransactionCanceledException') throw err;
+        // A concurrent retry already recorded the shred — converged.
+      }
+    }
 
     // Step 3 — free the email. Best-effort: a missing Cognito user means
     // someone else already did it; any other error surfaces.
