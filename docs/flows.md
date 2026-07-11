@@ -257,7 +257,7 @@ flowchart TB
 
 ## 10. Avoidance & protection — two tiers, drawn by need
 
-The tier line is drawn by **need, never relationship type** ("ex-spouse" can be an awkwardness or a danger — nobody proves which). Comfort tier is soft and graduated (D49); the safety tier is hard, instant, and above everything (D50 — a commitment, not a hypothesis). (`matching.md`, `user-model.md`)
+The tier line is drawn by **need, never relationship type** ("ex-spouse" can be an awkwardness or a danger — nobody proves which). Comfort tier is soft and graduated (D49); the safety tier is hard, instant, and above everything (D50 — a commitment, not a hypothesis; mechanism designed in `protective-blocks.md`, D52). (`matching.md`, `user-model.md`, `protective-blocks.md`)
 
 ```mermaid
 flowchart TB
@@ -271,7 +271,8 @@ flowchart TB
     DNI --> G3["Intimate composition: maximum<br/>de-weight — in practice never composed;<br/>never an advertised guarantee"]
     BLK --> B1["Presence-shielding everywhere:<br/>blocker vanishes from blocked's view;<br/>blocked's event visibility never<br/>conditionally altered — no leak"]:::req
     BLK --> B2["Hard co-placement filter —<br/>above the floor by construction<br/>(diagram 8 hard constraints)"]:::req
-    BLK -.-> B3["Full mechanism — Group 4, open-risks #23:<br/>attendee counts, blocker-side visibility,<br/>contested blocks, capture-time routing"]:::tbd
+    BLK --> B3["Mechanism v1 (D52, protective-blocks.md):<br/>rendered-world rule — counts adjusted,<br/>indistinguishable from leaving;<br/>ordinary-power blocker view,<br/>awareness / peace choice;<br/>block ≠ accusation"]:::req
+    B3 -.-> B4["Advocate validation before build;<br/>open: flags/notifications, tiny events,<br/>support resources, emergency escalation"]:::tbd
     MIS["Misuse watch: naming-rate outliers →<br/>human review of consequences only;<br/>the protection itself is never weakened"] --- BLK
 ```
 
@@ -309,7 +310,7 @@ flowchart TB
 | Overlapping same-time RSVP/confirm handling (by scenario) | 3 | Group 2 |
 | Recurring events, cancellation flow, interest surfacing, richer event data, suggest-change picker | 3 | Group 2 / 7 |
 | Crew detection & continuity events | (matching) | Group 3; continuity deferred (D33) |
-| Protective-block mechanism (counts, blocker-side visibility, contested blocks, routing) | 10 | Group 4 — open-risks #23, safety-critical |
+| Protective-block mechanism | 10 | **Designed** (D52, `protective-blocks.md`); advocate validation before build |
 | Contribution invitation (ambient give-back path for graduates) | 11 | Deferred (`success-and-progress.md`) |
 | Robot users / automated workshop activity | (workshop) | Deferred until needed (D2/D37) |
 | Billing gates · automated locality · minors | — | Groups 5 / 1 / 6 |

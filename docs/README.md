@@ -2,7 +2,7 @@
 
 Design notes for **in·real·life** — a local community meetup app: AI-guided onboarding, discover nearby events and people, coordinate real-world meetups. Privacy-focused (first names only, no messaging — just show up).
 
-These notes are **living and provisional** — current best decisions, revisable as real usage teaches us. `decisions.md` is the map: a register of every decision (D1–D51) with a one-line pointer to the note that holds the reasoning, plus watch-items for emergent effects we're tracking.
+These notes are **living and provisional** — current best decisions, revisable as real usage teaches us. `decisions.md` is the map: a register of every decision (D1–D52) with a one-line pointer to the note that holds the reasoning, plus watch-items for emergent effects we're tracking.
 
 ## How the pieces fit
 
@@ -50,6 +50,7 @@ Understanding of a person is **seeded** at onboarding and **grown** from what th
 
 **Trust & safety (Group 4)**
 - `contributor-rating.md` — a private, backstage, multi-faceted trust read; informs, never dominates.
+- `protective-blocks.md` — the safety tier's mechanism (D50/D52): the rendered-world rule, ordinary-power blocker view (awareness/peace), block ≠ accusation; advocate validation planned before build.
 
 ## Cross-cutting principles (the spine of the whole design)
 
