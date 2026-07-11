@@ -12,7 +12,7 @@ A mobile-first web app for a local community meetup platform. Users go through a
 
 - **Multi-file static app** — HTML + separate CSS/JS modules in `src/`
 - **Static hosting** — S3 + CloudFront (provisioned via CDK), domain `https://in-real.life`
-- **Backend (in progress)** — API Gateway + Lambda + DynamoDB + Cognito at `https://api.in-real.life`. Until the backend is wired up, the app runs offline against `localStorage`.
+- **Backend (built, pre-launch)** — HTTP API + Lambda + DynamoDB + Cognito at `https://api.in-real.life`. Hybrid event sourcing per `docs/event-sourcing.md`: command runner with idempotency (`irl-commands`), immutable event log (`irl-events-log`, Streams enabled), synchronous per-event projections into state tables via `TransactWriteItems`, per-aggregate crypto-shredding, workshop mode with simulated time. ~30 routes across users / events / interactions / polls / suggestions / notify / workshop; functional tests run against the deployed `IrlStackTest`. The frontend still runs against `localStorage` — app↔API wiring is still to come.
 - **Dev start page** — `src/index.html` is a persona selector for testers (not part of final app)
 
 ## Local Development
@@ -88,11 +88,24 @@ src/
 
 infrastructure/
   bin/app.ts                  CDK entry point
-  lib/irl-stack.ts            Main CDK stack
+  lib/irl-stack.ts            Main CDK stack (tables, Cognito, HTTP API, Lambdas)
   lambda/
-    api/index.mjs             API Lambda (router, currently health check only)
+    api/
+      index.mjs               API Lambda composition root (wires router, command runner, stores)
+      lib/                    Core: router, command runner (idempotency + event log +
+                              transactional projections), ULID, workshop time,
+                              crypto-shred + key store + PII registry
+      users/                  Register, profile, locality, me, export, delete (+ projections)
+      events/                 Propose, list, lifecycle, interactions, suggestions, polls (+ projections)
+      workshop/               get-time, admin-time (simulated clock)
+      notify/  admin/         Location-notify signup + admin list
     feedback/index.mjs        Feedback Lambda (S3 writer)
+  test/
+    functional/               End-to-end tests against deployed IrlStackTest (incl. replay proof)
+    helpers/                  CDK-output config, Cognito auth, cleanup, workshop time
 ```
+
+Unit tests are co-located `*.test.mjs` files (`npm test`); functional tests hit a live stack (`npm run test:functional`, serial).
 
 ## Page Flows
 
@@ -135,14 +148,21 @@ Organized into dependency-ordered groups. Earlier groups generally need to land 
 - [x] Content-alternative system + ⋯ menu
 - [x] App feedback submission (Lambda function URL → S3)
 - [x] Static site infrastructure (S3 + CloudFront + ACM + Route53 at in-real.life)
-- [x] Backend infrastructure scaffolded (DynamoDB, Cognito, API Lambda, HTTP API at api.in-real.life — declared, not yet deployed)
+- [x] Backend event-sourcing core: command runner (idempotency, immutable `irl-events-log`, atomic `TransactWriteItems`), synchronous projections, replay verified end-to-end by functional test
+- [x] Backend domain surface: users (register / profile / locality / me / export / delete), events (propose / list / lifecycle / interactions / suggestions / polls), notify; ~30 routes, unit + functional tests against deployed `IrlStackTest`
+- [x] Crypto-shredding: per-aggregate AES-GCM keys (`irl-user-keys`), PII encrypted on log records, key destroyed on delete (PII registry gaps for event-aggregate PII flagged in code as pre-launch work)
+- [x] Workshop mode runtime: mode flag from stage, simulated time (`irl-config` offset, `WorkshopTimeAdvanced`), admin-gated `POST /admin/time`
 
 ### Group 0 — Foundations
 
 Architectural decisions that affect everything downstream. Each warrants a short design note before implementation begins.
 
-- [ ] Event sourcing, CQRS, end-to-end tracing — every interaction recorded as an event; downstream views built from the event stream
-- [ ] Workshop-mode runtime design — single env runs both production and workshop modes; mode flag gates time manipulation, automated user/event activity, and bypassing production gates (locality, billing). Define seams up front so workshop scaffolding doesn't leak into production paths.
+- [x] Event sourcing + CQRS core — command runner, immutable log, idempotency, transactional synchronous projections, replay-verified (`docs/event-sourcing.md`)
+- [x] Workshop-mode runtime — mode flag, simulated time, admin gate (`docs/workshop-mode.md`)
+- [ ] End-to-end tracing depth — X-Ray subsegments, `traceId` on event records, structured per-command log line, HTTP API stage tracing (Lambda `Tracing.ACTIVE` is on; the rest of the `event-sourcing.md` observability slice is not)
+- [ ] **LLM seam (D37)** — the injected Claude provider (real in production, deterministic stub in workshop/test). The Group-0 blocker for every AI flow; only the Secrets Manager secret exists today
+- [ ] Async Streams projector + `irl-user-model` store (`docs/projection-store.md`, D36) — Streams are enabled on `irl-events-log` but nothing consumes them; the entire derived user-model/rating read-side is unbuilt
+- [ ] Event-vocabulary reconciliation with D42 — code folds `interviewResponses` into `UserProfileCreated` (docs: `OnboardingCompleted` is the sole interview carrier, and it doesn't exist yet); deletion emits `UserDeleted` with no `UserKeyShredded` audit event; `events-by-time-bucket` GSI exists but no `bucket` attribute is written
 
 ### Group 1 — Identity, profile, first contact
 
@@ -150,25 +170,25 @@ Everything needed for a real adult to land on the site, learn what IRL is, agree
 
 - [ ] Website / homepage — explains what IRL is, links to sign-up
 - [ ] User agreement — adults-only for now, terms of use, privacy
-- [ ] Public user sign-up flow (replaces invite-only Cognito plan)
-- [ ] Locality verification — manual admin approval first, automated later (postcard, third-party). Bypassable in workshop mode.
+- [x] Public user sign-up flow (Cognito sign-up + email verify → `UserRegistered`)
+- [x] Locality verification — manual admin approval implemented (request → verify → activate chain); automated verification (postcard, third-party) still open
 - [ ] Profile data model — richer than today's name/avatar/vibe; includes interview responses, attributes, preferences
 - [ ] Profile view + edit (extend current screen)
 - [ ] Optional user attributes — entered if user considers them valuable for matching
-- [ ] Real Claude API for onboarding interview (replaces scripted flow)
-- [ ] Account deletion / data export
+- [ ] Real Claude API for onboarding interview (replaces scripted flow) — blocked on the LLM seam (Group 0)
+- [x] Account deletion / data export (export decrypts the event log; delete shreds the per-user key)
 
 ### Group 2 — Core event experience
 
 Extends the prototype's RSVP→confirm→attend→debrief flow into a full proposed → planned → in-progress → over → cancelled lifecycle, with users able to propose events.
 
-- [ ] Full event lifecycle states: proposed, planned, in-progress, over, cancelled
-- [ ] Event cancellation flow — what happens to RSVPs when organizer cancels
-- [ ] Minimum attendance threshold ("happens if 3+ confirm")
-- [ ] User proposes event — pre-existing reference, or ad-hoc
+- [x] Full event lifecycle states: proposed, planned, in-progress, over, cancelled (stored states command-driven; in-progress/over time-derived)
+- [ ] Event cancellation flow — cancel command exists; what happens to RSVPs/attendee notification still open
+- [x] Minimum attendance threshold (auto-plan at `minimumAttendance`)
+- [x] User proposes event (`POST /events` → `EventProposed`)
 - [ ] Three event types: external/third-party, user-organized, this-user-organized
-- [ ] Track interest before commitment — see who's interested before an event becomes confirmed
-- [ ] Time/date suggestion handling for proposed events
+- [x] Track interest before commitment (`InterestExpressed` distinct from `AttendanceConfirmed`)
+- [x] Time/date suggestion handling for proposed events (suggestions: make/vote/adopt/reject/respond; polls: create/vote/close)
 - [ ] Time/place-less proposals — "Anyone into scrabble?" as a first-class early stage (idea → proposed once time/place firm up, e.g. via the existing polls); likely a common case. Note: propose currently *requires* startTime/endTime/location
 - [ ] Overlapping RSVPs — members RSVP'd/confirmed to same-time events: surface the conflict gently, distinguish interest (overlapping is fine) from double-confirmation (a reliability problem), handle by scenario (accident, can't decide, co-located events, spam); never auto-cancel
 - [ ] General event management — edit, cancel, notify attendees
