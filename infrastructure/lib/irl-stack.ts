@@ -11,6 +11,8 @@ import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as cognito from 'aws-cdk-lib/aws-cognito';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
+import * as sqs from 'aws-cdk-lib/aws-sqs';
+import { DynamoEventSource, SqsDlq } from 'aws-cdk-lib/aws-lambda-event-sources';
 import * as apigwv2 from 'aws-cdk-lib/aws-apigatewayv2';
 import * as apigwv2int from 'aws-cdk-lib/aws-apigatewayv2-integrations';
 import * as apigwv2auth from 'aws-cdk-lib/aws-apigatewayv2-authorizers';
@@ -334,6 +336,18 @@ export class IrlStack extends cdk.Stack {
       pointInTimeRecoverySpecification: { pointInTimeRecoveryEnabled: false },
     });
 
+    // Derived user-model read store (docs/projection-store.md, D36).
+    // PK userId, SK typed (profile#core, interest#{tag}, …). Written only
+    // by the async Streams projector; fully rebuildable by replaying the
+    // event log, so DESTROY is safe.
+    const userModelTable = new dynamodb.Table(this, 'UserModelTable', {
+      tableName: `irl-user-model-${stage}`,
+      partitionKey: { name: 'userId', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'sk', type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
+
     // ==========================================
     // Per-stage: Cognito User Pool
     // ==========================================
@@ -444,6 +458,53 @@ export class IrlStack extends cdk.Stack {
         'cognito-idp:ListUsers',
       ],
       resources: [userPool.userPoolArn],
+    }));
+
+    // ==========================================
+    // Per-stage: user-model Streams projector
+    // ==========================================
+
+    // First async consumer of the event-log stream (docs/projection-store.md).
+    // Same code asset as the API Lambda so it shares lib/ (crypto-shred,
+    // key store); a different handler entry point keeps the roles separate.
+
+    const projectorDlq = new sqs.Queue(this, 'UserModelProjectorDlq', {
+      retentionPeriod: cdk.Duration.days(14),
+    });
+
+    const projectorFn = new lambda.Function(this, 'UserModelProjectorFn', {
+      runtime: lambda.Runtime.NODEJS_20_X,
+      handler: 'projector.handler',
+      code: lambda.Code.fromAsset(path.join(__dirname, '../lambda/api'), {
+        exclude: ['**/*.test.mjs'],
+      }),
+      environment: {
+        USER_MODEL_TABLE: userModelTable.tableName,
+        USER_KEYS_TABLE: userKeysTable.tableName,
+        STAGE: stage,
+      },
+      timeout: cdk.Duration.seconds(60),
+      memorySize: 256,
+      tracing: lambda.Tracing.ACTIVE,
+    });
+
+    userModelTable.grantReadWriteData(projectorFn);
+    userKeysTable.grantReadData(projectorFn);
+
+    // INSERT-only filter: the log is append-only, so MODIFY/REMOVE are
+    // operational noise. Poison events retry with bisection, then land in
+    // the DLQ instead of blocking the shard (projection-store.md open
+    // question, answered conservatively).
+    projectorFn.addEventSource(new DynamoEventSource(eventsLogTable, {
+      startingPosition: lambda.StartingPosition.TRIM_HORIZON,
+      batchSize: 25,
+      bisectBatchOnError: true,
+      retryAttempts: 10,
+      reportBatchItemFailures: true,
+      onFailure: new SqsDlq(projectorDlq),
+      filters: [lambda.FilterCriteria.filter({
+        eventName: lambda.FilterRule.isEqual('INSERT'),
+      })],
     }));
 
     // ==========================================

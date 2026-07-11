@@ -12,7 +12,7 @@ A mobile-first web app for a local community meetup platform. Users go through a
 
 - **Multi-file static app** — HTML + separate CSS/JS modules in `src/`
 - **Static hosting** — S3 + CloudFront (provisioned via CDK), domain `https://in-real.life`
-- **Backend (built, pre-launch)** — HTTP API + Lambda + DynamoDB + Cognito at `https://api.in-real.life`. Hybrid event sourcing per `docs/event-sourcing.md`: command runner with idempotency (`irl-commands`), immutable event log (`irl-events-log`, Streams enabled), synchronous per-event projections into state tables via `TransactWriteItems`, per-aggregate crypto-shredding, workshop mode with simulated time. ~30 routes across users / events / interactions / polls / suggestions / notify / workshop; functional tests run against the deployed `IrlStackTest`. The frontend screens are wired to the API via `services.js` (Cognito auth + command wrappers); `localStorage` remains for the dev persona flow and offline fallbacks.
+- **Backend (built, pre-launch)** — HTTP API + Lambda + DynamoDB + Cognito at `https://api.in-real.life`. Hybrid event sourcing per `docs/event-sourcing.md`: command runner with idempotency (`irl-commands`), immutable event log (`irl-events-log`, Streams enabled), synchronous per-event projections into state tables via `TransactWriteItems`, an async Streams projector building the derived `irl-user-model` read store, per-aggregate crypto-shredding, workshop mode with simulated time. ~30 routes across users / events / interactions / polls / suggestions / notify / workshop; functional tests run against the deployed `IrlStackTest`. The frontend screens are wired to the API via `services.js` (Cognito auth + command wrappers); `localStorage` remains for the dev persona flow and offline fallbacks.
 - **Dev start page** — `src/index.html` is a persona selector for testers (not part of final app)
 
 ## Local Development
@@ -99,6 +99,8 @@ infrastructure/
       events/                 Propose, list, lifecycle, interactions, suggestions, polls (+ projections)
       workshop/               get-time, admin-time (simulated clock)
       notify/  admin/         Location-notify signup + admin list
+      projector.mjs           Streams projector Lambda entry point (same asset, own function)
+      projector/              Async user-model projector → irl-user-model read store
     feedback/index.mjs        Feedback Lambda (S3 writer)
   test/
     functional/               End-to-end tests against deployed IrlStackTest (incl. replay proof)
@@ -161,7 +163,7 @@ Architectural decisions that affect everything downstream. Each warrants a short
 - [x] Workshop-mode runtime — mode flag, simulated time, admin gate (`docs/workshop-mode.md`)
 - [ ] End-to-end tracing depth — X-Ray subsegments, `traceId` on event records, structured per-command log line, HTTP API stage tracing (Lambda `Tracing.ACTIVE` is on; the rest of the `event-sourcing.md` observability slice is not)
 - [x] **LLM seam (D37)** — `lambda/api/lib/llm.mjs`: injected provider (`llm.complete({task, system, messages, schema})`), real Claude API in production (structured outputs, key from Secrets Manager), deterministic canned stub in workshop/test; first consumer is the onboarding extraction call
-- [ ] Async Streams projector + `irl-user-model` store (`docs/projection-store.md`, D36) — Streams are enabled on `irl-events-log` but nothing consumes them; the entire derived user-model/rating read-side is unbuilt
+- [x] Async Streams projector + `irl-user-model` store (`docs/projection-store.md`, D36) — dedicated projector Lambda (`lambda/api/projector.mjs` + `projector/`) consumes the `irl-events-log` stream (INSERT-only filter, partial-batch failure reporting, bisect-on-error, SQS DLQ): `OnboardingCompleted` seeds `profile#core` + `interest#`/`strength#`/`barrier#` items (payloads encrypted under the per-user key, `asOf` from `simulatedTime`), `UserDeleted`/`UserKeyShredded` purge to an empty tombstone, shredded users (missing key) skip cleanly. Debrief/reflection deltas and D7 precedence/decay start once a second delta source exists (debrief extraction is unbuilt)
 - [x] Event-vocabulary reconciliation with D42 — `UserProfileCreated` is basics-only; `OnboardingCompleted` (via `POST /me/onboarding`) is the sole interview carrier (transcript + Layer-2 extraction, crypto-shredded); deletion appends a `UserKeyShredded` audit event after the physical key destruction; every event record now writes the `bucket` attribute for the `events-by-time-bucket` GSI
 
 ### Group 1 — Identity, profile, first contact
