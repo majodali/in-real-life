@@ -29,16 +29,21 @@ export function createRealLlmProvider({
 
   return {
     // `task` is part of the seam interface (the stub dispatches on it);
-    // the real provider works purely from system/messages/schema.
-    async complete({ system, messages, schema, maxTokens = 4096 }) {
+    // the real provider works purely from system/messages/schema/effort.
+    async complete({ system, messages, schema, maxTokens = 4096, effort }) {
+      // Adaptive thinking stays on: with thinking disabled, Opus 4.8 can
+      // leak reasoning into the visible response (onboarding-interview.md).
+      const outputConfig = {
+        ...(schema !== undefined && { format: { type: 'json_schema', schema } }),
+        ...(effort !== undefined && { effort }),
+      };
       const body = {
         model,
         max_tokens: maxTokens,
+        thinking: { type: 'adaptive' },
         messages,
         ...(system !== undefined && { system }),
-        ...(schema !== undefined && {
-          output_config: { format: { type: 'json_schema', schema } },
-        }),
+        ...(Object.keys(outputConfig).length > 0 && { output_config: outputConfig }),
       };
 
       const res = await fetchFn(apiUrl, {
@@ -114,23 +119,71 @@ export const STUB_ONBOARDING_EXTRACTION = {
   provisional: true,
 };
 
+// Canned interviewer turn for the workshop/test stub — a fixed short script
+// keyed off how many member turns appear in the request, so a driven loop
+// deterministically reaches done: true. Schema-valid against
+// INTERVIEW_TURN_SCHEMA (docs/onboarding-prompt.md → Per-turn card schema).
+export function stubOnboardingTurn(request) {
+  const content = request?.messages?.[0]?.content ?? '';
+  const memberTurns = (content.match(/^member:/gm) || []).length;
+
+  if (memberTurns >= 3) {
+    return {
+      done: true,
+      doorRead: 'connect',
+      closing: {
+        message: 'Thanks — that gives us a real sense of what suits you. '
+          + 'We’ll look for small, easygoing things to start with.',
+        nextStep: 'Browse what’s coming up and tap one that looks easy.',
+        exampleEventRefs: [],
+      },
+    };
+  }
+
+  const cards = [
+    {
+      prompt: 'Welcome — what would you love more of in your week?',
+      subtext: 'No wrong answers; whatever comes to mind.',
+      inputType: 'text',
+      probing: ['door', 'open'],
+    },
+    {
+      prompt: 'Tell us about a recent time being around people felt easy.',
+      inputType: 'text',
+      probing: ['group-size', 'structure', 'role', 'familiarity'],
+    },
+    {
+      prompt: 'How often would getting out feel right — without it becoming a chore?',
+      helpers: ['Weekly', 'Every couple of weeks', 'Monthly'],
+      inputType: 'single-choice',
+      probing: ['energy', 'constraints'],
+    },
+  ];
+  return {
+    done: false,
+    doorRead: memberTurns === 0 ? 'unclear' : 'connect',
+    card: cards[Math.min(memberTurns, cards.length - 1)],
+  };
+}
+
 const DEFAULT_CANNED = {
   'onboarding-extraction': STUB_ONBOARDING_EXTRACTION,
+  'onboarding-turn': stubOnboardingTurn,
 };
 
 // Deterministic stub provider. Outputs are keyed by `task`; workshop robots
 // and tests extend or override via the `canned` option (values may be plain
-// objects or zero-arg functions). An unknown task throws — a missing canned
-// entry must be loud, never silently wrong.
+// objects or functions of the complete() request). An unknown task throws —
+// a missing canned entry must be loud, never silently wrong.
 export function createStubLlmProvider({ canned = {} } = {}) {
   const table = { ...DEFAULT_CANNED, ...canned };
   return {
-    async complete({ task }) {
-      const entry = table[task];
+    async complete(request) {
+      const entry = table[request?.task];
       if (entry === undefined) {
-        throw new Error(`stub llm: no canned output for task "${task}"`);
+        throw new Error(`stub llm: no canned output for task "${request?.task}"`);
       }
-      const out = typeof entry === 'function' ? entry() : entry;
+      const out = typeof entry === 'function' ? entry(request) : entry;
       return typeof out === 'string' ? out : structuredClone(out);
     },
   };

@@ -32,6 +32,7 @@ import {
   projectUserKeyShredded,
 } from './users/projections.mjs';
 import { createOnboardingHandler } from './users/onboarding.mjs';
+import { createInterviewTurnHandler } from './users/interview.mjs';
 import { createRegisterHandler } from './users/register.mjs';
 import { createProfileHandler } from './users/profile.mjs';
 import { createUpdateProfileHandler } from './users/profile-update.mjs';
@@ -224,6 +225,13 @@ const deleteHandler = createDeleteHandler({
 const onboardingHandler = createOnboardingHandler({
   runner, client, usersTable: tables.usersTable, llm,
 });
+const interviewTurnHandler = createInterviewTurnHandler({
+  client,
+  usersTable: tables.usersTable,
+  eventsTable: tables.eventsTable,
+  llm,
+  getOffset: getWorkshopOffset,
+});
 const getTimeHandler = createGetTimeHandler({ getOffset: getWorkshopOffset });
 const advanceTimeHandler = createAdvanceTimeHandler({ runner, getOffset: getWorkshopOffset });
 const notifyListHandler = createNotifyListHandler({
@@ -349,6 +357,7 @@ router.add('DELETE', '/me', deleteHandler);
 router.add('POST', '/me/register', registerHandler);
 router.add('POST', '/me/profile', profileHandler);
 router.add('POST', '/me/onboarding', onboardingHandler);
+router.add('POST', '/me/interview/turn', interviewTurnHandler);
 router.add('PUT', '/me/profile', updateProfileHandler);
 router.add('POST', '/me/locality', localityHandler);
 router.add('GET', '/locality/check', localityCheckHandler);

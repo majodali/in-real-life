@@ -175,7 +175,7 @@ Everything needed for a real adult to land on the site, learn what IRL is, agree
 - [ ] Profile data model — richer than today's name/avatar/vibe; includes interview responses, attributes, preferences
 - [ ] Profile view + edit (extend current screen)
 - [ ] Optional user attributes — entered if user considers them valuable for matching
-- [ ] Real Claude API for onboarding interview (replaces scripted flow) — unblocked: the seam and the closing extraction call (`POST /me/onboarding` → `OnboardingCompleted`) exist; still to build: the per-turn interviewer loop (`POST /me/interview/turn`, `docs/onboarding-interview.md`)
+- [ ] Real Claude API for onboarding interview (replaces scripted flow) — backend complete: `POST /me/interview/turn` (per-turn interviewer, frozen system prompt + card schema from `docs/onboarding-prompt.md`, real-event grounding, branch-validated with retry + templated fallback) and `POST /me/onboarding` (extraction → `OnboardingCompleted`); remaining: wire the frontend onboarding screen to these endpoints (still scripted against `localStorage`)
 - [x] Account deletion / data export (export decrypts the event log; delete shreds the per-user key)
 
 ### Group 2 — Core event experience

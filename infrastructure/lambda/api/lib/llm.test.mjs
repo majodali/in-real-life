@@ -44,15 +44,38 @@ test('stub throws on an unknown task', async () => {
   );
 });
 
-test('stub accepts custom canned entries, including functions', async () => {
+test('stub accepts custom canned entries, including functions of the request', async () => {
   const llm = createStubLlmProvider({
     canned: {
       'onboarding-extraction': { replaced: true },
-      'robot-debrief': () => ({ again: 'yes' }),
+      'robot-debrief': (request) => ({ again: 'yes', sawTask: request.task }),
     },
   });
   assert.deepEqual(await llm.complete({ task: 'onboarding-extraction' }), { replaced: true });
-  assert.deepEqual(await llm.complete({ task: 'robot-debrief' }), { again: 'yes' });
+  assert.deepEqual(
+    await llm.complete({ task: 'robot-debrief' }),
+    { again: 'yes', sawTask: 'robot-debrief' },
+  );
+});
+
+test('stub onboarding-turn scripts a short interview that reaches done', async () => {
+  const llm = createStubLlmProvider();
+  const turnFor = (transcriptText) => llm.complete({
+    task: 'onboarding-turn',
+    messages: [{ role: 'user', content: `EVENTS: none\n\nTRANSCRIPT SO FAR:\n${transcriptText}` }],
+  });
+
+  const first = await turnFor('');
+  assert.equal(first.done, false);
+  assert.equal(typeof first.card.prompt, 'string');
+  assert.equal(typeof first.card.inputType, 'string');
+
+  const closing = await turnFor(
+    'interviewer: q1\nmember: a1\ninterviewer: q2\nmember: a2\ninterviewer: q3\nmember: a3',
+  );
+  assert.equal(closing.done, true);
+  assert.equal(typeof closing.closing.message, 'string');
+  assert.equal(typeof closing.closing.nextStep, 'string');
 });
 
 // ─── Real provider ───
@@ -79,6 +102,7 @@ test('real provider sends the Claude Messages API shape with structured output',
     messages: [{ role: 'user', content: 'transcript here' }],
     schema: { type: 'object' },
     maxTokens: 999,
+    effort: 'low',
   });
 
   assert.deepEqual(out, { hello: 'world' });
@@ -93,8 +117,10 @@ test('real provider sends the Claude Messages API shape with structured output',
   assert.equal(body.model, 'claude-opus-4-8');
   assert.equal(body.max_tokens, 999);
   assert.equal(body.system, 'extract things');
+  assert.deepEqual(body.thinking, { type: 'adaptive' });
   assert.deepEqual(body.output_config, {
     format: { type: 'json_schema', schema: { type: 'object' } },
+    effort: 'low',
   });
 });
 
