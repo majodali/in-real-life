@@ -12,7 +12,7 @@ A mobile-first web app for a local community meetup platform. Users go through a
 
 - **Multi-file static app** — HTML + separate CSS/JS modules in `src/`
 - **Static hosting** — S3 + CloudFront (provisioned via CDK), domain `https://in-real.life`
-- **Backend (built, pre-launch)** — HTTP API + Lambda + DynamoDB + Cognito at `https://api.in-real.life`. Hybrid event sourcing per `docs/event-sourcing.md`: command runner with idempotency (`irl-commands`), immutable event log (`irl-events-log`, Streams enabled), synchronous per-event projections into state tables via `TransactWriteItems`, per-aggregate crypto-shredding, workshop mode with simulated time. ~30 routes across users / events / interactions / polls / suggestions / notify / workshop; functional tests run against the deployed `IrlStackTest`. The frontend still runs against `localStorage` — app↔API wiring is still to come.
+- **Backend (built, pre-launch)** — HTTP API + Lambda + DynamoDB + Cognito at `https://api.in-real.life`. Hybrid event sourcing per `docs/event-sourcing.md`: command runner with idempotency (`irl-commands`), immutable event log (`irl-events-log`, Streams enabled), synchronous per-event projections into state tables via `TransactWriteItems`, per-aggregate crypto-shredding, workshop mode with simulated time. ~30 routes across users / events / interactions / polls / suggestions / notify / workshop; functional tests run against the deployed `IrlStackTest`. The frontend screens are wired to the API via `services.js` (Cognito auth + command wrappers); `localStorage` remains for the dev persona flow and offline fallbacks.
 - **Dev start page** — `src/index.html` is a persona selector for testers (not part of final app)
 
 ## Local Development
@@ -175,7 +175,7 @@ Everything needed for a real adult to land on the site, learn what IRL is, agree
 - [ ] Profile data model — richer than today's name/avatar/vibe; includes interview responses, attributes, preferences
 - [ ] Profile view + edit (extend current screen)
 - [ ] Optional user attributes — entered if user considers them valuable for matching
-- [ ] Real Claude API for onboarding interview (replaces scripted flow) — backend complete: `POST /me/interview/turn` (per-turn interviewer, frozen system prompt + card schema from `docs/onboarding-prompt.md`, real-event grounding, branch-validated with retry + templated fallback) and `POST /me/onboarding` (extraction → `OnboardingCompleted`); remaining: wire the frontend onboarding screen to these endpoints (still scripted against `localStorage`)
+- [x] Real Claude API for onboarding interview (replaces scripted flow) — backend: `POST /me/interview/turn` (per-turn interviewer, frozen system prompt + card schema from `docs/onboarding-prompt.md`, real-event grounding, branch-validated with retry + templated fallback) and `POST /me/onboarding` (extraction → `OnboardingCompleted`); frontend: onboarding screen drives the live turn loop (name as form field per D42, scripted flow retained as offline fallback) and completes via createProfile → completeOnboarding. Full screen redesign still planned.
 - [x] Account deletion / data export (export decrypts the event log; delete shreds the per-user key)
 
 ### Group 2 — Core event experience

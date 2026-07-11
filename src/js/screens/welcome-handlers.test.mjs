@@ -51,7 +51,6 @@ test('profile + locality complete: saves the user locally and navigates to feed'
     name: 'Mat',
     avatar: '\u{1F331}',
     vibeMessage: 'hi',
-    interviewResponses: [{ q: 'name', a: 'Mat' }],
     localityVerified: true,
     activated: true,
   }));
@@ -64,7 +63,6 @@ test('profile + locality complete: saves the user locally and navigates to feed'
     name: 'Mat',
     avatar: '\u{1F331}',
     vibeMessage: 'hi',
-    interviewResponses: [{ q: 'name', a: 'Mat' }],
     localityVerified: true,
     activated: true,
   });

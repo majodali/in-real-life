@@ -69,7 +69,6 @@ function saveUser(me) {
     name: me.name,
     avatar: me.avatar,
     vibeMessage: me.vibeMessage,
-    interviewResponses: me.interviewResponses ?? [],
     createdAt: me.createdAt ?? new Date().toISOString(),
   });
   store.setActiveUser(me.userId);

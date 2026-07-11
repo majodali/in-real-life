@@ -1,18 +1,28 @@
 // ─── Onboarding — first-time user flow ───
 //
-// Uses the reusable interview engine, then shows a confirmation card
-// where the user picks an avatar and sets a vibe message. Reached only
-// after sign-in via the welcome screen — direct navigation without a
-// Cognito session bounces back to sign-in.
+// Name card first (a form field, not interview content — D42), then the
+// live interview loop against POST /me/interview/turn. If the first live
+// turn fails, the scripted flow from data.js takes over so the interview
+// still works offline. Either path ends at the confirmation card, which
+// runs the completion sequence: profile basics, then POST /me/onboarding.
+// Reached only after sign-in via the welcome screen — direct navigation
+// without a Cognito session bounces back to sign-in.
 
-import * as store from '../store.js';
 import { INTERVIEW_FLOW, AVATAR_EMOJIS } from '../data.js';
 import { startInterview } from './interview.js';
 import { navigate, showToast } from '../app.js';
 import { auth, commands } from '../services.js';
+import {
+  appendExchange,
+  scriptedResponsesToTranscript,
+  handleInterviewTurn,
+  handleOnboardingDone,
+} from './onboarding-handlers.js';
 
-let interviewResponses = [];
+const SKIP_ANSWER = 'I’d rather skip that one.';
+
 let userName = '';
+let transcript = [];
 
 export function renderOnboarding() {
   if (!auth.getCurrentTokens()) {
@@ -22,14 +32,43 @@ export function renderOnboarding() {
 
   const container = document.getElementById('screen-onboarding');
   container.innerHTML = '';
+  userName = '';
+  transcript = [];
 
+  const nameQuestion = INTERVIEW_FLOW.find(q => q.type === 'name');
+  startInterview(container, {
+    questions: [nameQuestion],
+    showProgress: false,
+    onComplete: (responses) => {
+      userName = responses.find(r => r.questionId === 'name')?.response || 'Friend';
+      beginInterview(container);
+    },
+    onCancel: () => {
+      window.location.href = 'index.html';
+    },
+  });
+}
+
+// Try the live loop; if the first turn fails, fall back to the scripted
+// flow — the dev personas and offline preview keep working.
+async function beginInterview(container) {
+  showWaitingCard(container, 'One moment…');
+
+  const { turn, error } = await handleInterviewTurn({ transcript, commands });
+  if (error) {
+    startScriptedInterview(container);
+    return;
+  }
+  renderLiveTurn(container, turn);
+}
+
+function startScriptedInterview(container) {
   startInterview(container, {
     questions: INTERVIEW_FLOW,
+    existingName: userName,
     showProgress: true,
     onComplete: (responses) => {
-      interviewResponses = responses;
-      const nameResponse = responses.find(r => r.questionId === 'name');
-      userName = nameResponse?.response || 'Friend';
+      transcript = scriptedResponsesToTranscript(responses);
       showConfirmationCard(container);
     },
     onCancel: () => {
@@ -37,6 +76,131 @@ export function renderOnboarding() {
     },
   });
 }
+
+// ─── Live interview loop ───
+
+function renderLiveTurn(container, turn) {
+  if (turn.done) {
+    renderClosing(container, turn.closing);
+  } else {
+    renderLiveCard(container, turn.card);
+  }
+}
+
+function renderLiveCard(container, card, prefill = '') {
+  container.innerHTML = `
+    <div class="interview-card" data-direction="forward">
+      <div class="interview-content">
+        <h2 class="interview-question">${escapeHtml(card.prompt)}</h2>
+        ${card.subtext ? `<p class="interview-subtext">${escapeHtml(card.subtext)}</p>` : ''}
+
+        <div class="interview-input-area">
+          <textarea
+            class="interview-textarea"
+            id="interviewInput"
+            placeholder="Type your answer here..."
+            rows="4"
+          >${escapeHtml(prefill)}</textarea>
+        </div>
+
+        ${card.helpers?.length ? `
+          <div class="interview-helpers" id="helpersSection">
+            <button class="helpers-toggle" id="helpersToggle">
+              \u{1F4A1} Need a prompt?
+            </button>
+            <div class="helpers-list" id="helpersList" style="display:none">
+              ${card.helpers.map(h => `<div class="helper-item">${escapeHtml(h)}</div>`).join('')}
+            </div>
+          </div>
+        ` : ''}
+      </div>
+
+      <div class="interview-nav">
+        <div class="interview-nav-spacer"></div>
+        <button class="interview-nav-btn skip" id="navSkip">Skip</button>
+        <button class="interview-nav-btn next" id="navNext">Next →</button>
+      </div>
+    </div>
+  `;
+
+  const input = document.getElementById('interviewInput');
+  setTimeout(() => input.focus(), 100);
+  input.addEventListener('input', () => {
+    input.style.height = 'auto';
+    input.style.height = Math.max(input.scrollHeight, 100) + 'px';
+  });
+
+  const helpersToggle = document.getElementById('helpersToggle');
+  const helpersList = document.getElementById('helpersList');
+  if (helpersToggle && helpersList) {
+    helpersToggle.addEventListener('click', () => {
+      const visible = helpersList.style.display !== 'none';
+      helpersList.style.display = visible ? 'none' : 'flex';
+      helpersToggle.textContent = visible ? '\u{1F4A1} Need a prompt?' : '\u{1F4A1} Hide prompts';
+    });
+  }
+
+  document.getElementById('navNext').addEventListener('click', () => {
+    const answer = input.value.trim();
+    if (!answer) {
+      input.classList.add('shake');
+      setTimeout(() => input.classList.remove('shake'), 400);
+      return;
+    }
+    submitAnswer(container, card, answer);
+  });
+
+  document.getElementById('navSkip').addEventListener('click', () => {
+    submitAnswer(container, card, SKIP_ANSWER);
+  });
+}
+
+async function submitAnswer(container, card, answer) {
+  const nextTranscript = appendExchange(transcript, card.prompt, answer);
+  showWaitingCard(container, 'Thinking…');
+
+  const { turn, error } = await handleInterviewTurn({ transcript: nextTranscript, commands });
+  if (error) {
+    // Mid-interview failure: keep the transcript as-was and re-show the
+    // same card with the answer prefilled so a tap on Next retries.
+    showToast('Connection hiccup — let’s try that one again.');
+    renderLiveCard(container, card, answer === SKIP_ANSWER ? '' : answer);
+    return;
+  }
+
+  transcript = nextTranscript;
+  renderLiveTurn(container, turn);
+}
+
+function renderClosing(container, closing) {
+  container.innerHTML = `
+    <div class="interview-card" data-direction="forward">
+      <div class="interview-content">
+        <h2 class="interview-question">${escapeHtml(closing.message)}</h2>
+        <p class="interview-subtext">${escapeHtml(closing.nextStep)}</p>
+      </div>
+      <div class="interview-nav">
+        <div class="interview-nav-spacer"></div>
+        <button class="interview-nav-btn next" id="closingNext">Set up my profile →</button>
+      </div>
+    </div>
+  `;
+  document.getElementById('closingNext').addEventListener('click', () => {
+    showConfirmationCard(container);
+  });
+}
+
+function showWaitingCard(container, message) {
+  container.innerHTML = `
+    <div class="interview-card">
+      <div class="interview-content">
+        <p class="interview-subtext">${escapeHtml(message)}</p>
+      </div>
+    </div>
+  `;
+}
+
+// ─── Confirmation card (avatar + vibe) ───
 
 function showConfirmationCard(container) {
   let selectedAvatar = AVATAR_EMOJIS[0];
@@ -46,7 +210,7 @@ function showConfirmationCard(container) {
     <div class="interview-card confirmation-card">
       <div class="interview-content">
         <h2 class="interview-question">Nice to meet you, ${escapeHtml(userName)}!</h2>
-        <p class="interview-subtext">Let\u2019s set up how others will see you. Remember \u2014 only your name, avatar, and vibe are shared.</p>
+        <p class="interview-subtext">Let’s set up how others will see you. Remember — only your name, avatar, and vibe are shared.</p>
 
         <div class="confirmation-section">
           <label class="confirmation-label">Pick an avatar</label>
@@ -66,11 +230,11 @@ function showConfirmationCard(container) {
             placeholder="e.g. Always up for a morning walk"
             maxlength="60"
           >
-          <p class="vibe-hint">A short message others will see \u2014 what are you about right now?</p>
+          <p class="vibe-hint">A short message others will see — what are you about right now?</p>
         </div>
 
         <div class="confirmation-preview">
-          <div class="preview-label">How you\u2019ll appear</div>
+          <div class="preview-label">How you’ll appear</div>
           <div class="preview-card">
             <div class="preview-avatar" id="previewAvatar">${selectedAvatar}</div>
             <div class="preview-info">
@@ -82,9 +246,8 @@ function showConfirmationCard(container) {
       </div>
 
       <div class="interview-nav">
-        <button class="interview-nav-btn back" id="confBack">\u2190 Back</button>
         <div class="interview-nav-spacer"></div>
-        <button class="interview-nav-btn next" id="confDone">Find my people \u2192</button>
+        <button class="interview-nav-btn next" id="confDone">Find my people →</button>
       </div>
     </div>
   `;
@@ -106,37 +269,22 @@ function showConfirmationCard(container) {
     document.getElementById('previewVibe').textContent = vibeMessage || 'Set your vibe above';
   });
 
-  // Back — return to interview (last question)
-  document.getElementById('confBack').addEventListener('click', () => {
-    renderOnboarding(); // restart (could be smarter, but simple for now)
-  });
-
   const doneBtn = document.getElementById('confDone');
   doneBtn.addEventListener('click', async () => {
     doneBtn.disabled = true;
     doneBtn.textContent = 'Saving…';
-    try {
-      await commands.createProfile({
-        name: userName,
-        avatar: selectedAvatar,
-        vibeMessage: vibeMessage || '',
-        interviewResponses,
-      });
-      navigate('locality');
-    } catch (err) {
+    const ok = await handleOnboardingDone({
+      name: userName,
+      avatar: selectedAvatar,
+      vibeMessage: vibeMessage || '',
+      transcript,
+      commands,
+      navigate,
+      showToast,
+    });
+    if (!ok) {
       doneBtn.disabled = false;
       doneBtn.textContent = 'Find my people →';
-      if (err.status === 409) {
-        // Profile already exists in the backend. Until we have a GET /me
-        // endpoint to surface it locally, returning users can't progress
-        // past this screen — sign out and back in is the only path.
-        showToast('You already have a profile on this account.');
-      } else if (err.status === 404) {
-        showToast('Account not registered yet — please sign in again.');
-        navigate('signin');
-      } else {
-        showToast(err.message || 'Could not save your profile.');
-      }
     }
   });
 }
