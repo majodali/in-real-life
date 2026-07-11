@@ -76,7 +76,7 @@ test('returns 200 { status: deleted }', async () => {
 
 test('emits UserDeleted with seq = currentSeq + 1, data = { userId }', async () => {
   await handler(makeEvent({ claims: validClaims, body: validBody }));
-  assert.equal(runner.runCommand.calls.length, 1);
+  assert.equal(runner.runCommand.calls.length, 2); // UserDeleted, then UserKeyShredded
   const [args] = runner.runCommand.calls[0];
   assert.equal(args.commandId, 'cmd-1');
   assert.equal(args.aggregateId, 'user#abc');
@@ -86,6 +86,19 @@ test('emits UserDeleted with seq = currentSeq + 1, data = { userId }', async () 
   assert.equal(e.eventType, 'UserDeleted');
   assert.equal(e.version, 1);
   assert.equal(e.seq, 4); // currentSeq (3) + 1
+  assert.deepEqual(e.data, { userId: 'abc' });
+});
+
+test('emits the UserKeyShredded audit event after the key deletion (D42)', async () => {
+  await handler(makeEvent({ claims: validClaims, body: validBody }));
+  const [args] = runner.runCommand.calls[1];
+  assert.equal(args.commandId, 'cmd-1#shred');
+  assert.equal(args.aggregateId, 'user#abc');
+  assert.equal(args.actorId, 'system');
+  const e = args.events[0];
+  assert.equal(e.eventType, 'UserKeyShredded');
+  assert.equal(e.version, 1);
+  assert.equal(e.seq, 5); // currentSeq (3) + 2 — UserDeleted took + 1
   assert.deepEqual(e.data, { userId: 'abc' });
 });
 
@@ -104,7 +117,7 @@ test('calls Cognito AdminDeleteUser with the pool id and the user\'s email', asy
   assert.equal(cmd.input.Username, 'a@b.c');
 });
 
-test('orders steps: event+row delete → key shred → Cognito', async () => {
+test('orders steps: event+row delete → key shred → shred audit event → Cognito', async () => {
   const order = [];
   runner.runCommand = spy(async () => { order.push('runner'); return runCommandResult; });
   keyStore.deleteKey = spy(async () => { order.push('key'); });
@@ -114,7 +127,7 @@ test('orders steps: event+row delete → key shred → Cognito', async () => {
   });
 
   await handler(makeEvent({ claims: validClaims, body: validBody }));
-  assert.deepEqual(order, ['runner', 'key', 'cognito']);
+  assert.deepEqual(order, ['runner', 'key', 'runner', 'cognito']);
 });
 
 // ─── No-row convergence (already-deleted retry with a new commandId) ───

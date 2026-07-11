@@ -22,9 +22,11 @@ export function projectUserRegistered(event, tables) {
   };
 }
 
-// UserProfileCreated updates the existing user state row with profile data.
-// Condition: row's seq matches the previous event's seq, AND no name is
-// already set (rejects duplicate profile creation).
+// UserProfileCreated updates the existing user state row with profile
+// basics only — name, avatar, vibe (D42). Interview content never rides on
+// this event; OnboardingCompleted is its sole carrier. Condition: row's seq
+// matches the previous event's seq, AND no name is already set (rejects
+// duplicate profile creation).
 export function projectUserProfileCreated(event, tables) {
   return {
     Update: {
@@ -32,7 +34,7 @@ export function projectUserProfileCreated(event, tables) {
       Key: { userId: event.data.userId },
       UpdateExpression:
         'SET #name = :name, avatar = :avatar, vibeMessage = :vibeMessage, '
-        + 'interviewResponses = :interviewResponses, #seq = :seq, updatedAt = :updatedAt',
+        + '#seq = :seq, updatedAt = :updatedAt',
       ConditionExpression: '#seq = :expectedSeq AND attribute_not_exists(#name)',
       ExpressionAttributeNames: {
         '#name': 'name',
@@ -42,7 +44,6 @@ export function projectUserProfileCreated(event, tables) {
         ':name': event.data.name,
         ':avatar': event.data.avatar,
         ':vibeMessage': event.data.vibeMessage,
-        ':interviewResponses': event.data.interviewResponses,
         ':seq': event.seq,
         ':expectedSeq': event.seq - 1,
         ':updatedAt': event.wallTime,
@@ -51,11 +52,33 @@ export function projectUserProfileCreated(event, tables) {
   };
 }
 
+// OnboardingCompleted marks completion on the state row and nothing more —
+// the transcript and Layer-2 extraction stay on the (crypto-shredded) event
+// log as the sole interview carrier (D42); the async user-model projector
+// consumes them from Streams (docs/projection-store.md). Condition rejects
+// a second completion via attribute_not_exists(onboardingCompletedAt).
+export function projectOnboardingCompleted(event, tables) {
+  return {
+    Update: {
+      TableName: tables.usersTable,
+      Key: { userId: event.data.userId },
+      UpdateExpression: 'SET onboardingCompletedAt = :at, #seq = :seq',
+      ConditionExpression: '#seq = :expectedSeq AND attribute_not_exists(onboardingCompletedAt)',
+      ExpressionAttributeNames: { '#seq': 'seq' },
+      ExpressionAttributeValues: {
+        ':at': event.wallTime,
+        ':seq': event.seq,
+        ':expectedSeq': event.seq - 1,
+      },
+    },
+  };
+}
+
 // UserProfileUpdated overwrites the profile fields (name, avatar, vibeMessage)
 // after initial creation. Condition: existing seq matches the previous event's
 // seq AND a name is already present (rejects an update before profile creation).
-// interviewResponses is intentionally untouched here — those evolve via a
-// separate event type.
+// Interview content is never touched here — it lives on OnboardingCompleted
+// (D42) and never reaches the state row.
 export function projectUserProfileUpdated(event, tables) {
   return {
     Update: {
@@ -163,4 +186,11 @@ export function projectUserDeleted(event, tables) {
       Key: { userId: event.data.userId },
     },
   };
+}
+
+// UserKeyShredded is the audit record of the crypto-shred (D42): log-only,
+// no PII, no state effect — the user row is already gone by the time the
+// handler emits it after destroying the per-aggregate key.
+export function projectUserKeyShredded() {
+  return null;
 }

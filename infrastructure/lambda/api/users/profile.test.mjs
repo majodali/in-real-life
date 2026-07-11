@@ -70,7 +70,7 @@ test('passes the right command shape to the runner', async () => {
   assert.equal(e.data.name, 'Matthew');
   assert.equal(e.data.avatar, '\u{1F33F}');
   assert.equal(e.data.vibeMessage, 'Always up for a walk');
-  assert.deepEqual(e.data.interviewResponses, validBody.interviewResponses);
+  assert.equal(e.data.interviewResponses, undefined); // basics only (D42)
 });
 
 test('seq is currentSeq + 1, sourced from the users state row', async () => {
@@ -85,7 +85,7 @@ test('seq is currentSeq + 1, sourced from the users state row', async () => {
 
 // ─── Defaults ───
 
-test('defaults avatar, vibeMessage, and interviewResponses if not provided', async () => {
+test('defaults avatar and vibeMessage if not provided', async () => {
   await handler(makeEvent({
     claims: validClaims,
     body: { commandId: 'cmd-1', name: 'Matthew' },
@@ -94,7 +94,6 @@ test('defaults avatar, vibeMessage, and interviewResponses if not provided', asy
   const { data } = args.events[0];
   assert.ok(typeof data.avatar === 'string' && data.avatar.length > 0, 'avatar should default to a non-empty string');
   assert.equal(data.vibeMessage, '');
-  assert.deepEqual(data.interviewResponses, []);
 });
 
 // ─── Idempotent retry ───

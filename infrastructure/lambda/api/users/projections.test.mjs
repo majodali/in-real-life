@@ -13,6 +13,8 @@ import {
   projectLocalityVerified,
   projectUserActivated,
   projectUserDeleted,
+  projectOnboardingCompleted,
+  projectUserKeyShredded,
 } from './projections.mjs';
 
 const sampleEvent = {
@@ -82,14 +84,14 @@ test('projectUserProfileCreated: keys by userId', () => {
   assert.deepEqual(write.Update.Key, { userId: 'abc' });
 });
 
-test('projectUserProfileCreated: SET sets name, avatar, vibeMessage, interviewResponses, seq, updatedAt', () => {
+test('projectUserProfileCreated: SET sets name, avatar, vibeMessage, seq, updatedAt — basics only (D42)', () => {
   const write = projectUserProfileCreated(profileEvent, { usersTable: 't' });
   const ue = write.Update.UpdateExpression;
   assert.match(ue, /^SET/);
   assert.match(ue, /#name/);   // name is reserved → placeholder
   assert.match(ue, /avatar/);
   assert.match(ue, /vibeMessage/);
-  assert.match(ue, /interviewResponses/);
+  assert.doesNotMatch(ue, /interviewResponses/); // interview content never rides here
   assert.match(ue, /#seq/);    // seq treated as reserved (placeholder)
   assert.match(ue, /updatedAt/);
 
@@ -97,7 +99,6 @@ test('projectUserProfileCreated: SET sets name, avatar, vibeMessage, interviewRe
   assert.equal(v[':name'], 'Matthew');
   assert.equal(v[':avatar'], '\u{1F33F}');
   assert.equal(v[':vibeMessage'], 'Always up for a walk');
-  assert.deepEqual(v[':interviewResponses'], profileEvent.data.interviewResponses);
   assert.equal(v[':seq'], 2);
   assert.equal(v[':updatedAt'], '2026-05-08T10:00:00.000Z');
 
@@ -290,4 +291,41 @@ test('projectUserDeleted: returns an unconditional Delete on the users row', () 
   assert.deepEqual(write.Delete.Key, { userId: 'abc' });
   // No ConditionExpression — deletion is idempotent / converging.
   assert.equal(write.Delete.ConditionExpression, undefined);
+});
+
+const onboardingEvent = {
+  eventType: 'OnboardingCompleted',
+  version: 1,
+  seq: 3,
+  wallTime: '2026-05-19T12:00:00.000Z',
+  data: {
+    userId: 'abc',
+    transcript: [{ role: 'member', text: 'hello' }],
+    extraction: { provisional: true },
+  },
+};
+
+test('projectOnboardingCompleted: marks completion only — no transcript or extraction on the state row (D42)', () => {
+  const write = projectOnboardingCompleted(onboardingEvent, { usersTable: 't' });
+  const ue = write.Update.UpdateExpression;
+  assert.match(ue, /onboardingCompletedAt/);
+  assert.match(ue, /#seq/);
+  assert.doesNotMatch(ue, /transcript/);
+  assert.doesNotMatch(ue, /extraction/);
+  assert.deepEqual(write.Update.Key, { userId: 'abc' });
+
+  const v = write.Update.ExpressionAttributeValues;
+  assert.equal(v[':at'], onboardingEvent.wallTime);
+  assert.equal(v[':seq'], 3);
+  assert.equal(v[':expectedSeq'], 2);
+});
+
+test('projectOnboardingCompleted: condition rejects a second completion', () => {
+  const write = projectOnboardingCompleted(onboardingEvent, { usersTable: 't' });
+  assert.match(write.Update.ConditionExpression, /attribute_not_exists\(onboardingCompletedAt\)/);
+  assert.match(write.Update.ConditionExpression, /#seq = :expectedSeq/);
+});
+
+test('projectUserKeyShredded: log-only — no state write', () => {
+  assert.equal(projectUserKeyShredded(), null);
 });

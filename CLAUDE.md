@@ -160,9 +160,9 @@ Architectural decisions that affect everything downstream. Each warrants a short
 - [x] Event sourcing + CQRS core — command runner, immutable log, idempotency, transactional synchronous projections, replay-verified (`docs/event-sourcing.md`)
 - [x] Workshop-mode runtime — mode flag, simulated time, admin gate (`docs/workshop-mode.md`)
 - [ ] End-to-end tracing depth — X-Ray subsegments, `traceId` on event records, structured per-command log line, HTTP API stage tracing (Lambda `Tracing.ACTIVE` is on; the rest of the `event-sourcing.md` observability slice is not)
-- [ ] **LLM seam (D37)** — the injected Claude provider (real in production, deterministic stub in workshop/test). The Group-0 blocker for every AI flow; only the Secrets Manager secret exists today
+- [x] **LLM seam (D37)** — `lambda/api/lib/llm.mjs`: injected provider (`llm.complete({task, system, messages, schema})`), real Claude API in production (structured outputs, key from Secrets Manager), deterministic canned stub in workshop/test; first consumer is the onboarding extraction call
 - [ ] Async Streams projector + `irl-user-model` store (`docs/projection-store.md`, D36) — Streams are enabled on `irl-events-log` but nothing consumes them; the entire derived user-model/rating read-side is unbuilt
-- [ ] Event-vocabulary reconciliation with D42 — code folds `interviewResponses` into `UserProfileCreated` (docs: `OnboardingCompleted` is the sole interview carrier, and it doesn't exist yet); deletion emits `UserDeleted` with no `UserKeyShredded` audit event; `events-by-time-bucket` GSI exists but no `bucket` attribute is written
+- [x] Event-vocabulary reconciliation with D42 — `UserProfileCreated` is basics-only; `OnboardingCompleted` (via `POST /me/onboarding`) is the sole interview carrier (transcript + Layer-2 extraction, crypto-shredded); deletion appends a `UserKeyShredded` audit event after the physical key destruction; every event record now writes the `bucket` attribute for the `events-by-time-bucket` GSI
 
 ### Group 1 — Identity, profile, first contact
 
@@ -175,7 +175,7 @@ Everything needed for a real adult to land on the site, learn what IRL is, agree
 - [ ] Profile data model — richer than today's name/avatar/vibe; includes interview responses, attributes, preferences
 - [ ] Profile view + edit (extend current screen)
 - [ ] Optional user attributes — entered if user considers them valuable for matching
-- [ ] Real Claude API for onboarding interview (replaces scripted flow) — blocked on the LLM seam (Group 0)
+- [ ] Real Claude API for onboarding interview (replaces scripted flow) — unblocked: the seam and the closing extraction call (`POST /me/onboarding` → `OnboardingCompleted`) exist; still to build: the per-turn interviewer loop (`POST /me/interview/turn`, `docs/onboarding-interview.md`)
 - [x] Account deletion / data export (export decrypts the event log; delete shreds the per-user key)
 
 ### Group 2 — Core event experience

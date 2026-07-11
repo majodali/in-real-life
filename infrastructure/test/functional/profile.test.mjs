@@ -54,9 +54,6 @@ const sampleProfile = (overrides = {}) => ({
   name: 'Matthew',
   avatar: '\u{1F33F}',
   vibeMessage: 'Always up for a walk',
-  interviewResponses: [
-    { questionId: 'name', questionText: 'What should we call you?', response: 'Matthew', timestamp: '2026-05-08T09:55:00.000Z' },
-  ],
   ...overrides,
 });
 
@@ -93,7 +90,8 @@ test('POST /me/profile: writes UserProfileCreated event (seq=2) and updates the 
   assert.equal(clear.data.name, body.name);
   assert.equal(clear.data.avatar, body.avatar);
   assert.equal(clear.data.vibeMessage, body.vibeMessage);
-  assert.deepEqual(clear.data.interviewResponses, body.interviewResponses);
+  // Basics only (D42) — interview content never rides on UserProfileCreated.
+  assert.equal(clear.data.interviewResponses, undefined);
 
   // State row: profile fields applied, seq bumped to 2.
   const userRow = await ddb.send(new GetCommand({
@@ -105,7 +103,7 @@ test('POST /me/profile: writes UserProfileCreated event (seq=2) and updates the 
   assert.equal(userRow.Item.name, body.name);
   assert.equal(userRow.Item.avatar, body.avatar);
   assert.equal(userRow.Item.vibeMessage, body.vibeMessage);
-  assert.deepEqual(userRow.Item.interviewResponses, body.interviewResponses);
+  assert.equal(userRow.Item.interviewResponses, undefined);
   assert.equal(userRow.Item.seq, 2);
   // Original UserRegistered fields still present
   assert.equal(userRow.Item.email, user.email);

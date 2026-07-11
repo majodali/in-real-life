@@ -80,7 +80,6 @@ test('GET /me: returns profile fields after /me/profile', async () => {
     name: 'Matthew',
     avatar: '\u{1F33F}',
     vibeMessage: 'walks',
-    interviewResponses: [{ questionId: 'name', response: 'Matthew' }],
   };
   const prof = await fetch(`${config.apiUrl}/me/profile`, {
     method: 'POST', headers,
@@ -96,7 +95,7 @@ test('GET /me: returns profile fields after /me/profile', async () => {
   assert.equal(body.name, 'Matthew');
   assert.equal(body.avatar, '\u{1F33F}');
   assert.equal(body.vibeMessage, 'walks');
-  assert.deepEqual(body.interviewResponses, profileBody.interviewResponses);
+  assert.equal(body.interviewResponses, undefined); // basics only (D42)
   assert.equal(body.localityVerified, false);
   assert.equal(body.activated, false);
 });

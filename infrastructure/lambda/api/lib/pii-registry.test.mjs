@@ -13,11 +13,22 @@ test('UserRegistered shreds email only', () => {
   assert.deepEqual(piiFieldsFor('UserRegistered'), ['email']);
 });
 
-test('UserProfileCreated shreds name, avatar, vibeMessage, interviewResponses', () => {
+test('UserProfileCreated shreds name, avatar, vibeMessage — basics only (D42)', () => {
   assert.deepEqual(
     piiFieldsFor('UserProfileCreated').sort(),
-    ['avatar', 'interviewResponses', 'name', 'vibeMessage'],
+    ['avatar', 'name', 'vibeMessage'],
   );
+});
+
+test('OnboardingCompleted shreds transcript and extraction — the interview carrier (D42)', () => {
+  assert.deepEqual(
+    piiFieldsFor('OnboardingCompleted').sort(),
+    ['extraction', 'transcript'],
+  );
+});
+
+test('UserKeyShredded carries no PII — its key no longer exists', () => {
+  assert.deepEqual(piiFieldsFor('UserKeyShredded'), []);
 });
 
 test('UserProfileUpdated shreds name, avatar, vibeMessage', () => {

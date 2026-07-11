@@ -40,7 +40,7 @@ beforeEach(() => {
       name: 'Matthew',
       avatar: '\u{1F33F}',
       vibeMessage: 'walks',
-      interviewResponses: [{ questionId: 'name', response: 'Matthew' }],
+      onboardingCompletedAt: '2026-05-09T10:04:00.000Z',
       updatedAt: '2026-05-09T10:05:00.000Z',
     },
   };
@@ -60,6 +60,8 @@ test('returns 200 with the public state fields when the user exists', async () =
   assert.equal(body.name, 'Matthew');
   assert.equal(body.avatar, '\u{1F33F}');
   assert.equal(body.vibeMessage, 'walks');
+  assert.equal(body.onboardingCompletedAt, '2026-05-09T10:04:00.000Z');
+  assert.equal(body.interviewResponses, undefined); // basics only (D42)
 });
 
 test('queries the users table by the JWT sub claim', async () => {

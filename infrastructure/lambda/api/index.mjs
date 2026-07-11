@@ -12,12 +12,14 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 import { CognitoIdentityProviderClient } from '@aws-sdk/client-cognito-identity-provider';
+import { SecretsManagerClient, GetSecretValueCommand } from '@aws-sdk/client-secrets-manager';
 import { createRouter } from './lib/router.mjs';
 import { createCommandRunner } from './lib/command.mjs';
 import { createProjector } from './lib/projection.mjs';
 import { createWorkshopOffsetLoader } from './lib/workshop-time.mjs';
 import { createKeyStore } from './lib/key-store.mjs';
 import { piiFieldsFor } from './lib/pii-registry.mjs';
+import { createRealLlmProvider, createStubLlmProvider } from './lib/llm.mjs';
 import {
   projectUserRegistered,
   projectUserProfileCreated,
@@ -26,7 +28,10 @@ import {
   projectLocalityVerified,
   projectUserActivated,
   projectUserDeleted,
+  projectOnboardingCompleted,
+  projectUserKeyShredded,
 } from './users/projections.mjs';
+import { createOnboardingHandler } from './users/onboarding.mjs';
 import { createRegisterHandler } from './users/register.mjs';
 import { createProfileHandler } from './users/profile.mjs';
 import { createUpdateProfileHandler } from './users/profile-update.mjs';
@@ -127,6 +132,26 @@ const keyStore = createKeyStore({
   keysTable: process.env.USER_KEYS_TABLE,
 });
 
+// LLM seam (D37): real Claude provider in production, deterministic stub in
+// workshop/test. The API key lives in Secrets Manager; fetched lazily on the
+// first production call and cached for the Lambda's lifetime.
+const llm = isWorkshop
+  ? createStubLlmProvider()
+  : createRealLlmProvider({
+    getApiKey: async () => {
+      const sm = new SecretsManagerClient({});
+      const out = await sm.send(new GetSecretValueCommand({
+        SecretId: process.env.CLAUDE_API_KEY_SECRET_ARN,
+      }));
+      const secret = out.SecretString ?? '';
+      try {
+        const parsed = JSON.parse(secret);
+        if (parsed && typeof parsed === 'object' && parsed.apiKey) return parsed.apiKey;
+      } catch { /* raw string secret */ }
+      return secret;
+    },
+  });
+
 const projector = createProjector({
   registry: {
     UserRegistered: projectUserRegistered,
@@ -136,6 +161,8 @@ const projector = createProjector({
     LocalityVerified: projectLocalityVerified,
     UserActivated: projectUserActivated,
     UserDeleted: projectUserDeleted,
+    OnboardingCompleted: projectOnboardingCompleted,
+    UserKeyShredded: projectUserKeyShredded,
     LocationNotifyRequested: projectLocationNotifyRequested,
     WorkshopTimeAdvanced: projectWorkshopTimeAdvanced,
     EventProposed: projectEventProposed,
@@ -193,6 +220,9 @@ const deleteHandler = createDeleteHandler({
   keyStore,
   cognito,
   userPoolId: process.env.COGNITO_USER_POOL_ID,
+});
+const onboardingHandler = createOnboardingHandler({
+  runner, client, usersTable: tables.usersTable, llm,
 });
 const getTimeHandler = createGetTimeHandler({ getOffset: getWorkshopOffset });
 const advanceTimeHandler = createAdvanceTimeHandler({ runner, getOffset: getWorkshopOffset });
@@ -318,6 +348,7 @@ router.add('GET', '/me/export', exportHandler);
 router.add('DELETE', '/me', deleteHandler);
 router.add('POST', '/me/register', registerHandler);
 router.add('POST', '/me/profile', profileHandler);
+router.add('POST', '/me/onboarding', onboardingHandler);
 router.add('PUT', '/me/profile', updateProfileHandler);
 router.add('POST', '/me/locality', localityHandler);
 router.add('GET', '/locality/check', localityCheckHandler);

@@ -46,7 +46,6 @@ beforeEach(async () => {
     body: JSON.stringify({
       commandId: randomUUID(),
       name: 'Matthew', avatar: '\u{1F33F}', vibeMessage: 'walks',
-      interviewResponses: [{ q: 'name' }],
     }),
   });
   assert.equal(prof.status, 201);
