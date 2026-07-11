@@ -205,6 +205,34 @@ Re-run of all twelve scenarios against the design with the triage fixes and D46�
 | F13 | D47's co-attendance confirmation exploitable by a one-sided follower; do-not-interact vs. affinity-boost conflict unspecified | **fixed** — confirmation guard: do-not-interact zeroes the pair nudge; one-sided engagement caps gain (`matching.md`, D47, H4) |
 | F14 | D51's aggregate demand surfacing can de-anonymise members in a small community | **fixed** — minimum-cohort threshold before surfacing (`organizer-engagement.md`, D51, H7) |
 
+---
+
+# Third pass — 2026-07-10, after D52 (the protective-block mechanism)
+
+### 16 · Probing the block mechanism (`protective-blocks.md`)
+
+**Setup.** Sana blocks Marco. Separately, Vera — acting in bad faith — blocks Tom purely to keep tabs on him.
+
+**Leak check: rendered-world consistency.** Marco's IRL shows no Sana anywhere — lists, people steps, search — with counts adjusted to match, so there is no per-event hole to read; her absence is indistinguishable from her having left IRL. His own feed is unconditionally unaltered, so no negative-space differential encodes her plans. *Residual:* at an event of three, an adjusted count plus heads in the room does the math — accepted and disclosed at capture, not pretended away.
+
+**Leak check: the false victim.** Vera gains nothing she didn't have: awareness mode is exactly ordinary member browsing (attendee lists were always visible), there are no proactive flags or aggregated views in v1, and the active-placement filter only *removes* co-suggestions — it reveals nothing an open attendee list wouldn't. Block ≠ accusation means Tom's rating and standing are untouched, so the block can't be used to harm him either. The weaponization surface is bounded to ≈ zero by construction; naming-rate outliers go to human review that starts from care.
+
+**Leak check: inferring the block exists.** Marco might notice Sana "vanished." Software's ceiling is indistinguishable-from-leaving; a shared crew's real-world chatter can still leak — accepted and stated in the note's limits section.
+
+**Edge: the blocked organiser.** Sana RSVPs to an event Marco organises: her flow tells her privately, and confirming puts her on that one event's roster — informed choice, scoped to the event, because an organiser can't run an event with a ghost attendee and physical presence reveals everything anyway.
+
+**Verdict: holds.** No new findings; two residuals (tiny-event arithmetic, social leakage) accepted and disclosed rather than papered over. The open questions are deliberately parked for advocate validation before build.
+
+### Pass-3 addendum — owner review of the block mechanism (F15–F17)
+
+Product-owner review of `protective-blocks.md` surfaced three findings; all resolved in the same pass:
+
+| # | Finding | Outcome |
+|---|---|---|
+| F15 | **Displacement / area denial**: the blocked can guess (from real-world knowledge) which events the blocker will attend and commit to fence her out — commit-order gives him de facto priority because she is always the one who must move | **fixed** — yielding is free (reliability auto-quarantined), the **itinerary alert** forewarns her (the one narrow v1 notification, scoped to her own confirmed events), and displacement/proximity patterns route to human safety review in both directions |
+| F16 | **The people-step tell**: after physical co-presence, the blocker's absence from the blocked's surfaces reveals the block exists | **resolved as a stated limit** — the fiction cannot survive co-presence under *any* variant (post-hoc roster "correction" leaks more: it hands him her name and the count discrepancy still betrays the hiding). Consistent absence chosen; bounded to revealing the block's *existence*, never plans; disclosed at capture; discovery-escalation added to the advocate agenda |
+| F17 | **Env-crossing exception unnecessary**: migration is workshop→production onboarding only, and workshop blocks are demonstrated on fictional members | **simplified** — blocks are environment-local, D42 stays unqualified; capture reachable at first production login; tripwire recorded to revisit if migration semantics ever widen |
+
 ## What this note is and isn't
 
-These walkthroughs test the design *as written* against its own scenario specification. After two passes, **all twelve original scenarios read `holds`**; the deliberately open items are the protective-block mechanism (open-risks #23) and the tuning/validation burden carried by hypotheses H1–H7. The scenario set remains living — new mechanisms get walked through adversarially when they land (passes 13–15 exist because D47–D51 did), and everything gets re-run when caps, floors, and the welcomer parameters take real values.
+These walkthroughs test the design *as written* against its own scenario specification. After three passes, **all scenarios read `holds`** and the open-risks register is fully closed; what remains is the tuning/validation burden carried by hypotheses H1–H7 and the advocate validation of `protective-blocks.md` before it's built. The scenario set remains living — new mechanisms get walked through adversarially when they land (passes 13–16 exist because D47–D52 did), and everything gets re-run when caps, floors, and the welcomer parameters take real values.
