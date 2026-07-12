@@ -124,6 +124,9 @@ function renderCard(event) {
   const conflictBadge = event.conflictsWith?.length
     ? `<span class="card-mylevel mylevel-conflict">⚠ Overlaps another plan</span>`
     : '';
+  const fullBadge = event.full && event.myLevel !== 'confirmed'
+    ? `<span class="card-mylevel mylevel-full">Full — interest only</span>`
+    : '';
   const cancelledOnMe = effective === 'cancelled' && event.myLevel
     ? `<span class="card-mylevel mylevel-cancelled-on-me">✕ Cancelled — you were in</span>`
     : '';
@@ -139,8 +142,8 @@ function renderCard(event) {
         <span>\u{1F4C5} ${escapeHtml(when)}</span>
         <span>\u{1F4CD} ${escapeHtml(event.location ?? 'Place TBD')}</span>
       </div>
-      <div class="card-organizer">by ${escapeHtml(event.organizerName)}</div>
-      ${myLevelBadge}${conflictBadge}${cancelledOnMe}
+      <div class="card-organizer">${event.source === 'external' ? 'listed by' : 'by'} ${escapeHtml(event.organizerName)}</div>
+      ${myLevelBadge}${conflictBadge}${fullBadge}${cancelledOnMe}
     </div>
   `;
 

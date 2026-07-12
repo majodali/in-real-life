@@ -9,6 +9,7 @@
 import { GetCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
 import { computeEffectiveState, simulatedNowIso, CHANGE_OPEN_STATES } from '../lib/lifecycle-state.mjs';
 import { eventsOverlap } from './overlap.mjs';
+import { isFull } from './event-fields.mjs';
 
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
 const VALID_LEVELS = new Set(['interested', 'confirmed']);
@@ -122,6 +123,16 @@ export function createSetInteractionHandler({
     // up — which also keeps auto-plan from firing on an idea.
     if (level === 'confirmed' && effective === 'idea') {
       return reply(409, { error: 'still an idea — register interest until a time and place are set' });
+    }
+    // Capacity (matching.md hard constraint). Interest stays open on a
+    // full event — it's the demand signal for a bigger room or a repeat.
+    // Pre-check only: a concurrent-confirm race can overshoot by one at
+    // community scale, which is benign; hard enforcement belongs with
+    // waitlists if they ever land.
+    // …and informational-only for external events (D53): the venue's
+    // limits aren't IRL's to enforce.
+    if (level === 'confirmed' && eventRow.source !== 'external' && isFull(eventRow)) {
+      return reply(409, { error: 'event is full — you can still register interest' });
     }
 
     const userId = claims.sub;

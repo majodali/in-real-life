@@ -211,11 +211,14 @@ test('source defaults to "community" when omitted', async () => {
 });
 
 test('accepts source=external and source=platform', async () => {
-  for (const source of ['external', 'platform']) {
-    runner.runCommand.calls.length = 0;
-    await handler(makeEvent({ claims: validClaims, body: { ...validBody, source } }));
-    assert.equal(runner.runCommand.calls[0][0].events[0].data.source, source);
-  }
+  // External events reject threshold fields (D53), so drop minimumAttendance.
+  const { minimumAttendance, ...externalBody } = validBody;
+  await handler(makeEvent({ claims: validClaims, body: { ...externalBody, source: 'external' } }));
+  assert.equal(runner.runCommand.calls[0][0].events[0].data.source, 'external');
+
+  runner.runCommand.calls.length = 0;
+  await handler(makeEvent({ claims: validClaims, body: { ...validBody, source: 'platform' } }));
+  assert.equal(runner.runCommand.calls[0][0].events[0].data.source, 'platform');
 });
 
 test('description is optional (omitted from data when absent)', async () => {
@@ -281,4 +284,93 @@ test('organizerName defaults to email-prefix when omitted', async () => {
   await handler(makeEvent({ claims: validClaims, body }));
   const d = runner.runCommand.calls[0][0].events[0].data;
   assert.equal(d.organizerName, 'a');
+});
+
+// ─── Richer event data: cost disclosure (D34) + capacity ───
+
+test('cost and maxAttendance ride into EventProposed when valid', async () => {
+  const response = await handler(makeEvent({
+    claims: validClaims,
+    body: { ...validBody, cost: { amount: 12, covers: 'materials' }, maxAttendance: 8 },
+  }));
+  assert.equal(response.statusCode, 201);
+  const data = runner.runCommand.calls[0][0].events[0].data;
+  assert.deepEqual(data.cost, { amount: 12, covers: 'materials' });
+  assert.equal(data.maxAttendance, 8);
+});
+
+test('cost without covers is 400 — disclosure required (D34)', async () => {
+  const response = await handler(makeEvent({
+    claims: validClaims,
+    body: { ...validBody, cost: { amount: 12 } },
+  }));
+  assert.equal(response.statusCode, 400);
+  assert.match(JSON.parse(response.body).error, /covers/);
+});
+
+test('maxAttendance below minimumAttendance is 400', async () => {
+  const response = await handler(makeEvent({
+    claims: validClaims,
+    body: { ...validBody, minimumAttendance: 6, maxAttendance: 5 },
+  }));
+  assert.equal(response.statusCode, 400);
+  assert.match(JSON.parse(response.body).error, /maxAttendance/);
+});
+
+test('omitted cost/maxAttendance leave the event data clean', async () => {
+  await handler(makeEvent({ claims: validClaims, body: validBody }));
+  const data = runner.runCommand.calls[0][0].events[0].data;
+  assert.equal('cost' in data, false);
+  assert.equal('maxAttendance' in data, false);
+});
+
+// ─── External events (D53) + meeting spot (D54) ───
+
+const externalBody = () => {
+  const { minimumAttendance, ...rest } = validBody;
+  return { ...rest, source: 'external' };
+};
+
+test('external events require the full time/place trio', async () => {
+  for (const missing of ['startTime', 'endTime', 'location']) {
+    const body = externalBody();
+    delete body[missing];
+    const response = await handler(makeEvent({ claims: validClaims, body }));
+    assert.equal(response.statusCode, 400, `missing ${missing}`);
+    assert.match(JSON.parse(response.body).error, /external events need/);
+  }
+});
+
+test('external events reject threshold fields — the event happens regardless', async () => {
+  for (const extra of [{ minimumAttendance: 4 }, { autoPlanOnThreshold: true }]) {
+    const response = await handler(makeEvent({
+      claims: validClaims, body: { ...externalBody(), ...extra },
+    }));
+    assert.equal(response.statusCode, 400);
+    assert.match(JSON.parse(response.body).error, /do not apply to external/);
+  }
+});
+
+test('external event data omits threshold fields entirely', async () => {
+  await handler(makeEvent({ claims: validClaims, body: externalBody() }));
+  const data = runner.runCommand.calls[0][0].events[0].data;
+  assert.equal('minimumAttendance' in data, false);
+  assert.equal('autoPlanOnThreshold' in data, false);
+});
+
+test('meetingSpot is trimmed, bounded, and carried for any source', async () => {
+  await handler(makeEvent({
+    claims: validClaims,
+    body: { ...validBody, meetingSpot: '  back tables, blue scarf  ' },
+  }));
+  assert.equal(
+    runner.runCommand.calls[0][0].events[0].data.meetingSpot,
+    'back tables, blue scarf',
+  );
+
+  runner.runCommand.calls.length = 0;
+  await handler(makeEvent({
+    claims: validClaims, body: { ...validBody, meetingSpot: '   ' },
+  }));
+  assert.equal('meetingSpot' in runner.runCommand.calls[0][0].events[0].data, false);
 });

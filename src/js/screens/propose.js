@@ -74,6 +74,44 @@ export function renderPropose() {
         </div>
 
         <div class="profile-field">
+          <label class="profile-field-label" for="proposeMeetingSpot">How to find the group (optional)</label>
+          <input class="profile-field-input" id="proposeMeetingSpot" type="text" maxlength="200"
+                 placeholder="e.g. back tables — look for the blue scarf">
+        </div>
+
+        <label class="organizer-toggle">
+          <input type="checkbox" id="proposeExternal">
+          <span>This is an existing local event (not organized on IRL)</span>
+        </label>
+        <small class="profile-field-hint" style="display:block; margin-bottom:14px;">
+          You'll be its steward — shown as "listed by" you. It goes up as
+          already happening (real time and place required), and confirming
+          means members commit to meeting each other there.
+        </small>
+
+        <div class="profile-field">
+          <label class="profile-field-label" for="proposeCostAmount">Cost per person (optional)</label>
+          <input class="profile-field-input" id="proposeCostAmount" type="number"
+                 inputmode="decimal" min="0" step="0.5" placeholder="e.g. 12">
+        </div>
+
+        <div class="profile-field">
+          <label class="profile-field-label" for="proposeCostCovers">What does it cover?</label>
+          <input class="profile-field-input" id="proposeCostCovers" type="text" maxlength="120"
+                 placeholder="e.g. materials and the room">
+          <small class="profile-field-hint">
+            Required if there's a cost — people should know what they're
+            chipping in for. Leave both blank for free events.
+          </small>
+        </div>
+
+        <div class="profile-field">
+          <label class="profile-field-label" for="proposeMax">Spots (optional, including you)</label>
+          <input class="profile-field-input" id="proposeMax" type="number"
+                 inputmode="numeric" min="3" step="1" placeholder="e.g. 8">
+        </div>
+
+        <div class="profile-field">
           <label class="profile-field-label" for="proposeMin">Min. attendance</label>
           <input class="profile-field-input" id="proposeMin" type="number" inputmode="numeric" min="3" step="1"
                  placeholder="3">
@@ -108,6 +146,11 @@ export function renderPropose() {
         title: document.getElementById('proposeTitle').value,
         description: document.getElementById('proposeDescription').value,
         startTime: document.getElementById('proposeStart').value,
+        costAmount: document.getElementById('proposeCostAmount').value,
+        costCovers: document.getElementById('proposeCostCovers').value,
+        maxAttendance: document.getElementById('proposeMax').value,
+        meetingSpot: document.getElementById('proposeMeetingSpot').value,
+        isExternal: document.getElementById('proposeExternal').checked,
         endTime: document.getElementById('proposeEnd').value,
         location: document.getElementById('proposeLocation').value,
         organizerName: user.name,
@@ -124,6 +167,9 @@ export function renderPropose() {
           const map = {
             title: 'proposeTitle',
             startTime: 'proposeStart',
+            costAmount: 'proposeCostAmount',
+            costCovers: 'proposeCostCovers',
+            maxAttendance: 'proposeMax',
             endTime: 'proposeEnd',
             location: 'proposeLocation',
             minimumAttendance: 'proposeMin',

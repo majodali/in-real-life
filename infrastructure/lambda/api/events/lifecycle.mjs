@@ -8,6 +8,7 @@
 
 import { GetCommand } from '@aws-sdk/lib-dynamodb';
 import { computeEffectiveState, CHANGE_OPEN_STATES, simulatedNowIso } from '../lib/lifecycle-state.mjs';
+import { validateCost, validateMaxAttendance } from './event-fields.mjs';
 
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
 const REASON_MAX = 200;
@@ -147,7 +148,8 @@ export function createCancelEventHandler({ runner, client, eventsTable, getOffse
 
 // Editable fields on an event. Sparse update — only the keys the
 // organizer touches make it into EventEdited.data.fields. All optional.
-const EDITABLE_FIELDS = ['title', 'description', 'startTime', 'endTime', 'location', 'timesApproximate'];
+// cost and maxAttendance accept null to clear ("it's free now" / "no cap").
+const EDITABLE_FIELDS = ['title', 'description', 'startTime', 'endTime', 'location', 'timesApproximate', 'cost', 'maxAttendance', 'meetingSpot'];
 
 export function createEditEventHandler({ runner, client, eventsTable, getOffset }) {
   return async function handler(httpEvent) {
@@ -211,6 +213,24 @@ export function createEditEventHandler({ runner, client, eventsTable, getOffset 
     // endTime too, so a proposal never sits half-timed.
     if ('startTime' in fields && !('endTime' in fields) && !row.endTime) {
       return reply(400, { error: 'set endTime along with startTime' });
+    }
+    if ('cost' in fields && fields.cost !== null) {
+      const checked = validateCost(fields.cost);
+      if (checked.error) return reply(400, { error: checked.error });
+      fields.cost = checked.value;
+    }
+    if ('meetingSpot' in fields && fields.meetingSpot !== null) {
+      if (typeof fields.meetingSpot !== 'string') {
+        return reply(400, { error: 'meetingSpot must be a string' });
+      }
+      fields.meetingSpot = fields.meetingSpot.trim().slice(0, 200) || null;
+    }
+    if ('maxAttendance' in fields && fields.maxAttendance !== null) {
+      const checked = validateMaxAttendance(fields.maxAttendance, row.minimumAttendance ?? 3);
+      if (checked.error) return reply(400, { error: checked.error });
+      // Lowering the cap below current confirmations is allowed — nobody
+      // is evicted (interactions are never rewritten); the event just
+      // reads as full until spots free up.
     }
 
     const events = [{

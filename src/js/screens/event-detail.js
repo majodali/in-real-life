@@ -77,8 +77,26 @@ export async function renderEventDetail(eventId) {
           <span class="event-fact-label">Where</span>
           <span class="event-fact-value">${event.location ? escapeHtml(event.location) : 'To be decided'}</span>
         </div>
+        ${event.cost ? `
         <div class="event-fact">
-          <span class="event-fact-label">Organizer</span>
+          <span class="event-fact-label">Cost</span>
+          <span class="event-fact-value">$${escapeHtml(String(event.cost.amount))} — covers ${escapeHtml(event.cost.covers)}</span>
+        </div>
+        ` : ''}
+        ${event.maxAttendance ? `
+        <div class="event-fact">
+          <span class="event-fact-label">Spots</span>
+          <span class="event-fact-value">${event.maxAttendance} including the organizer${event.full ? ' — currently full' : ''}</span>
+        </div>
+        ` : ''}
+        ${event.meetingSpot ? `
+        <div class="event-fact">
+          <span class="event-fact-label">Finding the group</span>
+          <span class="event-fact-value">${escapeHtml(event.meetingSpot)}</span>
+        </div>
+        ` : ''}
+        <div class="event-fact">
+          <span class="event-fact-label">${event.source === 'external' ? 'Listed by' : 'Organizer'}</span>
           <span class="event-fact-value">${escapeHtml(event.organizerName)}</span>
         </div>
         ${event.minimumAttendance > 3 ? `
@@ -102,7 +120,7 @@ export async function renderEventDetail(eventId) {
 
       ${showInteractionButtons ? `
         <div class="event-actions" id="eventActions">
-          ${renderInteractionButtons(event.myLevel, effective)}
+          ${renderInteractionButtons(event.myLevel, effective, event.full === true)}
         </div>
       ` : ''}
 
@@ -247,7 +265,27 @@ function renderConflictNote(event, events) {
   `;
 }
 
-function renderInteractionButtons(myLevel, effective) {
+function renderInteractionButtons(myLevel, effective, full = false) {
+  // Full events keep interest open (demand signal for a bigger room or a
+  // repeat) but can't take more confirmations; existing confirmations
+  // keep their normal controls.
+  if (full && myLevel !== 'confirmed') {
+    if (myLevel === 'interested') {
+      return `
+        <div class="event-action-status">✓ You're interested</div>
+        <p class="event-action-hint">This one's full — if a spot frees up, interest is how you'll hear about it.</p>
+        <div class="event-action-row">
+          <button class="btn-outline-rust" data-action="withdraw">Not anymore</button>
+        </div>
+      `;
+    }
+    return `
+      <p class="event-action-hint">This one's full — register interest and the organizer can gauge demand for a repeat.</p>
+      <div class="event-action-row">
+        <button class="btn-secondary" data-action="interested">I'm interested</button>
+      </div>
+    `;
+  }
   // An idea has no time or place to commit to yet — interest is the
   // idea-stage currency (the backend rejects confirmation with 409).
   if (effective === 'idea') {
@@ -306,7 +344,7 @@ function renderOrganizerControls(event) {
 
   return `
     <div class="event-organizer-controls">
-      <div class="organizer-controls-label">Your event</div>
+      <div class="organizer-controls-label">${event.source === 'external' ? 'You listed this — keep it current or cancel it if it\u2019s off' : 'Your event'}</div>
       ${stored === 'proposed' && isIdea ? `
         <p class="organizer-threshold-met">Set a time and place (Edit event) before confirming it's happening — until then it floats as an idea.</p>
       ` : ''}

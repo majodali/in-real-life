@@ -89,6 +89,30 @@ export async function renderEdit(eventId) {
       </div>
 
       <div class="profile-field">
+        <label class="profile-field-label" for="editMeetingSpot">How to find the group (blank = none)</label>
+        <input class="profile-field-input" id="editMeetingSpot" type="text" maxlength="200"
+               value="${escapeAttr(event.meetingSpot ?? '')}">
+      </div>
+
+      <div class="profile-field">
+        <label class="profile-field-label" for="editCostAmount">Cost per person (blank = free)</label>
+        <input class="profile-field-input" id="editCostAmount" type="number"
+               inputmode="decimal" min="0" step="0.5" value="${escapeAttr(event.cost?.amount ?? '')}">
+      </div>
+
+      <div class="profile-field">
+        <label class="profile-field-label" for="editCostCovers">What does it cover?</label>
+        <input class="profile-field-input" id="editCostCovers" type="text" maxlength="120"
+               value="${escapeAttr(event.cost?.covers ?? '')}">
+      </div>
+
+      <div class="profile-field">
+        <label class="profile-field-label" for="editMax">Spots (blank = no cap, including you)</label>
+        <input class="profile-field-input" id="editMax" type="number"
+               inputmode="numeric" min="3" step="1" value="${escapeAttr(event.maxAttendance ?? '')}">
+      </div>
+
+      <div class="profile-field">
         <label class="profile-field-label" for="editLocation">Where</label>
         <input class="profile-field-input" id="editLocation" type="text" maxlength="120"
                value="${escapeAttr(event.location)}">
@@ -113,6 +137,10 @@ export async function renderEdit(eventId) {
         startTime: document.getElementById('editStart').value,
         endTime: document.getElementById('editEnd').value,
         location: document.getElementById('editLocation').value,
+        costAmount: document.getElementById('editCostAmount').value,
+        costCovers: document.getElementById('editCostCovers').value,
+        maxAttendance: document.getElementById('editMax').value,
+        meetingSpot: document.getElementById('editMeetingSpot').value,
         commands,
         showToast,
         onSuccess: () => {

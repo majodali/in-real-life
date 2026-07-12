@@ -8,6 +8,7 @@
 import { ScanCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
 import { computeEffectiveState } from '../lib/lifecycle-state.mjs';
 import { eventsOverlap } from './overlap.mjs';
+import { isFull } from './event-fields.mjs';
 
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
 
@@ -68,12 +69,20 @@ export function createListEventsHandler({ client, eventsTable, interactionsTable
     const offset = getOffset ? (await getOffset()).offsetMs : 0;
     const nowIso = new Date(Date.now() + offset).toISOString();
 
-    const events = items.map((e) => ({
-      ...e,
-      myLevel: levelByEvent.get(e.eventId) ?? null,
-      myDebrief: debriefByEvent.get(e.eventId) ?? null,
-      effectiveState: computeEffectiveState(e, nowIso),
-    }));
+    const events = items.map((e) => {
+      const effectiveState = computeEffectiveState(e, nowIso);
+      return {
+        ...e,
+        myLevel: levelByEvent.get(e.eventId) ?? null,
+        myDebrief: debriefByEvent.get(e.eventId) ?? null,
+        effectiveState,
+        // Capacity read: only meaningful while joining is possible, and
+        // informational-only for external events (D53) — never flagged.
+        ...(isFull(e) && e.source !== 'external'
+          && (effectiveState === 'proposed' || effectiveState === 'planned')
+          ? { full: true } : {}),
+      };
+    });
 
     // Double-confirmation conflicts, computed at read time so edits that
     // create (or dissolve) an overlap after the fact are always caught.

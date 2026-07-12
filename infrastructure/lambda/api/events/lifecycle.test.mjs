@@ -418,3 +418,52 @@ test('cancel: emits only EventCancelled — no interaction rewrites ride along',
   assert.equal(input.events[0].eventType, 'EventCancelled');
   assert.equal(input.aggregateId, 'event#evt-1');
 });
+
+// ─── Richer event data: cost + capacity edits ───
+
+test('edit: valid cost and maxAttendance pass through; null clears', async () => {
+  const res = await edit(makeEvent({
+    claims: organizerClaims,
+    body: { commandId: 'c', cost: { amount: 10, covers: 'venue' }, maxAttendance: 10 },
+  }));
+  assert.equal(res.statusCode, 201);
+  const fields = runner.runCommand.calls[0][0].events[0].data.fields;
+  assert.deepEqual(fields.cost, { amount: 10, covers: 'venue' });
+  assert.equal(fields.maxAttendance, 10);
+
+  const clear = await edit(makeEvent({
+    claims: organizerClaims,
+    body: { commandId: 'c2', cost: null, maxAttendance: null },
+  }));
+  assert.equal(clear.statusCode, 201);
+  const cleared = runner.runCommand.calls[1][0].events[0].data.fields;
+  assert.equal(cleared.cost, null);
+  assert.equal(cleared.maxAttendance, null);
+});
+
+test('edit: invalid cost (missing covers) and sub-minimum capacity are 400', async () => {
+  eventRow = { ...eventRow, minimumAttendance: 6 };
+  let res = await edit(makeEvent({
+    claims: organizerClaims, body: { commandId: 'c', cost: { amount: 10 } },
+  }));
+  assert.equal(res.statusCode, 400);
+  res = await edit(makeEvent({
+    claims: organizerClaims, body: { commandId: 'c', maxAttendance: 5 },
+  }));
+  assert.equal(res.statusCode, 400);
+});
+
+test('edit: meetingSpot is editable, trimmed, and clearable', async () => {
+  const res = await edit(makeEvent({
+    claims: organizerClaims,
+    body: { commandId: 'c', meetingSpot: '  by the door  ' },
+  }));
+  assert.equal(res.statusCode, 201);
+  assert.equal(runner.runCommand.calls[0][0].events[0].data.fields.meetingSpot, 'by the door');
+
+  const clear = await edit(makeEvent({
+    claims: organizerClaims, body: { commandId: 'c2', meetingSpot: null },
+  }));
+  assert.equal(clear.statusCode, 201);
+  assert.equal(runner.runCommand.calls[1][0].events[0].data.fields.meetingSpot, null);
+});

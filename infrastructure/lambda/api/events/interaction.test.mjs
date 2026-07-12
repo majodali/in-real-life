@@ -512,3 +512,39 @@ test('non-overlapping and cancelled confirmed events are not conflicts', async (
   }));
   assert.equal('conflicts' in JSON.parse(res.body), false);
 });
+
+// ─── Capacity: confirm gated when full, interest stays open ───
+
+test('confirming a full event is 409; interest still works (demand signal)', async () => {
+  eventRow = { ...eventRow, maxAttendance: 4, confirmedCount: 3 };
+
+  const confirm = await handler(makeEvent({
+    claims: validClaims, body: { commandId: 'cmd-1', level: 'confirmed' },
+  }));
+  assert.equal(confirm.statusCode, 409);
+  assert.match(JSON.parse(confirm.body).error, /full/);
+
+  const interest = await handler(makeEvent({
+    claims: validClaims, body: { commandId: 'cmd-2', level: 'interested' },
+  }));
+  assert.equal(interest.statusCode, 201);
+});
+
+test('confirming with spots left succeeds under a cap', async () => {
+  eventRow = { ...eventRow, maxAttendance: 4, confirmedCount: 2 };
+  const res = await handler(makeEvent({
+    claims: validClaims, body: { commandId: 'cmd-1', level: 'confirmed' },
+  }));
+  assert.equal(res.statusCode, 201);
+});
+
+test('capacity is informational for external events — confirm succeeds while "full"', async () => {
+  eventRow = {
+    ...eventRow, source: 'external', lifecycleState: 'planned',
+    maxAttendance: 4, confirmedCount: 5,
+  };
+  const res = await handler(makeEvent({
+    claims: validClaims, body: { commandId: 'cmd-1', level: 'confirmed' },
+  }));
+  assert.equal(res.statusCode, 201);
+});

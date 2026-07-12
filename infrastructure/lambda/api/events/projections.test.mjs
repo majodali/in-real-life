@@ -89,3 +89,30 @@ test('projectEventProposed: description optional', () => {
   const item = projectEventProposed(event, { eventsTable: 't' }).Put.Item;
   assert.equal(item.description, undefined);
 });
+
+test('projectEventProposed: external events are born planned (D53); meetingSpot carried', () => {
+  const write = projectEventProposed({
+    seq: 1,
+    wallTime: '2026-07-13T00:00:00.000Z',
+    data: {
+      eventId: 'evt-x', source: 'external', title: 'Library talk',
+      startTime: '2026-08-01T18:00:00Z', endTime: '2026-08-01T19:00:00Z',
+      location: 'Library', organizerId: 'u1', organizerName: 'Maya',
+      meetingSpot: 'back tables, blue scarf',
+    },
+  }, { eventsTable: 't' });
+  assert.equal(write.Put.Item.lifecycleState, 'planned');
+  assert.equal(write.Put.Item.meetingSpot, 'back tables, blue scarf');
+});
+
+test('projectEventProposed: community events still start proposed', () => {
+  const write = projectEventProposed({
+    seq: 1,
+    wallTime: '2026-07-13T00:00:00.000Z',
+    data: {
+      eventId: 'evt-c', source: 'community', title: 'Walk',
+      organizerId: 'u1', organizerName: 'Maya',
+    },
+  }, { eventsTable: 't' });
+  assert.equal(write.Put.Item.lifecycleState, 'proposed');
+});

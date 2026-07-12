@@ -136,7 +136,8 @@ export function createCommands({
 
   async function proposeEvent({
     title, description, startTime, endTime, location, organizerName,
-    minimumAttendance, autoPlanOnThreshold,
+    minimumAttendance, autoPlanOnThreshold, cost, maxAttendance,
+    source, meetingSpot,
   }) {
     const commandId = getOrMakeCommandId(PROPOSE_EVENT_KEY);
     const body = { commandId, title, startTime, location, organizerName };
@@ -144,6 +145,10 @@ export function createCommands({
     if (endTime !== undefined) body.endTime = endTime;
     if (minimumAttendance !== undefined) body.minimumAttendance = minimumAttendance;
     if (autoPlanOnThreshold !== undefined) body.autoPlanOnThreshold = autoPlanOnThreshold;
+    if (cost !== undefined) body.cost = cost;
+    if (maxAttendance !== undefined) body.maxAttendance = maxAttendance;
+    if (source !== undefined) body.source = source;
+    if (meetingSpot !== undefined) body.meetingSpot = meetingSpot;
     const result = await api.post('/events', body);
     storage.removeItem(PROPOSE_EVENT_KEY);
     return result;
@@ -189,13 +194,16 @@ export function createCommands({
     });
   }
 
-  async function editEvent({ eventId, title, description, startTime, endTime, location }) {
+  async function editEvent({ eventId, title, description, startTime, endTime, location, cost, maxAttendance, meetingSpot }) {
     const body = { commandId: makeId() };
     if (title !== undefined) body.title = title;
     if (description !== undefined) body.description = description;
     if (startTime !== undefined) body.startTime = startTime;
     if (endTime !== undefined) body.endTime = endTime;
     if (location !== undefined) body.location = location;
+    if (cost !== undefined) body.cost = cost;
+    if (maxAttendance !== undefined) body.maxAttendance = maxAttendance;
+    if (meetingSpot !== undefined) body.meetingSpot = meetingSpot;
     return await api.put(`/events/${encodeURIComponent(eventId)}`, body);
   }
 

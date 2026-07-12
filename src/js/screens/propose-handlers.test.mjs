@@ -192,3 +192,99 @@ test('accepts a local datetime string like a <input type=datetime-local> value',
   assert.match(args.startTime, /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
   assert.match(args.endTime, /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
 });
+
+// ─── Cost disclosure (D34) + spots ───
+
+test('cost amount + covers travel together; amount alone is rejected', async () => {
+  await handleProposeSubmit({
+    ...valid, costAmount: '12', costCovers: '',
+    commands, showToast, onSuccess, onValidationError,
+  });
+  assert.equal(commands.proposeEvent.calls.length, 0);
+  assert.equal(onValidationError.calls[0][0], 'costCovers');
+});
+
+test('covers without an amount is rejected', async () => {
+  await handleProposeSubmit({
+    ...valid, costAmount: '', costCovers: 'pizza',
+    commands, showToast, onSuccess, onValidationError,
+  });
+  assert.equal(onValidationError.calls[0][0], 'costAmount');
+});
+
+test('a valid cost and spots pass through, numbers coerced', async () => {
+  await handleProposeSubmit({
+    ...valid, costAmount: '12.5', costCovers: '  pizza  ', maxAttendance: '8',
+    commands, showToast, onSuccess, onValidationError,
+  });
+  const args = commands.proposeEvent.calls[0][0];
+  assert.deepEqual(args.cost, { amount: 12.5, covers: 'pizza' });
+  assert.equal(args.maxAttendance, 8);
+});
+
+test('blank cost and spots are omitted entirely', async () => {
+  await handleProposeSubmit({
+    ...valid, costAmount: '', costCovers: '', maxAttendance: '',
+    commands, showToast, onSuccess, onValidationError,
+  });
+  const args = commands.proposeEvent.calls[0][0];
+  assert.equal(args.cost, undefined);
+  assert.equal(args.maxAttendance, undefined);
+});
+
+test('spots below the minimum (including custom minimum) are rejected', async () => {
+  await handleProposeSubmit({
+    ...valid, minimumAttendance: '6', maxAttendance: '5',
+    commands, showToast, onSuccess, onValidationError,
+  });
+  assert.equal(commands.proposeEvent.calls.length, 0);
+  assert.equal(onValidationError.calls[0][0], 'maxAttendance');
+});
+
+// ─── External events (D53) + meeting spot (D54) ───
+
+test('external listing requires real time and place', async () => {
+  await handleProposeSubmit({
+    ...valid, startTime: '', endTime: '', isExternal: true,
+    commands, showToast, onSuccess, onValidationError,
+  });
+  assert.equal(commands.proposeEvent.calls.length, 0);
+  assert.equal(onValidationError.calls[0][0], 'startTime');
+});
+
+test('external listing sends source external and drops threshold fields', async () => {
+  await handleProposeSubmit({
+    ...valid, isExternal: true, minimumAttendance: '4', autoPlanOnThreshold: true,
+    commands, showToast, onSuccess, onValidationError,
+  });
+  const args = commands.proposeEvent.calls[0][0];
+  assert.equal(args.source, 'external');
+  assert.equal(args.minimumAttendance, undefined);
+  assert.equal(args.autoPlanOnThreshold, undefined);
+});
+
+test('community proposals send no source and keep threshold fields', async () => {
+  await handleProposeSubmit({
+    ...valid, minimumAttendance: '4',
+    commands, showToast, onSuccess, onValidationError,
+  });
+  const args = commands.proposeEvent.calls[0][0];
+  assert.equal(args.source, undefined);
+  assert.equal(args.minimumAttendance, 4);
+  assert.equal(args.autoPlanOnThreshold, false);
+});
+
+test('meetingSpot is trimmed and omitted when blank', async () => {
+  await handleProposeSubmit({
+    ...valid, meetingSpot: '  blue scarf  ',
+    commands, showToast, onSuccess, onValidationError,
+  });
+  assert.equal(commands.proposeEvent.calls[0][0].meetingSpot, 'blue scarf');
+
+  commands.proposeEvent.calls.length = 0;
+  await handleProposeSubmit({
+    ...valid, meetingSpot: '   ',
+    commands, showToast, onSuccess, onValidationError,
+  });
+  assert.equal(commands.proposeEvent.calls[0][0].meetingSpot, undefined);
+});

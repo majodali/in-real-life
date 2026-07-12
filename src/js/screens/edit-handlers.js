@@ -14,6 +14,10 @@ export async function handleEditSubmit({
   startTime,
   endTime,
   location,
+  costAmount,
+  costCovers,
+  maxAttendance,
+  meetingSpot,
   commands,
   showToast,
   onSuccess,
@@ -29,15 +33,25 @@ export async function handleEditSubmit({
     showToast('Title can\'t be blank.');
     return;
   }
-  if (!trimmedLocation) {
+  // Time and place follow the idea rules (an idea may have neither):
+  // blank keeps whatever the event has — the edit API can't clear them —
+  // and a start entering for the first time needs its end alongside.
+  if (!trimmedLocation && current.location) {
     onValidationError?.('location');
-    showToast('Where? can\'t be blank.');
+    showToast('Where? can\'t be cleared once set — change it instead.');
     return;
   }
-  const startIso = toIso(startTime);
-  if (!startIso) {
+  let startIso;
+  if (startTime) {
+    startIso = toIso(startTime);
+    if (!startIso) {
+      onValidationError?.('startTime');
+      showToast('Start time doesn\'t look right.');
+      return;
+    }
+  } else if (current.startTime) {
     onValidationError?.('startTime');
-    showToast('Start time doesn\'t look right.');
+    showToast('Start time can\'t be cleared once set — change it instead.');
     return;
   }
   let endIso;
@@ -48,21 +62,65 @@ export async function handleEditSubmit({
       showToast('End time doesn\'t look right.');
       return;
     }
-    if (new Date(endIso) <= new Date(startIso)) {
+    const effectiveStart = startIso ?? current.startTime;
+    if (!effectiveStart) {
+      onValidationError?.('startTime');
+      showToast('Set a start time along with the end.');
+      return;
+    }
+    if (new Date(endIso) <= new Date(effectiveStart)) {
       onValidationError?.('endTime');
       showToast('End time has to be after the start.');
       return;
     }
   }
+  if (startIso && !endIso && !current.endTime) {
+    onValidationError?.('endTime');
+    showToast('Add an end time along with the start.');
+    return;
+  }
+
+  // Cost disclosure (D34) + capacity, mirroring propose; blanking both
+  // cost fields (or the spots field) clears the value on the server.
+  const amountBlank = costAmount === undefined || costAmount === null || costAmount === '';
+  const coversBlank = !(costCovers ?? '').trim();
+  let nextCost;
+  if (amountBlank && coversBlank) {
+    nextCost = null;
+  } else {
+    const amount = Number(costAmount);
+    if (amountBlank || !Number.isFinite(amount) || amount <= 0) {
+      onValidationError?.('costAmount');
+      showToast('Cost needs a positive amount — or clear both cost fields.');
+      return;
+    }
+    if (coversBlank) {
+      onValidationError?.('costCovers');
+      showToast('Say what the cost covers.');
+      return;
+    }
+    nextCost = { amount, covers: costCovers.trim() };
+  }
+
+  let nextMax = null;
+  if (maxAttendance !== undefined && maxAttendance !== null && maxAttendance !== '') {
+    const n = Number(maxAttendance);
+    const floor = current.minimumAttendance ?? 3;
+    if (!Number.isInteger(n) || n < floor) {
+      onValidationError?.('maxAttendance');
+      showToast(`Spots must be a whole number of at least ${floor}.`);
+      return;
+    }
+    nextMax = n;
+  }
 
   // Send only what changed.
   const fields = {};
   if (trimmedTitle !== current.title) fields.title = trimmedTitle;
-  if (trimmedLocation !== current.location) fields.location = trimmedLocation;
+  if (trimmedLocation && trimmedLocation !== current.location) fields.location = trimmedLocation;
   if ((trimmedDescription || '') !== (current.description || '')) {
     fields.description = trimmedDescription;
   }
-  if (startIso !== current.startTime) fields.startTime = startIso;
   // endTime can be cleared.
   const currentEnd = current.endTime ?? null;
   const nextEnd = endIso ?? null;
@@ -71,6 +129,14 @@ export async function handleEditSubmit({
     // edit API to accept clear semantics. For now we only send when set.
     if (nextEnd != null) fields.endTime = nextEnd;
   }
+  if (startIso && startIso !== current.startTime) fields.startTime = startIso;
+  const currentCost = current.cost ?? null;
+  if (JSON.stringify(nextCost) !== JSON.stringify(currentCost)) fields.cost = nextCost;
+  const currentMax = current.maxAttendance ?? null;
+  if (nextMax !== currentMax) fields.maxAttendance = nextMax;
+  const nextSpot = (meetingSpot ?? '').trim() || null;
+  const currentSpot = current.meetingSpot ?? null;
+  if (nextSpot !== currentSpot) fields.meetingSpot = nextSpot;
 
   if (Object.keys(fields).length === 0) {
     onNoop?.();

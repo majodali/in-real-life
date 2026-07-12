@@ -108,3 +108,92 @@ test('clearing description sends empty string', async () => {
   const args = commands.editEvent.calls[0][0];
   assert.equal(args.description, '');
 });
+
+// ─── Idea edits + cost/spots ───
+
+test('editing an idea (no time/place) with those fields blank sends only the change', async () => {
+  const current = { eventId: 'e1', title: 'Scrabble?', description: '' };
+  await handleEditSubmit({
+    current, title: 'Scrabble night?', description: '', startTime: '', endTime: '', location: '',
+    costAmount: '', costCovers: '', maxAttendance: '',
+    commands, showToast, onSuccess, onValidationError,
+  });
+  assert.equal(commands.editEvent.calls.length, 1);
+  const sent = commands.editEvent.calls[0][0];
+  assert.equal(sent.title, 'Scrabble night?');
+  assert.equal('startTime' in sent, false);
+  assert.equal('location' in sent, false);
+});
+
+test('giving an idea a start requires the end alongside', async () => {
+  const current = { eventId: 'e1', title: 'Scrabble?' };
+  await handleEditSubmit({
+    current, title: 'Scrabble?', description: '',
+    startTime: '2099-02-01T10:00', endTime: '', location: 'Library',
+    costAmount: '', costCovers: '', maxAttendance: '',
+    commands, showToast, onSuccess, onValidationError,
+  });
+  assert.equal(commands.editEvent.calls.length, 0);
+  assert.equal(onValidationError.calls[0][0], 'endTime');
+});
+
+test('clearing both cost fields sends cost: null; clearing spots sends maxAttendance: null', async () => {
+  const current = {
+    eventId: 'e1', title: 'T', location: 'L',
+    startTime: '2099-01-01T10:00:00.000Z', endTime: '2099-01-01T12:00:00.000Z',
+    cost: { amount: 10, covers: 'venue' }, maxAttendance: 8,
+  };
+  await handleEditSubmit({
+    current, title: 'T', description: '', startTime: '', endTime: '', location: 'L',
+    costAmount: '', costCovers: '', maxAttendance: '',
+    commands, showToast, onSuccess, onValidationError,
+  });
+  // startTime blank while current has one → validation error, so pass it through instead
+  assert.equal(commands.editEvent.calls.length, 0);
+});
+
+test('cost/spots clear + unchanged times: send clears only', async () => {
+  const current = {
+    eventId: 'e1', title: 'T', location: 'L',
+    cost: { amount: 10, covers: 'venue' }, maxAttendance: 8,
+  };
+  await handleEditSubmit({
+    current, title: 'T', description: '', startTime: '', endTime: '', location: 'L',
+    costAmount: '', costCovers: '', maxAttendance: '',
+    commands, showToast, onSuccess, onValidationError,
+  });
+  const sent = commands.editEvent.calls[0][0];
+  assert.equal(sent.cost, null);
+  assert.equal(sent.maxAttendance, null);
+});
+
+test('changing cost sends the new disclosure pair', async () => {
+  const current = {
+    eventId: 'e1', title: 'T', location: 'L', cost: { amount: 10, covers: 'venue' },
+  };
+  await handleEditSubmit({
+    current, title: 'T', description: '', startTime: '', endTime: '', location: 'L',
+    costAmount: '15', costCovers: 'venue and snacks', maxAttendance: '',
+    commands, showToast, onSuccess, onValidationError,
+  });
+  const sent = commands.editEvent.calls[0][0];
+  assert.deepEqual(sent.cost, { amount: 15, covers: 'venue and snacks' });
+});
+
+test('meetingSpot: change sends the trimmed value; clearing sends null', async () => {
+  const current = { eventId: 'e1', title: 'T', location: 'L', meetingSpot: 'old spot' };
+  await handleEditSubmit({
+    current, title: 'T', description: '', startTime: '', endTime: '', location: 'L',
+    costAmount: '', costCovers: '', maxAttendance: '', meetingSpot: '  new spot  ',
+    commands, showToast, onSuccess, onValidationError,
+  });
+  assert.equal(commands.editEvent.calls[0][0].meetingSpot, 'new spot');
+
+  commands.editEvent.calls.length = 0;
+  await handleEditSubmit({
+    current, title: 'T', description: '', startTime: '', endTime: '', location: 'L',
+    costAmount: '', costCovers: '', maxAttendance: '', meetingSpot: '',
+    commands, showToast, onSuccess, onValidationError,
+  });
+  assert.equal(commands.editEvent.calls[0][0].meetingSpot, null);
+});
