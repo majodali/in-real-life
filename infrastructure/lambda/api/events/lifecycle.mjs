@@ -121,12 +121,24 @@ export function createCancelEventHandler({ runner, client, eventsTable, getOffse
       data,
     }];
 
+    // RSVP disposition: interaction rows are never rewritten — the
+    // commitment historically existed, and "live commitment" is derived
+    // (confirmed AND the event not cancelled/over) everywhere it matters.
+    // The result reports who's affected so the organizer sees the impact;
+    // notifying them is the Group 7 notifications slice.
     const out = await runner.runCommand({
       commandId,
       aggregateId: `event#${eventId}`,
       actorId: `user#${ctx.claims.sub}`,
       events,
-      result: { eventId, lifecycleState: 'cancelled' },
+      result: {
+        eventId,
+        lifecycleState: 'cancelled',
+        affected: {
+          interested: row.interestCount ?? 0,
+          confirmed: row.confirmedCount ?? 0,
+        },
+      },
     });
 
     return reply(out.cached ? 200 : 201, out.result);

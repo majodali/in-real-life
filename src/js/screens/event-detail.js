@@ -106,6 +106,7 @@ export async function renderEventDetail(eventId) {
         </div>
       ` : ''}
 
+      ${renderCancelledOnMeNote(event)}
       ${renderConflictNote(event, events)}
 
       ${iAmOrganizer ? renderOrganizerControls(event) : ''}
@@ -213,6 +214,21 @@ function bindDebriefForm(container, event) {
       submit.textContent = 'Save';
     }
   });
+}
+
+// For a member who had committed to an event that then died: acknowledge
+// it plainly. Their interaction row is untouched (history, not a live
+// commitment); withdrawing stays available but is never required.
+function renderCancelledOnMeNote(event) {
+  const effective = event.effectiveState || event.lifecycleState;
+  if (effective !== 'cancelled' || !event.myLevel) return '';
+  const verb = event.myLevel === 'confirmed' ? "you'd said you'd be there" : 'you were interested';
+  return `
+    <div class="event-conflict-note">
+      ✕ This one's off — ${verb}. Nothing needed from you; it stays in your
+      history and the spot frees up on its own.
+    </div>
+  `;
 }
 
 // Standing double-confirmation note (from the list annotation, so edits
@@ -393,13 +409,27 @@ function bindOrganizerControls(container, event) {
   }
 }
 
+// The impact line for the cancel dialog: the organizer should see whose
+// plans they're touching before they pull the trigger.
+function cancelImpactLine(event) {
+  const interested = event.interestCount ?? 0;
+  const confirmed = event.confirmedCount ?? 0;
+  if (interested + confirmed === 0) {
+    return 'No-one has committed yet, so this only removes the listing.';
+  }
+  const parts = [];
+  if (confirmed) parts.push(`${confirmed} confirmed`);
+  if (interested) parts.push(`${interested} interested`);
+  return `${parts.join(' and ')} will see this marked as cancelled — IRL can't message them yet, so consider spreading the word yourself.`;
+}
+
 function promptCancel(container, event) {
   // In-place prompt: text field + confirm/back.
   const controls = container.querySelector('.event-organizer-controls');
   if (!controls) return;
   controls.innerHTML = `
     <div class="organizer-controls-label">Cancel this event?</div>
-    <p class="profile-danger-warning">Anyone interested or confirmed will see this event marked as cancelled. There's no undo.</p>
+    <p class="profile-danger-warning">${cancelImpactLine(event)} There's no undo.</p>
     <label class="profile-field-label" for="cancelReason">Reason (optional)</label>
     <input class="profile-field-input" id="cancelReason" maxlength="200"
            placeholder="e.g. Not enough interest this time">

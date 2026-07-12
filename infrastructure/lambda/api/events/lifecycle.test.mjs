@@ -391,3 +391,30 @@ test('edit: endTime alone on an untimed idea is 400', async () => {
   assert.equal(res.statusCode, 400);
   assert.match(JSON.parse(res.body).error, /startTime/);
 });
+
+// ─── Cancellation: RSVP disposition + impact report ───
+
+test('cancel: result reports affected interest/confirmed counts from the row', async () => {
+  eventRow = { ...eventRow, interestCount: 4, confirmedCount: 2 };
+  const res = await cancel(makeEvent({ claims: organizerClaims, body: { commandId: 'c' } }));
+  assert.equal(res.statusCode, 201);
+  assert.deepEqual(JSON.parse(res.body), {
+    eventId: 'evt-1',
+    lifecycleState: 'cancelled',
+    affected: { interested: 4, confirmed: 2 },
+  });
+});
+
+test('cancel: zero counts default cleanly', async () => {
+  const res = await cancel(makeEvent({ claims: organizerClaims, body: { commandId: 'c' } }));
+  assert.deepEqual(JSON.parse(res.body).affected, { interested: 0, confirmed: 0 });
+});
+
+test('cancel: emits only EventCancelled — no interaction rewrites ride along', async () => {
+  eventRow = { ...eventRow, interestCount: 4, confirmedCount: 2 };
+  await cancel(makeEvent({ claims: organizerClaims, body: { commandId: 'c' } }));
+  const [input] = runner.runCommand.calls[0];
+  assert.equal(input.events.length, 1);
+  assert.equal(input.events[0].eventType, 'EventCancelled');
+  assert.equal(input.aggregateId, 'event#evt-1');
+});
