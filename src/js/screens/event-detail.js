@@ -89,8 +89,14 @@ export async function renderEventDetail(eventId) {
           <span class="event-fact-value">${event.maxAttendance} including the organizer${event.full ? ' — currently full' : ''}</span>
         </div>
         ` : ''}
+        ${event.meetingSpot ? `
         <div class="event-fact">
-          <span class="event-fact-label">Organizer</span>
+          <span class="event-fact-label">Finding the group</span>
+          <span class="event-fact-value">${escapeHtml(event.meetingSpot)}</span>
+        </div>
+        ` : ''}
+        <div class="event-fact">
+          <span class="event-fact-label">${event.source === 'external' ? 'Listed by' : 'Organizer'}</span>
           <span class="event-fact-value">${escapeHtml(event.organizerName)}</span>
         </div>
         ${event.minimumAttendance > 3 ? `
@@ -338,7 +344,7 @@ function renderOrganizerControls(event) {
 
   return `
     <div class="event-organizer-controls">
-      <div class="organizer-controls-label">Your event</div>
+      <div class="organizer-controls-label">${event.source === 'external' ? 'You listed this — keep it current or cancel it if it\u2019s off' : 'Your event'}</div>
       ${stored === 'proposed' && isIdea ? `
         <p class="organizer-threshold-met">Set a time and place (Edit event) before confirming it's happening — until then it floats as an idea.</p>
       ` : ''}

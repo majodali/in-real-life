@@ -74,6 +74,22 @@ export function renderPropose() {
         </div>
 
         <div class="profile-field">
+          <label class="profile-field-label" for="proposeMeetingSpot">How to find the group (optional)</label>
+          <input class="profile-field-input" id="proposeMeetingSpot" type="text" maxlength="200"
+                 placeholder="e.g. back tables — look for the blue scarf">
+        </div>
+
+        <label class="organizer-toggle">
+          <input type="checkbox" id="proposeExternal">
+          <span>This is an existing local event (not organized on IRL)</span>
+        </label>
+        <small class="profile-field-hint" style="display:block; margin-bottom:14px;">
+          You'll be its steward — shown as "listed by" you. It goes up as
+          already happening (real time and place required), and confirming
+          means members commit to meeting each other there.
+        </small>
+
+        <div class="profile-field">
           <label class="profile-field-label" for="proposeCostAmount">Cost per person (optional)</label>
           <input class="profile-field-input" id="proposeCostAmount" type="number"
                  inputmode="decimal" min="0" step="0.5" placeholder="e.g. 12">
@@ -133,6 +149,8 @@ export function renderPropose() {
         costAmount: document.getElementById('proposeCostAmount').value,
         costCovers: document.getElementById('proposeCostCovers').value,
         maxAttendance: document.getElementById('proposeMax').value,
+        meetingSpot: document.getElementById('proposeMeetingSpot').value,
+        isExternal: document.getElementById('proposeExternal').checked,
         endTime: document.getElementById('proposeEnd').value,
         location: document.getElementById('proposeLocation').value,
         organizerName: user.name,

@@ -62,7 +62,7 @@ export function projectEventCancelled(event, tables) {
 // prior seq + lifecycleState <> cancelled. The handler is responsible for
 // rejecting edits on cancelled/over events; this projection guard catches
 // the cancelled case as a defence in depth.
-const EDITABLE_FIELDS = new Set(['title', 'description', 'startTime', 'endTime', 'location', 'timesApproximate', 'cost', 'maxAttendance']);
+const EDITABLE_FIELDS = new Set(['title', 'description', 'startTime', 'endTime', 'location', 'timesApproximate', 'cost', 'maxAttendance', 'meetingSpot']);
 
 export function projectEventEdited(event, tables) {
   const names = { '#seq': 'seq' };

@@ -76,8 +76,10 @@ export function createListEventsHandler({ client, eventsTable, interactionsTable
         myLevel: levelByEvent.get(e.eventId) ?? null,
         myDebrief: debriefByEvent.get(e.eventId) ?? null,
         effectiveState,
-        // Capacity read: only meaningful while joining is possible.
-        ...(isFull(e) && (effectiveState === 'proposed' || effectiveState === 'planned')
+        // Capacity read: only meaningful while joining is possible, and
+        // informational-only for external events (D53) — never flagged.
+        ...(isFull(e) && e.source !== 'external'
+          && (effectiveState === 'proposed' || effectiveState === 'planned')
           ? { full: true } : {}),
       };
     });

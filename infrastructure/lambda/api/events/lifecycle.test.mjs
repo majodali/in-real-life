@@ -452,3 +452,18 @@ test('edit: invalid cost (missing covers) and sub-minimum capacity are 400', asy
   }));
   assert.equal(res.statusCode, 400);
 });
+
+test('edit: meetingSpot is editable, trimmed, and clearable', async () => {
+  const res = await edit(makeEvent({
+    claims: organizerClaims,
+    body: { commandId: 'c', meetingSpot: '  by the door  ' },
+  }));
+  assert.equal(res.statusCode, 201);
+  assert.equal(runner.runCommand.calls[0][0].events[0].data.fields.meetingSpot, 'by the door');
+
+  const clear = await edit(makeEvent({
+    claims: organizerClaims, body: { commandId: 'c2', meetingSpot: null },
+  }));
+  assert.equal(clear.statusCode, 201);
+  assert.equal(runner.runCommand.calls[1][0].events[0].data.fields.meetingSpot, null);
+});

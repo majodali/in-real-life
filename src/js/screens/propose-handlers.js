@@ -17,6 +17,8 @@ export async function handleProposeSubmit({
   costAmount,
   costCovers,
   maxAttendance,
+  meetingSpot,
+  isExternal,
   minimumAttendance,
   autoPlanOnThreshold,
   timesApproximate,
@@ -32,6 +34,13 @@ export async function handleProposeSubmit({
   if (!trimmedTitle) {
     onValidationError?.('title');
     showToast('A short title helps people find this.');
+    return;
+  }
+
+  // External events (D53) are already real: full time/place required.
+  if (isExternal && (!startTime || !endTime || !trimmedLocation)) {
+    onValidationError?.(!startTime ? 'startTime' : !endTime ? 'endTime' : 'location');
+    showToast('An existing event needs its real time and place — if it\u2019s not pinned down yet, float it as an idea instead.');
     return;
   }
 
@@ -118,10 +127,12 @@ export async function handleProposeSubmit({
       endTime: endIso,
       location: trimmedLocation || undefined,
       organizerName: trimmedOrganizerName || undefined,
-      minimumAttendance: minAttendance ?? undefined,
+      minimumAttendance: isExternal ? undefined : (minAttendance ?? undefined),
       cost,
       maxAttendance: maxSpots,
-      autoPlanOnThreshold: autoPlanOnThreshold === true,
+      source: isExternal ? 'external' : undefined,
+      meetingSpot: (meetingSpot ?? '').trim() || undefined,
+      autoPlanOnThreshold: isExternal ? undefined : (autoPlanOnThreshold === true),
       timesApproximate: timesApproximate === true,
     });
     onSuccess?.(result);

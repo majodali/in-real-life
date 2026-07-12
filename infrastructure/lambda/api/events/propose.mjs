@@ -46,6 +46,17 @@ export function createProposeEventHandler({ runner, makeEventId }) {
     if (!VALID_SOURCES.has(source)) {
       return reply(400, { error: 'source must be community, external, or platform' });
     }
+    // External events (D53) are real events IRL didn't create: born
+    // planned, so the full time/place trio is required up front, and
+    // threshold semantics don't apply — the event happens regardless.
+    if (source === 'external') {
+      if (!startTime || !endTime || !location) {
+        return reply(400, { error: 'external events need startTime, endTime, and location — if you can’t pin it down yet, float it as a community idea instead' });
+      }
+      if (body.minimumAttendance !== undefined || body.autoPlanOnThreshold !== undefined) {
+        return reply(400, { error: 'minimumAttendance/autoPlanOnThreshold do not apply to external events' });
+      }
+    }
     if (startTime !== undefined && Number.isNaN(new Date(startTime).getTime())) {
       return reply(400, { error: 'startTime is not a parseable ISO datetime' });
     }
@@ -85,6 +96,14 @@ export function createProposeEventHandler({ runner, makeEventId }) {
       if (checked.error) return reply(400, { error: checked.error });
       maxAttendance = checked.value;
     }
+    let meetingSpot;
+    if (body.meetingSpot !== undefined) {
+      if (typeof body.meetingSpot !== 'string') {
+        return reply(400, { error: 'meetingSpot must be a string' });
+      }
+      meetingSpot = body.meetingSpot.trim().slice(0, 200);
+      if (!meetingSpot) meetingSpot = undefined;
+    }
 
     const eventId = makeEventId();
     const aggregateId = `event#${eventId}`;
@@ -102,9 +121,12 @@ export function createProposeEventHandler({ runner, makeEventId }) {
     if (description !== undefined) data.description = description;
     if (cost !== undefined) data.cost = cost;
     if (maxAttendance !== undefined) data.maxAttendance = maxAttendance;
+    if (meetingSpot !== undefined) data.meetingSpot = meetingSpot;
     data.timesApproximate = body.timesApproximate === true;
-    data.minimumAttendance = minimumAttendance;
-    data.autoPlanOnThreshold = body.autoPlanOnThreshold === true;
+    if (source !== 'external') {
+      data.minimumAttendance = minimumAttendance;
+      data.autoPlanOnThreshold = body.autoPlanOnThreshold === true;
+    }
 
     const events = [{
       eventType: 'EventProposed',

@@ -240,3 +240,51 @@ test('spots below the minimum (including custom minimum) are rejected', async ()
   assert.equal(commands.proposeEvent.calls.length, 0);
   assert.equal(onValidationError.calls[0][0], 'maxAttendance');
 });
+
+// ─── External events (D53) + meeting spot (D54) ───
+
+test('external listing requires real time and place', async () => {
+  await handleProposeSubmit({
+    ...valid, startTime: '', endTime: '', isExternal: true,
+    commands, showToast, onSuccess, onValidationError,
+  });
+  assert.equal(commands.proposeEvent.calls.length, 0);
+  assert.equal(onValidationError.calls[0][0], 'startTime');
+});
+
+test('external listing sends source external and drops threshold fields', async () => {
+  await handleProposeSubmit({
+    ...valid, isExternal: true, minimumAttendance: '4', autoPlanOnThreshold: true,
+    commands, showToast, onSuccess, onValidationError,
+  });
+  const args = commands.proposeEvent.calls[0][0];
+  assert.equal(args.source, 'external');
+  assert.equal(args.minimumAttendance, undefined);
+  assert.equal(args.autoPlanOnThreshold, undefined);
+});
+
+test('community proposals send no source and keep threshold fields', async () => {
+  await handleProposeSubmit({
+    ...valid, minimumAttendance: '4',
+    commands, showToast, onSuccess, onValidationError,
+  });
+  const args = commands.proposeEvent.calls[0][0];
+  assert.equal(args.source, undefined);
+  assert.equal(args.minimumAttendance, 4);
+  assert.equal(args.autoPlanOnThreshold, false);
+});
+
+test('meetingSpot is trimmed and omitted when blank', async () => {
+  await handleProposeSubmit({
+    ...valid, meetingSpot: '  blue scarf  ',
+    commands, showToast, onSuccess, onValidationError,
+  });
+  assert.equal(commands.proposeEvent.calls[0][0].meetingSpot, 'blue scarf');
+
+  commands.proposeEvent.calls.length = 0;
+  await handleProposeSubmit({
+    ...valid, meetingSpot: '   ',
+    commands, showToast, onSuccess, onValidationError,
+  });
+  assert.equal(commands.proposeEvent.calls[0][0].meetingSpot, undefined);
+});

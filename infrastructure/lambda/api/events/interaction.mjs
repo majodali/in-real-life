@@ -129,7 +129,9 @@ export function createSetInteractionHandler({
     // Pre-check only: a concurrent-confirm race can overshoot by one at
     // community scale, which is benign; hard enforcement belongs with
     // waitlists if they ever land.
-    if (level === 'confirmed' && isFull(eventRow)) {
+    // …and informational-only for external events (D53): the venue's
+    // limits aren't IRL's to enforce.
+    if (level === 'confirmed' && eventRow.source !== 'external' && isFull(eventRow)) {
       return reply(409, { error: 'event is full — you can still register interest' });
     }
 

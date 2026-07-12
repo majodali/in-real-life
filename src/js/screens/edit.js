@@ -89,6 +89,12 @@ export async function renderEdit(eventId) {
       </div>
 
       <div class="profile-field">
+        <label class="profile-field-label" for="editMeetingSpot">How to find the group (blank = none)</label>
+        <input class="profile-field-input" id="editMeetingSpot" type="text" maxlength="200"
+               value="${escapeAttr(event.meetingSpot ?? '')}">
+      </div>
+
+      <div class="profile-field">
         <label class="profile-field-label" for="editCostAmount">Cost per person (blank = free)</label>
         <input class="profile-field-input" id="editCostAmount" type="number"
                inputmode="decimal" min="0" step="0.5" value="${escapeAttr(event.cost?.amount ?? '')}">
@@ -134,6 +140,7 @@ export async function renderEdit(eventId) {
         costAmount: document.getElementById('editCostAmount').value,
         costCovers: document.getElementById('editCostCovers').value,
         maxAttendance: document.getElementById('editMax').value,
+        meetingSpot: document.getElementById('editMeetingSpot').value,
         commands,
         showToast,
         onSuccess: () => {

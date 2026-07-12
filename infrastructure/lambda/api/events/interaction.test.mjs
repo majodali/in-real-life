@@ -537,3 +537,14 @@ test('confirming with spots left succeeds under a cap', async () => {
   }));
   assert.equal(res.statusCode, 201);
 });
+
+test('capacity is informational for external events — confirm succeeds while "full"', async () => {
+  eventRow = {
+    ...eventRow, source: 'external', lifecycleState: 'planned',
+    maxAttendance: 4, confirmedCount: 5,
+  };
+  const res = await handler(makeEvent({
+    claims: validClaims, body: { commandId: 'cmd-1', level: 'confirmed' },
+  }));
+  assert.equal(res.statusCode, 201);
+});

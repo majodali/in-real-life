@@ -2,7 +2,7 @@
 
 Design notes for **in·real·life** — a local community meetup app: AI-guided onboarding, discover nearby events and people, coordinate real-world meetups. Privacy-focused (first names only, no messaging — just show up).
 
-These notes are **living and provisional** — current best decisions, revisable as real usage teaches us. `decisions.md` is the map: a register of every decision (D1–D52) with a one-line pointer to the note that holds the reasoning, plus watch-items for emergent effects we're tracking.
+These notes are **living and provisional** — current best decisions, revisable as real usage teaches us. `decisions.md` is the map: a register of every decision (D1–D54) with a one-line pointer to the note that holds the reasoning, plus watch-items for emergent effects we're tracking.
 
 ## How the pieces fit
 
@@ -36,6 +36,7 @@ Understanding of a person is **seeded** at onboarding and **grown** from what th
 
 **The event experience & feedback (Group 2)**
 - `debrief.md` — the dominant signal source; information-first, tiered, low-friction; people step; safety + policy feedback paths.
+- `external-events.md` — events IRL didn't create: steward not organizer (D53), confirmation as mutual member commitment, suggestions as the correction channel; finding-each-other design area (D54).
 - `organizer-engagement.md` — organisers as first-class; framing help, responsibility gates, organiser debrief.
 - `event-policy.md` — what belongs on IRL: honesty + non-coercion, not subject matter.
 

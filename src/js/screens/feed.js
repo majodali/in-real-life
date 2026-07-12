@@ -142,7 +142,7 @@ function renderCard(event) {
         <span>\u{1F4C5} ${escapeHtml(when)}</span>
         <span>\u{1F4CD} ${escapeHtml(event.location ?? 'Place TBD')}</span>
       </div>
-      <div class="card-organizer">by ${escapeHtml(event.organizerName)}</div>
+      <div class="card-organizer">${event.source === 'external' ? 'listed by' : 'by'} ${escapeHtml(event.organizerName)}</div>
       ${myLevelBadge}${conflictBadge}${fullBadge}${cancelledOnMe}
     </div>
   `;

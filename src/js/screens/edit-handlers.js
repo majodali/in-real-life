@@ -17,6 +17,7 @@ export async function handleEditSubmit({
   costAmount,
   costCovers,
   maxAttendance,
+  meetingSpot,
   commands,
   showToast,
   onSuccess,
@@ -133,6 +134,9 @@ export async function handleEditSubmit({
   if (JSON.stringify(nextCost) !== JSON.stringify(currentCost)) fields.cost = nextCost;
   const currentMax = current.maxAttendance ?? null;
   if (nextMax !== currentMax) fields.maxAttendance = nextMax;
+  const nextSpot = (meetingSpot ?? '').trim() || null;
+  const currentSpot = current.meetingSpot ?? null;
+  if (nextSpot !== currentSpot) fields.meetingSpot = nextSpot;
 
   if (Object.keys(fields).length === 0) {
     onNoop?.();

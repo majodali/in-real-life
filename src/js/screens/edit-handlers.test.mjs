@@ -179,3 +179,21 @@ test('changing cost sends the new disclosure pair', async () => {
   const sent = commands.editEvent.calls[0][0];
   assert.deepEqual(sent.cost, { amount: 15, covers: 'venue and snacks' });
 });
+
+test('meetingSpot: change sends the trimmed value; clearing sends null', async () => {
+  const current = { eventId: 'e1', title: 'T', location: 'L', meetingSpot: 'old spot' };
+  await handleEditSubmit({
+    current, title: 'T', description: '', startTime: '', endTime: '', location: 'L',
+    costAmount: '', costCovers: '', maxAttendance: '', meetingSpot: '  new spot  ',
+    commands, showToast, onSuccess, onValidationError,
+  });
+  assert.equal(commands.editEvent.calls[0][0].meetingSpot, 'new spot');
+
+  commands.editEvent.calls.length = 0;
+  await handleEditSubmit({
+    current, title: 'T', description: '', startTime: '', endTime: '', location: 'L',
+    costAmount: '', costCovers: '', maxAttendance: '', meetingSpot: '',
+    commands, showToast, onSuccess, onValidationError,
+  });
+  assert.equal(commands.editEvent.calls[0][0].meetingSpot, null);
+});
