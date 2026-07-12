@@ -185,7 +185,7 @@ Everything needed for a real adult to land on the site, learn what IRL is, agree
 Extends the prototype's RSVP→confirm→attend→debrief flow into a full proposed → planned → in-progress → over → cancelled lifecycle, with users able to propose events.
 
 - [x] Full event lifecycle states: proposed, planned, in-progress, over, cancelled (stored states command-driven; in-progress/over time-derived; idea time/place-derived)
-- [ ] Event cancellation flow — cancel command exists; what happens to RSVPs/attendee notification still open
+- [x] Event cancellation flow — RSVP disposition decided: interaction rows are **never rewritten** on cancellation (the commitment historically existed; "live commitment" is derived — confirmed AND event not cancelled/over — everywhere it matters: conflicts, feed, future supply/reliability signals). Cancel result reports `affected: {interested, confirmed}`; the organizer's cancel dialog shows the impact before confirming. Affected members get in-app surfacing: one-time feed toast (client-side seen-set), "Cancelled — you were in" feed badge, plain-language detail note; withdraw stays available, never required. Push/email notification of attendees is explicitly the Group 7 notifications slice
 - [x] Minimum attendance threshold (auto-plan at `minimumAttendance`)
 - [x] User proposes event (`POST /events` → `EventProposed`)
 - [ ] Three event types: external/third-party, user-organized, this-user-organized
@@ -246,7 +246,7 @@ Items that can land alongside any group above once prerequisites exist.
 - [ ] Recurring events (weekly coffee walk, monthly book swap)
 - [ ] Weather/seasonality awareness for outdoor events
 - [ ] Multiple locations beyond Bainbridge Island — per the launch playbook (radar R5)
-- [ ] Notifications — push, email digest, in-app only?
+- [ ] Notifications — push, email digest, in-app only? First confirmed consumers: cancellation notices to affected members (in-app toast/badge exists; the reach-them-when-away channel doesn't) and overlap follow-through's organizer heads-up
 - [ ] Calendar integration — export confirmed events
 - [ ] Reminders for confirmed meetups
 - [ ] Illustrated avatar system (replace emoji picker)

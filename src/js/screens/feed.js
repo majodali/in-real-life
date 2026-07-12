@@ -11,6 +11,7 @@ import { navigate, showToast } from '../app.js';
 import { getAltSelection } from '../alternatives.js';
 import { renderEllipsisButton, bindEllipsis } from '../components/ellipsis-menu.js';
 import { commands } from '../services.js';
+import { unseenCancellations, noticeMessage, readSeen, markSeen } from '../cancellation-notices.js';
 
 const LIFECYCLE_LABELS = {
   idea: 'Idea',
@@ -89,6 +90,13 @@ export async function renderFeed() {
     return;
   }
 
+  // One-time in-app notice for cancellations that touch this member.
+  const fresh = unseenCancellations(events, readSeen(localStorage));
+  if (fresh.length) {
+    showToast(noticeMessage(fresh));
+    markSeen(localStorage, fresh.map((e) => e.eventId));
+  }
+
   scroll.innerHTML = events.map(renderCard).join('');
   scroll.querySelectorAll('[data-event-id]').forEach((el) => {
     el.addEventListener('click', () => navigate('event', el.dataset.eventId));
@@ -116,6 +124,9 @@ function renderCard(event) {
   const conflictBadge = event.conflictsWith?.length
     ? `<span class="card-mylevel mylevel-conflict">⚠ Overlaps another plan</span>`
     : '';
+  const cancelledOnMe = effective === 'cancelled' && event.myLevel
+    ? `<span class="card-mylevel mylevel-cancelled-on-me">✕ Cancelled — you were in</span>`
+    : '';
 
   const bodyHtml = `
     <div class="card-body">
@@ -129,7 +140,7 @@ function renderCard(event) {
         <span>\u{1F4CD} ${escapeHtml(event.location ?? 'Place TBD')}</span>
       </div>
       <div class="card-organizer">by ${escapeHtml(event.organizerName)}</div>
-      ${myLevelBadge}${conflictBadge}
+      ${myLevelBadge}${conflictBadge}${cancelledOnMe}
     </div>
   `;
 
