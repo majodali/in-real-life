@@ -66,6 +66,21 @@ export function renderAdmin() {
       </div>
 
       <div class="profile-card admin-card">
+        <div class="admin-section-title">Required agreement version</div>
+        <p class="auth-subtext">
+          Bumping this asks every member on an older version to re-accept the
+          Terms of Use at their next sign-in. Update terms.html first.
+        </p>
+        <div class="admin-time-row">
+          <div class="admin-inline-form">
+            <input class="profile-field-input" id="adminAgreementVersion"
+                   type="text" placeholder="e.g. v2" maxlength="10">
+            <button class="btn-small" id="adminAgreementVersionBtn">Set required</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="profile-card admin-card">
         <div class="admin-section-title">Notify list</div>
         <div class="admin-notify-meta" id="adminNotifyMeta">Loading…</div>
         <div class="admin-notify-list" id="adminNotifyList"></div>
@@ -95,6 +110,21 @@ export function renderAdmin() {
   }));
 
   bindTimeAction('adminResetBtn', () => ({ action: 'reset', args: {} }));
+
+  // Required agreement version
+  const versionBtn = document.getElementById('adminAgreementVersionBtn');
+  versionBtn.addEventListener('click', async () => {
+    const version = document.getElementById('adminAgreementVersion').value.trim();
+    versionBtn.disabled = true;
+    try {
+      const result = await commands.setRequiredAgreementVersion({ version });
+      showToast(`Required agreement version is now ${result.requiredAgreementVersion}.`);
+    } catch (err) {
+      showToast(err?.message || 'Could not update the required version.');
+    } finally {
+      versionBtn.disabled = false;
+    }
+  });
 
   // First loads
   refreshTimeDisplay();

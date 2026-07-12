@@ -15,6 +15,7 @@ import {
   projectUserDeleted,
   projectOnboardingCompleted,
   projectUserKeyShredded,
+  projectUserAgreementReaccepted,
 } from './projections.mjs';
 
 const sampleEvent = {
@@ -328,4 +329,31 @@ test('projectOnboardingCompleted: condition rejects a second completion', () => 
 
 test('projectUserKeyShredded: log-only — no state write', () => {
   assert.equal(projectUserKeyShredded(), null);
+});
+
+// ─── UserAgreementReaccepted ───
+
+const reacceptedEvent = {
+  eventType: 'UserAgreementReaccepted',
+  version: 1,
+  seq: 7,
+  wallTime: '2026-07-12T09:00:00.000Z',
+  data: { userId: 'abc', agreementVersion: 'v2' },
+};
+
+test('projectUserAgreementReaccepted: moves the row to the new version and acceptance time', () => {
+  const write = projectUserAgreementReaccepted(reacceptedEvent, { usersTable: 'irl-users-test' });
+  assert.equal(write.Update.TableName, 'irl-users-test');
+  assert.deepEqual(write.Update.Key, { userId: 'abc' });
+
+  const ue = write.Update.UpdateExpression;
+  assert.match(ue, /agreementVersion/);
+  assert.match(ue, /agreementAcceptedAt/);
+
+  const v = write.Update.ExpressionAttributeValues;
+  assert.equal(v[':version'], 'v2');
+  assert.equal(v[':at'], reacceptedEvent.wallTime);
+  assert.equal(v[':seq'], 7);
+  assert.equal(v[':expectedSeq'], 6);
+  assert.match(write.Update.ConditionExpression, /#seq\s*=\s*:expectedSeq/);
 });

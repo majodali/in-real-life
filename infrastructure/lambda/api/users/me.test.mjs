@@ -162,3 +162,32 @@ test('responses set Content-Type: application/json', async () => {
   const response = await handler(makeEvent({ claims: validClaims }));
   assert.equal(response.headers['Content-Type'], 'application/json');
 });
+
+// ─── Agreement re-acceptance flag ───
+
+test('flags re-acceptance when the accepted version is behind the required one', async () => {
+  handler = createGetMeHandler({
+    client,
+    usersTable: 'irl-users-test',
+    getRequiredAgreement: async () => ({ version: 'v2', seq: 1, updatedAt: null }),
+  });
+  const response = await handler(makeEvent({ claims: validClaims }));
+  const body = JSON.parse(response.body);
+  assert.equal(body.requiredAgreementVersion, 'v2');
+  assert.equal(body.requiresAgreementReacceptance, true);
+});
+
+test('no flag when current, and none when no requirement is configured', async () => {
+  handler = createGetMeHandler({
+    client,
+    usersTable: 'irl-users-test',
+    getRequiredAgreement: async () => ({ version: 'v1', seq: 1, updatedAt: null }),
+  });
+  let body = JSON.parse((await handler(makeEvent({ claims: validClaims }))).body);
+  assert.equal(body.requiresAgreementReacceptance, false);
+
+  handler = createGetMeHandler({ client, usersTable: 'irl-users-test' });
+  body = JSON.parse((await handler(makeEvent({ claims: validClaims }))).body);
+  assert.equal(body.requiredAgreementVersion, null);
+  assert.equal(body.requiresAgreementReacceptance, false);
+});

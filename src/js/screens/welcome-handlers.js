@@ -6,6 +6,8 @@
 // without touching the DOM.
 //
 // Routing matrix:
+//   200 + requiresAgreementReacceptance → agreement (before anything else —
+//                                         state-changing commands are gated)
 //   200 + name + localityVerified → saveUser(me) + feed
 //   200 + name + !localityVerified → locality
 //   200 + no name                 → onboarding (registered, no profile yet)
@@ -33,6 +35,11 @@ export async function handleWelcomeMount({ api, commands, navigate, showToast, s
       return;
     }
     showToast(err.message || 'Could not load your account.');
+    return;
+  }
+
+  if (me.requiresAgreementReacceptance) {
+    navigate('agreement');
     return;
   }
 

@@ -170,12 +170,12 @@ Architectural decisions that affect everything downstream. Each warrants a short
 
 Everything needed for a real adult to land on the site, learn what IRL is, agree to terms, sign up, and build a meaningful profile.
 
-- [ ] Website / homepage — explains what IRL is, links to sign-up
-- [ ] User agreement — adults-only for now, terms of use, privacy
+- [x] Website / homepage — `src/index.html` is the public landing page (what IRL is, how it works, principles, sign-up/sign-in CTAs, terms link); the old dev persona selector is gone
+- [x] User agreement — `src/terms.html` (v1, plain-language: adults-only, conduct, privacy/data rights) + acceptance captured at register; agreement versioning per `docs/event-sourcing.md`: `required_user_agreement_version` in `irl-config` bumped via `POST /admin/agreement-version` (`RequiredAgreementVersionUpdated` on `system#config`), `GET /me` flags `requiresAgreementReacceptance`, state-changing member routes gated (deletion/export exempt — data rights), `POST /me/agreement` emits `UserAgreementReaccepted`, frontend re-acceptance screen in the sign-in flow. Terms text still needs counsel review before launch.
 - [x] Public user sign-up flow (Cognito sign-up + email verify → `UserRegistered`)
 - [x] Locality verification — manual admin approval implemented (request → verify → activate chain); automated verification (postcard, third-party) still open — design alongside age verification (radar R3)
 - [ ] Profile data model — richer than today's name/avatar/vibe; includes interview responses, attributes, preferences
-- [ ] Profile view + edit (extend current screen)
+- [x] Profile view + edit — profile screen views/edits name, avatar, vibe (`PUT /me/profile` → `UserProfileUpdated`), plus export/delete/sign-out and the "tell us more" follow-up
 - [ ] Optional user attributes — entered if user considers them valuable for matching
 - [x] Real Claude API for onboarding interview (replaces scripted flow) — backend: `POST /me/interview/turn` (per-turn interviewer, frozen system prompt + card schema from `docs/onboarding-prompt.md`, real-event grounding, branch-validated with retry + templated fallback) and `POST /me/onboarding` (extraction → `OnboardingCompleted`); frontend: onboarding screen drives the live turn loop (name as form field per D42, scripted flow retained as offline fallback) and completes via createProfile → completeOnboarding. Full screen redesign still planned.
 - [x] Account deletion / data export (export decrypts the event log; delete shreds the per-user key)

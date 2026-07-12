@@ -236,7 +236,7 @@ This is the same mechanism for everyone:
 - Admin-invited users whose pre-existing agreement was older
 - Imported users whose source-env agreement was older than target's required version
 
-At sign-in, the API checks `user.acceptedAgreementVersion` against `required_user_agreement_version`. If lower, the response carries a `requires_agreement_reacceptance` flag and the new agreement text. Until acceptance, the user cannot run any state-changing command except `ReacceptAgreement`; read-only commands (e.g. viewing their own profile) remain available.
+At sign-in, the API checks `user.acceptedAgreementVersion` against `required_user_agreement_version`. If lower, the `GET /me` response carries a `requiresAgreementReacceptance` flag (plus the required version; the agreement text itself lives on the terms page). Until acceptance, the user cannot run any state-changing command except `ReacceptAgreement` (`POST /me/agreement`); read-only commands (e.g. viewing their own profile) remain available. Two deliberate exemptions beyond reads: **account deletion and data export are never gated** — data rights aren't held hostage to a terms change. A *newer* accepted version always satisfies the requirement, so an admin rollback never re-prompts members who accepted the newer terms.
 
 ## Tracing & observability
 

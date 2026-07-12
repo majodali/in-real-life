@@ -174,6 +174,30 @@ export function projectUserActivated(event, tables) {
   };
 }
 
+// UserAgreementReaccepted moves the state row to the newly accepted
+// agreement version (docs/event-sourcing.md → Agreement versioning),
+// which is what clears the agreement gate.
+export function projectUserAgreementReaccepted(event, tables) {
+  return {
+    Update: {
+      TableName: tables.usersTable,
+      Key: { userId: event.data.userId },
+      UpdateExpression:
+        'SET agreementVersion = :version, agreementAcceptedAt = :at, '
+        + '#seq = :seq, updatedAt = :updatedAt',
+      ConditionExpression: '#seq = :expectedSeq',
+      ExpressionAttributeNames: { '#seq': 'seq' },
+      ExpressionAttributeValues: {
+        ':version': event.data.agreementVersion,
+        ':at': event.wallTime,
+        ':seq': event.seq,
+        ':expectedSeq': event.seq - 1,
+        ':updatedAt': event.wallTime,
+      },
+    },
+  };
+}
+
 // UserDeleted tears down the read model: the state row is hard-deleted
 // (it's PII at rest and not needed for replay). The event itself stays in
 // the log for the deletion audit trail; the user's crypto-shred key is

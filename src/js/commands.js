@@ -14,6 +14,7 @@ const LOCALITY_KEY = 'irl_cmd_locality';
 const NOTIFY_KEY = 'irl_cmd_notify';
 const DELETE_KEY = 'irl_cmd_delete';
 const ONBOARDING_KEY = 'irl_cmd_onboarding';
+const REACCEPT_KEY = 'irl_cmd_reaccept_agreement';
 const PROPOSE_EVENT_KEY = 'irl_cmd_propose_event';
 
 export function createCommands({
@@ -67,6 +68,17 @@ export function createCommands({
     return result;
   }
 
+  // Accept a bumped Terms of Use version (POST /me/agreement). The version
+  // must be the one the server said is required — the screen passes it
+  // through from GET /me, never the local AGREEMENT_VERSION constant,
+  // which can lag behind a freshly bumped requirement.
+  async function reacceptAgreement({ agreementVersion }) {
+    const commandId = getOrMakeCommandId(REACCEPT_KEY);
+    const result = await api.post('/me/agreement', { commandId, agreementVersion });
+    storage.removeItem(REACCEPT_KEY);
+    return result;
+  }
+
   async function updateProfile({ name, avatar, vibeMessage } = {}) {
     const commandId = getOrMakeCommandId(PROFILE_UPDATE_KEY);
     const body = { commandId };
@@ -116,6 +128,10 @@ export function createCommands({
 
   async function getNotifyList() {
     return await api.get('/admin/notify-list');
+  }
+
+  async function setRequiredAgreementVersion({ version }) {
+    return await api.post('/admin/agreement-version', { commandId: makeId(), version });
   }
 
   async function proposeEvent({
@@ -281,6 +297,8 @@ export function createCommands({
     createProfile,
     interviewTurn,
     completeOnboarding,
+    reacceptAgreement,
+    setRequiredAgreementVersion,
     updateProfile,
     verifyLocality,
     checkLocality,
