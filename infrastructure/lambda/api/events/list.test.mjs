@@ -315,3 +315,24 @@ test('interest overlaps are not flagged; cancelled confirmations do not conflict
     assert.equal('conflictsWith' in e, false, e.eventId);
   }
 });
+
+// ─── Capacity: full annotation ───
+
+test('full: true only while joinable and out of member spots', async () => {
+  client.send = spy(async (cmd) => {
+    if (cmd.input.KeyConditionExpression) return { Items: [] };
+    return { Items: [
+      timed('evt-1', '10:00', '12:00', { maxAttendance: 4, confirmedCount: 3 }),
+      timed('evt-2', '13:00', '14:00', { maxAttendance: 4, confirmedCount: 2 }),
+      timed('evt-3', '15:00', '16:00', { maxAttendance: 4, confirmedCount: 3, lifecycleState: 'cancelled' }),
+      timed('evt-4', '17:00', '18:00'),
+    ] };
+  });
+
+  const body = JSON.parse((await handler(makeEvent({ claims: validClaims }))).body);
+  const byId = Object.fromEntries(body.events.map((e) => [e.eventId, e]));
+  assert.equal(byId['evt-1'].full, true);
+  assert.equal('full' in byId['evt-2'], false);
+  assert.equal('full' in byId['evt-3'], false, 'cancelled events are not "full"');
+  assert.equal('full' in byId['evt-4'], false, 'uncapped events are never full');
+});

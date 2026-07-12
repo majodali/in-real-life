@@ -1858,6 +1858,11 @@ html, body {
   color: var(--amber);
 }
 
+.mylevel-full {
+  background: color-mix(in srgb, var(--earth) 12%, transparent);
+  color: var(--earth);
+}
+
 .mylevel-cancelled-on-me {
   background: color-mix(in srgb, var(--rust) 16%, transparent);
   color: var(--rust);

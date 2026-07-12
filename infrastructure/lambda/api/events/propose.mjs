@@ -5,6 +5,8 @@
 // organizerName is the user's profile snapshot at proposal time —
 // renames to the user's profile after this don't update the event card.
 
+import { validateCost, validateMaxAttendance } from './event-fields.mjs';
+
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
 const VALID_SOURCES = new Set(['community', 'external', 'platform']);
 
@@ -71,6 +73,18 @@ export function createProposeEventHandler({ runner, makeEventId }) {
     if (!Number.isInteger(minimumAttendance) || minimumAttendance < 3) {
       return reply(400, { error: 'minimumAttendance must be an integer >= 3' });
     }
+    let cost;
+    if (body.cost !== undefined) {
+      const checked = validateCost(body.cost);
+      if (checked.error) return reply(400, { error: checked.error });
+      cost = checked.value;
+    }
+    let maxAttendance;
+    if (body.maxAttendance !== undefined) {
+      const checked = validateMaxAttendance(body.maxAttendance, minimumAttendance);
+      if (checked.error) return reply(400, { error: checked.error });
+      maxAttendance = checked.value;
+    }
 
     const eventId = makeEventId();
     const aggregateId = `event#${eventId}`;
@@ -86,6 +100,8 @@ export function createProposeEventHandler({ runner, makeEventId }) {
     if (endTime !== undefined) data.endTime = endTime;
     if (location !== undefined) data.location = location;
     if (description !== undefined) data.description = description;
+    if (cost !== undefined) data.cost = cost;
+    if (maxAttendance !== undefined) data.maxAttendance = maxAttendance;
     data.timesApproximate = body.timesApproximate === true;
     data.minimumAttendance = minimumAttendance;
     data.autoPlanOnThreshold = body.autoPlanOnThreshold === true;

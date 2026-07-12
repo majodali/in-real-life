@@ -77,6 +77,18 @@ export async function renderEventDetail(eventId) {
           <span class="event-fact-label">Where</span>
           <span class="event-fact-value">${event.location ? escapeHtml(event.location) : 'To be decided'}</span>
         </div>
+        ${event.cost ? `
+        <div class="event-fact">
+          <span class="event-fact-label">Cost</span>
+          <span class="event-fact-value">$${escapeHtml(String(event.cost.amount))} — covers ${escapeHtml(event.cost.covers)}</span>
+        </div>
+        ` : ''}
+        ${event.maxAttendance ? `
+        <div class="event-fact">
+          <span class="event-fact-label">Spots</span>
+          <span class="event-fact-value">${event.maxAttendance} including the organizer${event.full ? ' — currently full' : ''}</span>
+        </div>
+        ` : ''}
         <div class="event-fact">
           <span class="event-fact-label">Organizer</span>
           <span class="event-fact-value">${escapeHtml(event.organizerName)}</span>
@@ -102,7 +114,7 @@ export async function renderEventDetail(eventId) {
 
       ${showInteractionButtons ? `
         <div class="event-actions" id="eventActions">
-          ${renderInteractionButtons(event.myLevel, effective)}
+          ${renderInteractionButtons(event.myLevel, effective, event.full === true)}
         </div>
       ` : ''}
 
@@ -247,7 +259,27 @@ function renderConflictNote(event, events) {
   `;
 }
 
-function renderInteractionButtons(myLevel, effective) {
+function renderInteractionButtons(myLevel, effective, full = false) {
+  // Full events keep interest open (demand signal for a bigger room or a
+  // repeat) but can't take more confirmations; existing confirmations
+  // keep their normal controls.
+  if (full && myLevel !== 'confirmed') {
+    if (myLevel === 'interested') {
+      return `
+        <div class="event-action-status">✓ You're interested</div>
+        <p class="event-action-hint">This one's full — if a spot frees up, interest is how you'll hear about it.</p>
+        <div class="event-action-row">
+          <button class="btn-outline-rust" data-action="withdraw">Not anymore</button>
+        </div>
+      `;
+    }
+    return `
+      <p class="event-action-hint">This one's full — register interest and the organizer can gauge demand for a repeat.</p>
+      <div class="event-action-row">
+        <button class="btn-secondary" data-action="interested">I'm interested</button>
+      </div>
+    `;
+  }
   // An idea has no time or place to commit to yet — interest is the
   // idea-stage currency (the backend rejects confirmation with 409).
   if (effective === 'idea') {

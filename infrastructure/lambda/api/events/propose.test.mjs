@@ -282,3 +282,41 @@ test('organizerName defaults to email-prefix when omitted', async () => {
   const d = runner.runCommand.calls[0][0].events[0].data;
   assert.equal(d.organizerName, 'a');
 });
+
+// ─── Richer event data: cost disclosure (D34) + capacity ───
+
+test('cost and maxAttendance ride into EventProposed when valid', async () => {
+  const response = await handler(makeEvent({
+    claims: validClaims,
+    body: { ...validBody, cost: { amount: 12, covers: 'materials' }, maxAttendance: 8 },
+  }));
+  assert.equal(response.statusCode, 201);
+  const data = runner.runCommand.calls[0][0].events[0].data;
+  assert.deepEqual(data.cost, { amount: 12, covers: 'materials' });
+  assert.equal(data.maxAttendance, 8);
+});
+
+test('cost without covers is 400 — disclosure required (D34)', async () => {
+  const response = await handler(makeEvent({
+    claims: validClaims,
+    body: { ...validBody, cost: { amount: 12 } },
+  }));
+  assert.equal(response.statusCode, 400);
+  assert.match(JSON.parse(response.body).error, /covers/);
+});
+
+test('maxAttendance below minimumAttendance is 400', async () => {
+  const response = await handler(makeEvent({
+    claims: validClaims,
+    body: { ...validBody, minimumAttendance: 6, maxAttendance: 5 },
+  }));
+  assert.equal(response.statusCode, 400);
+  assert.match(JSON.parse(response.body).error, /maxAttendance/);
+});
+
+test('omitted cost/maxAttendance leave the event data clean', async () => {
+  await handler(makeEvent({ claims: validClaims, body: validBody }));
+  const data = runner.runCommand.calls[0][0].events[0].data;
+  assert.equal('cost' in data, false);
+  assert.equal('maxAttendance' in data, false);
+});

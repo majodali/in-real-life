@@ -14,6 +14,9 @@ export async function handleProposeSubmit({
   endTime,
   location,
   organizerName,
+  costAmount,
+  costCovers,
+  maxAttendance,
   minimumAttendance,
   autoPlanOnThreshold,
   timesApproximate,
@@ -67,11 +70,42 @@ export async function handleProposeSubmit({
     }
   }
 
+  // Cost disclosure (D34): an amount never travels without what it covers.
+  let cost;
+  const amountBlank = costAmount === undefined || costAmount === null || costAmount === '';
+  const coversBlank = !(costCovers ?? '').trim();
+  if (!amountBlank || !coversBlank) {
+    const amount = Number(costAmount);
+    if (amountBlank || !Number.isFinite(amount) || amount <= 0) {
+      onValidationError?.('costAmount');
+      showToast('Cost needs a positive amount — or clear both cost fields for a free event.');
+      return;
+    }
+    if (coversBlank) {
+      onValidationError?.('costCovers');
+      showToast('Say what the cost covers — that\u2019s the one required bit for paid events.');
+      return;
+    }
+    cost = { amount, covers: costCovers.trim() };
+  }
+
   const minAttendance = normaliseMinimum(minimumAttendance);
   if (minimumAttendance !== undefined && minimumAttendance !== '' && minAttendance == null) {
     onValidationError?.('minimumAttendance');
     showToast('Minimum attendance must be a whole number of 3 or more.');
     return;
+  }
+
+  let maxSpots;
+  if (maxAttendance !== undefined && maxAttendance !== null && maxAttendance !== '') {
+    const n = Number(maxAttendance);
+    const floor = minAttendance ?? 3;
+    if (!Number.isInteger(n) || n < floor) {
+      onValidationError?.('maxAttendance');
+      showToast(`Spots must be a whole number of at least ${floor} (you count too).`);
+      return;
+    }
+    maxSpots = n;
   }
 
   const trimmedDescription = description?.trim();
@@ -85,6 +119,8 @@ export async function handleProposeSubmit({
       location: trimmedLocation || undefined,
       organizerName: trimmedOrganizerName || undefined,
       minimumAttendance: minAttendance ?? undefined,
+      cost,
+      maxAttendance: maxSpots,
       autoPlanOnThreshold: autoPlanOnThreshold === true,
       timesApproximate: timesApproximate === true,
     });
