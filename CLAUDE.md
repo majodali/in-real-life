@@ -6,7 +6,7 @@ A mobile-first web app for a local community meetup platform. Users go through a
 
 ## Design documentation
 
-`docs/README.md` is the index to the design notes; `docs/decisions.md` is the canonical decision register (D1–D52) and `docs/open-risks.md` the known-gaps tracker. Read those before extending any designed area — most conceptual decisions (user model, onboarding, debrief, matching, policy, trust) are already made and recorded there.
+`docs/README.md` is the index to the design notes; `docs/decisions.md` is the canonical decision register (D1–D52), `docs/open-risks.md` the known-gaps tracker, and `docs/radar.md` the register of tracked-but-undesigned workstreams (R1–R7: decision registers & feedback intake, A/B testing UX, age/locality verification, staff↔member support comms, community launch playbook, broad community feedback, pricing & sponsorship). Read those before extending any designed area — most conceptual decisions (user model, onboarding, debrief, matching, policy, trust) are already made and recorded there.
 
 ## Architecture
 
@@ -173,7 +173,7 @@ Everything needed for a real adult to land on the site, learn what IRL is, agree
 - [ ] Website / homepage — explains what IRL is, links to sign-up
 - [ ] User agreement — adults-only for now, terms of use, privacy
 - [x] Public user sign-up flow (Cognito sign-up + email verify → `UserRegistered`)
-- [x] Locality verification — manual admin approval implemented (request → verify → activate chain); automated verification (postcard, third-party) still open
+- [x] Locality verification — manual admin approval implemented (request → verify → activate chain); automated verification (postcard, third-party) still open — design alongside age verification (radar R3)
 - [ ] Profile data model — richer than today's name/avatar/vibe; includes interview responses, attributes, preferences
 - [ ] Profile view + edit (extend current screen)
 - [ ] Optional user attributes — entered if user considers them valuable for matching
@@ -227,11 +227,11 @@ Trust & safety surface, internal admin/support tooling.
 - [ ] Mutual blocks UX — event visibility, attendee counts
 - [ ] Internal user contributor rating — trustworthy, positive contributor; private, used for group composition
 - [ ] Admin & support UI — system metrics, health, logs/traces, support requests, data management, workshop controls (time, seed, automated activity)
-- [ ] User support — support info, request for support, assistant chat, support staff chat
+- [ ] User support — support info, request for support, assistant chat, support staff chat; communication design first (radar R4)
 
 ### Group 5 — Production economics
 
-- [ ] Billing & plans — paid tiers, payment integration (Stripe?), entitlements, plan-based feature gates. Workshop mode bypasses entirely.
+- [ ] Billing & plans — paid tiers, payment integration (Stripe?), entitlements, plan-based feature gates. Workshop mode bypasses entirely. Pricing model + sponsorship stance come first (radar R7).
 
 ### Group 6 — Deferred
 
@@ -243,7 +243,7 @@ Items that can land alongside any group above once prerequisites exist.
 
 - [ ] Recurring events (weekly coffee walk, monthly book swap)
 - [ ] Weather/seasonality awareness for outdoor events
-- [ ] Multiple locations beyond Bainbridge Island
+- [ ] Multiple locations beyond Bainbridge Island — per the launch playbook (radar R5)
 - [ ] Notifications — push, email digest, in-app only?
 - [ ] Calendar integration — export confirmed events
 - [ ] Reminders for confirmed meetups

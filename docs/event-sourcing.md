@@ -308,7 +308,7 @@ The replay path and any consumer reads the event through the upcast pipeline.
 
 - **DynamoDB Streams** on `irl-events-log` — enabled from day one, ready for async consumers
 - **EventBridge bus** — if/when we have multiple downstream services beyond the API Lambda
-- **OpenTelemetry** — only if we leave AWS; X-Ray is sufficient until then
+- **OpenTelemetry / roll-our-own tracing** — only if X-Ray proves unwieldy or we leave AWS. The escape hatch is already cheap: `lib/tracing.mjs` speaks the daemon wire protocol directly (no X-Ray SDK anywhere), the tracer is injected into the command runner, and the structured log lines carry the same correlation ids — so replacing X-Ray means swapping the emitter for our own collector (or leaning on the logs alone), not rewriting instrumentation.
 
 ## First implementation slice
 
