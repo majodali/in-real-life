@@ -31,8 +31,9 @@ export async function renderEventDetail(eventId) {
   document.getElementById('eventBack').addEventListener('click', () => navigate('feed'));
 
   let event;
+  let events = [];
   try {
-    const { events } = await commands.listEvents();
+    events = (await commands.listEvents()).events ?? [];
     event = events.find((e) => e.eventId === eventId);
   } catch (err) {
     container.querySelector('.event-detail-loading').textContent =
@@ -104,6 +105,8 @@ export async function renderEventDetail(eventId) {
           ${renderInteractionButtons(event.myLevel, effective)}
         </div>
       ` : ''}
+
+      ${renderConflictNote(event, events)}
 
       ${iAmOrganizer ? renderOrganizerControls(event) : ''}
 
@@ -210,6 +213,22 @@ function bindDebriefForm(container, event) {
       submit.textContent = 'Save';
     }
   });
+}
+
+// Standing double-confirmation note (from the list annotation, so edits
+// that create an overlap later are caught too). Gentle: never a blocker.
+function renderConflictNote(event, events) {
+  if (!event.conflictsWith?.length) return '';
+  const titles = event.conflictsWith
+    .map((id) => events.find((e) => e.eventId === id)?.title)
+    .filter(Boolean);
+  const names = titles.length ? titles.map((t) => `“${escapeHtml(t)}”`).join(', ') : 'another event';
+  return `
+    <div class="event-conflict-note">
+      ⚠ This overlaps with ${names}, which you're also confirmed for.
+      If you can't make both, free up a spot so others can plan around you.
+    </div>
+  `;
 }
 
 function renderInteractionButtons(myLevel, effective) {

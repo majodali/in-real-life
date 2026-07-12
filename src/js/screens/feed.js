@@ -113,6 +113,9 @@ function renderCard(event) {
     : event.myLevel === 'interested'
       ? `<span class="card-mylevel mylevel-interested">★ You're interested</span>`
       : '';
+  const conflictBadge = event.conflictsWith?.length
+    ? `<span class="card-mylevel mylevel-conflict">⚠ Overlaps another plan</span>`
+    : '';
 
   const bodyHtml = `
     <div class="card-body">
@@ -126,7 +129,7 @@ function renderCard(event) {
         <span>\u{1F4CD} ${escapeHtml(event.location ?? 'Place TBD')}</span>
       </div>
       <div class="card-organizer">by ${escapeHtml(event.organizerName)}</div>
-      ${myLevelBadge}
+      ${myLevelBadge}${conflictBadge}
     </div>
   `;
 

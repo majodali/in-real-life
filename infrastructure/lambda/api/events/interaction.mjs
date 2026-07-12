@@ -6,8 +6,9 @@
 // previousLevel, then emits the appropriate event. Projections do the
 // count math via atomic ADD on the event row.
 
-import { GetCommand } from '@aws-sdk/lib-dynamodb';
+import { GetCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
 import { computeEffectiveState, simulatedNowIso, CHANGE_OPEN_STATES } from '../lib/lifecycle-state.mjs';
+import { eventsOverlap } from './overlap.mjs';
 
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
 const VALID_LEVELS = new Set(['interested', 'confirmed']);
@@ -37,6 +38,50 @@ function userNameFor(claims, override) {
   if (override) return override;
   if (claims.email) return claims.email.split('@')[0];
   return 'someone';
+}
+
+// The caller's OTHER still-live confirmed events whose times overlap the
+// target (backlog: overlapping RSVPs). Interest overlaps are deliberately
+// not computed — browsing options is fine; double-confirmation is the
+// reliability problem worth surfacing. Never blocks anything: the result
+// rides on the response as a heads-up, and co-located or deliberate
+// doubles are legitimate (the member decides, never the system).
+async function findConfirmedOverlaps({
+  client, interactionsTable, eventsTable, userId, targetEventId, targetRow, nowIso,
+}) {
+  const confirmed = [];
+  let lastKey;
+  do {
+    const out = await client.send(new QueryCommand({
+      TableName: interactionsTable,
+      KeyConditionExpression: 'userId = :u',
+      ExpressionAttributeValues: { ':u': userId },
+      ...(lastKey ? { ExclusiveStartKey: lastKey } : {}),
+    }));
+    for (const row of out.Items ?? []) {
+      if (row.level === 'confirmed' && row.eventId !== targetEventId) {
+        confirmed.push(row.eventId);
+      }
+    }
+    lastKey = out.LastEvaluatedKey;
+  } while (lastKey);
+
+  const conflicts = [];
+  for (const otherId of confirmed) {
+    const other = await readEventRow(client, eventsTable, otherId);
+    if (!other) continue;
+    // A spot on a cancelled event is no longer a real commitment.
+    if (computeEffectiveState(other, nowIso) === 'cancelled') continue;
+    if (eventsOverlap(targetRow, other)) {
+      conflicts.push({
+        eventId: other.eventId,
+        title: other.title,
+        startTime: other.startTime,
+        endTime: other.endTime,
+      });
+    }
+  }
+  return conflicts;
 }
 
 export function createSetInteractionHandler({
@@ -87,6 +132,21 @@ export function createSetInteractionHandler({
     // Already at requested level → no-op (idempotent without writing).
     if (previousLevel === level) {
       return reply(200, { eventId, level, noop: true });
+    }
+
+    // Overlap heads-up (never a gate): computed before the command so the
+    // response can carry it, surfaced only when newly confirming.
+    let conflicts = [];
+    if (level === 'confirmed') {
+      conflicts = await findConfirmedOverlaps({
+        client,
+        interactionsTable,
+        eventsTable,
+        userId,
+        targetEventId: eventId,
+        targetRow: eventRow,
+        nowIso: simulatedNowIso(offsetMs),
+      });
     }
 
     const eventType = level === 'confirmed' ? 'AttendanceConfirmed' : 'InterestExpressed';
@@ -151,7 +211,10 @@ export function createSetInteractionHandler({
       }
     }
 
-    return reply(out.cached ? 200 : 201, out.result);
+    return reply(
+      out.cached ? 200 : 201,
+      conflicts.length ? { ...out.result, conflicts } : out.result,
+    );
   };
 }
 

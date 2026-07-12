@@ -261,3 +261,57 @@ test('list: response includes effectiveState per event and simulatedTime', async
     Date.now = realNow;
   }
 });
+
+// ─── Overlapping RSVPs: conflictsWith annotation ───
+
+function overlapFixture({ interactions, rows }) {
+  client.send = spy(async (cmd) => {
+    if (cmd.input.KeyConditionExpression) return { Items: interactions };
+    return { Items: rows };
+  });
+}
+
+const timed = (id, start, end, overrides = {}) => sampleRow({
+  eventId: id,
+  startTime: `2099-01-01T${start}:00.000Z`,
+  endTime: `2099-01-01T${end}:00.000Z`,
+  lifecycleState: 'planned',
+  ...overrides,
+});
+
+test('two confirmed overlapping events are annotated with each other', async () => {
+  overlapFixture({
+    rows: [timed('evt-1', '10:00', '12:00'), timed('evt-2', '11:00', '13:00'), timed('evt-3', '18:00', '19:00')],
+    interactions: [
+      { eventId: 'evt-1', level: 'confirmed' },
+      { eventId: 'evt-2', level: 'confirmed' },
+      { eventId: 'evt-3', level: 'confirmed' },
+    ],
+  });
+
+  const body = JSON.parse((await handler(makeEvent({ claims: validClaims }))).body);
+  const byId = Object.fromEntries(body.events.map((e) => [e.eventId, e]));
+  assert.deepEqual(byId['evt-1'].conflictsWith, ['evt-2']);
+  assert.deepEqual(byId['evt-2'].conflictsWith, ['evt-1']);
+  assert.equal('conflictsWith' in byId['evt-3'], false, 'disjoint stays clean');
+});
+
+test('interest overlaps are not flagged; cancelled confirmations do not conflict', async () => {
+  overlapFixture({
+    rows: [
+      timed('evt-1', '10:00', '12:00'),
+      timed('evt-2', '11:00', '13:00'),
+      timed('evt-4', '10:30', '11:30', { lifecycleState: 'cancelled' }),
+    ],
+    interactions: [
+      { eventId: 'evt-1', level: 'confirmed' },
+      { eventId: 'evt-2', level: 'interested' },
+      { eventId: 'evt-4', level: 'confirmed' },
+    ],
+  });
+
+  const body = JSON.parse((await handler(makeEvent({ claims: validClaims }))).body);
+  for (const e of body.events) {
+    assert.equal('conflictsWith' in e, false, e.eventId);
+  }
+});

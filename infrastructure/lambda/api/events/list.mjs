@@ -7,6 +7,7 @@
 
 import { ScanCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
 import { computeEffectiveState } from '../lib/lifecycle-state.mjs';
+import { eventsOverlap } from './overlap.mjs';
 
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
 
@@ -73,6 +74,19 @@ export function createListEventsHandler({ client, eventsTable, interactionsTable
       myDebrief: debriefByEvent.get(e.eventId) ?? null,
       effectiveState: computeEffectiveState(e, nowIso),
     }));
+
+    // Double-confirmation conflicts, computed at read time so edits that
+    // create (or dissolve) an overlap after the fact are always caught.
+    // Interest overlaps are deliberately not flagged — browsing options is
+    // fine — and nothing is ever auto-cancelled; the member decides.
+    const myLive = events.filter((e) => e.myLevel === 'confirmed'
+      && e.effectiveState !== 'cancelled' && e.effectiveState !== 'over');
+    for (const e of myLive) {
+      const overlapping = myLive
+        .filter((other) => other.eventId !== e.eventId && eventsOverlap(e, other))
+        .map((other) => other.eventId);
+      if (overlapping.length) e.conflictsWith = overlapping;
+    }
 
     return reply(200, { events, count: events.length, simulatedTime: nowIso });
   };
