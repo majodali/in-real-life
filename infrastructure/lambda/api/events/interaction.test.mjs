@@ -36,7 +36,10 @@ let runner, client, handler, withdrawHandler;
 let eventRow, interactionRow;
 
 beforeEach(() => {
-  eventRow = { eventId: 'evt-1', seq: 1, lifecycleState: 'proposed' };
+  eventRow = {
+    eventId: 'evt-1', seq: 1, lifecycleState: 'proposed',
+    startTime: '2099-01-01T10:00:00Z', endTime: '2099-01-01T12:00:00Z', location: 'The Park',
+  };
   interactionRow = null;
   client = {
     send: spy(async (cmd) => {
@@ -378,4 +381,25 @@ test('debrief: notes is optional and capped at 500 chars', async () => {
   }));
   const data = runner.runCommand.calls[0][0].events[0].data;
   assert.equal(data.notes.length, 500);
+});
+
+// ─── Ideas (time/place-less proposals) ───
+
+test('interest on an idea is allowed', async () => {
+  eventRow = { eventId: 'evt-1', seq: 1, lifecycleState: 'proposed', title: 'Scrabble?' };
+  const res = await handler(makeEvent({
+    claims: validClaims, body: { commandId: 'cmd-1', level: 'interested' },
+  }));
+  assert.equal(res.statusCode, 201);
+  assert.equal(runner.runCommand.calls[0][0].events[0].eventType, 'InterestExpressed');
+});
+
+test('confirming an idea is rejected until a time and place are set', async () => {
+  eventRow = { eventId: 'evt-1', seq: 1, lifecycleState: 'proposed', title: 'Scrabble?' };
+  const res = await handler(makeEvent({
+    claims: validClaims, body: { commandId: 'cmd-1', level: 'confirmed' },
+  }));
+  assert.equal(res.statusCode, 409);
+  assert.match(JSON.parse(res.body).error, /still an idea/);
+  assert.equal(runner.runCommand.calls.length, 0);
 });

@@ -14,14 +14,23 @@
 
 // The phases during which an event is still open to changes — proposing
 // suggestions, editing, registering interest/confirmation. Once an event is
-// in-progress, over, or cancelled, these surfaces close.
-export const CHANGE_OPEN_STATES = new Set(['proposed', 'planned']);
+// in-progress, over, or cancelled, these surfaces close. Ideas are the most
+// open of all: they exist precisely to be shaped.
+export const CHANGE_OPEN_STATES = new Set(['idea', 'proposed', 'planned']);
 
 // nowIso is the simulated-clock ISO timestamp (see simulatedNowIso). Passing
 // it in (rather than reading the clock here) keeps this a pure function so it
 // can be unit-tested and reused across readers within a single request.
+//
+// "idea" is derived, not stored: a proposed event missing any of startTime /
+// endTime / location is an idea ("Anyone into scrabble?") — interest-only
+// until it firms up via edit / suggestions / polls. Confirmation and
+// scheduling both require the concrete trio, so an idea can never
+// auto-plan or drift into time-derived states.
 export function computeEffectiveState(row, nowIso) {
   if (row.lifecycleState === 'cancelled') return 'cancelled';
+  if (row.lifecycleState === 'proposed'
+    && !(row.startTime && row.endTime && row.location)) return 'idea';
   if (row.lifecycleState !== 'planned') return row.lifecycleState;
   if (row.endTime && nowIso >= row.endTime) return 'over';
   if (row.startTime && nowIso >= row.startTime) return 'in-progress';

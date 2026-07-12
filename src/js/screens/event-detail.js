@@ -54,7 +54,7 @@ export async function renderEventDetail(eventId) {
   // While the event is still open (proposed or planned) it accepts changes —
   // interest, suggestions, polls. The backend rejects all of these once the
   // event is in-progress, over, or cancelled, so the UI follows suit.
-  const openForChanges = effective === 'proposed' || effective === 'planned';
+  const openForChanges = effective === 'idea' || effective === 'proposed' || effective === 'planned';
   const showInteractionButtons = openForChanges;
 
   container.querySelector('.profile-body').innerHTML = `
@@ -70,11 +70,11 @@ export async function renderEventDetail(eventId) {
       <div class="event-facts">
         <div class="event-fact">
           <span class="event-fact-label">When</span>
-          <span class="event-fact-value">${escapeHtml(start)}${event.timesApproximate ? ' <span class="event-fact-approx">(approximate)</span>' : ''}</span>
+          <span class="event-fact-value">${event.startTime ? escapeHtml(start) : 'To be decided'}${event.timesApproximate ? ' <span class="event-fact-approx">(approximate)</span>' : ''}</span>
         </div>
         <div class="event-fact">
           <span class="event-fact-label">Where</span>
-          <span class="event-fact-value">${escapeHtml(event.location)}</span>
+          <span class="event-fact-value">${event.location ? escapeHtml(event.location) : 'To be decided'}</span>
         </div>
         <div class="event-fact">
           <span class="event-fact-label">Organizer</span>
@@ -101,7 +101,7 @@ export async function renderEventDetail(eventId) {
 
       ${showInteractionButtons ? `
         <div class="event-actions" id="eventActions">
-          ${renderInteractionButtons(event.myLevel)}
+          ${renderInteractionButtons(event.myLevel, effective)}
         </div>
       ` : ''}
 
@@ -113,7 +113,7 @@ export async function renderEventDetail(eventId) {
       ${openForChanges ? `
         <div class="event-suggestions" id="suggestionsSection"></div>
       ` : ''}
-      ${effective === 'proposed' ? `
+      ${effective === 'proposed' || effective === 'idea' ? `
         <div class="event-suggestions" id="pollsSection"></div>
       ` : ''}
     </div>
@@ -212,7 +212,26 @@ function bindDebriefForm(container, event) {
   });
 }
 
-function renderInteractionButtons(myLevel) {
+function renderInteractionButtons(myLevel, effective) {
+  // An idea has no time or place to commit to yet — interest is the
+  // idea-stage currency (the backend rejects confirmation with 409).
+  if (effective === 'idea') {
+    if (myLevel === 'interested') {
+      return `
+        <div class="event-action-status">✓ You're interested</div>
+        <p class="event-action-hint">Still an idea — once a time and place are set, you can commit to going.</p>
+        <div class="event-action-row">
+          <button class="btn-outline-rust" data-action="withdraw">Not anymore</button>
+        </div>
+      `;
+    }
+    return `
+      <p class="event-action-hint">Still an idea — say you're interested and help pin down a time and place.</p>
+      <div class="event-action-row">
+        <button class="btn-primary" data-action="interested">I'm interested</button>
+      </div>
+    `;
+  }
   if (myLevel === 'confirmed') {
     return `
       <div class="event-action-status">✓ You're confirmed</div>
@@ -248,11 +267,15 @@ function renderOrganizerControls(event) {
   // when confirmedCount + 1 >= min.
   const reached = (event.confirmedCount ?? 0) + 1 >= min;
   const stored = event.lifecycleState;
+  const isIdea = effective === 'idea';
 
   return `
     <div class="event-organizer-controls">
       <div class="organizer-controls-label">Your event</div>
-      ${stored === 'proposed' ? `
+      ${stored === 'proposed' && isIdea ? `
+        <p class="organizer-threshold-met">Set a time and place (Edit event) before confirming it's happening — until then it floats as an idea.</p>
+      ` : ''}
+      ${stored === 'proposed' && !isIdea ? `
         ${reached ? `
           <p class="organizer-threshold-met">✨ Threshold reached. ${event.autoPlanOnThreshold ? 'Auto-plan should have triggered — refresh to see it.' : 'Confirm this is happening when you\'re ready.'}</p>
         ` : ''}
@@ -383,6 +406,7 @@ function promptCancel(container, event) {
 }
 
 const LIFECYCLE_LABELS = {
+  idea: 'Idea',
   proposed: 'Proposed',
   planned: 'Planned',
   'in-progress': 'Happening now',

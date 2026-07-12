@@ -60,6 +60,11 @@ export function createScheduleEventHandler({ runner, client, eventsTable }) {
     if (row.lifecycleState !== 'proposed') {
       return reply(409, { error: `event is ${row.lifecycleState}; can only schedule from proposed` });
     }
+    // An idea can't be scheduled — "planned" is a promise of a concrete
+    // when-and-where. Firm it up (edit, or adopt a suggestion/poll) first.
+    if (!(row.startTime && row.endTime && row.location)) {
+      return reply(409, { error: 'still an idea — set a time and place before confirming it’s happening' });
+    }
 
     const events = [{
       eventType: 'EventScheduled',
@@ -183,9 +188,17 @@ export function createEditEventHandler({ runner, client, eventsTable, getOffset 
         return reply(400, { error: 'endTime is not a parseable ISO datetime' });
       }
       const effectiveStart = 'startTime' in fields ? fields.startTime : row.startTime;
+      if (!effectiveStart) {
+        return reply(400, { error: 'set startTime along with endTime' });
+      }
       if (new Date(fields.endTime) <= new Date(effectiveStart)) {
         return reply(400, { error: 'endTime must be after startTime' });
       }
+    }
+    // The reverse pairing: giving an idea its first startTime requires the
+    // endTime too, so a proposal never sits half-timed.
+    if ('startTime' in fields && !('endTime' in fields) && !row.endTime) {
+      return reply(400, { error: 'set endTime along with startTime' });
     }
 
     const events = [{

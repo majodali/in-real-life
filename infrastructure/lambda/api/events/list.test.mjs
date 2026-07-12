@@ -194,7 +194,12 @@ test('computeEffectiveState: cancelled stays cancelled regardless of time', () =
 });
 
 test('computeEffectiveState: proposed stays proposed', () => {
-  const row = { lifecycleState: 'proposed', startTime: '2020-01-01T00:00:00Z' };
+  const row = {
+    lifecycleState: 'proposed',
+    startTime: '2020-01-01T00:00:00Z',
+    endTime: '2020-01-01T01:00:00Z',
+    location: 'Park',
+  };
   assert.equal(computeEffectiveState(row, '2026-06-01T12:00:00Z'), 'proposed');
 });
 

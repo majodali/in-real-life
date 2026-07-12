@@ -72,6 +72,12 @@ export function createSetInteractionHandler({
     if (!CHANGE_OPEN_STATES.has(effective)) {
       return reply(409, { error: `event is ${effective}; can no longer change interest` });
     }
+    // Interest is the idea-stage currency: you can't promise to show up to
+    // an event with no time or place yet. Confirmation opens when it firms
+    // up — which also keeps auto-plan from firing on an idea.
+    if (level === 'confirmed' && effective === 'idea') {
+      return reply(409, { error: 'still an idea — register interest until a time and place are set' });
+    }
 
     const userId = claims.sub;
     const interactionRow = await readInteractionRow(client, interactionsTable, userId, eventId);

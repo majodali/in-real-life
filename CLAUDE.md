@@ -184,14 +184,14 @@ Everything needed for a real adult to land on the site, learn what IRL is, agree
 
 Extends the prototype's RSVP→confirm→attend→debrief flow into a full proposed → planned → in-progress → over → cancelled lifecycle, with users able to propose events.
 
-- [x] Full event lifecycle states: proposed, planned, in-progress, over, cancelled (stored states command-driven; in-progress/over time-derived)
+- [x] Full event lifecycle states: proposed, planned, in-progress, over, cancelled (stored states command-driven; in-progress/over time-derived; idea time/place-derived)
 - [ ] Event cancellation flow — cancel command exists; what happens to RSVPs/attendee notification still open
 - [x] Minimum attendance threshold (auto-plan at `minimumAttendance`)
 - [x] User proposes event (`POST /events` → `EventProposed`)
 - [ ] Three event types: external/third-party, user-organized, this-user-organized
 - [x] Track interest before commitment (`InterestExpressed` distinct from `AttendanceConfirmed`)
 - [x] Time/date suggestion handling for proposed events (suggestions: make/vote/adopt/reject/respond; polls: create/vote/close)
-- [ ] Time/place-less proposals — "Anyone into scrabble?" as a first-class early stage (idea → proposed once time/place firm up, e.g. via the existing polls); likely a common case. Note: propose currently *requires* startTime/endTime/location
+- [x] Time/place-less proposals — "Anyone into scrabble?" is a first-class **idea** stage: `POST /events` accepts title-only proposals (times stay a pair when given); `idea` is *derived*, not stored (`lifecycleState` stays `proposed`; missing any of startTime/endTime/location ⇒ idea), so no event-vocabulary change. Ideas are maximally open (suggestions, polls, edits, interest) but interest is the idea-stage currency — confirmation and scheduling 409 until the time/place trio is set via edit (auto-plan therefore can't fire on an idea). Feed/detail render TBD + interest-only affordances
 - [ ] Overlapping RSVPs — members RSVP'd/confirmed to same-time events: surface the conflict gently, distinguish interest (overlapping is fine) from double-confirmation (a reliability problem), handle by scenario (accident, can't decide, co-located events, spam); never auto-cancel
 - [ ] General event management — edit, cancel, notify attendees
 - [ ] Richer event data — images, descriptions, organisers

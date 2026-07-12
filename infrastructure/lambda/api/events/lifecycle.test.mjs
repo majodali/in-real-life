@@ -47,6 +47,7 @@ beforeEach(() => {
     // Far-future sentinel — never a near-future date, which rots as the
     // calendar passes it and silently flips planned rows to in-progress/over.
     startTime: '2099-01-01T10:00:00Z',
+    endTime: '2099-01-01T12:00:00Z',
   };
   client = {
     send: spy(async () => ({ Item: eventRow })),
@@ -340,4 +341,53 @@ test('edit: trims string fields', async () => {
   const fields = runner.runCommand.calls[0][0].events[0].data.fields;
   assert.equal(fields.title, 'New');
   assert.equal(fields.location, 'Where');
+});
+
+// ─── Ideas (time/place-less proposals) ───
+
+test('schedule: 409 while the proposal is still an idea', async () => {
+  eventRow = { ...eventRow, location: undefined };
+  const res = await schedule(makeEvent({ claims: organizerClaims, body: { commandId: 'c' } }));
+  assert.equal(res.statusCode, 409);
+  assert.match(JSON.parse(res.body).error, /still an idea/);
+  assert.equal(runner.runCommand.calls.length, 0);
+});
+
+test('edit: an idea can gain its time and place (the firming-up path)', async () => {
+  eventRow = {
+    ...eventRow, startTime: undefined, endTime: undefined, location: undefined,
+  };
+  const res = await edit(makeEvent({
+    claims: organizerClaims,
+    body: {
+      commandId: 'c',
+      startTime: '2099-02-01T10:00:00Z',
+      endTime: '2099-02-01T12:00:00Z',
+      location: 'The Library',
+    },
+  }));
+  assert.equal(res.statusCode, 201);
+  const fields = runner.runCommand.calls[0][0].events[0].data.fields;
+  assert.equal(fields.location, 'The Library');
+  assert.equal(fields.startTime, '2099-02-01T10:00:00Z');
+});
+
+test('edit: times stay a pair — startTime alone on an untimed idea is 400', async () => {
+  eventRow = { ...eventRow, startTime: undefined, endTime: undefined };
+  const res = await edit(makeEvent({
+    claims: organizerClaims,
+    body: { commandId: 'c', startTime: '2099-02-01T10:00:00Z' },
+  }));
+  assert.equal(res.statusCode, 400);
+  assert.match(JSON.parse(res.body).error, /endTime/);
+});
+
+test('edit: endTime alone on an untimed idea is 400', async () => {
+  eventRow = { ...eventRow, startTime: undefined, endTime: undefined };
+  const res = await edit(makeEvent({
+    claims: organizerClaims,
+    body: { commandId: 'c', endTime: '2099-02-01T12:00:00Z' },
+  }));
+  assert.equal(res.statusCode, 400);
+  assert.match(JSON.parse(res.body).error, /startTime/);
 });

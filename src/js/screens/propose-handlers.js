@@ -31,39 +31,40 @@ export async function handleProposeSubmit({
     showToast('A short title helps people find this.');
     return;
   }
-  if (!startTime) {
-    onValidationError?.('startTime');
-    showToast('Pick a start time.');
-    return;
-  }
-  if (!endTime) {
+
+  // Time and place are optional: leaving them blank floats the proposal
+  // as an idea (interest-only until it firms up). Times come as a pair.
+  if (startTime && !endTime) {
     onValidationError?.('endTime');
-    showToast('Pick an end time — you can mark the times approximate if unsure.');
+    showToast('Add an end time too — or clear the start to float this as an idea.');
     return;
   }
-  if (!trimmedLocation) {
-    onValidationError?.('location');
-    showToast('Where is this happening?');
+  if (endTime && !startTime) {
+    onValidationError?.('startTime');
+    showToast('Add a start time too — or clear the end to float this as an idea.');
     return;
   }
 
-  const startIso = toIso(startTime);
-  if (!startIso) {
-    onValidationError?.('startTime');
-    showToast('That start time doesn’t look right.');
-    return;
-  }
-
-  const endIso = toIso(endTime);
-  if (!endIso) {
-    onValidationError?.('endTime');
-    showToast('That end time doesn’t look right.');
-    return;
-  }
-  if (new Date(endIso) <= new Date(startIso)) {
-    onValidationError?.('endTime');
-    showToast('End time needs to be after the start.');
-    return;
+  let startIso;
+  let endIso;
+  if (startTime) {
+    startIso = toIso(startTime);
+    if (!startIso) {
+      onValidationError?.('startTime');
+      showToast('That start time doesn’t look right.');
+      return;
+    }
+    endIso = toIso(endTime);
+    if (!endIso) {
+      onValidationError?.('endTime');
+      showToast('That end time doesn’t look right.');
+      return;
+    }
+    if (new Date(endIso) <= new Date(startIso)) {
+      onValidationError?.('endTime');
+      showToast('End time needs to be after the start.');
+      return;
+    }
   }
 
   const minAttendance = normaliseMinimum(minimumAttendance);
@@ -81,7 +82,7 @@ export async function handleProposeSubmit({
       description: trimmedDescription || undefined,
       startTime: startIso,
       endTime: endIso,
-      location: trimmedLocation,
+      location: trimmedLocation || undefined,
       organizerName: trimmedOrganizerName || undefined,
       minimumAttendance: minAttendance ?? undefined,
       autoPlanOnThreshold: autoPlanOnThreshold === true,

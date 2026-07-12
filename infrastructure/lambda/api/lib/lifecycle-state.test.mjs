@@ -17,7 +17,7 @@ test('cancelled stays cancelled regardless of time', () => {
 });
 
 test('proposed stays proposed even past its startTime', () => {
-  const row = { lifecycleState: 'proposed', startTime: '2026-05-01T00:00:00Z', endTime: '2026-05-01T01:00:00Z' };
+  const row = { lifecycleState: 'proposed', startTime: '2026-05-01T00:00:00Z', endTime: '2026-05-01T01:00:00Z', location: 'Park' };
   assert.equal(computeEffectiveState(row, NOW), 'proposed');
 });
 
@@ -75,8 +75,8 @@ test('isOpenForChanges: false once in-progress, over, or cancelled', () => {
 
 // ─── CHANGE_OPEN_STATES ───
 
-test('CHANGE_OPEN_STATES is exactly proposed + planned', () => {
-  assert.deepEqual([...CHANGE_OPEN_STATES].sort(), ['planned', 'proposed']);
+test('CHANGE_OPEN_STATES is exactly idea + proposed + planned', () => {
+  assert.deepEqual([...CHANGE_OPEN_STATES].sort(), ['idea', 'planned', 'proposed']);
 });
 
 // ─── simulatedNowIso ───
@@ -92,4 +92,32 @@ test('simulatedNowIso adds the offset to wall time', () => {
 test('simulatedNowIso with no offset is ~now', () => {
   const iso = simulatedNowIso(0);
   assert.ok(Math.abs(new Date(iso).getTime() - Date.now()) < 1000);
+});
+
+// ─── Idea stage (time/place-less proposals) ───
+
+test('a proposed row missing any of startTime/endTime/location derives as idea', () => {
+  const base = {
+    lifecycleState: 'proposed',
+    startTime: '2026-07-01T00:00:00Z',
+    endTime: '2026-07-01T02:00:00Z',
+    location: 'Park',
+  };
+  assert.equal(computeEffectiveState({ lifecycleState: 'proposed' }, NOW), 'idea');
+  for (const missing of ['startTime', 'endTime', 'location']) {
+    const row = { ...base };
+    delete row[missing];
+    assert.equal(computeEffectiveState(row, NOW), 'idea', `missing ${missing}`);
+  }
+  assert.equal(computeEffectiveState(base, NOW), 'proposed', 'full trio is a real proposal');
+});
+
+test('ideas never drift into time-derived states and stay open for changes', () => {
+  const idea = { lifecycleState: 'proposed', startTime: '2020-01-01T00:00:00Z', endTime: '2020-01-01T01:00:00Z' };
+  assert.equal(computeEffectiveState(idea, NOW), 'idea'); // past times, no location
+  assert.equal(isOpenForChanges(idea, NOW), true);
+});
+
+test('a cancelled idea is cancelled, not idea', () => {
+  assert.equal(computeEffectiveState({ lifecycleState: 'cancelled' }, NOW), 'cancelled');
 });
