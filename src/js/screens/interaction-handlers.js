@@ -32,6 +32,12 @@ export async function handleInteraction({
       result = await commands.setEventInteraction({ eventId, level: desired });
     }
     onSuccess?.(result);
+    // Double-confirmation heads-up (backlog: overlapping RSVPs). The
+    // backend never blocks; we surface it gently after the success toast
+    // so the member can decide — co-located doubles are legitimate.
+    if (desired === 'confirmed' && result?.conflicts?.length) {
+      showToast(conflictMessage(result.conflicts));
+    }
   } catch (err) {
     if (err?.status === 401) {
       showToast('Your session expired. Sign in again.');
@@ -41,4 +47,10 @@ export async function handleInteraction({
       showToast(err?.message || 'Couldn’t save that. Try again.');
     }
   }
+}
+
+function conflictMessage(conflicts) {
+  const first = conflicts[0]?.title || 'another event';
+  const more = conflicts.length > 1 ? ` (and ${conflicts.length - 1} more)` : '';
+  return `Heads up — this overlaps with “${first}”${more}, which you're also in for. If you can't make both, free up the spot.`;
 }

@@ -36,7 +36,10 @@ let runner, client, handler, withdrawHandler;
 let eventRow, interactionRow;
 
 beforeEach(() => {
-  eventRow = { eventId: 'evt-1', seq: 1, lifecycleState: 'proposed' };
+  eventRow = {
+    eventId: 'evt-1', seq: 1, lifecycleState: 'proposed',
+    startTime: '2099-01-01T10:00:00Z', endTime: '2099-01-01T12:00:00Z', location: 'The Park',
+  };
   interactionRow = null;
   client = {
     send: spy(async (cmd) => {
@@ -378,4 +381,134 @@ test('debrief: notes is optional and capped at 500 chars', async () => {
   }));
   const data = runner.runCommand.calls[0][0].events[0].data;
   assert.equal(data.notes.length, 500);
+});
+
+// ─── Ideas (time/place-less proposals) ───
+
+test('interest on an idea is allowed', async () => {
+  eventRow = { eventId: 'evt-1', seq: 1, lifecycleState: 'proposed', title: 'Scrabble?' };
+  const res = await handler(makeEvent({
+    claims: validClaims, body: { commandId: 'cmd-1', level: 'interested' },
+  }));
+  assert.equal(res.statusCode, 201);
+  assert.equal(runner.runCommand.calls[0][0].events[0].eventType, 'InterestExpressed');
+});
+
+test('confirming an idea is rejected until a time and place are set', async () => {
+  eventRow = { eventId: 'evt-1', seq: 1, lifecycleState: 'proposed', title: 'Scrabble?' };
+  const res = await handler(makeEvent({
+    claims: validClaims, body: { commandId: 'cmd-1', level: 'confirmed' },
+  }));
+  assert.equal(res.statusCode, 409);
+  assert.match(JSON.parse(res.body).error, /still an idea/);
+  assert.equal(runner.runCommand.calls.length, 0);
+});
+
+// ─── Overlapping RSVPs (double-confirmation heads-up) ───
+
+// A richer fake: interactions Query returns the member's rows; event Gets
+// resolve from a small table of rows.
+function overlapClient({ myInteractions, otherEvents }) {
+  return {
+    send: spy(async (cmd) => {
+      const tn = cmd.input.TableName;
+      if (cmd.input.KeyConditionExpression) {
+        return { Items: myInteractions };
+      }
+      const key = cmd.input.Key || {};
+      if (tn.startsWith('irl-events')) {
+        if (key.eventId === 'evt-1') return { Item: eventRow };
+        const found = otherEvents.find((e) => e.eventId === key.eventId);
+        return { Item: found ?? null };
+      }
+      if (tn.startsWith('irl-interactions')) return { Item: interactionRow };
+      return { Item: null };
+    }),
+  };
+}
+
+function rebuildForOverlap({ myInteractions, otherEvents }) {
+  client = overlapClient({ myInteractions, otherEvents });
+  handler = createSetInteractionHandler({
+    runner, client,
+    eventsTable: 'irl-events-test',
+    interactionsTable: 'irl-interactions-test',
+  });
+}
+
+test('confirming over another confirmed event returns a conflicts heads-up (still 201)', async () => {
+  rebuildForOverlap({
+    myInteractions: [{ eventId: 'evt-2', level: 'confirmed' }],
+    otherEvents: [{
+      eventId: 'evt-2', title: 'Trivia night', lifecycleState: 'planned',
+      startTime: '2099-01-01T11:00:00Z', endTime: '2099-01-01T13:00:00Z', location: 'Pub',
+    }],
+  });
+
+  const res = await handler(makeEvent({
+    claims: validClaims, body: { commandId: 'cmd-1', level: 'confirmed' },
+  }));
+
+  assert.equal(res.statusCode, 201, 'never blocked');
+  const body = JSON.parse(res.body);
+  assert.deepEqual(body.conflicts, [{
+    eventId: 'evt-2',
+    title: 'Trivia night',
+    startTime: '2099-01-01T11:00:00Z',
+    endTime: '2099-01-01T13:00:00Z',
+  }]);
+});
+
+test('expressing interest never computes conflicts (overlapping interest is fine)', async () => {
+  rebuildForOverlap({
+    myInteractions: [{ eventId: 'evt-2', level: 'confirmed' }],
+    otherEvents: [{
+      eventId: 'evt-2', title: 'Trivia night', lifecycleState: 'planned',
+      startTime: '2099-01-01T11:00:00Z', endTime: '2099-01-01T13:00:00Z', location: 'Pub',
+    }],
+  });
+
+  const res = await handler(makeEvent({
+    claims: validClaims, body: { commandId: 'cmd-1', level: 'interested' },
+  }));
+  assert.equal('conflicts' in JSON.parse(res.body), false);
+});
+
+test('an overlapping event the member is only interested in is not a conflict', async () => {
+  rebuildForOverlap({
+    myInteractions: [{ eventId: 'evt-2', level: 'interested' }],
+    otherEvents: [{
+      eventId: 'evt-2', title: 'Trivia night', lifecycleState: 'planned',
+      startTime: '2099-01-01T11:00:00Z', endTime: '2099-01-01T13:00:00Z', location: 'Pub',
+    }],
+  });
+
+  const res = await handler(makeEvent({
+    claims: validClaims, body: { commandId: 'cmd-1', level: 'confirmed' },
+  }));
+  assert.equal('conflicts' in JSON.parse(res.body), false);
+});
+
+test('non-overlapping and cancelled confirmed events are not conflicts', async () => {
+  rebuildForOverlap({
+    myInteractions: [
+      { eventId: 'evt-2', level: 'confirmed' },
+      { eventId: 'evt-3', level: 'confirmed' },
+    ],
+    otherEvents: [
+      { // same day, disjoint hours
+        eventId: 'evt-2', title: 'Morning swim', lifecycleState: 'planned',
+        startTime: '2099-01-01T06:00:00Z', endTime: '2099-01-01T07:00:00Z', location: 'Pool',
+      },
+      { // overlapping but cancelled — no longer a real commitment
+        eventId: 'evt-3', title: 'Cancelled walk', lifecycleState: 'cancelled',
+        startTime: '2099-01-01T10:30:00Z', endTime: '2099-01-01T12:30:00Z', location: 'Park',
+      },
+    ],
+  });
+
+  const res = await handler(makeEvent({
+    claims: validClaims, body: { commandId: 'cmd-1', level: 'confirmed' },
+  }));
+  assert.equal('conflicts' in JSON.parse(res.body), false);
 });

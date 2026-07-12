@@ -6,7 +6,7 @@ A mobile-first web app for a local community meetup platform. Users go through a
 
 ## Design documentation
 
-`docs/README.md` is the index to the design notes; `docs/decisions.md` is the canonical decision register (D1–D52) and `docs/open-risks.md` the known-gaps tracker. Read those before extending any designed area — most conceptual decisions (user model, onboarding, debrief, matching, policy, trust) are already made and recorded there.
+`docs/README.md` is the index to the design notes; `docs/decisions.md` is the canonical decision register (D1–D52), `docs/open-risks.md` the known-gaps tracker, and `docs/radar.md` the register of tracked-but-undesigned workstreams (R1–R7: decision registers & feedback intake, A/B testing UX, age/locality verification, staff↔member support comms, community launch playbook, broad community feedback, pricing & sponsorship). Read those before extending any designed area — most conceptual decisions (user model, onboarding, debrief, matching, policy, trust) are already made and recorded there.
 
 ## Architecture
 
@@ -161,7 +161,7 @@ Architectural decisions that affect everything downstream. Each warrants a short
 
 - [x] Event sourcing + CQRS core — command runner, immutable log, idempotency, transactional synchronous projections, replay-verified (`docs/event-sourcing.md`)
 - [x] Workshop-mode runtime — mode flag, simulated time, admin gate (`docs/workshop-mode.md`)
-- [ ] End-to-end tracing depth — X-Ray subsegments, `traceId` on event records, structured per-command log line, HTTP API stage tracing (Lambda `Tracing.ACTIVE` is on; the rest of the `event-sourcing.md` observability slice is not)
+- [x] End-to-end tracing depth — `lib/tracing.mjs` emits X-Ray subsegments (`idempotency-check` / `encrypt-pii` / `transact-write`) over the daemon wire protocol (no X-Ray SDK dependency); the command runner stamps the invocation's `traceId` on every event record and emits one structured JSON log line per command (status ok/cached/error, durationMs, errorType+stack on failure); HTTP API `$default` stage writes structured JSON access logs (HTTP APIs don't support X-Ray stage tracing — REST-only — so the trace root is the Lambda; `event-sourcing.md` corrected)
 - [x] **LLM seam (D37)** — `lambda/api/lib/llm.mjs`: injected provider (`llm.complete({task, system, messages, schema})`), real Claude API in production (structured outputs, key from Secrets Manager), deterministic canned stub in workshop/test; first consumer is the onboarding extraction call
 - [x] Async Streams projector + `irl-user-model` store (`docs/projection-store.md`, D36) — dedicated projector Lambda (`lambda/api/projector.mjs` + `projector/`) consumes the `irl-events-log` stream (INSERT-only filter, partial-batch failure reporting, bisect-on-error, SQS DLQ): `OnboardingCompleted` seeds `profile#core` + `interest#`/`strength#`/`barrier#` items (payloads encrypted under the per-user key, `asOf` from `simulatedTime`), `UserDeleted`/`UserKeyShredded` purge to an empty tombstone, shredded users (missing key) skip cleanly. Debrief/reflection deltas and D7 precedence/decay start once a second delta source exists (debrief extraction is unbuilt)
 - [x] Event-vocabulary reconciliation with D42 — `UserProfileCreated` is basics-only; `OnboardingCompleted` (via `POST /me/onboarding`) is the sole interview carrier (transcript + Layer-2 extraction, crypto-shredded); deletion appends a `UserKeyShredded` audit event after the physical key destruction; every event record now writes the `bucket` attribute for the `events-by-time-bucket` GSI
@@ -170,12 +170,12 @@ Architectural decisions that affect everything downstream. Each warrants a short
 
 Everything needed for a real adult to land on the site, learn what IRL is, agree to terms, sign up, and build a meaningful profile.
 
-- [ ] Website / homepage — explains what IRL is, links to sign-up
-- [ ] User agreement — adults-only for now, terms of use, privacy
+- [x] Website / homepage — `src/index.html` is the public landing page (what IRL is, how it works, principles, sign-up/sign-in CTAs, terms link); the old dev persona selector is gone
+- [x] User agreement — `src/terms.html` (v1, plain-language: adults-only, conduct, privacy/data rights) + acceptance captured at register; agreement versioning per `docs/event-sourcing.md`: `required_user_agreement_version` in `irl-config` bumped via `POST /admin/agreement-version` (`RequiredAgreementVersionUpdated` on `system#config`), `GET /me` flags `requiresAgreementReacceptance`, state-changing member routes gated (deletion/export exempt — data rights), `POST /me/agreement` emits `UserAgreementReaccepted`, frontend re-acceptance screen in the sign-in flow. Terms text still needs counsel review before launch.
 - [x] Public user sign-up flow (Cognito sign-up + email verify → `UserRegistered`)
-- [x] Locality verification — manual admin approval implemented (request → verify → activate chain); automated verification (postcard, third-party) still open
+- [x] Locality verification — manual admin approval implemented (request → verify → activate chain); automated verification (postcard, third-party) still open — design alongside age verification (radar R3)
 - [ ] Profile data model — richer than today's name/avatar/vibe; includes interview responses, attributes, preferences
-- [ ] Profile view + edit (extend current screen)
+- [x] Profile view + edit — profile screen views/edits name, avatar, vibe (`PUT /me/profile` → `UserProfileUpdated`), plus export/delete/sign-out and the "tell us more" follow-up
 - [ ] Optional user attributes — entered if user considers them valuable for matching
 - [x] Real Claude API for onboarding interview (replaces scripted flow) — backend: `POST /me/interview/turn` (per-turn interviewer, frozen system prompt + card schema from `docs/onboarding-prompt.md`, real-event grounding, branch-validated with retry + templated fallback) and `POST /me/onboarding` (extraction → `OnboardingCompleted`); frontend: onboarding screen drives the live turn loop (name as form field per D42, scripted flow retained as offline fallback) and completes via createProfile → completeOnboarding. Full screen redesign still planned.
 - [x] Account deletion / data export (export decrypts the event log; delete shreds the per-user key)
@@ -184,15 +184,17 @@ Everything needed for a real adult to land on the site, learn what IRL is, agree
 
 Extends the prototype's RSVP→confirm→attend→debrief flow into a full proposed → planned → in-progress → over → cancelled lifecycle, with users able to propose events.
 
-- [x] Full event lifecycle states: proposed, planned, in-progress, over, cancelled (stored states command-driven; in-progress/over time-derived)
+- [x] Full event lifecycle states: proposed, planned, in-progress, over, cancelled (stored states command-driven; in-progress/over time-derived; idea time/place-derived)
 - [ ] Event cancellation flow — cancel command exists; what happens to RSVPs/attendee notification still open
 - [x] Minimum attendance threshold (auto-plan at `minimumAttendance`)
 - [x] User proposes event (`POST /events` → `EventProposed`)
 - [ ] Three event types: external/third-party, user-organized, this-user-organized
 - [x] Track interest before commitment (`InterestExpressed` distinct from `AttendanceConfirmed`)
 - [x] Time/date suggestion handling for proposed events (suggestions: make/vote/adopt/reject/respond; polls: create/vote/close)
-- [ ] Time/place-less proposals — "Anyone into scrabble?" as a first-class early stage (idea → proposed once time/place firm up, e.g. via the existing polls); likely a common case. Note: propose currently *requires* startTime/endTime/location
-- [ ] Overlapping RSVPs — members RSVP'd/confirmed to same-time events: surface the conflict gently, distinguish interest (overlapping is fine) from double-confirmation (a reliability problem), handle by scenario (accident, can't decide, co-located events, spam); never auto-cancel
+- [x] Time/place-less proposals — "Anyone into scrabble?" is a first-class **idea** stage: `POST /events` accepts title-only proposals (times stay a pair when given); `idea` is *derived*, not stored (`lifecycleState` stays `proposed`; missing any of startTime/endTime/location ⇒ idea), so no event-vocabulary change. Ideas are maximally open (suggestions, polls, edits, interest) but interest is the idea-stage currency — confirmation and scheduling 409 until the time/place trio is set via edit (auto-plan therefore can't fire on an idea). Feed/detail render TBD + interest-only affordances
+- [x] Overlapping RSVPs — double-confirmation is surfaced, never blocked: confirming over another still-live confirmed event returns a `conflicts` heads-up on the response (interest overlaps deliberately not computed — browsing options is fine), and `GET /events` annotates `conflictsWith` among the caller's confirmed live events at read time so post-hoc edits are caught. Half-open intervals (back-to-back events don't conflict — co-located doubles are legitimate); cancelled events aren't commitments; nothing is ever auto-cancelled — the member decides. Frontend: gentle toast on confirm, standing note on detail, feed badge. Spam-scale double-confirming is contributor-rating input later (Group 4)
+- [ ] Start-time strictness — events flag how tight the start really is: a hard start ("doors close 7:15 sharp") vs. an arrival window ("arriving around 7pm, all games start by 7:15"). Real events almost always have leeway — but not so much that showing up feels optional or a one-minute poke-in counts. Feeds into overlap handling (a soft start blunts a back-to-back squeeze) and later reliability reads
+- [ ] Overlap follow-through — when a double-confirmation is surfaced, ask the member what they intend: attending both (legitimate, esp. co-located/back-to-back) → offer to notify one or both organizers they may be late or splitting time; otherwise nudge toward freeing the spot. Needs organizer-notification machinery (Group 7 notifications) and start-time strictness above
 - [ ] General event management — edit, cancel, notify attendees
 - [ ] Richer event data — images, descriptions, organisers
 - [ ] User interaction during event — what happens between confirm and debrief while in-progress
@@ -227,11 +229,11 @@ Trust & safety surface, internal admin/support tooling.
 - [ ] Mutual blocks UX — event visibility, attendee counts
 - [ ] Internal user contributor rating — trustworthy, positive contributor; private, used for group composition
 - [ ] Admin & support UI — system metrics, health, logs/traces, support requests, data management, workshop controls (time, seed, automated activity)
-- [ ] User support — support info, request for support, assistant chat, support staff chat
+- [ ] User support — support info, request for support, assistant chat, support staff chat; communication design first (radar R4)
 
 ### Group 5 — Production economics
 
-- [ ] Billing & plans — paid tiers, payment integration (Stripe?), entitlements, plan-based feature gates. Workshop mode bypasses entirely.
+- [ ] Billing & plans — paid tiers, payment integration (Stripe?), entitlements, plan-based feature gates. Workshop mode bypasses entirely. Pricing model + sponsorship stance come first (radar R7).
 
 ### Group 6 — Deferred
 
@@ -243,7 +245,7 @@ Items that can land alongside any group above once prerequisites exist.
 
 - [ ] Recurring events (weekly coffee walk, monthly book swap)
 - [ ] Weather/seasonality awareness for outdoor events
-- [ ] Multiple locations beyond Bainbridge Island
+- [ ] Multiple locations beyond Bainbridge Island — per the launch playbook (radar R5)
 - [ ] Notifications — push, email digest, in-app only?
 - [ ] Calendar integration — export confirmed events
 - [ ] Reminders for confirmed meetups

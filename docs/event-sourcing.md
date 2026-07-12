@@ -236,16 +236,15 @@ This is the same mechanism for everyone:
 - Admin-invited users whose pre-existing agreement was older
 - Imported users whose source-env agreement was older than target's required version
 
-At sign-in, the API checks `user.acceptedAgreementVersion` against `required_user_agreement_version`. If lower, the response carries a `requires_agreement_reacceptance` flag and the new agreement text. Until acceptance, the user cannot run any state-changing command except `ReacceptAgreement`; read-only commands (e.g. viewing their own profile) remain available.
+At sign-in, the API checks `user.acceptedAgreementVersion` against `required_user_agreement_version`. If lower, the `GET /me` response carries a `requiresAgreementReacceptance` flag (plus the required version; the agreement text itself lives on the terms page). Until acceptance, the user cannot run any state-changing command except `ReacceptAgreement` (`POST /me/agreement`); read-only commands (e.g. viewing their own profile) remain available. Two deliberate exemptions beyond reads: **account deletion and data export are never gated** — data rights aren't held hostage to a terms change. A *newer* accepted version always satisfies the requirement, so an admin rollback never re-prompts members who accepted the newer terms.
 
 ## Tracing & observability
 
 ### X-Ray
 
-- API Lambda: `tracing: lambda.Tracing.ACTIVE` in CDK
-- HTTP API Gateway stage: tracing enabled
-- AWS SDK calls auto-instrumented via the X-Ray SDK (DynamoDB, Cognito, Secrets Manager all traced)
-- Custom subsegments around `validate`, `appendEvent`, `applyProjection`
+- API + projector Lambdas: `tracing: lambda.Tracing.ACTIVE` in CDK
+- HTTP APIs (v2) don't support X-Ray stage tracing — that's REST-API-only — so the trace root is the Lambda function segment. The stage contributes structured JSON access logs instead (one line per request: requestId, route, status, gateway vs integration latency split), correlated with the Lambda's per-command log line via requestId/timestamps.
+- Custom subsegments (`lib/tracing.mjs`) around the command phases — `idempotency-check`, `encrypt-pii`, `transact-write` — emitted over the X-Ray daemon wire protocol directly, so no X-Ray SDK dependency; the transact-write subsegment times the DynamoDB transaction that appends events and applies projections atomically. Tracing never breaks a request: emission is fire-and-forget, and untraced/unsampled invocations pass straight through.
 
 ### Structured logs
 
@@ -309,7 +308,7 @@ The replay path and any consumer reads the event through the upcast pipeline.
 
 - **DynamoDB Streams** on `irl-events-log` — enabled from day one, ready for async consumers
 - **EventBridge bus** — if/when we have multiple downstream services beyond the API Lambda
-- **OpenTelemetry** — only if we leave AWS; X-Ray is sufficient until then
+- **OpenTelemetry / roll-our-own tracing** — only if X-Ray proves unwieldy or we leave AWS. The escape hatch is already cheap: `lib/tracing.mjs` speaks the daemon wire protocol directly (no X-Ray SDK anywhere), the tracer is injected into the command runner, and the structured log lines carry the same correlation ids — so replacing X-Ray means swapping the emitter for our own collector (or leaning on the logs alone), not rewriting instrumentation.
 
 ## First implementation slice
 

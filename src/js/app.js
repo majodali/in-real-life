@@ -8,6 +8,7 @@ import { renderSignup } from './screens/signup.js';
 import { renderConfirm } from './screens/confirm.js';
 import { renderSignin } from './screens/signin.js';
 import { renderWelcome } from './screens/welcome.js';
+import { renderAgreement } from './screens/agreement.js';
 import { renderLocality } from './screens/locality.js';
 import { renderLocation } from './screens/location.js';
 import { renderAdmin } from './screens/admin.js';
@@ -15,7 +16,7 @@ import { renderPropose } from './screens/propose.js';
 import { renderEventDetail } from './screens/event-detail.js';
 import { renderEdit } from './screens/edit.js';
 
-const PUBLIC_SCREENS = new Set(['location', 'signup', 'confirm', 'signin', 'welcome', 'onboarding', 'locality']);
+const PUBLIC_SCREENS = new Set(['location', 'signup', 'confirm', 'signin', 'welcome', 'agreement', 'onboarding', 'locality']);
 
 let currentScreen = null;
 
@@ -87,6 +88,11 @@ function route() {
     case 'welcome':
       showScreen('welcome');
       renderWelcome();
+      break;
+
+    case 'agreement':
+      showScreen('agreement');
+      renderAgreement();
       break;
 
     case 'onboarding':

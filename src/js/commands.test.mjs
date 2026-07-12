@@ -569,3 +569,39 @@ test('setAutoPlanOnThreshold: PUTs /events/:id/auto-plan with the boolean', asyn
   assert.equal(api.put.calls[0][0], '/events/evt-1/auto-plan');
   assert.deepEqual(api.put.calls[0][1], { commandId: 'cmd-1', autoPlanOnThreshold: true });
 });
+
+// ─── reacceptAgreement / setRequiredAgreementVersion ───
+
+test('reacceptAgreement posts the shown version with a persisted commandId', async () => {
+  api.post = spy(async () => ({ status: 'reaccepted' }));
+
+  await commands.reacceptAgreement({ agreementVersion: 'v2' });
+
+  const [path, body] = api.post.calls[0];
+  assert.equal(path, '/me/agreement');
+  assert.equal(body.agreementVersion, 'v2');
+  assert.equal(typeof body.commandId, 'string');
+  assert.equal(storage.getItem('irl_cmd_reaccept_agreement'), null);
+});
+
+test('reacceptAgreement keeps the commandId across a failed attempt', async () => {
+  api.post = spy(async () => { throw new Error('network'); });
+  await assert.rejects(() => commands.reacceptAgreement({ agreementVersion: 'v2' }));
+  const kept = storage.getItem('irl_cmd_reaccept_agreement');
+  assert.ok(kept);
+
+  api.post = spy(async () => ({ status: 'reaccepted' }));
+  await commands.reacceptAgreement({ agreementVersion: 'v2' });
+  assert.equal(api.post.calls[0][1].commandId, kept);
+});
+
+test('setRequiredAgreementVersion posts to the admin route with a fresh commandId', async () => {
+  api.post = spy(async () => ({ requiredAgreementVersion: 'v2' }));
+
+  await commands.setRequiredAgreementVersion({ version: 'v2' });
+
+  const [path, body] = api.post.calls[0];
+  assert.equal(path, '/admin/agreement-version');
+  assert.equal(body.version, 'v2');
+  assert.equal(typeof body.commandId, 'string');
+});

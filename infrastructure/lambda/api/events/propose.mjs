@@ -37,23 +37,33 @@ export function createProposeEventHandler({ runner, makeEventId }) {
 
     if (!commandId) return reply(400, { error: 'commandId required' });
     if (!title) return reply(400, { error: 'title required' });
-    if (!startTime) return reply(400, { error: 'startTime required' });
-    // endTime is required so the event can reach the "over" state (and thus
-    // become debriefable). When the organizer is unsure of exact times they
-    // flag timesApproximate; the lifecycle still keys off these timestamps.
-    if (!endTime) return reply(400, { error: 'endTime required' });
-    if (!location) return reply(400, { error: 'location required' });
+    // Time and place are optional at proposal: a proposal missing any of
+    // startTime / endTime / location is an *idea* (derived stage, see
+    // lib/lifecycle-state.mjs) — open to interest, suggestions, and polls,
+    // but not confirmable or schedulable until it firms up.
     if (!VALID_SOURCES.has(source)) {
       return reply(400, { error: 'source must be community, external, or platform' });
     }
-    if (Number.isNaN(new Date(startTime).getTime())) {
+    if (startTime !== undefined && Number.isNaN(new Date(startTime).getTime())) {
       return reply(400, { error: 'startTime is not a parseable ISO datetime' });
     }
-    if (Number.isNaN(new Date(endTime).getTime())) {
-      return reply(400, { error: 'endTime is not a parseable ISO datetime' });
+    // Times come as a pair: endTime is what lets the event reach "over"
+    // (and become debriefable), so a start without an end stays an idea —
+    // reject it early instead of leaving a half-timed proposal around.
+    // Organizers unsure of exact times flag timesApproximate instead.
+    if (startTime !== undefined && endTime === undefined) {
+      return reply(400, { error: 'endTime required when startTime is set (mark timesApproximate if unsure)' });
     }
-    if (new Date(endTime) <= new Date(startTime)) {
-      return reply(400, { error: 'endTime must be after startTime' });
+    if (endTime !== undefined && startTime === undefined) {
+      return reply(400, { error: 'startTime required when endTime is set' });
+    }
+    if (endTime !== undefined) {
+      if (Number.isNaN(new Date(endTime).getTime())) {
+        return reply(400, { error: 'endTime is not a parseable ISO datetime' });
+      }
+      if (new Date(endTime) <= new Date(startTime)) {
+        return reply(400, { error: 'endTime must be after startTime' });
+      }
     }
     if (body.timesApproximate !== undefined && typeof body.timesApproximate !== 'boolean') {
       return reply(400, { error: 'timesApproximate must be a boolean' });
@@ -69,12 +79,12 @@ export function createProposeEventHandler({ runner, makeEventId }) {
       eventId,
       source,
       title,
-      startTime,
-      endTime,
-      location,
       organizerId: claims.sub,
       organizerName: organizerName || (claims.email ? claims.email.split('@')[0] : 'someone'),
     };
+    if (startTime !== undefined) data.startTime = startTime;
+    if (endTime !== undefined) data.endTime = endTime;
+    if (location !== undefined) data.location = location;
     if (description !== undefined) data.description = description;
     data.timesApproximate = body.timesApproximate === true;
     data.minimumAttendance = minimumAttendance;

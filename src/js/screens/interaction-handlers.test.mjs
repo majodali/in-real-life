@@ -98,3 +98,60 @@ test('unknown desired action: throws (programmer error)', async () => {
     commands, showToast, onSuccess,
   }));
 });
+
+// ─── Overlapping RSVPs heads-up ───
+
+test('confirm with conflicts in the response: success first, then a gentle heads-up toast', async () => {
+  const commands = {
+    setEventInteraction: spy(async () => ({
+      eventId: 'evt-1',
+      level: 'confirmed',
+      conflicts: [{ eventId: 'evt-2', title: 'Trivia night' }],
+    })),
+  };
+  const showToast = spy(() => {});
+  const onSuccess = spy(() => {});
+
+  await handleInteraction({
+    desired: 'confirmed', currentLevel: null, eventId: 'evt-1',
+    commands, showToast, onSuccess,
+  });
+
+  assert.equal(onSuccess.calls.length, 1);
+  assert.equal(showToast.calls.length, 1);
+  assert.match(showToast.calls[0][0], /Trivia night/);
+  assert.match(showToast.calls[0][0], /free up the spot/i);
+});
+
+test('confirm without conflicts shows no extra toast', async () => {
+  const commands = {
+    setEventInteraction: spy(async () => ({ eventId: 'evt-1', level: 'confirmed' })),
+  };
+  const showToast = spy(() => {});
+
+  await handleInteraction({
+    desired: 'confirmed', currentLevel: null, eventId: 'evt-1',
+    commands, showToast, onSuccess: () => {},
+  });
+  assert.equal(showToast.calls.length, 0);
+});
+
+test('multiple conflicts are summarised', async () => {
+  const commands = {
+    setEventInteraction: spy(async () => ({
+      eventId: 'evt-1',
+      level: 'confirmed',
+      conflicts: [
+        { eventId: 'evt-2', title: 'Trivia night' },
+        { eventId: 'evt-3', title: 'Book swap' },
+      ],
+    })),
+  };
+  const showToast = spy(() => {});
+
+  await handleInteraction({
+    desired: 'confirmed', currentLevel: null, eventId: 'evt-1',
+    commands, showToast, onSuccess: () => {},
+  });
+  assert.match(showToast.calls[0][0], /and 1 more/);
+});

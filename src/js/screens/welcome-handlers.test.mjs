@@ -142,3 +142,19 @@ test('unexpected error (500): shows toast and does not navigate', async () => {
   assert.equal(navigate.calls.length, 0);
   assert.equal(showToast.calls.length, 1);
 });
+
+test('requiresAgreementReacceptance routes to the agreement screen before anything else', async () => {
+  api.get = spy(async () => ({
+    userId: 'u-1',
+    name: 'Mat',
+    localityVerified: true,
+    activated: true,
+    requiresAgreementReacceptance: true,
+    requiredAgreementVersion: 'v2',
+  }));
+
+  await handleWelcomeMount({ api, commands, navigate, showToast, saveUser });
+
+  assert.deepEqual(navigate.calls, [['agreement']]);
+  assert.equal(saveUser.calls.length, 0);
+});

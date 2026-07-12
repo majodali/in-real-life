@@ -82,18 +82,42 @@ test('400 when title is missing', async () => {
   assert.match(JSON.parse(response.body).error, /title/);
 });
 
-test('400 when startTime is missing', async () => {
-  const { startTime, ...rest } = validBody;
-  const response = await handler(makeEvent({ claims: validClaims, body: rest }));
+test('times come as a pair: start without end (and end without start) are 400', async () => {
+  const { endTime, ...noEnd } = validBody;
+  let response = await handler(makeEvent({ claims: validClaims, body: noEnd }));
   assert.equal(response.statusCode, 400);
-  assert.match(JSON.parse(response.body).error, /startTime/);
+  assert.match(JSON.parse(response.body).error, /endTime required/);
+
+  const { startTime, ...noStart } = validBody;
+  response = await handler(makeEvent({ claims: validClaims, body: noStart }));
+  assert.equal(response.statusCode, 400);
+  assert.match(JSON.parse(response.body).error, /startTime required/);
 });
 
-test('400 when location is missing', async () => {
+// ─── Ideas (time/place-less proposals) ───
+
+test('a title-only proposal is accepted as an idea — no time or place on the event', async () => {
+  const response = await handler(makeEvent({
+    claims: validClaims,
+    body: { commandId: 'cmd-1', title: 'Anyone into scrabble?' },
+  }));
+  assert.equal(response.statusCode, 201);
+
+  const [input] = runner.runCommand.calls[0];
+  const data = input.events[0].data;
+  assert.equal(data.title, 'Anyone into scrabble?');
+  assert.equal('startTime' in data, false);
+  assert.equal('endTime' in data, false);
+  assert.equal('location' in data, false);
+});
+
+test('a timed proposal without a place is accepted (still an idea until located)', async () => {
   const { location, ...rest } = validBody;
   const response = await handler(makeEvent({ claims: validClaims, body: rest }));
-  assert.equal(response.statusCode, 400);
-  assert.match(JSON.parse(response.body).error, /location/);
+  assert.equal(response.statusCode, 201);
+  const data = runner.runCommand.calls[0][0].events[0].data;
+  assert.equal(data.startTime, validBody.startTime);
+  assert.equal('location' in data, false);
 });
 
 test('400 when source is not one of community|external|platform', async () => {

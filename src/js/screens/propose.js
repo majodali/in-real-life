@@ -45,12 +45,12 @@ export function renderPropose() {
         </div>
 
         <div class="profile-field">
-          <label class="profile-field-label" for="proposeStart">Start time</label>
+          <label class="profile-field-label" for="proposeStart">Start time (optional)</label>
           <input class="profile-field-input" id="proposeStart" type="datetime-local">
         </div>
 
         <div class="profile-field">
-          <label class="profile-field-label" for="proposeEnd">End time</label>
+          <label class="profile-field-label" for="proposeEnd">End time (optional)</label>
           <input class="profile-field-input" id="proposeEnd" type="datetime-local">
         </div>
 
@@ -64,9 +64,13 @@ export function renderPropose() {
         </small>
 
         <div class="profile-field">
-          <label class="profile-field-label" for="proposeLocation">Where</label>
+          <label class="profile-field-label" for="proposeLocation">Where (optional)</label>
           <input class="profile-field-input" id="proposeLocation" type="text" maxlength="120"
                  placeholder="e.g. Blackbird Bakery">
+          <small class="profile-field-hint">
+            No time or place yet? Leave them blank — your proposal floats as
+            an idea people can get behind, and firms up from there.
+          </small>
         </div>
 
         <div class="profile-field">

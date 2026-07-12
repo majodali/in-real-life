@@ -13,6 +13,7 @@ import { renderEllipsisButton, bindEllipsis } from '../components/ellipsis-menu.
 import { commands } from '../services.js';
 
 const LIFECYCLE_LABELS = {
+  idea: 'Idea',
   proposed: 'Proposed',
   planned: 'Planned',
   'in-progress': 'Happening now',
@@ -100,7 +101,7 @@ function renderCard(event) {
   const effective = event.effectiveState || event.lifecycleState;
   const lifecycleLabel = LIFECYCLE_LABELS[effective] || effective;
   const accent = ACCENT_FOR_LIFECYCLE[effective] || 'sage';
-  const when = formatWhen(event.startTime);
+  const when = event.startTime ? formatWhen(event.startTime) : 'Time TBD';
 
   const accentHtml = `<div class="card-accent ${accent}"></div>`;
   const interestSummary = (event.interestCount ?? 0) + (event.confirmedCount ?? 0) === 0
@@ -112,6 +113,9 @@ function renderCard(event) {
     : event.myLevel === 'interested'
       ? `<span class="card-mylevel mylevel-interested">★ You're interested</span>`
       : '';
+  const conflictBadge = event.conflictsWith?.length
+    ? `<span class="card-mylevel mylevel-conflict">⚠ Overlaps another plan</span>`
+    : '';
 
   const bodyHtml = `
     <div class="card-body">
@@ -122,10 +126,10 @@ function renderCard(event) {
       <div class="card-title">${escapeHtml(event.title)}</div>
       <div class="card-details">
         <span>\u{1F4C5} ${escapeHtml(when)}</span>
-        <span>\u{1F4CD} ${escapeHtml(event.location)}</span>
+        <span>\u{1F4CD} ${escapeHtml(event.location ?? 'Place TBD')}</span>
       </div>
       <div class="card-organizer">by ${escapeHtml(event.organizerName)}</div>
-      ${myLevelBadge}
+      ${myLevelBadge}${conflictBadge}
     </div>
   `;
 
@@ -147,6 +151,7 @@ function renderCard(event) {
 }
 
 const ACCENT_FOR_LIFECYCLE = {
+  idea: 'amber',
   proposed: 'amber',
   planned: 'sage',
   'in-progress': 'rust',

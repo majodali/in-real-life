@@ -19,6 +19,9 @@ import { createProjector } from './lib/projection.mjs';
 import { createWorkshopOffsetLoader } from './lib/workshop-time.mjs';
 import { createKeyStore } from './lib/key-store.mjs';
 import { piiFieldsFor } from './lib/pii-registry.mjs';
+import { createTracer } from './lib/tracing.mjs';
+import { createRequiredAgreementLoader } from './lib/agreement-version.mjs';
+import { createAgreementGate } from './lib/agreement-gate.mjs';
 import { createRealLlmProvider, createStubLlmProvider } from './lib/llm.mjs';
 import {
   projectUserRegistered,
@@ -30,7 +33,11 @@ import {
   projectUserDeleted,
   projectOnboardingCompleted,
   projectUserKeyShredded,
+  projectUserAgreementReaccepted,
 } from './users/projections.mjs';
+import { createReacceptAgreementHandler } from './users/agreement.mjs';
+import { createUpdateAgreementVersionHandler } from './admin/agreement-version.mjs';
+import { projectRequiredAgreementVersionUpdated } from './admin/agreement-projections.mjs';
 import { createOnboardingHandler } from './users/onboarding.mjs';
 import { createInterviewTurnHandler } from './users/interview.mjs';
 import { createRegisterHandler } from './users/register.mjs';
@@ -186,9 +193,29 @@ const projector = createProjector({
     PollClosed: projectPollClosed,
     PollVoteCast: projectPollVoteCast,
     PollVoteRetracted: projectPollVoteRetracted,
+    UserAgreementReaccepted: projectUserAgreementReaccepted,
+    RequiredAgreementVersionUpdated: projectRequiredAgreementVersionUpdated,
   },
   tables,
 });
+
+const getRequiredAgreement = createRequiredAgreementLoader({
+  client,
+  configTable: tables.configTable,
+});
+
+// Gate on state-changing member routes: a user whose accepted agreement
+// version has fallen behind must re-accept before any further commands.
+// See lib/agreement-gate.mjs for the deliberate exemptions (reads,
+// register, the re-accept route itself, deletion/export, admin, notify).
+const requireCurrentAgreement = createAgreementGate({
+  client,
+  usersTable: process.env.USERS_TABLE,
+  getRequiredAgreement,
+});
+
+// Reads _X_AMZN_TRACE_ID per call, so one instance serves every invocation.
+const tracer = createTracer();
 
 const runner = createCommandRunner({
   client,
@@ -198,6 +225,7 @@ const runner = createCommandRunner({
   getOffset: getWorkshopOffset,
   keyStore,
   piiFieldsFor,
+  tracer,
 });
 
 const registerHandler = createRegisterHandler({ runner });
@@ -206,7 +234,21 @@ const updateProfileHandler = createUpdateProfileHandler({ runner, client, usersT
 const localityHandler = createLocalityHandler({ runner, client, usersTable: tables.usersTable });
 const localityCheckHandler = createLocalityCheckHandler();
 const notifyHandler = createNotifyHandler({ runner });
-const getMeHandler = createGetMeHandler({ client, usersTable: tables.usersTable });
+const getMeHandler = createGetMeHandler({
+  client,
+  usersTable: tables.usersTable,
+  getRequiredAgreement,
+});
+const reacceptAgreementHandler = createReacceptAgreementHandler({
+  runner,
+  client,
+  usersTable: tables.usersTable,
+  getRequiredAgreement,
+});
+const updateAgreementVersionHandler = createUpdateAgreementVersionHandler({
+  runner,
+  getRequiredAgreement,
+});
 const exportHandler = createExportHandler({
   client,
   usersTable: tables.usersTable,
@@ -355,39 +397,41 @@ router.add('GET', '/me', getMeHandler);
 router.add('GET', '/me/export', exportHandler);
 router.add('DELETE', '/me', deleteHandler);
 router.add('POST', '/me/register', registerHandler);
-router.add('POST', '/me/profile', profileHandler);
-router.add('POST', '/me/onboarding', onboardingHandler);
-router.add('POST', '/me/interview/turn', interviewTurnHandler);
-router.add('PUT', '/me/profile', updateProfileHandler);
-router.add('POST', '/me/locality', localityHandler);
+router.add('POST', '/me/agreement', reacceptAgreementHandler);
+router.add('POST', '/me/profile', requireCurrentAgreement(profileHandler));
+router.add('POST', '/me/onboarding', requireCurrentAgreement(onboardingHandler));
+router.add('POST', '/me/interview/turn', requireCurrentAgreement(interviewTurnHandler));
+router.add('PUT', '/me/profile', requireCurrentAgreement(updateProfileHandler));
+router.add('POST', '/me/locality', requireCurrentAgreement(localityHandler));
 router.add('GET', '/locality/check', localityCheckHandler);
 router.add('POST', '/notify', notifyHandler);
 router.add('GET', '/time', getTimeHandler);
 
 router.add('GET', '/admin/notify-list', notifyListHandler);
+router.add('POST', '/admin/agreement-version', updateAgreementVersionHandler);
 
-router.add('POST', '/events', proposeEventHandler);
+router.add('POST', '/events', requireCurrentAgreement(proposeEventHandler));
 router.add('GET', '/events', listEventsHandler);
-router.add('PUT', '/events/:eventId/interaction', setInteractionHandler);
-router.add('DELETE', '/events/:eventId/interaction', withdrawInteractionHandler);
-router.add('POST', '/events/:eventId/debrief', submitDebriefHandler);
-router.add('PUT', '/events/:eventId/schedule', scheduleEventHandler);
-router.add('PUT', '/events/:eventId/cancel', cancelEventHandler);
-router.add('PUT', '/events/:eventId/auto-plan', autoPlanHandler);
-router.add('PUT', '/events/:eventId', editEventHandler);
+router.add('PUT', '/events/:eventId/interaction', requireCurrentAgreement(setInteractionHandler));
+router.add('DELETE', '/events/:eventId/interaction', requireCurrentAgreement(withdrawInteractionHandler));
+router.add('POST', '/events/:eventId/debrief', requireCurrentAgreement(submitDebriefHandler));
+router.add('PUT', '/events/:eventId/schedule', requireCurrentAgreement(scheduleEventHandler));
+router.add('PUT', '/events/:eventId/cancel', requireCurrentAgreement(cancelEventHandler));
+router.add('PUT', '/events/:eventId/auto-plan', requireCurrentAgreement(autoPlanHandler));
+router.add('PUT', '/events/:eventId', requireCurrentAgreement(editEventHandler));
 
-router.add('POST', '/events/:eventId/suggestions', makeSuggestionHandler);
+router.add('POST', '/events/:eventId/suggestions', requireCurrentAgreement(makeSuggestionHandler));
 router.add('GET', '/events/:eventId/suggestions', listSuggestionsHandler);
-router.add('PUT', '/events/:eventId/suggestions/:suggestionId/status', setSuggestionStatusHandler);
-router.add('PUT', '/events/:eventId/suggestions/:suggestionId/response', setSuggestionResponseHandler);
-router.add('PUT', '/events/:eventId/suggestions/:suggestionId/vote', voteSuggestionHandler);
-router.add('DELETE', '/events/:eventId/suggestions/:suggestionId/vote', retractSuggestionVoteHandler);
+router.add('PUT', '/events/:eventId/suggestions/:suggestionId/status', requireCurrentAgreement(setSuggestionStatusHandler));
+router.add('PUT', '/events/:eventId/suggestions/:suggestionId/response', requireCurrentAgreement(setSuggestionResponseHandler));
+router.add('PUT', '/events/:eventId/suggestions/:suggestionId/vote', requireCurrentAgreement(voteSuggestionHandler));
+router.add('DELETE', '/events/:eventId/suggestions/:suggestionId/vote', requireCurrentAgreement(retractSuggestionVoteHandler));
 
-router.add('POST', '/events/:eventId/polls', makePollHandler);
+router.add('POST', '/events/:eventId/polls', requireCurrentAgreement(makePollHandler));
 router.add('GET', '/events/:eventId/polls', listPollsHandler);
-router.add('PUT', '/events/:eventId/polls/:pollId/close', closePollHandler);
-router.add('PUT', '/events/:eventId/polls/:pollId/vote', castPollVoteHandler);
-router.add('DELETE', '/events/:eventId/polls/:pollId/vote', retractPollVoteHandler);
+router.add('PUT', '/events/:eventId/polls/:pollId/close', requireCurrentAgreement(closePollHandler));
+router.add('PUT', '/events/:eventId/polls/:pollId/vote', requireCurrentAgreement(castPollVoteHandler));
+router.add('DELETE', '/events/:eventId/polls/:pollId/vote', requireCurrentAgreement(retractPollVoteHandler));
 
 // Workshop-only routes are registered conditionally so they don't exist
 // on the production Lambda's route table.

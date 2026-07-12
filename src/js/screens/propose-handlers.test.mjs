@@ -43,10 +43,24 @@ test('missing startTime: toast + onValidationError(startTime)', async () => {
   assert.equal(onValidationError.calls[0][0], 'startTime');
 });
 
-test('blank location: toast + onValidationError(location)', async () => {
+test('blank location is fine — proposal floats as an idea without a place', async () => {
   await handleProposeSubmit({ ...valid, location: '  ', commands, showToast, onSuccess, onValidationError });
-  assert.equal(commands.proposeEvent.calls.length, 0);
-  assert.equal(onValidationError.calls[0][0], 'location');
+  assert.equal(commands.proposeEvent.calls.length, 1);
+  assert.equal(commands.proposeEvent.calls[0][0].location, undefined);
+  assert.equal(onSuccess.calls.length, 1);
+});
+
+test('title-only submission floats as a full idea — no time or place sent', async () => {
+  await handleProposeSubmit({
+    title: 'Anyone into scrabble?',
+    commands, showToast, onSuccess, onValidationError,
+  });
+  const args = commands.proposeEvent.calls[0][0];
+  assert.equal(args.title, 'Anyone into scrabble?');
+  assert.equal(args.startTime, undefined);
+  assert.equal(args.endTime, undefined);
+  assert.equal(args.location, undefined);
+  assert.equal(onSuccess.calls.length, 1);
 });
 
 test('unparseable startTime: toast + onValidationError(startTime)', async () => {
