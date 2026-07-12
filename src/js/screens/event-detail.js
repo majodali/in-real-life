@@ -117,6 +117,7 @@ export async function renderEventDetail(eventId) {
         <span class="event-count"><strong>${event.interestCount ?? 0}</strong> interested</span>
         <span class="event-count"><strong>${event.confirmedCount ?? 0}</strong> confirmed</span>
       </div>
+      <div class="event-roster" id="eventRoster"></div>
 
       ${showInteractionButtons ? `
         <div class="event-actions" id="eventActions">
@@ -140,6 +141,8 @@ export async function renderEventDetail(eventId) {
       ` : ''}
     </div>
   `;
+
+  loadRoster(event);
 
   if (showInteractionButtons) {
     bindInteractionButtons(container, event.eventId, event.myLevel);
@@ -232,6 +235,35 @@ function bindDebriefForm(container, event) {
       submit.textContent = 'Save';
     }
   });
+}
+
+// The roster behind the counts (first names only; "you" marked). On an
+// external event the confirmed list IS the mutual commitment — the
+// people you're agreeing to meet there (D53).
+async function loadRoster(event) {
+  const el = document.getElementById('eventRoster');
+  if (!el) return;
+  try {
+    const roster = await commands.listAttendees({ eventId: event.eventId });
+    el.innerHTML = renderRoster(roster, event);
+  } catch {
+    el.innerHTML = ''; // roster is enrichment — never block the screen
+  }
+}
+
+function renderRoster({ confirmed = [], interested = [] }, event) {
+  if (!confirmed.length && !interested.length) return '';
+  const names = (list) => list
+    .map((p) => (p.me ? '<strong>you</strong>' : escapeHtml(p.name)))
+    .join(', ');
+  const goingLabel = event.source === 'external' ? 'Meeting there' : 'Going';
+  const going = confirmed.length
+    ? `<div class="roster-line"><span class="roster-label">${goingLabel}</span> ${names(confirmed)}</div>`
+    : '';
+  const curious = interested.length
+    ? `<div class="roster-line"><span class="roster-label">Interested</span> ${names(interested)}</div>`
+    : '';
+  return going + curious;
 }
 
 // For a member who had committed to an event that then died: acknowledge

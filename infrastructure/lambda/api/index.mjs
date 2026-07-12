@@ -69,6 +69,7 @@ import {
 } from './events/lifecycle-projections.mjs';
 import { createProposeEventHandler } from './events/propose.mjs';
 import { createListEventsHandler } from './events/list.mjs';
+import { createListAttendeesHandler } from './events/attendees.mjs';
 import {
   createSetInteractionHandler,
   createWithdrawInteractionHandler,
@@ -281,6 +282,11 @@ const notifyListHandler = createNotifyListHandler({
   eventsLogTable: process.env.EVENTS_LOG_TABLE,
 });
 const proposeEventHandler = createProposeEventHandler({ runner, makeEventId: ulid });
+const listAttendeesHandler = createListAttendeesHandler({
+  client,
+  eventsTable: tables.eventsTable,
+  interactionsTable: tables.interactionsTable,
+});
 const listEventsHandler = createListEventsHandler({
   client,
   eventsTable: tables.eventsTable,
@@ -412,6 +418,7 @@ router.add('POST', '/admin/agreement-version', updateAgreementVersionHandler);
 
 router.add('POST', '/events', requireCurrentAgreement(proposeEventHandler));
 router.add('GET', '/events', listEventsHandler);
+router.add('GET', '/events/:eventId/attendees', listAttendeesHandler);
 router.add('PUT', '/events/:eventId/interaction', requireCurrentAgreement(setInteractionHandler));
 router.add('DELETE', '/events/:eventId/interaction', requireCurrentAgreement(withdrawInteractionHandler));
 router.add('POST', '/events/:eventId/debrief', requireCurrentAgreement(submitDebriefHandler));

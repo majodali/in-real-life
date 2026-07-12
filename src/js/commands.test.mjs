@@ -605,3 +605,9 @@ test('setRequiredAgreementVersion posts to the admin route with a fresh commandI
   assert.equal(body.version, 'v2');
   assert.equal(typeof body.commandId, 'string');
 });
+
+test('listAttendees fetches the roster for an event, id encoded', async () => {
+  api.get = spy(async () => ({ eventId: 'e/1', confirmed: [], interested: [] }));
+  await commands.listAttendees({ eventId: 'e/1' });
+  assert.equal(api.get.calls[0][0], '/events/e%2F1/attendees');
+});
