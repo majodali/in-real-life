@@ -158,6 +158,23 @@ export function createCommands({
     return await api.get('/events');
   }
 
+  // One reflection turn (ephemeral, no commandId — nothing persists per
+  // turn); the close records ReflectionRecorded with a per-event
+  // persisted commandId so retries converge.
+  async function reflectionTurn({ eventId, transcript }) {
+    return await api.post('/me/reflection/turn', { eventId, transcript });
+  }
+
+  async function completeReflection({ eventId, transcript, perspectivesOffered }) {
+    const key = `irl_cmd_reflection_${eventId}`;
+    const commandId = getOrMakeCommandId(key);
+    const body = { commandId, eventId, transcript };
+    if (perspectivesOffered?.length) body.perspectivesOffered = perspectivesOffered;
+    const result = await api.post('/me/reflection', body);
+    storage.removeItem(key);
+    return result;
+  }
+
   async function listAttendees({ eventId }) {
     return await api.get(`/events/${encodeURIComponent(eventId)}/attendees`);
   }
@@ -340,6 +357,8 @@ export function createCommands({
     proposeEvent,
     listEvents,
     listAttendees,
+    reflectionTurn,
+    completeReflection,
     setEventInteraction,
     withdrawEventInteraction,
     scheduleEvent,

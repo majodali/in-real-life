@@ -1391,6 +1391,14 @@ html, body {
 .debrief-chip.selected { background: var(--moss); color: #fff; border-color: var(--moss); }
 .debrief-person { display: flex; gap: 6px; margin: 4px 0; align-items: center; }
 .debrief-see-again.selected { background: var(--amber); border-color: var(--amber); color: #fff; }
+.reflection-thread { margin: 8px 0; }
+.reflection-line {
+  font-size: 13px; line-height: 1.5; padding: 6px 10px; border-radius: 10px;
+  margin: 4px 0; max-width: 90%;
+}
+.reflection-us { background: color-mix(in srgb, var(--sage) 18%, transparent); }
+.reflection-member { background: color-mix(in srgb, var(--mist) 40%, transparent); margin-left: auto; }
+
 .debrief-conduct-link {
   display: block; background: none; border: none; padding: 4px 0;
   font-size: 12px; color: var(--soft); text-decoration: underline; cursor: pointer;

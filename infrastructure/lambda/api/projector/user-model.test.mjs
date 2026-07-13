@@ -371,3 +371,43 @@ test('a shredded member\'s debrief is skipped cleanly', async () => {
   }));
   assert.equal(writes.length, 0);
 });
+
+// ─── Reflection deltas ───
+
+test('ReflectionRecorded applies extracted deltas through the shared path', async () => {
+  await projector.applyEvent(makeEvent()); // seed
+  await projector.applyEvent({
+    aggregateId: 'user#abc',
+    seq: 5,
+    eventId: '01REFL',
+    eventType: 'ReflectionRecorded',
+    simulatedTime: '2026-07-22T10:00:00.000Z',
+    data: {
+      userId: 'abc',
+      eventId: 'evt-9',
+      transcript: encryptValue([{ role: 'member', text: 'it was fine once we were cooking' }], dataKey),
+      deltas: encryptValue(STUB_DEBRIEF_EXTRACTION, dataKey),
+      perspectivesOffered: ['barriers-are-situational'],
+    },
+  });
+
+  const core = writes.filter((w) => w.sk === 'profile#core').at(-1);
+  const model = decryptValue(core.model, dataKey);
+  assert.equal(model.envelope.groupSize.provenance, 'observed');
+  assert.equal(model.envelope.groupSize.observations[0].sourceEventId, '01REFL');
+});
+
+test('a suppressed reflection is non-model-bearing', async () => {
+  await projector.applyEvent({
+    aggregateId: 'user#abc',
+    seq: 5,
+    eventId: '01REFL',
+    eventType: 'ReflectionRecorded',
+    simulatedTime: '2026-07-22T10:00:00.000Z',
+    data: {
+      userId: 'abc', eventId: 'evt-9', suppressed: true,
+      transcript: encryptValue([], dataKey),
+    },
+  });
+  assert.equal(writes.length, 0);
+});

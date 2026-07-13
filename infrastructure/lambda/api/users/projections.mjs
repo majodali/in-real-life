@@ -198,6 +198,31 @@ export function projectUserAgreementReaccepted(event, tables) {
   };
 }
 
+// ReflectionRecorded bumps the row and appends the coaching cap record
+// (offeredPerspectives; duplicates tolerated — readers dedup). Content
+// stays on the crypto-shredded log event; the row carries no narrative.
+export function projectReflectionRecorded(event, tables) {
+  const offered = event.data.perspectivesOffered ?? [];
+  return {
+    Update: {
+      TableName: tables.usersTable,
+      Key: { userId: event.data.userId },
+      UpdateExpression:
+        'SET #seq = :seq, updatedAt = :now, lastReflectionAt = :now, '
+        + 'offeredPerspectives = list_append(if_not_exists(offeredPerspectives, :empty), :new)',
+      ConditionExpression: '#seq = :expectedSeq',
+      ExpressionAttributeNames: { '#seq': 'seq' },
+      ExpressionAttributeValues: {
+        ':seq': event.seq,
+        ':expectedSeq': event.seq - 1,
+        ':now': event.wallTime,
+        ':empty': [],
+        ':new': offered,
+      },
+    },
+  };
+}
+
 // UserDeleted tears down the read model: the state row is hard-deleted
 // (it's PII at rest and not needed for replay). The event itself stays in
 // the log for the deletion audit trail; the user's crypto-shred key is

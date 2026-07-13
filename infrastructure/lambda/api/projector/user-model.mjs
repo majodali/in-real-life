@@ -57,12 +57,33 @@ export function createUserModelProjector({ client, userModelTable, keyStore }) {
     switch (event.eventType) {
       case 'OnboardingCompleted':
         return seedFromOnboarding(event);
+      case 'ReflectionRecorded':
+        return applyReflection(event);
       case 'UserDeleted':
       case 'UserKeyShredded':
         return purge(event);
       default:
         return;
     }
+  }
+
+  // ── Reflection deltas (docs/reflection-and-coaching.md) ──
+  //
+  // Same observed evidence as a Tier-2 debrief, applied through the same
+  // shared delta logic. A suppressed reflection (conduct-quarantined
+  // debrief upstream) is non-model-bearing: the narrative stays on the
+  // log; nothing reaches the model.
+  async function applyReflection(event) {
+    const d = event.data;
+    if (d.suppressed) return;
+    const userId = d.userId;
+    const dataKey = await keyStore.getKey(`user#${userId}`);
+    if (!dataKey) return;
+    if (d.deltas === undefined) return;
+    const clear = decryptPii(d, ['deltas'], dataKey);
+    const asOf = event.simulatedTime;
+    const source = { eventId: d.eventId, sourceEventId: event.eventId, asOf };
+    await applyExtractedDeltas(userId, dataKey, clear.deltas, source, asOf, event.eventId);
   }
 
   // ── Debrief deltas (docs/debrief.md → Projection-update mechanism) ──
@@ -114,11 +135,16 @@ export function createUserModelProjector({ client, userModelTable, keyStore }) {
 
     const deltas = clear.deltas;
     if (!deltas) return;
+    await applyExtractedDeltas(userId, dataKey, deltas, source, asOf, event.eventId);
+  }
 
+  // Shared by debrief and reflection — both produce the same observed
+  // delta shapes (docs/debrief-prompt.md schema).
+  async function applyExtractedDeltas(userId, dataKey, deltas, source, asOf, eventId) {
     // Envelope updates → profile#core, observed evidence appended per
     // dimension; observed outranks the seeded stated/inferred annotation.
     if (deltas.envelopeUpdates?.length) {
-      await applyDelta(userId, 'profile#core', dataKey, event.eventId, asOf, (current) => {
+      await applyDelta(userId, 'profile#core', dataKey, eventId, asOf, (current) => {
         const payload = current ?? { envelope: {}, doors: [], constraints: {}, growthEdges: [], provisional: true };
         for (const u of deltas.envelopeUpdates) {
           const dim = { ...(payload.envelope[u.dimension] ?? {}) };
@@ -137,7 +163,7 @@ export function createUserModelProjector({ client, userModelTable, keyStore }) {
     }
 
     for (const u of deltas.interestUpdates ?? []) {
-      await applyDelta(userId, `interest#${modelSlug(u.tag)}`, dataKey, event.eventId, asOf, (current) => {
+      await applyDelta(userId, `interest#${modelSlug(u.tag)}`, dataKey, eventId, asOf, (current) => {
         const payload = current ?? { tag: u.tag, weight: 0.6, provenance: 'observed', confidence: u.confidence };
         if (u.direction === 'strengthen') payload.weight = Math.min(1, (payload.weight ?? 0.5) + 0.1);
         if (u.direction === 'weaken') payload.weight = Math.max(0, (payload.weight ?? 0.5) - 0.1);
@@ -148,7 +174,7 @@ export function createUserModelProjector({ client, userModelTable, keyStore }) {
     }
 
     for (const u of deltas.barrierUpdates ?? []) {
-      await applyDelta(userId, `barrier#${modelSlug(u.what)}`, dataKey, event.eventId, asOf, (current) => {
+      await applyDelta(userId, `barrier#${modelSlug(u.what)}`, dataKey, eventId, asOf, (current) => {
         const payload = current ?? { what: u.what, provenance: 'observed', observations: [] };
         if (u.direction === 'easing') payload.easing = true;
         payload.provenance = 'observed';

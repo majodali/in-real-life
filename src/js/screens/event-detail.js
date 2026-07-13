@@ -12,6 +12,12 @@ import { commands } from '../services.js';
 import { navigate, showToast } from '../app.js';
 import { handleInteraction } from './interaction-handlers.js';
 import { handleDebriefSubmit } from './debrief-handlers.js';
+import {
+  appendExchange,
+  collectPerspectives,
+  handleReflectionTurn,
+  handleReflectionClose,
+} from './reflection-handlers.js';
 import { renderSuggestionsSection } from './event-suggestions.js';
 import { renderPollsSection } from './event-polls.js';
 
@@ -144,6 +150,7 @@ export async function renderEventDetail(eventId) {
   `;
 
   loadRoster(event);
+  if (event.myDebrief) bindReflection(container, event);
 
   if (showInteractionButtons) {
     bindInteractionButtons(container, event.eventId, event.myLevel);
@@ -251,14 +258,111 @@ function renderMyDebrief(event) {
         : d.again === 'maybe' ? 'Maybe again'
           : d.again === 'no' ? 'Not for you — noted'
             : 'Recorded';
+  // The standing reflection door (D44): static, always there, spans self
+  // and process. Not offered on a conduct-flagged debrief — that one's
+  // with the safety path.
+  const door = d.conductConcern ? '' : `
+    <button type="button" class="debrief-conduct-link" id="reflectionDoor">
+      Anything else worth saying — about the event, the people, or how we're doing?
+    </button>
+    <div id="reflectionPanel" style="display:none">
+      <div id="reflectionThread" class="reflection-thread"></div>
+      <textarea class="profile-field-input suggest-textarea" id="reflectionInput"
+                rows="2" maxlength="1000" placeholder="Say as much or as little as you like"></textarea>
+      <div class="event-action-row" style="margin-top:8px;">
+        <button type="button" class="btn-secondary" id="reflectionDone">I'm done</button>
+        <button type="button" class="btn-primary" id="reflectionSend">Send</button>
+      </div>
+    </div>
+  `;
   return `
     <div class="event-debrief event-debrief-done">
       <div class="organizer-controls-label">Your reflection</div>
       <div class="debrief-saved-row">
         <span class="debrief-saved-notes">${escapeHtml(line)}</span>
       </div>
+      ${door}
     </div>
   `;
+}
+
+// The reflection conversation: we-voice turns, user-led, exitable at any
+// point. Turn responses accumulate the coaching cap record client-side;
+// the close records everything in one command.
+function bindReflection(container, event) {
+  const door = container.querySelector('#reflectionDoor');
+  const panel = container.querySelector('#reflectionPanel');
+  if (!door || !panel) return;
+
+  let transcript = [];
+  const turns = [];
+  let closed = false;
+
+  const thread = () => container.querySelector('#reflectionThread');
+  const renderThread = (pending) => {
+    thread().innerHTML = transcript.map((t) => `
+      <div class="reflection-line reflection-${t.role === 'member' ? 'member' : 'us'}">${escapeHtml(t.text)}</div>
+    `).join('') + (pending ? '<div class="reflection-line reflection-us">…</div>' : '');
+  };
+
+  door.addEventListener('click', async () => {
+    door.style.display = 'none';
+    panel.style.display = '';
+    renderThread(true);
+    const { turn, error } = await handleReflectionTurn({
+      eventId: event.eventId, transcript, commands,
+    });
+    if (error) {
+      showToast(error.message || 'Couldn’t open that just now.');
+      panel.style.display = 'none';
+      door.style.display = '';
+      return;
+    }
+    turns.push(turn);
+    transcript = appendExchange(transcript, null, turn.message);
+    renderThread(false);
+  });
+
+  const close = async () => {
+    if (closed) return;
+    closed = true;
+    await handleReflectionClose({
+      eventId: event.eventId,
+      transcript,
+      perspectivesOffered: collectPerspectives(turns),
+      commands,
+      showToast,
+      onDone: () => {
+        panel.style.display = 'none';
+        showToast('Thanks — we’ll keep that in mind.');
+      },
+    });
+  };
+
+  container.querySelector('#reflectionSend').addEventListener('click', async () => {
+    const input = container.querySelector('#reflectionInput');
+    const text = input.value.trim();
+    if (!text || closed) return;
+    input.value = '';
+    transcript = appendExchange(transcript, text, null);
+    renderThread(true);
+    const { turn, error } = await handleReflectionTurn({
+      eventId: event.eventId, transcript, commands,
+    });
+    if (error) {
+      renderThread(false);
+      showToast('Connection hiccup — try that again.');
+      transcript = transcript.slice(0, -1);
+      input.value = text;
+      return;
+    }
+    turns.push(turn);
+    transcript = appendExchange(transcript, null, turn.message);
+    renderThread(false);
+    if (turn.done) await close();
+  });
+
+  container.querySelector('#reflectionDone').addEventListener('click', close);
 }
 
 function bindDebriefForm(container, event) {
