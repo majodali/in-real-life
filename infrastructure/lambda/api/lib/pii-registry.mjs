@@ -25,6 +25,14 @@ const PII_FIELDS = {
   // The interview carrier (D42): transcript is Layer-1 narrative, extraction
   // the Layer-2 seed — the heaviest PII any event carries.
   OnboardingCompleted: ['transcript', 'extraction'],
+  // The debrief is preference + relational PII (docs/debrief.md): who you
+  // met, see-again marks, free text, extracted deltas. attended and the
+  // conductConcern flag stay cleartext (reliability + safety-ops reads);
+  // everything with content is shredded. NOTE: these events live on the
+  // interaction# aggregate but encrypt under the USER's key — see
+  // piiKeyIdFor in index.mjs — so account deletion shreds them.
+  DebriefSubmitted: ['again', 'noShowReason', 'outcomeTexture', 'people',
+    'surprise', 'reflection', 'conductNote', 'deltas'],
   // UserKeyShredded is intentionally absent: it's the post-shred audit
   // record and must carry no PII (its aggregate's key no longer exists).
 };

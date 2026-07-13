@@ -11,6 +11,7 @@ import * as store from '../store.js';
 import { commands } from '../services.js';
 import { navigate, showToast } from '../app.js';
 import { handleInteraction } from './interaction-handlers.js';
+import { handleDebriefSubmit } from './debrief-handlers.js';
 import { renderSuggestionsSection } from './event-suggestions.js';
 import { renderPollsSection } from './event-polls.js';
 
@@ -165,21 +166,75 @@ export async function renderEventDetail(eventId) {
   }
 }
 
+const TEXTURE_CHIPS = [
+  'great-company', 'too-big', 'just-right', 'hard-to-break-in',
+  'nothing-to-do', 'went-long',
+];
+const NOSHOW_CHIPS = ['timing', 'distance', 'energy', 'nerves', 'plans-changed'];
+
+// Tiered debrief (docs/debrief.md): taps first, optional texture and
+// text, the people step over the roster, and a calm conduct door. Most
+// of it is optional — completion rate is the asset.
 function renderDebriefSection(event) {
   if (event.myDebrief) return '';  // already debriefed — see renderMyDebrief
   return `
     <div class="event-debrief">
       <div class="organizer-controls-label">How was it?</div>
-      <p class="suggestions-hint">A quick reflection — it shapes what we suggest you next.</p>
       <form id="debriefForm" class="debrief-form">
-        <div class="debrief-rating" id="debriefRating">
-          ${[1, 2, 3, 4, 5].map((n) => `
-            <button type="button" class="debrief-star" data-rating="${n}">★</button>
-          `).join('')}
+        <div class="debrief-field">
+          <span class="debrief-q">Did you make it?</span>
+          <div class="event-action-row">
+            <button type="button" class="btn-small debrief-chip" data-attended="yes">Yes</button>
+            <button type="button" class="btn-small debrief-chip" data-attended="no">Couldn't make it</button>
+          </div>
         </div>
-        <textarea class="profile-field-input suggest-textarea" id="debriefNotes"
-                  rows="2" maxlength="500"
-                  placeholder="One line about how it went (optional)"></textarea>
+
+        <div class="debrief-field" id="debriefNoShow" style="display:none">
+          <span class="debrief-q">No worries — what got in the way?</span>
+          <div class="event-action-row debrief-chip-row">
+            ${NOSHOW_CHIPS.map((c) => `<button type="button" class="btn-small debrief-chip" data-noshow="${c}">${c.replace(/-/g, ' ')}</button>`).join('')}
+          </div>
+        </div>
+
+        <div id="debriefWent" style="display:none">
+          <div class="debrief-field">
+            <span class="debrief-q">Worth another go?</span>
+            <div class="event-action-row">
+              <button type="button" class="btn-small debrief-chip" data-again="yes">Yes</button>
+              <button type="button" class="btn-small debrief-chip" data-again="maybe">Maybe</button>
+              <button type="button" class="btn-small debrief-chip" data-again="no">Not for me</button>
+            </div>
+          </div>
+
+          <div class="debrief-field" id="debriefPeople" style="display:none">
+            <span class="debrief-q">Who'd you end up meeting?</span>
+            <div id="debriefPeopleList"></div>
+          </div>
+
+          <div class="debrief-field">
+            <span class="debrief-q">Anything stand out? <span class="auth-optional">(optional)</span></span>
+            <div class="event-action-row debrief-chip-row">
+              ${TEXTURE_CHIPS.map((c) => `<button type="button" class="btn-small debrief-chip" data-texture="${c}">${c.replace(/-/g, ' ')}</button>`).join('')}
+            </div>
+          </div>
+
+          <textarea class="profile-field-input suggest-textarea" id="debriefReflection"
+                    rows="2" maxlength="1000"
+                    placeholder="Anything else worth saying? (optional)"></textarea>
+        </div>
+
+        <button type="button" class="debrief-conduct-link" id="debriefConductLink">
+          Did you have any concerns with anyone's conduct?
+        </button>
+        <div class="debrief-field" id="debriefConduct" style="display:none">
+          <p class="event-action-hint">
+            If someone made you feel unsafe or uncomfortable, you can tell us
+            what happened — it goes to a person, never into your preferences.
+          </p>
+          <textarea class="profile-field-input suggest-textarea" id="debriefConductNote"
+                    rows="2" maxlength="1000" placeholder="What happened (optional)"></textarea>
+        </div>
+
         <button type="submit" class="btn-primary" id="debriefSubmit">Save</button>
       </form>
     </div>
@@ -188,13 +243,19 @@ function renderDebriefSection(event) {
 
 function renderMyDebrief(event) {
   const d = event.myDebrief;
-  const stars = '★'.repeat(d.rating) + '☆'.repeat(5 - d.rating);
+  const line = d.conductConcern
+    ? 'Thanks for telling us — someone will look at it with care.'
+    : d.attended === false
+      ? "Couldn't make it — no worries."
+      : d.again === 'yes' ? 'Worth another go ✓'
+        : d.again === 'maybe' ? 'Maybe again'
+          : d.again === 'no' ? 'Not for you — noted'
+            : 'Recorded';
   return `
     <div class="event-debrief event-debrief-done">
       <div class="organizer-controls-label">Your reflection</div>
       <div class="debrief-saved-row">
-        <span class="debrief-saved-stars">${stars}</span>
-        ${d.notes ? `<span class="debrief-saved-notes">${escapeHtml(d.notes)}</span>` : ''}
+        <span class="debrief-saved-notes">${escapeHtml(line)}</span>
       </div>
     </div>
   `;
@@ -203,38 +264,119 @@ function renderMyDebrief(event) {
 function bindDebriefForm(container, event) {
   const form = container.querySelector('#debriefForm');
   if (!form) return;
-  let selected = 0;
-  const stars = form.querySelectorAll('[data-rating]');
-  stars.forEach((btn) => {
+
+  const state = {
+    attended: undefined, again: undefined, noShowReason: undefined,
+    textures: [], people: [], conductConcern: false,
+  };
+  const peopleMarks = new Map(); // ref → { seeAgain }
+
+  const pick = (selector, onPick) => {
+    const buttons = form.querySelectorAll(selector);
+    buttons.forEach((btn) => btn.addEventListener('click', () => {
+      buttons.forEach((b) => b.classList.toggle('selected', b === btn));
+      onPick(btn);
+    }));
+  };
+
+  pick('[data-attended]', (btn) => {
+    state.attended = btn.dataset.attended === 'yes';
+    form.querySelector('#debriefWent').style.display = state.attended ? '' : 'none';
+    form.querySelector('#debriefNoShow').style.display = state.attended ? 'none' : '';
+    if (state.attended) loadDebriefPeople(form, event, peopleMarks);
+  });
+  pick('[data-noshow]', (btn) => { state.noShowReason = btn.dataset.noshow; });
+  pick('[data-again]', (btn) => { state.again = btn.dataset.again; });
+
+  form.querySelectorAll('[data-texture]').forEach((btn) => {
     btn.addEventListener('click', () => {
-      selected = Number(btn.dataset.rating);
-      stars.forEach((s) => {
-        s.classList.toggle('selected', Number(s.dataset.rating) <= selected);
-      });
+      btn.classList.toggle('selected');
+      const c = btn.dataset.texture;
+      state.textures = btn.classList.contains('selected')
+        ? [...state.textures, c]
+        : state.textures.filter((t) => t !== c);
     });
+  });
+
+  const conductLink = form.querySelector('#debriefConductLink');
+  conductLink.addEventListener('click', () => {
+    state.conductConcern = !state.conductConcern;
+    conductLink.classList.toggle('selected', state.conductConcern);
+    form.querySelector('#debriefConduct').style.display = state.conductConcern ? '' : 'none';
   });
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    if (selected < 1) {
-      showToast('Tap a star to rate.');
-      return;
-    }
-    const notes = container.querySelector('#debriefNotes').value.trim();
-    const submit = container.querySelector('#debriefSubmit');
+    const submit = form.querySelector('#debriefSubmit');
     submit.disabled = true;
     submit.textContent = 'Saving…';
-    try {
-      await commands.submitDebrief({ eventId: event.eventId, rating: selected, notes });
-      showToast('Saved.');
-      renderEventDetail(event.eventId);
-    } catch (err) {
-      showToast(err?.message || 'Could not save.');
-    } finally {
+    const ok = await handleDebriefSubmit({
+      eventId: event.eventId,
+      state: {
+        ...state,
+        people: [...peopleMarks.entries()]
+          .filter(([, v]) => v.met)
+          .map(([ref, v]) => ({ ref, seeAgain: v.seeAgain === true })),
+        reflection: form.querySelector('#debriefReflection')?.value,
+        conductNote: form.querySelector('#debriefConductNote')?.value,
+      },
+      commands,
+      showToast,
+      onSuccess: () => {
+        showToast('Thanks — we\u2019ll keep that in mind.');
+        renderEventDetail(event.eventId);
+      },
+    });
+    if (!ok) {
       submit.disabled = false;
       submit.textContent = 'Save';
     }
   });
+}
+
+// The people step: who you met (tap), then a positive-only "see again"
+// star on the people you met. Untapped is neutral; there is no per-person
+// "no" (docs/debrief.md).
+async function loadDebriefPeople(form, event, peopleMarks) {
+  const wrap = form.querySelector('#debriefPeople');
+  const list = form.querySelector('#debriefPeopleList');
+  if (!wrap || !list || list.dataset.loaded) return;
+  try {
+    const roster = await commands.listAttendees({ eventId: event.eventId });
+    const others = [...(roster.confirmed ?? []), ...(roster.interested ?? [])]
+      .filter((p) => !p.me);
+    if (!others.length) return;
+    list.dataset.loaded = '1';
+    wrap.style.display = '';
+    list.innerHTML = others.map((p) => `
+      <div class="debrief-person" data-ref="${escapeAttr(p.ref)}">
+        <button type="button" class="btn-small debrief-chip" data-person-met>${escapeHtml(p.name)}</button>
+        <button type="button" class="btn-small debrief-chip debrief-see-again" data-person-again
+                style="display:none" title="Want to see again?">★ see again</button>
+      </div>
+    `).join('');
+    list.querySelectorAll('.debrief-person').forEach((row) => {
+      const ref = row.dataset.ref;
+      const metBtn = row.querySelector('[data-person-met]');
+      const againBtn = row.querySelector('[data-person-again]');
+      metBtn.addEventListener('click', () => {
+        const mark = peopleMarks.get(ref) ?? { met: false, seeAgain: false };
+        mark.met = !mark.met;
+        if (!mark.met) { mark.seeAgain = false; againBtn.classList.remove('selected'); }
+        peopleMarks.set(ref, mark);
+        metBtn.classList.toggle('selected', mark.met);
+        againBtn.style.display = mark.met ? '' : 'none';
+      });
+      againBtn.addEventListener('click', () => {
+        const mark = peopleMarks.get(ref) ?? { met: true, seeAgain: false };
+        mark.seeAgain = !mark.seeAgain;
+        peopleMarks.set(ref, mark);
+        againBtn.classList.toggle('selected', mark.seeAgain);
+      });
+    });
+  } catch {
+    // People step is enrichment; the rest of the debrief works without it.
+  }
 }
 
 // The roster behind the counts (first names only; "you" marked). On an
@@ -554,6 +696,10 @@ function formatDateRange(startIso, endIso) {
     ? { hour: 'numeric', minute: '2-digit' }
     : { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
   return `${startStr} — ${endStr}`;
+}
+
+function escapeAttr(str) {
+  return escapeHtml(str).replace(/"/g, '&quot;');
 }
 
 function escapeHtml(str) {

@@ -12,9 +12,27 @@
 // the world without the blocker; counts adjusted to match). Pre-launch,
 // with blocks unbuilt, the unfiltered roster is acceptable.
 
+import { createHmac } from 'node:crypto';
 import { GetCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
 
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
+
+// Opaque per-event attendee reference: an HMAC of the userId under a
+// per-event roster key (random, from the key store, no PII). Lets the
+// debrief people-step point at attendees without userIds ever reaching a
+// client; the debrief handler recomputes the same refs to resolve taps
+// back to userIds server-side. Refs are stable within an event and
+// meaningless across events — no cross-event correlation handle.
+export function attendeeRef(userId, rosterKey) {
+  return createHmac('sha256', Buffer.from(rosterKey, 'base64'))
+    .update(String(userId))
+    .digest('hex')
+    .slice(0, 16);
+}
+
+export async function rosterKeyFor(keyStore, eventId) {
+  return keyStore.getOrCreateKey(`roster#${eventId}`);
+}
 
 function reply(statusCode, body) {
   return {
@@ -24,7 +42,7 @@ function reply(statusCode, body) {
   };
 }
 
-export function createListAttendeesHandler({ client, eventsTable, interactionsTable }) {
+export function createListAttendeesHandler({ client, eventsTable, interactionsTable, keyStore }) {
   return async function handler(event) {
     const claims = event?.requestContext?.authorizer?.jwt?.claims;
     if (!claims || !claims.sub) return reply(401, { error: 'unauthorized' });
@@ -52,7 +70,9 @@ export function createListAttendeesHandler({ client, eventsTable, interactionsTa
       lastKey = out.LastEvaluatedKey;
     } while (lastKey);
 
+    const rosterKey = await rosterKeyFor(keyStore, eventId);
     const entry = (row) => ({
+      ref: attendeeRef(row.userId, rosterKey),
       name: row.userName || 'someone',
       ...(row.userId === claims.sub ? { me: true } : {}),
     });

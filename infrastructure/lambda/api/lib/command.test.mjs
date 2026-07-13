@@ -596,3 +596,32 @@ test('runs unchanged without a tracer', async () => {
   const out = await buildRunner().runCommand(baseInput());
   assert.equal(out.cached, false);
 });
+
+test('piiKeyIdFor routes interaction-event PII to the member\'s user# key', async () => {
+  ddbMock.on(GetCommand).resolves({});
+  ddbMock.on(TransactWriteCommand).resolves({});
+  const keyStore = fakeKeyStore();
+
+  const runner2 = buildRunner({
+    keyStore,
+    piiFieldsFor: (t) => (t === 'DebriefSubmitted' ? ['reflection'] : []),
+    piiKeyIdFor: (record) => (record.aggregateId.startsWith('interaction#')
+      ? `user#${record.data.userId}`
+      : record.aggregateId),
+  });
+
+  await runner2.runCommand({
+    commandId: 'cmd-1',
+    aggregateId: 'interaction#abc#evt-1',
+    events: [{
+      eventType: 'DebriefSubmitted', version: 1, seq: 3,
+      data: { userId: 'abc', eventId: 'evt-1', attended: true, reflection: 'private words' },
+    }],
+    result: { ok: true },
+  });
+
+  assert.deepEqual(keyStore.created, ['user#abc'], 'key created for the USER, not the interaction');
+  const [item] = loggedEventItems();
+  assert.match(item.data.reflection, /^v1:/, 'reflection encrypted');
+  assert.equal(item.data.attended, true, 'non-PII stays cleartext');
+});

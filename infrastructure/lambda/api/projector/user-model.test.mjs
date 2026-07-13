@@ -270,3 +270,104 @@ test('modelSlug is deterministic, lowercase, bounded', () => {
   assert.equal(modelSlug(''), 'unnamed');
   assert.ok(modelSlug('x'.repeat(200)).length <= 48);
 });
+
+// ─── Debrief deltas (second source; D7 read→apply→conditional write) ───
+
+import { encryptPii } from '../lib/crypto-shred.mjs';
+import { STUB_DEBRIEF_EXTRACTION } from '../lib/llm.mjs';
+
+function debriefEvent(data, overrides = {}) {
+  const piiFields = ['again', 'noShowReason', 'outcomeTexture', 'people',
+    'surprise', 'reflection', 'deltas'].filter((f) => data[f] !== undefined);
+  return {
+    aggregateId: 'interaction#abc#evt-9',
+    seq: 3,
+    eventId: overrides.eventId ?? '01DEBRIEF',
+    eventType: 'DebriefSubmitted',
+    simulatedTime: '2026-07-20T10:00:00.000Z',
+    data: { userId: 'abc', eventId: 'evt-9', ...encryptPii(data, piiFields, dataKey), attended: data.attended },
+    ...overrides,
+  };
+}
+
+test('people taps grow affinity items: met counts, positive-only seeAgain, sources', async () => {
+  await projector.applyEvent(debriefEvent({
+    attended: true, again: 'yes',
+    people: [{ userId: 'other-1', met: true, seeAgain: true }],
+  }));
+
+  const item = writes.find((w) => w.sk === 'affinity#other-1');
+  assert.ok(item, 'affinity item written');
+  const model = decryptValue(item.model, dataKey);
+  assert.equal(model.met, 1);
+  assert.equal(model.seeAgain, 1);
+  assert.equal(model.sources[0].eventId, 'evt-9');
+  assert.equal(item.version, 1);
+  assert.equal(item.lastEventId, '01DEBRIEF');
+
+  // A second debrief (different event) merges into the same edge.
+  await projector.applyEvent(debriefEvent({
+    attended: true, again: 'yes',
+    people: [{ userId: 'other-1', met: true, seeAgain: false }],
+  }, { eventId: '01DEBRIEF2', aggregateId: 'interaction#abc#evt-10' }));
+
+  const merged = writes.filter((w) => w.sk === 'affinity#other-1').at(-1);
+  const mergedModel = decryptValue(merged.model, dataKey);
+  assert.equal(mergedModel.met, 2);
+  assert.equal(mergedModel.seeAgain, 1, 'seeAgain only on the positive tap');
+  assert.equal(merged.version, 2);
+});
+
+test('redelivered debrief is a no-op (lastEventId idempotency)', async () => {
+  const ev = debriefEvent({
+    attended: true, again: 'yes',
+    people: [{ userId: 'other-1', met: true, seeAgain: true }],
+  });
+  await projector.applyEvent(ev);
+  const count = writes.length;
+  await projector.applyEvent(ev);
+  assert.equal(writes.length, count);
+});
+
+test('conduct-quarantined debriefs are non-model-bearing (defence in depth)', async () => {
+  await projector.applyEvent(debriefEvent({ attended: true, suppressed: true, conductConcern: true }));
+  assert.equal(writes.length, 0);
+});
+
+test('LLM deltas apply: envelope observation lands on profile#core as observed', async () => {
+  await projector.applyEvent(makeEvent()); // onboarding seed first
+  const before = writes.filter((w) => w.sk === 'profile#core').length;
+
+  await projector.applyEvent(debriefEvent({
+    attended: true, again: 'yes', surprise: 'big room was fine',
+    deltas: STUB_DEBRIEF_EXTRACTION,
+  }));
+
+  const cores = writes.filter((w) => w.sk === 'profile#core');
+  assert.equal(cores.length, before + 1);
+  const model = decryptValue(cores.at(-1).model, dataKey);
+  const dim = model.envelope.groupSize;
+  assert.equal(dim.provenance, 'observed', 'observed outranks the seeded annotation');
+  assert.equal(dim.observations.length, 1);
+  assert.equal(dim.observations[0].condition, 'a shared activity gave everyone something to do');
+  assert.equal(dim.observations[0].sourceEventId, '01DEBRIEF');
+  assert.equal(dim.comfort, 'small groups', 'seeded comfort text preserved');
+});
+
+test('no-show reason becomes an observed barrier item', async () => {
+  await projector.applyEvent(debriefEvent({ attended: false, noShowReason: 'nerves on the day' }));
+  const item = writes.find((w) => w.sk === 'barrier#nerves-on-the-day');
+  assert.ok(item);
+  const model = decryptValue(item.model, dataKey);
+  assert.equal(model.provenance, 'observed');
+  assert.equal(model.observations.length, 1);
+});
+
+test('a shredded member\'s debrief is skipped cleanly', async () => {
+  keyStore.getKey = async () => null;
+  await projector.applyEvent(debriefEvent({
+    attended: true, again: 'yes',
+    people: [{ userId: 'other-1', met: true, seeAgain: true }],
+  }));
+  assert.equal(writes.length, 0);
+});

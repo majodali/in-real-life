@@ -97,9 +97,13 @@ export function projectAttendanceConfirmed(event, tables) {
 }
 
 export function projectDebriefSubmitted(event, tables) {
-  const { userId, eventId, rating, notes } = event.data;
-  const debrief = { rating, submittedAt: event.wallTime };
-  if (notes !== undefined) debrief.notes = notes;
+  const { userId, eventId, attended, again, conductConcern } = event.data;
+  // Summary only — the full capture (people, text, deltas) lives on the
+  // crypto-shredded log event; the state row records that a debrief
+  // happened and the deterministic core.
+  const debrief = { attended: attended !== false, submittedAt: event.wallTime };
+  if (again !== undefined) debrief.again = again;
+  if (conductConcern === true) debrief.conductConcern = true;
   return [{
     Update: {
       TableName: tables.interactionsTable,

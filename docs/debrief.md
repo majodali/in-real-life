@@ -71,7 +71,7 @@ Because debrief evidence is `observed`, it dominates and decays the `stated`/`in
 
 ## Projection-update mechanism
 
-A debrief emits a **`DebriefRecorded`** event on the `interaction#{userId}#{eventId}` aggregate (`event-sourcing.md`), carrying the raw debrief plus, when Tier 2 ran, extracted deltas. A **projector** applies them under the precedence rules (`observed > inferred > stated`, with decay and a `sourceRef` back to the event). Per D7, conflict-resolution starts as **per-contribution judgment calls**.
+A debrief emits a **`DebriefRecorded`** event (implemented as `DebriefSubmitted` — same event, the code kept the earlier name) on the `interaction#{userId}#{eventId}` aggregate (`event-sourcing.md`), carrying the raw debrief plus, when Tier 2 ran, extracted deltas. A **projector** applies them under the precedence rules (`observed > inferred > stated`, with decay and a `sourceRef` back to the event). Per D7, conflict-resolution starts as **per-contribution judgment calls**.
 
 - **Per-debrief** updates the individual's projection (Tier-2 extraction is one cheap call; Tier-0/1 maps deterministically).
 - **Batched, aggregate** analysis across users is a *separate* loop — model-evolution governance (`user-model.md`): de-identified, surfaces candidate dimensions, never per-person.

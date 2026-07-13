@@ -166,9 +166,25 @@ export function stubOnboardingTurn(request) {
   };
 }
 
+// Canned debrief extraction — schema-valid against
+// DEBRIEF_EXTRACTION_SCHEMA (docs/debrief-prompt.md). Deliberately
+// modest: one conditioned envelope observation, nothing invented.
+export const STUB_DEBRIEF_EXTRACTION = {
+  envelopeUpdates: [{
+    dimension: 'groupSize',
+    observation: 'a bigger room worked this time',
+    condition: 'a shared activity gave everyone something to do',
+    direction: 'widen',
+    confidence: 'medium',
+  }],
+  interestUpdates: [],
+  barrierUpdates: [],
+};
+
 const DEFAULT_CANNED = {
   'onboarding-extraction': STUB_ONBOARDING_EXTRACTION,
   'onboarding-turn': stubOnboardingTurn,
+  'debrief-extraction': STUB_DEBRIEF_EXTRACTION,
 };
 
 // Deterministic stub provider. Outputs are keyed by `task`; workshop robots

@@ -38,6 +38,7 @@ beforeEach(() => {
     client,
     eventsTable: 'irl-events-test',
     interactionsTable: 'irl-interactions-test',
+    keyStore: { getOrCreateKey: async () => Buffer.alloc(32, 5).toString('base64') },
   });
 });
 
@@ -46,12 +47,22 @@ test('splits confirmed and interested, sorted by name, me marked, no userIds lea
   assert.equal(response.statusCode, 200);
   const body = JSON.parse(response.body);
 
-  assert.deepEqual(body.confirmed, [
+  assert.deepEqual(body.confirmed.map(({ ref, ...rest }) => rest), [
     { name: 'Mat', me: true },
     { name: 'Zoe' },
   ]);
-  assert.deepEqual(body.interested, [{ name: 'Ana' }]);
+  assert.deepEqual(body.interested.map(({ ref, ...rest }) => rest), [{ name: 'Ana' }]);
   assert.doesNotMatch(response.body, /user-a|user-b|user-me/, 'userIds never leave the server');
+});
+
+test('attendee refs are opaque, stable per event, and distinct per member', async () => {
+  const first = JSON.parse((await handler(makeEvent({ claims: validClaims }))).body);
+  const second = JSON.parse((await handler(makeEvent({ claims: validClaims }))).body);
+  const refs = [...first.confirmed, ...first.interested].map((p) => p.ref);
+
+  assert.equal(new Set(refs).size, refs.length, 'refs distinct');
+  for (const ref of refs) assert.match(ref, /^[0-9a-f]{16}$/);
+  assert.deepEqual(first, second, 'refs stable across calls');
 });
 
 test('queries the event-user-index GSI for the event partition', async () => {
@@ -76,6 +87,7 @@ test('paginates the roster query', async () => {
   });
   handler = createListAttendeesHandler({
     client, eventsTable: 't', interactionsTable: 'i',
+    keyStore: { getOrCreateKey: async () => Buffer.alloc(32, 5).toString('base64') },
   });
   const body = JSON.parse((await handler(makeEvent({ claims: validClaims }))).body);
   assert.equal(body.confirmed.length, 1);
@@ -92,7 +104,8 @@ test('an empty roster returns empty groups', async () => {
 test('falls back to "someone" when a name snapshot is missing', async () => {
   interactionRows = [{ userId: 'u1', eventId: 'evt-1', level: 'confirmed' }];
   const body = JSON.parse((await handler(makeEvent({ claims: validClaims }))).body);
-  assert.deepEqual(body.confirmed, [{ name: 'someone' }]);
+  assert.equal(body.confirmed.length, 1);
+  assert.equal(body.confirmed[0].name, 'someone');
 });
 
 test('401 unauthenticated; 404 unknown event', async () => {
