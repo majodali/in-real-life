@@ -34,8 +34,13 @@ import {
   projectOnboardingCompleted,
   projectUserKeyShredded,
   projectUserAgreementReaccepted,
+  projectReflectionRecorded,
 } from './users/projections.mjs';
 import { createReacceptAgreementHandler } from './users/agreement.mjs';
+import {
+  createReflectionTurnHandler,
+  createCompleteReflectionHandler,
+} from './users/reflection.mjs';
 import { createUpdateAgreementVersionHandler } from './admin/agreement-version.mjs';
 import { projectRequiredAgreementVersionUpdated } from './admin/agreement-projections.mjs';
 import { createOnboardingHandler } from './users/onboarding.mjs';
@@ -195,6 +200,7 @@ const projector = createProjector({
     PollVoteCast: projectPollVoteCast,
     PollVoteRetracted: projectPollVoteRetracted,
     UserAgreementReaccepted: projectUserAgreementReaccepted,
+    ReflectionRecorded: projectReflectionRecorded,
     RequiredAgreementVersionUpdated: projectRequiredAgreementVersionUpdated,
   },
   tables,
@@ -272,6 +278,20 @@ const deleteHandler = createDeleteHandler({
 });
 const onboardingHandler = createOnboardingHandler({
   runner, client, usersTable: tables.usersTable, llm,
+});
+const reflectionTurnHandler = createReflectionTurnHandler({
+  client,
+  usersTable: tables.usersTable,
+  eventsTable: tables.eventsTable,
+  interactionsTable: tables.interactionsTable,
+  llm,
+});
+const completeReflectionHandler = createCompleteReflectionHandler({
+  runner,
+  client,
+  usersTable: tables.usersTable,
+  interactionsTable: tables.interactionsTable,
+  llm,
 });
 const interviewTurnHandler = createInterviewTurnHandler({
   client,
@@ -415,6 +435,8 @@ router.add('POST', '/me/agreement', reacceptAgreementHandler);
 router.add('POST', '/me/profile', requireCurrentAgreement(profileHandler));
 router.add('POST', '/me/onboarding', requireCurrentAgreement(onboardingHandler));
 router.add('POST', '/me/interview/turn', requireCurrentAgreement(interviewTurnHandler));
+router.add('POST', '/me/reflection/turn', requireCurrentAgreement(reflectionTurnHandler));
+router.add('POST', '/me/reflection', requireCurrentAgreement(completeReflectionHandler));
 router.add('PUT', '/me/profile', requireCurrentAgreement(updateProfileHandler));
 router.add('POST', '/me/locality', requireCurrentAgreement(localityHandler));
 router.add('GET', '/locality/check', localityCheckHandler);

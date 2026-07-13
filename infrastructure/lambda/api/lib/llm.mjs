@@ -181,10 +181,34 @@ export const STUB_DEBRIEF_EXTRACTION = {
   barrierUpdates: [],
 };
 
+// Canned reflection turn — a fixed short script keyed off member-turn
+// count so a driven loop deterministically closes. Schema-valid against
+// REFLECTION_TURN_SCHEMA (docs/reflection-prompt.md).
+export function stubReflectionTurn(request) {
+  const content = request?.messages?.[0]?.content ?? '';
+  const memberTurns = (content.match(/^member:/gm) || []).length;
+  if (memberTurns >= 2) {
+    return {
+      message: 'Thanks for saying all that — it genuinely helps. We’ll leave it there for now.',
+      done: true,
+      perspectiveOffered: 'none',
+    };
+  }
+  return {
+    message: memberTurns === 0
+      ? 'Of course — what’s the part that stayed with you?'
+      : 'That’s fair to raise. What were you hoping it’d be like?',
+    done: false,
+    perspectiveOffered: 'none',
+  };
+}
+
 const DEFAULT_CANNED = {
   'onboarding-extraction': STUB_ONBOARDING_EXTRACTION,
   'onboarding-turn': stubOnboardingTurn,
   'debrief-extraction': STUB_DEBRIEF_EXTRACTION,
+  'reflection-turn': stubReflectionTurn,
+  'reflection-extraction': STUB_DEBRIEF_EXTRACTION,
 };
 
 // Deterministic stub provider. Outputs are keyed by `task`; workshop robots

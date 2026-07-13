@@ -33,6 +33,10 @@ const PII_FIELDS = {
   // piiKeyIdFor in index.mjs — so account deletion shreds them.
   DebriefSubmitted: ['again', 'noShowReason', 'outcomeTexture', 'people',
     'surprise', 'reflection', 'conductNote', 'deltas'],
+  // Reflection narrative + deltas + routed feedback are PII; the
+  // perspectivesOffered cap keys are cleartext (enum keys, projected
+  // onto the state row, no content).
+  ReflectionRecorded: ['transcript', 'deltas', 'processFeedback', 'organizerFeedback'],
   // UserKeyShredded is intentionally absent: it's the post-shred audit
   // record and must carry no PII (its aggregate's key no longer exists).
 };

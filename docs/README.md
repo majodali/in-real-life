@@ -43,6 +43,7 @@ Understanding of a person is **seeded** at onboarding and **grown** from what th
 
 **Understanding & guidance (Group 3)**
 - `reflection-and-coaching.md` — the optional deeper modes the debrief opens a door to; skills development; the reframe library.
+- `reflection-prompt.md` — the reflection/coaching turn prompt + control envelope and the close (v1; the reframe library in `reflection-and-coaching.md` stays the copy source of truth).
 - `coaching-and-engagement.md` — the global AI voice (warm-not-familiar, "we", no persona), the coaching model, active engagement.
 
 **Matching & recommendation (Group 3)**
