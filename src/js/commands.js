@@ -158,6 +158,10 @@ export function createCommands({
     return await api.get('/events');
   }
 
+  async function listAttendees({ eventId }) {
+    return await api.get(`/events/${encodeURIComponent(eventId)}/attendees`);
+  }
+
   // Per-click commandId — each press is a distinct user intent, and a
   // network retry within a single press reuses the local id naturally.
   async function setEventInteraction({ eventId, level }) {
@@ -318,6 +322,7 @@ export function createCommands({
     getNotifyList,
     proposeEvent,
     listEvents,
+    listAttendees,
     setEventInteraction,
     withdrawEventInteraction,
     scheduleEvent,
