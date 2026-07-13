@@ -611,3 +611,34 @@ test('listAttendees fetches the roster for an event, id encoded', async () => {
   await commands.listAttendees({ eventId: 'e/1' });
   assert.equal(api.get.calls[0][0], '/events/e%2F1/attendees');
 });
+
+test('submitDebrief posts the tiered capture with a per-event persisted commandId', async () => {
+  api.post = spy(async () => { throw new Error('network'); });
+  await assert.rejects(() => commands.submitDebrief({
+    eventId: 'evt-1', attended: true, again: 'yes',
+    people: [{ ref: 'abcd', seeAgain: true }],
+  }));
+  const kept = storage.getItem('irl_cmd_debrief_evt-1');
+  assert.ok(kept, 'commandId survives the failure');
+
+  api.post = spy(async () => ({ eventId: 'evt-1' }));
+  await commands.submitDebrief({ eventId: 'evt-1', attended: true, again: 'yes' });
+  const [path, body] = api.post.calls[0];
+  assert.equal(path, '/events/evt-1/debrief');
+  assert.equal(body.commandId, kept, 'retry converges on the same commandId');
+  assert.equal(body.attended, true);
+  assert.equal(body.again, 'yes');
+  assert.equal(storage.getItem('irl_cmd_debrief_evt-1'), null);
+});
+
+test('submitDebrief omits absent optional fields and carries conduct flags', async () => {
+  api.post = spy(async () => ({}));
+  await commands.submitDebrief({
+    eventId: 'e2', attended: true, conductConcern: true, conductNote: 'note',
+  });
+  const body = api.post.calls[0][1];
+  assert.equal(body.conductConcern, true);
+  assert.equal(body.conductNote, 'note');
+  assert.equal('again' in body, false);
+  assert.equal('people' in body, false);
+});

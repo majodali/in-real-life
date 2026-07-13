@@ -25,6 +25,10 @@ export function createCommandRunner({
   getOffset,
   keyStore,
   piiFieldsFor,
+  // Which aggregate's key encrypts a record's PII. Defaults to the
+  // record's own aggregate; interaction events override to the member's
+  // user# key so account deletion shreds debrief content too.
+  piiKeyIdFor = (record) => record.aggregateId,
   tracer,
   log = (line) => console.log(JSON.stringify(line)),
 }) {
@@ -36,6 +40,7 @@ export function createCommandRunner({
     getOffset,
     keyStore,
     piiFieldsFor,
+    piiKeyIdFor,
     trace: tracer ? (name, fn) => tracer.subsegment(name, fn) : (_name, fn) => fn(),
     tracer,
   };
@@ -78,7 +83,7 @@ export function createCommandRunner({
 }
 
 async function runCommand(
-  { client, commandsTable, eventsLogTable, projector, getOffset, keyStore, piiFieldsFor, trace, tracer },
+  { client, commandsTable, eventsLogTable, projector, getOffset, keyStore, piiFieldsFor, piiKeyIdFor, trace, tracer },
   { commandId, aggregateId, events, result, actorId = 'system', traceId },
 ) {
   const effectiveTraceId = traceId ?? tracer?.traceId();
@@ -125,12 +130,14 @@ async function runCommand(
   if (keyStore && piiFieldsFor) {
     const anyPii = eventRecords.some((r) => piiFieldsFor(r.eventType).length > 0);
     if (anyPii) {
-      const dataKey = await trace('encrypt-pii', () => keyStore.getOrCreateKey(aggregateId));
-      logRecords = eventRecords.map((r) => {
-        const fields = piiFieldsFor(r.eventType);
-        if (fields.length === 0) return r;
-        return { ...r, data: encryptPii(r.data, fields, dataKey) };
-      });
+      logRecords = await trace('encrypt-pii', async () => Promise.all(
+        eventRecords.map(async (r) => {
+          const fields = piiFieldsFor(r.eventType);
+          if (fields.length === 0) return r;
+          const dataKey = await keyStore.getOrCreateKey(piiKeyIdFor(r));
+          return { ...r, data: encryptPii(r.data, fields, dataKey) };
+        }),
+      ));
     }
   }
 

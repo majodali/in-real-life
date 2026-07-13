@@ -73,8 +73,8 @@ import { createListAttendeesHandler } from './events/attendees.mjs';
 import {
   createSetInteractionHandler,
   createWithdrawInteractionHandler,
-  createSubmitDebriefHandler,
 } from './events/interaction.mjs';
+import { createSubmitDebriefHandler } from './events/debrief.mjs';
 import {
   createScheduleEventHandler,
   createCancelEventHandler,
@@ -226,6 +226,11 @@ const runner = createCommandRunner({
   getOffset: getWorkshopOffset,
   keyStore,
   piiFieldsFor,
+  // Interaction-aggregate PII (debrief content) encrypts under the
+  // member's user# key so DELETE /me shreds it (pii-registry.mjs note).
+  piiKeyIdFor: (record) => (record.aggregateId.startsWith('interaction#')
+    ? `user#${record.data.userId}`
+    : record.aggregateId),
   tracer,
 });
 
@@ -286,6 +291,7 @@ const listAttendeesHandler = createListAttendeesHandler({
   client,
   eventsTable: tables.eventsTable,
   interactionsTable: tables.interactionsTable,
+  keyStore,
 });
 const listEventsHandler = createListEventsHandler({
   client,
@@ -309,6 +315,8 @@ const submitDebriefHandler = createSubmitDebriefHandler({
   eventsTable: tables.eventsTable,
   interactionsTable: tables.interactionsTable,
   getOffset: getWorkshopOffset,
+  llm,
+  keyStore,
 });
 const scheduleEventHandler = createScheduleEventHandler({
   runner, client, eventsTable: tables.eventsTable,

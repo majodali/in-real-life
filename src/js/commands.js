@@ -211,10 +211,27 @@ export function createCommands({
     return await api.put(`/events/${encodeURIComponent(eventId)}`, body);
   }
 
-  async function submitDebrief({ eventId, rating, notes }) {
-    const body = { commandId: makeId(), rating };
-    if (notes !== undefined && notes !== '') body.notes = notes;
-    return await api.post(`/events/${encodeURIComponent(eventId)}/debrief`, body);
+  // Tiered debrief (docs/debrief.md). One debrief per event → the
+  // commandId persists per event so a retry converges instead of
+  // duplicating.
+  async function submitDebrief({
+    eventId, attended, again, noShowReason, outcomeTexture, people,
+    surprise, reflection, conductConcern, conductNote,
+  }) {
+    const key = `irl_cmd_debrief_${eventId}`;
+    const commandId = getOrMakeCommandId(key);
+    const body = { commandId, attended };
+    if (again !== undefined) body.again = again;
+    if (noShowReason) body.noShowReason = noShowReason;
+    if (outcomeTexture?.length) body.outcomeTexture = outcomeTexture;
+    if (people?.length) body.people = people;
+    if (surprise) body.surprise = surprise;
+    if (reflection) body.reflection = reflection;
+    if (conductConcern) body.conductConcern = true;
+    if (conductNote) body.conductNote = conductNote;
+    const result = await api.post(`/events/${encodeURIComponent(eventId)}/debrief`, body);
+    storage.removeItem(key);
+    return result;
   }
 
   // ─── Suggestions ───

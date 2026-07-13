@@ -169,36 +169,46 @@ const debriefBase = {
   eventType: 'DebriefSubmitted',
   version: 1,
   seq: 3,
-  aggregateId: 'interaction#user-a#evt-1',
   wallTime: '2026-06-05T10:00:00.000Z',
   data: {
     userId: 'user-a',
     eventId: 'evt-1',
-    rating: 4,
-    notes: 'Nice walk, good chat.',
+    attended: true,
+    again: 'yes',
+    outcomeTexture: ['great-company'],
   },
 };
 
-test('DebriefSubmitted: Updates interaction row with debrief object + seq', () => {
+test('DebriefSubmitted: state row gets the deterministic summary only', () => {
   const writes = projectDebriefSubmitted(debriefBase, tables);
   assert.equal(writes.length, 1);
   const update = writes[0].Update;
   assert.equal(update.TableName, 'irl-interactions-test');
   assert.deepEqual(update.Key, { userId: 'user-a', eventId: 'evt-1' });
   assert.match(update.UpdateExpression, /debrief = :debrief/);
-  assert.match(update.UpdateExpression, /#seq = :seq/);
   const debrief = update.ExpressionAttributeValues[':debrief'];
-  assert.equal(debrief.rating, 4);
-  assert.equal(debrief.notes, 'Nice walk, good chat.');
-  assert.equal(debrief.submittedAt, '2026-06-05T10:00:00.000Z');
+  assert.deepEqual(debrief, {
+    attended: true,
+    again: 'yes',
+    submittedAt: '2026-06-05T10:00:00.000Z',
+  });
 });
 
-test('DebriefSubmitted: notes optional', () => {
-  const ev = { ...debriefBase, data: { ...debriefBase.data, notes: undefined } };
+test('DebriefSubmitted: no-show and conduct flags summarised; content never on the row', () => {
+  const ev = {
+    ...debriefBase,
+    data: {
+      userId: 'user-a', eventId: 'evt-1', attended: false,
+      noShowReason: 'nerves', conductConcern: true,
+    },
+  };
   const writes = projectDebriefSubmitted(ev, tables);
   const debrief = writes[0].Update.ExpressionAttributeValues[':debrief'];
-  assert.equal(debrief.rating, 4);
-  assert.equal(debrief.notes, undefined);
+  assert.deepEqual(debrief, {
+    attended: false,
+    conductConcern: true,
+    submittedAt: '2026-06-05T10:00:00.000Z',
+  });
 });
 
 test('DebriefSubmitted: condition guards prior seq', () => {

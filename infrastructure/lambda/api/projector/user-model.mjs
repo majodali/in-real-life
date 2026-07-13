@@ -31,7 +31,7 @@
 // only structural metadata (sk, version, lastEventId, asOf) stays clear.
 
 import { GetCommand, PutCommand, QueryCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
-import { decryptValue, encryptValue } from '../lib/crypto-shred.mjs';
+import { decryptValue, encryptValue, decryptPii } from '../lib/crypto-shred.mjs';
 
 // Deterministic sort-key slug for variable-set items. Collisions merge,
 // which is the semantics we want (two mentions of "pottery" are one
@@ -48,9 +48,12 @@ export function modelSlug(text) {
 
 export function createUserModelProjector({ client, userModelTable, keyStore }) {
   async function applyEvent(event) {
-    if (typeof event?.aggregateId !== 'string' || !event.aggregateId.startsWith('user#')) {
-      return;
+    if (typeof event?.aggregateId !== 'string') return;
+    if (event.aggregateId.startsWith('interaction#')
+      && event.eventType === 'DebriefSubmitted') {
+      return applyDebrief(event);
     }
+    if (!event.aggregateId.startsWith('user#')) return;
     switch (event.eventType) {
       case 'OnboardingCompleted':
         return seedFromOnboarding(event);
@@ -59,6 +62,143 @@ export function createUserModelProjector({ client, userModelTable, keyStore }) {
         return purge(event);
       default:
         return;
+    }
+  }
+
+  // ── Debrief deltas (docs/debrief.md → Projection-update mechanism) ──
+  //
+  // The second delta source: applied read → apply → conditional write on
+  // `version` (D7 lives here; conflict resolution starts as
+  // per-contribution judgment calls). All recency is the event's
+  // simulatedTime. Conduct-quarantined debriefs are non-model-bearing
+  // (open-risks #11) — the command already suppressed the preference
+  // fields; the flag check here is defence in depth.
+
+  async function applyDebrief(event) {
+    const d = event.data;
+    if (d.suppressed || d.conductConcern) return;
+
+    const userId = d.userId;
+    const dataKey = await keyStore.getKey(`user#${userId}`);
+    if (!dataKey) return; // shredded member — nothing to grow
+
+    const fields = ['again', 'noShowReason', 'outcomeTexture', 'people',
+      'surprise', 'reflection', 'deltas'];
+    const clear = decryptPii(d, fields.filter((f) => d[f] !== undefined), dataKey);
+    const asOf = event.simulatedTime;
+    const source = { eventId: d.eventId, sourceEventId: event.eventId, asOf };
+
+    // People step → affinity edges (met + positive-only see-again).
+    for (const p of clear.people ?? []) {
+      await applyDelta(userId, `affinity#${p.userId}`, dataKey, event.eventId, asOf, (current) => {
+        const payload = current ?? { otherUserId: p.userId, met: 0, seeAgain: 0, sources: [] };
+        payload.met += 1;
+        if (p.seeAgain) payload.seeAgain += 1;
+        payload.sources = [...payload.sources, { ...source, seeAgain: p.seeAgain === true }].slice(-10);
+        return payload;
+      });
+    }
+
+    // No-show reason → situational barrier (observed).
+    if (clear.attended === false || d.attended === false) {
+      if (clear.noShowReason) {
+        await applyDelta(userId, `barrier#${modelSlug(clear.noShowReason)}`, dataKey, event.eventId, asOf, (current) => {
+          const payload = current ?? { what: clear.noShowReason, provenance: 'observed', observations: [] };
+          payload.provenance = 'observed';
+          payload.observations = [...(payload.observations ?? []), source].slice(-10);
+          return payload;
+        });
+      }
+      return;
+    }
+
+    const deltas = clear.deltas;
+    if (!deltas) return;
+
+    // Envelope updates → profile#core, observed evidence appended per
+    // dimension; observed outranks the seeded stated/inferred annotation.
+    if (deltas.envelopeUpdates?.length) {
+      await applyDelta(userId, 'profile#core', dataKey, event.eventId, asOf, (current) => {
+        const payload = current ?? { envelope: {}, doors: [], constraints: {}, growthEdges: [], provisional: true };
+        for (const u of deltas.envelopeUpdates) {
+          const dim = { ...(payload.envelope[u.dimension] ?? {}) };
+          dim.observations = [...(dim.observations ?? []), {
+            observation: u.observation,
+            ...(u.condition ? { condition: u.condition } : {}),
+            direction: u.direction,
+            confidence: u.confidence,
+            ...source,
+          }].slice(-5);
+          dim.provenance = 'observed';
+          payload.envelope[u.dimension] = dim;
+        }
+        return payload;
+      });
+    }
+
+    for (const u of deltas.interestUpdates ?? []) {
+      await applyDelta(userId, `interest#${modelSlug(u.tag)}`, dataKey, event.eventId, asOf, (current) => {
+        const payload = current ?? { tag: u.tag, weight: 0.6, provenance: 'observed', confidence: u.confidence };
+        if (u.direction === 'strengthen') payload.weight = Math.min(1, (payload.weight ?? 0.5) + 0.1);
+        if (u.direction === 'weaken') payload.weight = Math.max(0, (payload.weight ?? 0.5) - 0.1);
+        payload.provenance = 'observed';
+        payload.observations = [...(payload.observations ?? []), { observation: u.observation, ...source }].slice(-10);
+        return payload;
+      });
+    }
+
+    for (const u of deltas.barrierUpdates ?? []) {
+      await applyDelta(userId, `barrier#${modelSlug(u.what)}`, dataKey, event.eventId, asOf, (current) => {
+        const payload = current ?? { what: u.what, provenance: 'observed', observations: [] };
+        if (u.direction === 'easing') payload.easing = true;
+        payload.provenance = 'observed';
+        payload.observations = [...(payload.observations ?? []), { observation: u.observation, ...source }].slice(-10);
+        return payload;
+      });
+    }
+    // forecastError: storage waits for outcome#{eventType} (Group 3 —
+    // event-type register); the frozen delta stays on the log for replay.
+  }
+
+  // Read → apply → conditional write on version, with lastEventId
+  // idempotency (a redelivered stream record is a no-op) and one retry on
+  // a concurrent-writer conflict.
+  async function applyDelta(userId, sk, dataKey, eventId, asOf, applyFn, attempt = 0) {
+    const existing = await client.send(new GetCommand({
+      TableName: userModelTable,
+      Key: { userId, sk },
+    }));
+    const item = existing.Item;
+    if (item?.lastEventId === eventId) return; // already applied
+
+    const currentPayload = item?.model ? decryptValue(item.model, dataKey) : null;
+    const nextPayload = applyFn(currentPayload);
+    const version = (item?.version ?? 0) + 1;
+
+    try {
+      await client.send(new PutCommand({
+        TableName: userModelTable,
+        Item: {
+          userId,
+          sk,
+          model: encryptValue(nextPayload, dataKey),
+          version,
+          lastEventId: eventId,
+          asOf: item?.asOf ?? asOf, // seed time survives; per-delta recency lives in the payload sources
+        },
+        ConditionExpression: item
+          ? '#v = :expected'
+          : 'attribute_not_exists(userId)',
+        ...(item ? {
+          ExpressionAttributeNames: { '#v': 'version' },
+          ExpressionAttributeValues: { ':expected': item.version },
+        } : {}),
+      }));
+    } catch (err) {
+      if (err?.name === 'ConditionalCheckFailedException' && attempt < 2) {
+        return applyDelta(userId, sk, dataKey, eventId, asOf, applyFn, attempt + 1);
+      }
+      throw err;
     }
   }
 
