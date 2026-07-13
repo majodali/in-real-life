@@ -228,3 +228,72 @@ test('eligibility unchanged: 401 / 404 / not-over 409 / non-confirmed 409 / canc
     claims: validClaims, body: { commandId: 'c', attended: true, again: 'yes' },
   }))).statusCode, 409, 'cancelled');
 });
+
+// ─── Interactive Tier-2 follow-up (one invited question) ───
+
+test('an answered follow-up triggers extraction and rides in the event', async () => {
+  const seen = [];
+  llm = { complete: spy(async (req) => { seen.push(req); return structuredClone(STUB_DEBRIEF_EXTRACTION); }) };
+  handler = build();
+
+  const res = await handler(makeEvent({
+    claims: validClaims,
+    body: {
+      commandId: 'c1', attended: true, again: 'maybe',
+      followUp: { question: 'What would’ve made it easier?', answer: ' if I’d had a job to do ' },
+    },
+  }));
+
+  assert.equal(res.statusCode, 201);
+  assert.equal(llm.complete.calls.length, 1);
+  assert.match(seen[0].messages[0].content, /FOLLOW-UP ASKED: What would/);
+  assert.match(seen[0].messages[0].content, /FOLLOW-UP ANSWER: if I/);
+  const data = runner.runCommand.calls[0][0].events[0].data;
+  assert.deepEqual(data.followUp, {
+    question: 'What would’ve made it easier?',
+    answer: 'if I’d had a job to do',
+  });
+  assert.deepEqual(data.deltas, STUB_DEBRIEF_EXTRACTION);
+});
+
+test('a skipped follow-up (blank answer) is dropped — no extraction, no field', async () => {
+  llm = { complete: spy(async () => { throw new Error('no call expected'); }) };
+  handler = build();
+
+  const res = await handler(makeEvent({
+    claims: validClaims,
+    body: {
+      commandId: 'c1', attended: true, again: 'maybe',
+      followUp: { question: 'What would’ve made it easier?', answer: '   ' },
+    },
+  }));
+
+  assert.equal(res.statusCode, 201);
+  assert.equal(llm.complete.calls.length, 0);
+  const data = runner.runCommand.calls[0][0].events[0].data;
+  assert.equal('followUp' in data, false);
+  assert.equal('deltas' in data, false);
+});
+
+test('malformed followUp shapes are 400', async () => {
+  for (const followUp of ['text', { answer: 'x' }, { question: '', answer: 'x' }, { question: 'q' }]) {
+    const res = await handler(makeEvent({
+      claims: validClaims,
+      body: { commandId: 'c1', attended: true, again: 'maybe', followUp },
+    }));
+    assert.equal(res.statusCode, 400, JSON.stringify(followUp));
+  }
+});
+
+test('quarantine still suppresses a follow-up answer', async () => {
+  const res = await handler(makeEvent({
+    claims: validClaims,
+    body: {
+      commandId: 'c1', attended: true, conductConcern: true,
+      followUp: { question: 'q', answer: 'a' },
+    },
+  }));
+  assert.equal(res.statusCode, 201);
+  const data = runner.runCommand.calls[0][0].events[0].data;
+  assert.equal('followUp' in data, false);
+});

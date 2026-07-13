@@ -5,6 +5,33 @@
 // 409 (already debriefed / concurrent retry). DOM stays in
 // event-detail.js.
 
+// The one invited Tier-2 question (docs/debrief.md → When depth is
+// invited) — deterministic, so the fast path stays model-free. Returns
+// null when depth wouldn't yield real signal (good outcome, no-show,
+// conduct) — the minimal close is the right ending for most debriefs.
+const MISMATCH_EXPAND = {
+  'too-big': 'Was it the size itself, or more that it was hard to find a way in?',
+  'hard-to-break-in': 'What would’ve made it easier to break in?',
+  'nothing-to-do': 'What would’ve given it more shape for you?',
+  'went-long': 'Was it the length itself, or the pacing?',
+};
+
+export function chooseFollowUp({ attended, again, textures, conductConcern }) {
+  if (!attended || conductConcern) return null;
+  const mismatch = (textures ?? []).find((t) => t in MISMATCH_EXPAND);
+  if (again === 'maybe' || again === 'no') {
+    // Poor-ish result → one follow-up to aim better; a mismatch chip
+    // makes it specific (confirm and expand).
+    return mismatch ? MISMATCH_EXPAND[mismatch] : 'What would’ve made it easier?';
+  }
+  if (again === 'yes' && mismatch) {
+    // Enjoyed it despite a predicted mismatch — worth a calibration
+    // check (forecast error), not a refine-negotiation.
+    return 'Anything surprise you about how it went?';
+  }
+  return null;
+}
+
 export function buildDebriefPayload({
   attended,
   again,
@@ -12,6 +39,7 @@ export function buildDebriefPayload({
   textures,
   people,          // [{ ref, seeAgain }]
   reflection,
+  followUp,        // { question, answer } from the one invited question
   conductConcern,
   conductNote,
 }) {
@@ -47,6 +75,9 @@ export function buildDebriefPayload({
       ...(textures?.length ? { outcomeTexture: textures } : {}),
       ...(people?.length ? { people } : {}),
       ...(reflection?.trim() ? { reflection: reflection.trim() } : {}),
+      ...(followUp?.answer?.trim()
+        ? { followUp: { question: followUp.question, answer: followUp.answer.trim() } }
+        : {}),
     },
   };
 }
