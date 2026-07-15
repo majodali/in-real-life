@@ -411,3 +411,37 @@ test('a suppressed reflection is non-model-bearing', async () => {
   });
   assert.equal(writes.length, 0);
 });
+
+test('people taps maintain stats#affinity running totals (the generosity input, D47)', async () => {
+  await projector.applyEvent(debriefEvent({
+    attended: true, again: 'yes',
+    people: [
+      { userId: 'other-1', met: true, seeAgain: true },
+      { userId: 'other-2', met: true, seeAgain: false },
+    ],
+  }));
+
+  const stats = writes.find((w) => w.sk === 'stats#affinity');
+  assert.ok(stats, 'stats item written');
+  let model = decryptValue(stats.model, dataKey);
+  assert.equal(model.peopleMet, 2);
+  assert.equal(model.tapsGiven, 1);
+
+  // A second debrief accumulates; redelivery of the same event is a no-op.
+  const second = () => debriefEvent({
+    attended: true, again: 'yes',
+    people: [{ userId: 'other-3', met: true, seeAgain: true }],
+  }, { eventId: '01DEBRIEF-2' });
+  await projector.applyEvent(second());
+  await projector.applyEvent(second());
+
+  const after = writes.filter((w) => w.sk === 'stats#affinity').at(-1);
+  model = decryptValue(after.model, dataKey);
+  assert.equal(model.peopleMet, 3);
+  assert.equal(model.tapsGiven, 2);
+});
+
+test('a tap-free debrief (no people) writes no stats item', async () => {
+  await projector.applyEvent(debriefEvent({ attended: true, again: 'yes' }));
+  assert.equal(writes.find((w) => w.sk === 'stats#affinity'), undefined);
+});

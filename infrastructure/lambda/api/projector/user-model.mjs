@@ -119,6 +119,17 @@ export function createUserModelProjector({ client, userModelTable, keyStore }) {
         return payload;
       });
     }
+    // Running tap totals → stats#affinity: the generosity-weight input
+    // (D47/H2 — a tapper's selectivity), maintained here so consumers
+    // read one small item instead of summing a partition.
+    if ((clear.people ?? []).length > 0) {
+      await applyDelta(userId, 'stats#affinity', dataKey, event.eventId, asOf, (current) => {
+        const payload = current ?? { peopleMet: 0, tapsGiven: 0 };
+        payload.peopleMet += clear.people.length;
+        payload.tapsGiven += clear.people.filter((p) => p.seeAgain === true).length;
+        return payload;
+      });
+    }
 
     // No-show reason → situational barrier (observed).
     if (clear.attended === false || d.attended === false) {
