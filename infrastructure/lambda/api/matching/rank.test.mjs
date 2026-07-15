@@ -66,8 +66,7 @@ test('fit orders candidates when noise and affinity are zeroed', () => {
     userId: 'u1',
     candidates,
     model: { interests: [{ tag: 'pottery', weight: 0.9 }] },
-    affinityCounts: new Map(),
-    generosity: 1,
+    affinityNudges: new Map(),
     nowIso: NOW,
     tunables: noNoise(),
   });
@@ -85,10 +84,9 @@ test('affinity nudges an otherwise-tied event up, but stays capped below a fit g
     userId: 'u1',
     candidates,
     model: { interests: [{ tag: 'pottery', weight: 1 }] },
-    // Ten tapped people on e-b: nudge saturates at affinityNudgeCap (0.24),
+    // A huge summed strength on e-b saturates at affinityNudgeCap (0.24),
     // still below e-fit's fit (0.4) — fit dominance is structural.
-    affinityCounts: new Map([['e-b', 10]]),
-    generosity: 1,
+    affinityNudges: new Map([['e-b', 10]]),
     nowIso: NOW,
     tunables,
   });
@@ -103,8 +101,7 @@ test('ranking is deterministic for fixed inputs, including noise', () => {
     userId: 'u1',
     candidates,
     model: { interests: [] },
-    affinityCounts: new Map(),
-    generosity: 1,
+    affinityNudges: new Map(),
     nowIso: NOW,
     tunables: RANKING_TUNABLES,
   };
@@ -116,7 +113,7 @@ test('with an empty model the ordering is exploration, and differs per member', 
     eventId: `e${i}`, title: `Event ${i}`, startTime: '2026-07-20T10:00:00Z',
   }));
   const base = {
-    candidates, model: { interests: [] }, affinityCounts: new Map(), generosity: 1,
+    candidates, model: { interests: [] }, affinityNudges: new Map(),
     nowIso: NOW, tunables: RANKING_TUNABLES,
   };
   const u1 = rankCandidates({ ...base, userId: 'u1' });

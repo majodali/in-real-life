@@ -1,4 +1,4 @@
-# Ranking Spec — v2 (implemented)
+# Ranking Spec — v3 (implemented)
 
 The **explicit, versioned ranking spec** that `matching.md` requires ("how
 recommendations are ranked is never implicit or emergent-from-code"). This
@@ -68,33 +68,57 @@ form (a member-model evolution, i.e. a re-extraction job per
 backfill needed. Cold-start still holds: interests and doors both exist
 from onboarding with zero history.
 
-## Affinity nudge (outgoing only, capped)
+## Affinity nudge (strength-weighted, capped — D47/H4)
 
-For each candidate event, count the people this member has tapped "want to
-see again" (positive taps only — `affinity#` edges with `seeAgain > 0`,
-top `affinityEdgeLimit` edges by tap count) who are currently interested
-or confirmed on that event. Then:
+For each candidate event, the people this member has tapped "want to see
+again" (positive taps only — `affinity#` edges with `seeAgain > 0`, top
+`affinityEdgeLimit` edges by tap count) who are currently interested or
+confirmed on that event each contribute their edge **strength**
+(`matching/affinity.mjs` — strength, never a boolean):
 
-`nudge = min( affinityNudgeCap, count × affinityPerPersonNudge × generosity )`
+```
+w_me   = generosity(my tapsGiven)      w_them = generosity(their tapsGiven)
+generosity(n) = 1 while n ≤ affinityGenerosityPivot, else pivot / n
 
-`generosity` is the H2-lite self-discount (D47's transform, simplest
-form): `1` while the member's total positive taps ≤
-`affinityGenerosityPivot`, then `pivot / totalTaps` — a member who taps
-everyone nudges their own feed toward no one in particular.
+strength = affinityPerPersonNudge × w_me × tapDecay              (one-sided)
+         + affinityMutualBonus × min(w_me, w_them) × tapDecay    (if they tapped back)
+         + affinityConfirmedBonus                                 (if mutual AND
+             × min(1, reciprocalMet / affinityConfirmationPivot)   reciprocally met)
+             × confirmedDecay
 
-Scope honesty (per the influence map):
+nudge(event) = min( affinityNudgeCap, Σ strengths of tapped people present )
+```
 
-- **Own feed only.** A tap boosts the *tapper's* recommendations. It never
-  alters the tapped person's or any third party's ranking.
-- **Mutual amplification is not in yet.** Consuming mutuality requires
-  reading the *other* member's edges (a cross-partition read needing the
-  `otherUserId` GSI flagged in `projection-store.md`), and D47's full
-  strength model (weaker-side combiner, co-attendance confirmation,
-  differential decay). Deferred to the affinity/crews slice; the one-sided
-  nudge here is the component D47 says survives untouched.
+- **Generosity inputs** come from the projector-maintained `stats#affinity`
+  item (running `tapsGiven` / `peopleMet` totals per member — the shared
+  H2 transform's substrate). Missing stats fall back benignly (own side:
+  sum own edges; other side: weight 1 — a replay gap, not selectivity).
+- **Weaker-side combiner**: a mutual is two claims, credible only as its
+  less selective tapper — a spam tapper's "mutuals" amplify ≈ nothing,
+  while their own one-sided component survives at its own (self-discounted)
+  weight, exactly D47's split.
+- **Confirmation is reciprocal-met**: `reciprocalMet = min(my met count,
+  their met count)` — both members must keep marking each other met, so
+  co-presence alone (a follower) never strengthens the edge (F13 guard,
+  structural). Deliberately **not** weight-gated: observed beats inferred —
+  behaviour confirms what taps can't. v1 uses raw reciprocal counts; the
+  above-calendar-chance-rate baseline is named H4 tuning work.
+- **Dual half-lives**: tap-derived strength decays on
+  `affinityTapHalfLifeDays`, confirmed strength on the longer
+  `affinityConfirmedHalfLifeDays`; confirmed freshness takes the OLDER of
+  the two sides' latest met. All decay anchors to simulated time
+  (replay-safe).
+- **Reverse edges are read pointwise** — the typed sort key
+  `affinity#<otherUserId>` makes "did they tap me back" a `GetItem`, so
+  the `otherUserId` GSI flagged in `projection-store.md` is deliberately
+  NOT built yet: it becomes necessary when crew detection asks set-level
+  questions ("who taps into this cluster"), and lands with that slice.
+- **Own feed only.** All of this shapes the *tapper's* recommendations;
+  reverse edges and stats are decrypted server-side, backstage, and never
+  alter the tapped person's or any third party's ranking.
 - **Do-not-interact zeroing** (D47/D49) has nothing to zero yet —
   avoidance capture is Group 3/4 work. When it lands, it zeroes the pair's
-  nudge here.
+  strength here outright (a boost must never fight a de-weight).
 
 ## Exploration (noise + floor)
 
@@ -118,7 +142,7 @@ events-only, and a newcomer's own cold-start is already served (fit works
 from onboarding, and with a thin model the noise share dominates —
 their feed is naturally exploratory).
 
-## Tunables (v2 defaults)
+## Tunables (v3 defaults)
 
 Every value is configuration, not a constant; **tunable to zero** (zeroing
 `affinityPerPersonNudge` removes affinity entirely; zeroing
@@ -131,8 +155,13 @@ Every value is configuration, not a constant; **tunable to zero** (zeroing
 | `fitDoorWeight` | 0.15 | score per shared door, × member door weight |
 | `fitCap` | 1.0 | max total fit contribution |
 | `interestDefaultWeight` | 0.5 | interest weight when the item carries none |
-| `affinityPerPersonNudge` | 0.12 | per tapped-person-present, × generosity |
-| `affinityNudgeCap` | 0.24 | max total affinity contribution |
+| `affinityPerPersonNudge` | 0.12 | one-sided component, × own generosity weight |
+| `affinityMutualBonus` | 0.12 | mutual amplification, × min(w_me, w_them) |
+| `affinityConfirmedBonus` | 0.08 | reciprocal-met confirmation, × scale (not weight-gated) |
+| `affinityConfirmationPivot` | 3 | reciprocal met count at which confirmation saturates |
+| `affinityTapHalfLifeDays` | 90 | tap-derived strength half-life |
+| `affinityConfirmedHalfLifeDays` | 270 | confirmed strength half-life (observed decays slower) |
+| `affinityNudgeCap` | 0.24 | max total affinity contribution per event |
 | `affinityGenerosityPivot` | 12 | positive taps before self-discount begins |
 | `affinityEdgeLimit` | 20 | strongest edges consulted per ranking |
 | `explorationNoise` | 0.2 | amplitude of the per-event deterministic noise |
@@ -148,8 +177,8 @@ this relationship against the defaults.
 | Input | Why absent | Lands with |
 |---|---|---|
 | Envelope fit (size/structure) | member envelope is free text — shape's `structure` captured, not used | structured profile form (member-model re-extraction, Group 3) |
-| Mutual affinity strength (D47) | needs `otherUserId` GSI + strength model | affinity/crews slice |
-| Crews | needs mutual edges + co-attendance detection | crews slice |
+| Crews | needs weighted co-attendance accumulation + the `otherUserId` GSI (set-level queries — pointwise reverse reads sufficed for mutuals) | crews slice |
+| Co-attendance chance-rate baseline | v1 confirmation uses raw reciprocal met counts; thin-calendar correction is tuning work | H4 evidence loop |
 | Contributor rating | not built (Group 4); composition-only anyway | rating slice |
 | Avoidance / didn't-click | capture not built | preferences/safety slices |
 | Newcomer injection into others' feeds | no people-surfaces/composition yet | group formation slice |
@@ -158,6 +187,12 @@ this relationship against the defaults.
 
 ## Version history
 
+- **v3** — affinity becomes strength-weighted (D47/H4 v1): mutual
+  amplification gated by the weaker side's generosity (`stats#affinity`
+  substrate maintained by the projector), reciprocal-met confirmation with
+  the F13 one-sided guard, dual half-lives on simulated time. The
+  `otherUserId` GSI deliberately deferred to crews (reverse reads are
+  pointwise via the typed sort key).
 - **v2** — event shape (D56): interest fit gains the activityTags tier
   (`fitActivityTagWeight`, text match demoted to fallback), door fit added
   (`fitDoorWeight`); shape `structure` captured-not-used. Spec-version bump

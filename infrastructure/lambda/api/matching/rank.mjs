@@ -19,14 +19,9 @@ export function weekBucket(nowIso) {
   return Math.floor(Date.parse(nowIso) / (7 * 24 * 60 * 60 * 1000));
 }
 
-// H2-lite generosity self-discount (D47): full weight while total positive
-// taps stay at or under the pivot, then pivot/total — a member who taps
-// everyone nudges their own feed toward no one in particular.
-export function generosityWeight(totalPositiveTaps, pivot) {
-  if (pivot <= 0) return 0;
-  if (totalPositiveTaps <= pivot) return 1;
-  return pivot / totalPositiveTaps;
-}
+// Generosity now lives with the rest of the edge-strength math (D47);
+// re-exported so existing consumers keep one import site.
+export { generosityWeight } from './affinity.mjs';
 
 // Fill every period-th slot from the noise ordering instead of the score
 // ordering — the guaranteed exploratory share. Both inputs are arrays of
@@ -64,18 +59,19 @@ export function blendExploration(byScore, byExplore, share) {
 
 // candidates: feasible events (already hard-constraint filtered).
 // model: { interests, doors } — the member-side fit inputs.
-// affinityCounts: Map eventId → tapped-people present on that event.
+// affinityNudges: Map eventId → summed edge strength of tapped people
+// present on that event (recommend.mjs computes it via affinity.mjs);
+// the cap is applied here so no accumulation can outgrow it.
 // Returns an ordered array of eventIds. Deterministic for fixed inputs.
 export function rankCandidates({
-  userId, candidates, model, affinityCounts, generosity, nowIso, tunables,
+  userId, candidates, model, affinityNudges, nowIso, tunables,
 }) {
   const bucket = weekBucket(nowIso);
   const scored = candidates.map((event) => {
     const fit = eventFit(model ?? {}, event, tunables);
-    const present = affinityCounts?.get(event.eventId) ?? 0;
     const nudge = Math.min(
       tunables.affinityNudgeCap,
-      present * tunables.affinityPerPersonNudge * generosity,
+      affinityNudges?.get(event.eventId) ?? 0,
     );
     const noise = hash01(userId, event.eventId, RANKING_SPEC_VERSION, bucket);
     return {

@@ -14,17 +14,27 @@ const MODEL_TABLE = 'irl-user-model-test';
 const INTERACTIONS_TABLE = 'irl-interactions-test';
 const NOW = '2026-07-15T10:00:00.000Z';
 
-let dataKey, modelRows, interactionsByUser, queries, keyStore, client;
+let dataKey, keysById, modelRows, otherRows, interactionsByUser, queries, keyStore, client;
 
 function modelRow(sk, payload) {
   return { userId: 'me', sk, model: encryptValue(payload, dataKey), version: 1 };
 }
 
+// Another member's encrypted model row, addressable by GetItem.
+function otherRow(userId, sk, payload, key) {
+  otherRows[`${userId}|${sk}`] = { userId, sk, model: encryptValue(payload, key), version: 1 };
+}
+
 function buildClient() {
   return {
     send: async (cmd) => {
-      assert.equal(cmd.constructor.name, 'QueryCommand');
       queries.push(cmd.input);
+      if (cmd.constructor.name === 'GetCommand') {
+        assert.equal(cmd.input.TableName, MODEL_TABLE);
+        const item = otherRows[`${cmd.input.Key.userId}|${cmd.input.Key.sk}`];
+        return item ? { Item: item } : {};
+      }
+      assert.equal(cmd.constructor.name, 'QueryCommand');
       if (cmd.input.TableName === MODEL_TABLE) return { Items: modelRows };
       if (cmd.input.TableName === INTERACTIONS_TABLE) {
         const userId = cmd.input.ExpressionAttributeValues[':u'];
@@ -61,10 +71,12 @@ const NO_NOISE = { ...RANKING_TUNABLES, explorationNoise: 0, explorationShare: 0
 
 beforeEach(() => {
   dataKey = generateDataKey();
+  keysById = { 'user#me': dataKey };
   modelRows = [];
+  otherRows = {};
   interactionsByUser = {};
   queries = [];
-  keyStore = { getKey: async (id) => (id === 'user#me' ? dataKey : null) };
+  keyStore = { getKey: async (id) => keysById[id] ?? null };
   client = buildClient();
 });
 
@@ -141,9 +153,11 @@ test('a tapped person being in nudges that event up; negative-only edges never q
   assert.deepEqual(consulted, ['p1']);
 });
 
-test('zeroing affinityPerPersonNudge skips the interaction reads entirely', async () => {
+test('zeroing every affinity tunable skips the interaction reads entirely', async () => {
   modelRows = [modelRow('affinity#p1', { otherUserId: 'p1', met: 1, seeAgain: 1 })];
-  const tunables = { ...NO_NOISE, affinityPerPersonNudge: 0 };
+  const tunables = {
+    ...NO_NOISE, affinityPerPersonNudge: 0, affinityMutualBonus: 0, affinityConfirmedBonus: 0,
+  };
   await recommender(tunables).recommend({ userId: 'me', events: [evt('e1')], nowIso: NOW });
   assert.deepEqual(queries.filter((q) => q.TableName === INTERACTIONS_TABLE), []);
 });
@@ -174,4 +188,80 @@ test('doors from profile#core drive door fit against event shape', async () => {
   ];
   const out = await recommender(NO_NOISE).recommend({ userId: 'me', events, nowIso: NOW });
   assert.deepEqual(out, ['e-class', 'e-plain']);
+});
+
+// ─── D47: strength-weighted mutuals ───
+
+test('a mutual edge outranks a one-sided edge; a spam tapper\'s mutual amplifies toward the one-sided floor', async () => {
+  const p1Key = generateDataKey();
+  const p2Key = generateDataKey();
+  const p3Key = generateDataKey();
+  keysById['user#p1'] = p1Key;
+  keysById['user#p2'] = p2Key;
+  keysById['user#p3'] = p3Key;
+
+  modelRows = [
+    modelRow('affinity#p1', { otherUserId: 'p1', met: 1, seeAgain: 1, sources: [] }),
+    modelRow('affinity#p2', { otherUserId: 'p2', met: 1, seeAgain: 1, sources: [] }),
+    modelRow('affinity#p3', { otherUserId: 'p3', met: 1, seeAgain: 1, sources: [] }),
+  ];
+  // p1: selective mutual (tapped me back, few taps overall).
+  otherRow('p1', 'affinity#me', { otherUserId: 'me', met: 0, seeAgain: 1, sources: [] }, p1Key);
+  otherRow('p1', 'stats#affinity', { peopleMet: 4, tapsGiven: 2 }, p1Key);
+  // p2: spam mutual (tapped me back — along with everyone else).
+  otherRow('p2', 'affinity#me', { otherUserId: 'me', met: 0, seeAgain: 1, sources: [] }, p2Key);
+  otherRow('p2', 'stats#affinity', { peopleMet: 1300, tapsGiven: 1200 }, p2Key);
+  // p3: never tapped back — one-sided only.
+
+  interactionsByUser.p1 = [{ userId: 'p1', eventId: 'e-selective', level: 'confirmed' }];
+  interactionsByUser.p2 = [{ userId: 'p2', eventId: 'e-spam', level: 'confirmed' }];
+  interactionsByUser.p3 = [{ userId: 'p3', eventId: 'e-oneside', level: 'confirmed' }];
+
+  const events = [evt('e-oneside'), evt('e-spam'), evt('e-selective')];
+  const out = await recommender(NO_NOISE).recommend({ userId: 'me', events, nowIso: NOW });
+  // Selective mutual carries the full bonus; the spammer's mutual is
+  // weaker-side-gated to ≈ the one-sided floor (but never below it).
+  assert.deepEqual(out, ['e-selective', 'e-spam', 'e-oneside']);
+});
+
+test('reciprocal met counts add confirmed strength; one-sided met does not', async () => {
+  const p1Key = generateDataKey();
+  const p2Key = generateDataKey();
+  keysById['user#p1'] = p1Key;
+  keysById['user#p2'] = p2Key;
+
+  modelRows = [
+    modelRow('affinity#p1', { otherUserId: 'p1', met: 3, seeAgain: 1, sources: [] }),
+    modelRow('affinity#p2', { otherUserId: 'p2', met: 3, seeAgain: 1, sources: [] }),
+  ];
+  // p1: both sides keep marking each other met (confirmed pair).
+  otherRow('p1', 'affinity#me', { otherUserId: 'me', met: 3, seeAgain: 1, sources: [] }, p1Key);
+  // p2: mutual tap once, but p2 never marked me met — a follower pattern
+  // gains no confirmation (F13 guard).
+  otherRow('p2', 'affinity#me', { otherUserId: 'me', met: 0, seeAgain: 1, sources: [] }, p2Key);
+
+  interactionsByUser.p1 = [{ userId: 'p1', eventId: 'e-confirmed', level: 'confirmed' }];
+  interactionsByUser.p2 = [{ userId: 'p2', eventId: 'e-unconfirmed', level: 'confirmed' }];
+
+  const events = [evt('e-unconfirmed'), evt('e-confirmed')];
+  const out = await recommender(NO_NOISE).recommend({ userId: 'me', events, nowIso: NOW });
+  assert.deepEqual(out, ['e-confirmed', 'e-unconfirmed']);
+});
+
+test('own stats#affinity discounts a heavy tapper\'s one-sided nudges', async () => {
+  const heavy = { ...NO_NOISE };
+  modelRows = [
+    modelRow('stats#affinity', { peopleMet: 500, tapsGiven: 480 }),
+    modelRow('affinity#p1', { otherUserId: 'p1', met: 1, seeAgain: 1, sources: [] }),
+    modelRow('interest#running', { tag: 'running', weight: 0.5 }),
+  ];
+  interactionsByUser.p1 = [{ userId: 'p1', eventId: 'e-tapped', level: 'confirmed' }];
+  const events = [
+    evt('e-tapped', { title: 'Quiet hall gathering' }),
+    // Modest fit beats a self-discounted tap: 0.4×0.5 = 0.2 fit vs
+    // 0.12×(12/480) = 0.003 nudge.
+    evt('e-run', { title: 'Morning running club' }),
+  ];
+  const out = await recommender(heavy).recommend({ userId: 'me', events, nowIso: NOW });
+  assert.deepEqual(out, ['e-run', 'e-tapped']);
 });
