@@ -215,7 +215,7 @@ export function createCommands({
     });
   }
 
-  async function editEvent({ eventId, title, description, startTime, endTime, location, cost, maxAttendance, meetingSpot }) {
+  async function editEvent({ eventId, title, description, startTime, endTime, location, cost, maxAttendance, meetingSpot, shape }) {
     const body = { commandId: makeId() };
     if (title !== undefined) body.title = title;
     if (description !== undefined) body.description = description;
@@ -225,6 +225,7 @@ export function createCommands({
     if (cost !== undefined) body.cost = cost;
     if (maxAttendance !== undefined) body.maxAttendance = maxAttendance;
     if (meetingSpot !== undefined) body.meetingSpot = meetingSpot;
+    if (shape !== undefined) body.shape = shape;
     return await api.put(`/events/${encodeURIComponent(eventId)}`, body);
   }
 

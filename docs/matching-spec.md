@@ -1,4 +1,4 @@
-# Ranking Spec — v1 (implemented)
+# Ranking Spec — v2 (implemented)
 
 The **explicit, versioned ranking spec** that `matching.md` requires ("how
 recommendations are ranked is never implicit or emergent-from-code"). This
@@ -9,10 +9,10 @@ weight flows through the hypothesis register (`hypotheses.md`) and, when
 consequential, the decision register.
 
 `matching.md` holds the philosophy and the influence map; this file holds
-the v1 mechanics — including an honest register of what v1 deliberately
-does **not** do yet, and why.
+the current mechanics — including an honest register of what the spec
+deliberately does **not** do yet, and why.
 
-## What v1 ranks
+## What it ranks
 
 `GET /events` returns, alongside the full event list, a `recommendations`
 array: the caller's feasible, joinable events **ordered** by the ranker.
@@ -26,7 +26,7 @@ joinable), not "scored low".
 
 Filtered out before scoring, per the influence map:
 
-| Constraint | v1 status |
+| Constraint | Status |
 |---|---|
 | Joinable lifecycle | implemented — only `idea` / `proposed` / `planned` are candidates |
 | Capacity | implemented — `full` events are not recommended (interest stays open on the event itself) |
@@ -36,30 +36,37 @@ Filtered out before scoring, per the influence map:
 | Adults-only | enforced at registration, not per-event |
 | Distance / travel willingness | **not built** — no structured locality/travel model yet (single-locality launch; `constraints.maxTravel` in the store is free text) |
 
-## Fit (base signal — deliberately thin in v1)
+## Fit (base signal)
 
-`fit = Σ over matched interests ( fitInterestWeight × interestWeight )`,
-capped at `fitCap`.
+`fit = interestFit + doorFit`, capped at `fitCap`.
 
-An interest **matches** an event when at least half of the interest tag's
-tokens (rounded up) appear in the event's `title + description` token set
-(lowercased, alphanumeric tokens, naive plural-stripping). Interest weights
-come from the user-model store (`interest#` items: onboarding-seeded,
-debrief-adjusted ±0.1 per D7-observed delta; default
-`interestDefaultWeight` when unset).
+**Interest fit is two-tiered** against the event's shape (D56,
+`event-shape-prompt.md` — extracted at propose time, organizer-correctable):
 
-**Why thin:** the comfort envelope and doors — the substance of fit per
-`matching.md` — are stored as free-text annotations (`comfort: "small
-groups"`), not machine-comparable values, and events carry no structured
-shape (size/structure/activity) beyond attendance numbers. Interest-tag
-matching is the one honest, deterministic fit signal available today. It
-still satisfies the cold-start requirement: it works from onboarding with
-zero history. The lever that makes fit real is the **event-type register /
-structured event shape** (Group 3 backlog) — when an event carries
-activity + structure + size and the envelope gets a comparable form, fit
-grows into the dominant signal the design intends. Until then the ranker
-is mostly exploration-with-a-tilt, which is the correct conservative
-default (soft and noisy by design).
+- An interest matching the shape's `activityTags` scores
+  `fitActivityTagWeight × interestWeight` — the high-confidence tier.
+- Otherwise, a match against the `title + description` token set scores
+  `fitInterestWeight × interestWeight` — the fallback that keeps
+  shapeless/older events ranking. One interest never scores both tiers.
+
+A tag **matches** when at least half its tokens (rounded up) appear in the
+target token set (lowercased, alphanumeric tokens, naive
+plural-stripping). Interest weights come from the user-model store
+(`interest#` items: onboarding-seeded, debrief-adjusted ±0.1 per
+D7-observed delta; default `interestDefaultWeight` when unset).
+
+**Door fit is structured on both sides**: the member's onboarding door
+weights (`profile#core` → `doors`) against the shape's doors — each shared
+door scores `fitDoorWeight × memberDoorWeight`.
+
+**Still deliberately thin on the envelope:** the shape's `structure` is
+**captured, not used** (capture ≠ use) — the member-side comfort envelope
+remains free-text annotations (`comfort: "small groups"`), so there is
+nothing honest to compare against yet. When the envelope gets a comparable
+form (a member-model evolution, i.e. a re-extraction job per
+`projection-store.md`), structure/size fit lands with no event-side
+backfill needed. Cold-start still holds: interests and doors both exist
+from onboarding with zero history.
 
 ## Affinity nudge (outgoing only, capped)
 
@@ -79,7 +86,7 @@ Scope honesty (per the influence map):
 
 - **Own feed only.** A tap boosts the *tapper's* recommendations. It never
   alters the tapped person's or any third party's ranking.
-- **Mutual amplification is not in v1.** Consuming mutuality requires
+- **Mutual amplification is not in yet.** Consuming mutuality requires
   reading the *other* member's edges (a cross-partition read needing the
   `otherUserId` GSI flagged in `projection-store.md`), and D47's full
   strength model (weaker-side combiner, co-attendance confirmation,
@@ -103,7 +110,7 @@ Two mechanisms, per `matching.md`:
   instead — a fixed floor of recommendations that owe nothing to fit or
   affinity.
 
-**Newcomer injection note:** v1's floor is exploration within one member's
+**Newcomer injection note:** the floor here is exploration within one member's
 own feed. The *injection* half of `matching.md`'s floor — newcomers
 surfaced into others' rooms — becomes meaningful when there are
 people-surfaces and group composition to inject into; today the feed is
@@ -111,7 +118,7 @@ events-only, and a newcomer's own cold-start is already served (fit works
 from onboarding, and with a thin model the noise share dominates —
 their feed is naturally exploratory).
 
-## Tunables (v1 defaults)
+## Tunables (v2 defaults)
 
 Every value is configuration, not a constant; **tunable to zero** (zeroing
 `affinityPerPersonNudge` removes affinity entirely; zeroing
@@ -119,7 +126,9 @@ Every value is configuration, not a constant; **tunable to zero** (zeroing
 
 | Tunable | Default | Meaning |
 |---|---|---|
-| `fitInterestWeight` | 0.4 | score per matched interest, × interest weight |
+| `fitActivityTagWeight` | 0.5 | score per interest matching the shape's activityTags, × interest weight |
+| `fitInterestWeight` | 0.4 | score per interest matching title+description (fallback tier), × interest weight |
+| `fitDoorWeight` | 0.15 | score per shared door, × member door weight |
 | `fitCap` | 1.0 | max total fit contribution |
 | `interestDefaultWeight` | 0.5 | interest weight when the item carries none |
 | `affinityPerPersonNudge` | 0.12 | per tapped-person-present, × generosity |
@@ -134,11 +143,11 @@ fitCap` — all soft nudges together stay below what fit can express, so no
 outcome is ever driven solely by a backstage signal. The unit tests assert
 this relationship against the defaults.
 
-## Deliberately absent from v1 (and where each lands)
+## Deliberately absent (and where each lands)
 
 | Input | Why absent | Lands with |
 |---|---|---|
-| Envelope/doors fit | free text in store; no structured event shape | event-type register + structured profile (Group 3) |
+| Envelope fit (size/structure) | member envelope is free text — shape's `structure` captured, not used | structured profile form (member-model re-extraction, Group 3) |
 | Mutual affinity strength (D47) | needs `otherUserId` GSI + strength model | affinity/crews slice |
 | Crews | needs mutual edges + co-attendance detection | crews slice |
 | Contributor rating | not built (Group 4); composition-only anyway | rating slice |
@@ -149,6 +158,10 @@ this relationship against the defaults.
 
 ## Version history
 
+- **v2** — event shape (D56): interest fit gains the activityTags tier
+  (`fitActivityTagWeight`, text match demoted to fallback), door fit added
+  (`fitDoorWeight`); shape `structure` captured-not-used. Spec-version bump
+  reshuffles the deterministic exploration noise.
 - **v1** — first implemented spec: interests-only fit, outgoing capped
   affinity nudge with generosity self-discount, deterministic
   noise + exploratory-share floor, hard-constraint candidate filter.

@@ -307,7 +307,7 @@ const notifyListHandler = createNotifyListHandler({
   client,
   eventsLogTable: process.env.EVENTS_LOG_TABLE,
 });
-const proposeEventHandler = createProposeEventHandler({ runner, makeEventId: ulid });
+const proposeEventHandler = createProposeEventHandler({ runner, makeEventId: ulid, llm });
 const listAttendeesHandler = createListAttendeesHandler({
   client,
   eventsTable: tables.eventsTable,

@@ -41,11 +41,12 @@ export function createRecommender({
     return items;
   }
 
-  // Interests + affinity edges in one partition query. Missing key
-  // (shredded / never onboarded) → empty model, exploration-only ranking.
+  // Interests + doors + affinity edges in one partition query. Missing
+  // key (shredded / never onboarded) → empty model, exploration-only
+  // ranking.
   async function loadModel(userId) {
     const dataKey = await keyStore.getKey(`user#${userId}`);
-    if (!dataKey) return { interests: [], affinities: [] };
+    if (!dataKey) return { interests: [], doors: [], affinities: [] };
     const rows = await queryAll({
       TableName: userModelTable,
       KeyConditionExpression: 'userId = :u',
@@ -53,15 +54,18 @@ export function createRecommender({
     });
     const interests = [];
     const affinities = [];
+    let doors = [];
     for (const row of rows) {
       if (!row.model || typeof row.sk !== 'string') continue;
       if (row.sk.startsWith('interest#')) {
         interests.push(decryptValue(row.model, dataKey));
       } else if (row.sk.startsWith('affinity#')) {
         affinities.push(decryptValue(row.model, dataKey));
+      } else if (row.sk === 'profile#core') {
+        doors = decryptValue(row.model, dataKey)?.doors ?? [];
       }
     }
-    return { interests, affinities };
+    return { interests, doors, affinities };
   }
 
   // For each positively-tapped person (strongest edges first, bounded),
@@ -98,7 +102,7 @@ export function createRecommender({
       && !myCommitted.some((c) => eventsOverlap(e, c)));
     if (candidates.length === 0) return [];
 
-    const { interests, affinities } = await loadModel(userId);
+    const { interests, doors, affinities } = await loadModel(userId);
 
     const totalTaps = affinities.reduce((sum, a) => sum + (a?.seeAgain ?? 0), 0);
     const generosity = generosityWeight(totalTaps, tunables.affinityGenerosityPivot);
@@ -108,7 +112,13 @@ export function createRecommender({
       : new Map();
 
     return rankCandidates({
-      userId, candidates, interests, affinityCounts, generosity, nowIso, tunables,
+      userId,
+      candidates,
+      model: { interests, doors },
+      affinityCounts,
+      generosity,
+      nowIso,
+      tunables,
     });
   }
 

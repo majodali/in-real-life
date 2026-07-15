@@ -157,3 +157,21 @@ test('empty candidate set short-circuits with no reads', async () => {
   assert.deepEqual(out, []);
   assert.deepEqual(queries, []);
 });
+
+test('doors from profile#core drive door fit against event shape', async () => {
+  modelRows = [modelRow('profile#core', {
+    envelope: {}, constraints: {},
+    doors: [{ door: 'make-learn', weight: 0.9, provenance: 'stated', confidence: 'high' }],
+  })];
+  const events = [
+    evt('e-plain'),
+    evt('e-class', {
+      shape: {
+        activityTags: ['pottery'], structure: 'structured',
+        doors: ['make-learn'], source: 'extracted',
+      },
+    }),
+  ];
+  const out = await recommender(NO_NOISE).recommend({ userId: 'me', events, nowIso: NOW });
+  assert.deepEqual(out, ['e-class', 'e-plain']);
+});

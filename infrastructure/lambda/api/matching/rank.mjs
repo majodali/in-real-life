@@ -7,7 +7,7 @@
 // No wall-clock randomness anywhere — the caller passes simulated now.
 
 import { createHash } from 'node:crypto';
-import { fitScore } from './fit.mjs';
+import { eventFit } from './fit.mjs';
 import { RANKING_SPEC_VERSION } from './tunables.mjs';
 
 export function hash01(...parts) {
@@ -63,14 +63,15 @@ export function blendExploration(byScore, byExplore, share) {
 }
 
 // candidates: feasible events (already hard-constraint filtered).
+// model: { interests, doors } — the member-side fit inputs.
 // affinityCounts: Map eventId → tapped-people present on that event.
 // Returns an ordered array of eventIds. Deterministic for fixed inputs.
 export function rankCandidates({
-  userId, candidates, interests, affinityCounts, generosity, nowIso, tunables,
+  userId, candidates, model, affinityCounts, generosity, nowIso, tunables,
 }) {
   const bucket = weekBucket(nowIso);
   const scored = candidates.map((event) => {
-    const fit = fitScore(interests, event, tunables);
+    const fit = eventFit(model ?? {}, event, tunables);
     const present = affinityCounts?.get(event.eventId) ?? 0;
     const nudge = Math.min(
       tunables.affinityNudgeCap,

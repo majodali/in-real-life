@@ -7,11 +7,14 @@
 // hash so a spec bump reshuffles deterministic noise rather than freezing
 // it across versions.
 
-export const RANKING_SPEC_VERSION = 1;
+export const RANKING_SPEC_VERSION = 2;
 
 export const RANKING_TUNABLES = {
-  // Fit — interests-only in v1 (envelope/doors await structured event shape)
+  // Fit — interest tags vs event shape (D56) with text fallback, plus
+  // door fit; envelope fit still waits on a comparable member-side form
+  fitActivityTagWeight: 0.5,
   fitInterestWeight: 0.4,
+  fitDoorWeight: 0.15,
   fitCap: 1.0,
   interestDefaultWeight: 0.5,
 
