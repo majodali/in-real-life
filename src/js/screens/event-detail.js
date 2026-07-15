@@ -11,7 +11,7 @@ import * as store from '../store.js';
 import { commands } from '../services.js';
 import { navigate, showToast } from '../app.js';
 import { handleInteraction } from './interaction-handlers.js';
-import { handleDebriefSubmit } from './debrief-handlers.js';
+import { handleDebriefSubmit, chooseFollowUp } from './debrief-handlers.js';
 import {
   appendExchange,
   collectPerspectives,
@@ -230,6 +230,12 @@ function renderDebriefSection(event) {
                     placeholder="Anything else worth saying? (optional)"></textarea>
         </div>
 
+        <div class="debrief-field" id="debriefFollowUp" style="display:none">
+          <span class="debrief-q" id="debriefFollowUpQ"></span>
+          <textarea class="profile-field-input suggest-textarea" id="debriefFollowUpA"
+                    rows="2" maxlength="1000" placeholder="Only if you feel like it — skipping is fine"></textarea>
+        </div>
+
         <button type="button" class="debrief-conduct-link" id="debriefConductLink">
           Did you have any concerns with anyone's conduct?
         </button>
@@ -409,11 +415,33 @@ function bindDebriefForm(container, event) {
     form.querySelector('#debriefConduct').style.display = state.conductConcern ? '' : 'none';
   });
 
+  let followUpShown = false;
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const submit = form.querySelector('#debriefSubmit');
+
+    // The one invited follow-up (opt-in, once): shown between the taps
+    // and the save when it would yield real signal. Stopping is always
+    // the default — the answer field can be left empty.
+    if (!followUpShown) {
+      const question = chooseFollowUp(state);
+      if (question) {
+        followUpShown = true;
+        const wrap = form.querySelector('#debriefFollowUp');
+        form.querySelector('#debriefFollowUpQ').textContent = question;
+        wrap.style.display = '';
+        wrap.dataset.question = question;
+        submit.textContent = 'Save';
+        return;
+      }
+    }
+
     submit.disabled = true;
     submit.textContent = 'Saving…';
+    const followUpWrap = form.querySelector('#debriefFollowUp');
+    const followUp = followUpShown
+      ? { question: followUpWrap.dataset.question, answer: form.querySelector('#debriefFollowUpA').value }
+      : undefined;
     const ok = await handleDebriefSubmit({
       eventId: event.eventId,
       state: {
@@ -422,12 +450,15 @@ function bindDebriefForm(container, event) {
           .filter(([, v]) => v.met)
           .map(([ref, v]) => ({ ref, seeAgain: v.seeAgain === true })),
         reflection: form.querySelector('#debriefReflection')?.value,
+        followUp,
         conductNote: form.querySelector('#debriefConductNote')?.value,
       },
       commands,
       showToast,
       onSuccess: () => {
-        showToast('Thanks — we\u2019ll keep that in mind.');
+        showToast(followUp?.answer?.trim()
+          ? 'Got it — that helps us aim better.'
+          : 'Thanks — we\u2019ll keep that in mind.');
         renderEventDetail(event.eventId);
       },
     });

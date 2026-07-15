@@ -32,7 +32,7 @@ const PII_FIELDS = {
   // interaction# aggregate but encrypt under the USER's key — see
   // piiKeyIdFor in index.mjs — so account deletion shreds them.
   DebriefSubmitted: ['again', 'noShowReason', 'outcomeTexture', 'people',
-    'surprise', 'reflection', 'conductNote', 'deltas'],
+    'surprise', 'reflection', 'followUp', 'conductNote', 'deltas'],
   // Reflection narrative + deltas + routed feedback are PII; the
   // perspectivesOffered cap keys are cleartext (enum keys, projected
   // onto the state row, no content).

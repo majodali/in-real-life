@@ -2,7 +2,7 @@
 
 import { test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildDebriefPayload, handleDebriefSubmit } from './debrief-handlers.js';
+import { buildDebriefPayload, handleDebriefSubmit, chooseFollowUp } from './debrief-handlers.js';
 
 function spy(impl) {
   const fn = (...args) => { fn.calls.push(args); return impl(...args); };
@@ -108,4 +108,46 @@ test('other errors toast and stay for retry', async () => {
   });
   assert.equal(ok, false);
   assert.equal(onSuccess.calls.length, 0);
+});
+
+// ─── The one invited follow-up (chooseFollowUp) ───
+
+test('maybe/no invite the aim-better question; a mismatch chip makes it specific', () => {
+  assert.equal(
+    chooseFollowUp({ attended: true, again: 'maybe', textures: [] }),
+    'What would’ve made it easier?',
+  );
+  assert.equal(
+    chooseFollowUp({ attended: true, again: 'no', textures: ['too-big'] }),
+    'Was it the size itself, or more that it was hard to find a way in?',
+  );
+});
+
+test('a good outcome with a mismatch chip invites the calibration check', () => {
+  assert.equal(
+    chooseFollowUp({ attended: true, again: 'yes', textures: ['too-big', 'great-company'] }),
+    'Anything surprise you about how it went?',
+  );
+});
+
+test('no follow-up on plain good outcomes, no-shows, or conduct concerns', () => {
+  assert.equal(chooseFollowUp({ attended: true, again: 'yes', textures: ['great-company'] }), null);
+  assert.equal(chooseFollowUp({ attended: false, again: undefined, textures: [] }), null);
+  assert.equal(chooseFollowUp({ attended: true, again: 'no', textures: [], conductConcern: true }), null);
+});
+
+test('an answered follow-up rides in the payload; a skipped one is dropped', () => {
+  const { payload } = buildDebriefPayload({
+    attended: true, again: 'maybe',
+    followUp: { question: 'What would’ve made it easier?', answer: ' a job to do ' },
+  });
+  assert.deepEqual(payload.followUp, {
+    question: 'What would’ve made it easier?', answer: 'a job to do',
+  });
+
+  const skipped = buildDebriefPayload({
+    attended: true, again: 'maybe',
+    followUp: { question: 'q', answer: '   ' },
+  });
+  assert.equal('followUp' in skipped.payload, false);
 });

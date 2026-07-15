@@ -104,7 +104,7 @@ export function createUserModelProjector({ client, userModelTable, keyStore }) {
     if (!dataKey) return; // shredded member — nothing to grow
 
     const fields = ['again', 'noShowReason', 'outcomeTexture', 'people',
-      'surprise', 'reflection', 'deltas'];
+      'surprise', 'reflection', 'followUp', 'deltas'];
     const clear = decryptPii(d, fields.filter((f) => d[f] !== undefined), dataKey);
     const asOf = event.simulatedTime;
     const source = { eventId: d.eventId, sourceEventId: event.eventId, asOf };

@@ -116,6 +116,19 @@ export function createSubmitDebriefHandler({
       people = body.people;
     }
     const noShowReason = trimmed(body.noShowReason, SHORT_MAX);
+    let followUp;
+    if (body.followUp !== undefined) {
+      const f = body.followUp;
+      if (typeof f !== 'object' || f === null
+        || typeof f.question !== 'string' || !f.question.trim()
+        || typeof f.answer !== 'string') {
+        return reply(400, { error: 'followUp needs question and answer strings' });
+      }
+      const answer = f.answer.trim().slice(0, TEXT_MAX);
+      if (answer) {
+        followUp = { question: f.question.trim().slice(0, SHORT_MAX), answer };
+      }
+    }
     const surprise = trimmed(body.surprise, TEXT_MAX);
     const reflection = trimmed(body.reflection, TEXT_MAX);
     const conductNote = trimmed(body.conductNote, TEXT_MAX);
@@ -161,9 +174,12 @@ export function createSubmitDebriefHandler({
         }
         if (surprise !== undefined && surprise !== '') data.surprise = surprise;
         if (reflection !== undefined && reflection !== '') data.reflection = reflection;
+        if (followUp) data.followUp = followUp;
 
-        // Tier 2: one extraction call, only when free text was given.
-        if (data.surprise || data.reflection) {
+        // Tier 2: one extraction call, only when free text was given —
+        // volunteered (surprise / say-more) or via the one invited
+        // follow-up question (docs/debrief.md → When depth is invited).
+        if (data.surprise || data.reflection || data.followUp) {
           const extraction = await llm.complete({
             task: 'debrief-extraction',
             system: DEBRIEF_EXTRACTION_SYSTEM,
@@ -173,6 +189,7 @@ export function createSubmitDebriefHandler({
                 `EVENT: ${eventRow.title}`,
                 `WORTH ANOTHER GO: ${again}`,
                 outcomeTexture?.length ? `TEXTURE CHIPS: ${outcomeTexture.join(', ')}` : null,
+                data.followUp ? `FOLLOW-UP ASKED: ${data.followUp.question}\nFOLLOW-UP ANSWER: ${data.followUp.answer}` : null,
                 data.surprise ? `SURPRISE: ${data.surprise}` : null,
                 data.reflection ? `SAY MORE: ${data.reflection}` : null,
               ].filter(Boolean).join('\n'),
