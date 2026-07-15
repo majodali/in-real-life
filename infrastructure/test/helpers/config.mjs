@@ -33,6 +33,7 @@ export async function loadTestConfig() {
       commands: `irl-commands-${stage}`,
       config: `irl-config-${stage}`,
       userKeys: `irl-user-keys-${stage}`,
+      userModel: `irl-user-model-${stage}`,
     },
   };
 

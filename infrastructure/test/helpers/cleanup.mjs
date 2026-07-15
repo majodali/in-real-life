@@ -40,6 +40,28 @@ export async function purgeUserAggregate({ userId, tables }) {
     Key: { userId },
   }));
 
+  // Derived user-model rows (async projector output) — purge the partition
+  // so a test user leaves nothing behind in the read store.
+  if (tables.userModel) {
+    let lastKey;
+    do {
+      const page = await ddb.send(new QueryCommand({
+        TableName: tables.userModel,
+        KeyConditionExpression: 'userId = :u',
+        ExpressionAttributeValues: { ':u': userId },
+        ProjectionExpression: 'sk',
+        ...(lastKey ? { ExclusiveStartKey: lastKey } : {}),
+      }));
+      for (const item of page.Items ?? []) {
+        await ddb.send(new DeleteCommand({
+          TableName: tables.userModel,
+          Key: { userId, sk: item.sk },
+        }));
+      }
+      lastKey = page.LastEvaluatedKey;
+    } while (lastKey);
+  }
+
   const aggregateId = `user#${userId}`;
   const events = await ddb.send(new QueryCommand({
     TableName: tables.eventsLog,
@@ -62,3 +84,41 @@ export async function purgeUserAggregate({ userId, tables }) {
 }
 
 export { ddb };
+
+// Purge one event's footprint: state row, interactions, event-log entries
+// for the event and interaction aggregates, and the per-event roster key.
+export async function purgeEventAggregate({ eventId, userIds = [], tables }) {
+  await ddb.send(new DeleteCommand({
+    TableName: tables.events,
+    Key: { eventId },
+  }));
+  for (const userId of userIds) {
+    await ddb.send(new DeleteCommand({
+      TableName: tables.interactions,
+      Key: { userId, eventId },
+    })).catch(() => {});
+  }
+  const aggregates = [
+    `event#${eventId}`,
+    ...userIds.map((u) => `interaction#${u}#${eventId}`),
+  ];
+  for (const aggregateId of aggregates) {
+    const events = await ddb.send(new QueryCommand({
+      TableName: tables.eventsLog,
+      KeyConditionExpression: 'aggregateId = :a',
+      ExpressionAttributeValues: { ':a': aggregateId },
+    }));
+    for (const ev of events.Items ?? []) {
+      await ddb.send(new DeleteCommand({
+        TableName: tables.eventsLog,
+        Key: { aggregateId: ev.aggregateId, seq: ev.seq },
+      }));
+    }
+  }
+  if (tables.userKeys) {
+    await ddb.send(new DeleteCommand({
+      TableName: tables.userKeys,
+      Key: { aggregateId: `roster#${eventId}` },
+    })).catch(() => {});
+  }
+}
