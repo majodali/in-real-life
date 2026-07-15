@@ -62,9 +62,12 @@ export function createOnboardingHandler({ runner, client, usersTable, llm }) {
     if (!userRow.Item) {
       return reply(404, { error: 'user not registered' });
     }
-    if (userRow.Item.onboardingCompletedAt) {
-      return reply(409, { error: 'onboarding already completed' });
-    }
+    // "Already completed" is detected by the projection's
+    // attribute_not_exists(onboardingCompletedAt) condition rather than a
+    // pre-check (same convention as register.mjs), so an idempotent retry
+    // is served from the commandId cache instead of being short-circuited
+    // to 409 by the already-updated row. Cost: that rare retry re-runs the
+    // extraction before hitting the cache — accepted.
 
     const extraction = await llm.complete({
       task: 'onboarding-extraction',

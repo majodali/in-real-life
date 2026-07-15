@@ -125,11 +125,15 @@ test('returns 404 when the user is not registered', async () => {
   assert.equal(runner.runCommand.calls.length, 0);
 });
 
-test('returns 409 when onboarding is already completed (state row)', async () => {
+test('an already-completed row never short-circuits an idempotent retry (register.mjs convention)', async () => {
+  // Same commandId, row already shows completed: the runner's cache
+  // answers 200 — the completed row must not pre-empt it with a 409.
   getItemResult = { Item: { userId: 'abc', seq: 3, onboardingCompletedAt: '2026-07-01T00:00:00Z' } };
+  runner.runCommand = spy(async ({ result }) => ({ cached: true, events: [], result }));
+  handler = createOnboardingHandler({ runner, client, usersTable: 'irl-users-test', llm });
   const response = await handler(makeEvent({ claims: validClaims, body: validBody }));
-  assert.equal(response.statusCode, 409);
-  assert.equal(runner.runCommand.calls.length, 0);
+  assert.equal(response.statusCode, 200);
+  assert.equal(runner.runCommand.calls.length, 1);
 });
 
 test('returns 409 when the projection condition rejects a concurrent completion', async () => {
