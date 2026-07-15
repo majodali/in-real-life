@@ -1,5 +1,9 @@
-// Functional tests for slice-8 debrief endpoint. Relies on the workshop
-// time controls (POST /admin/time) to advance past the event's endTime.
+// Functional tests for the tiered debrief endpoint (docs/debrief.md):
+// deterministic Tier 0-1 capture (attended / again / texture, no-show
+// reason) and the Tier-2 free-text path (extraction runs at command time
+// through the LLM seam - the deterministic stub on this workshop-mode
+// stack). Relies on the workshop time controls (POST /admin/time) to
+// advance past the event's endTime.
 
 import { test, before, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
@@ -129,45 +133,84 @@ async function jumpClockTo(datetime) {
   });
 }
 
-test('debrief: confirmed attendee can debrief once event is over', async () => {
+// Propose -> schedule -> (optionally confirm `other`) -> jump the clock
+// past endTime: the standard runway to a debriefable event.
+async function makeDebriefableEvent({ confirmOther = true } = {}) {
   const eventId = await proposeEvent(admin.idToken);
   await fetch(`${config.apiUrl}/events/${eventId}/schedule`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${admin.idToken}` },
     body: JSON.stringify({ commandId: randomUUID() }),
   });
-  await setLevel(other.idToken, eventId, 'confirmed');
-
-  // Advance the clock past endTime.
+  if (confirmOther) await setLevel(other.idToken, eventId, 'confirmed');
   const jump = await jumpClockTo(AFTER_END);
   assert.equal(jump.status, 201);
+  return eventId;
+}
 
-  const res = await fetch(`${config.apiUrl}/events/${eventId}/debrief`, {
+async function submitDebrief(token, eventId, body) {
+  return fetch(`${config.apiUrl}/events/${eventId}/debrief`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${other.idToken}` },
-    body: JSON.stringify({ commandId: randomUUID(), rating: 4, notes: 'Lovely.' }),
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ commandId: randomUUID(), ...body }),
+  });
+}
+
+test('debrief: tap-only submit lands and the summary rides on the list row', async () => {
+  const eventId = await makeDebriefableEvent();
+
+  const res = await submitDebrief(other.idToken, eventId, {
+    attended: true, again: 'yes', outcomeTexture: ['great-company'],
+  });
+  assert.equal(res.status, 201);
+  const out = await res.json();
+  assert.equal(out.attended, true);
+  assert.equal(out.again, 'yes');
+
+  // The state row carries the deterministic summary only - the full
+  // capture lives on the crypto-shredded log event.
+  const row = await readEvent(other.idToken, eventId);
+  assert.ok(row.myDebrief, 'expected myDebrief on the list response');
+  assert.equal(row.myDebrief.attended, true);
+  assert.equal(row.myDebrief.again, 'yes');
+  assert.ok(row.myDebrief.submittedAt);
+  assert.equal('outcomeTexture' in row.myDebrief, false);
+});
+
+test('debrief: no-show path records attendance without preference fields', async () => {
+  const eventId = await makeDebriefableEvent();
+
+  const res = await submitDebrief(other.idToken, eventId, {
+    attended: false, noShowReason: 'nerves',
   });
   assert.equal(res.status, 201);
 
   const row = await readEvent(other.idToken, eventId);
-  assert.ok(row.myDebrief, 'expected myDebrief on the list response');
-  assert.equal(row.myDebrief.rating, 4);
-  assert.equal(row.myDebrief.notes, 'Lovely.');
+  assert.equal(row.myDebrief.attended, false);
+  assert.equal('again' in row.myDebrief, false);
+});
+
+test('debrief: free text goes through Tier-2 extraction at command time', async () => {
+  // Workshop-mode stack -> the deterministic stub answers the extraction
+  // call; what this proves end-to-end is that the free-text path (one
+  // seam call, deltas frozen into the event) completes and lands.
+  const eventId = await makeDebriefableEvent();
+
+  const res = await submitDebrief(other.idToken, eventId, {
+    attended: true, again: 'maybe',
+    surprise: 'thought it would be too big, but the food helped',
+  });
+  assert.equal(res.status, 201);
+
+  const row = await readEvent(other.idToken, eventId);
+  assert.equal(row.myDebrief.again, 'maybe');
 });
 
 test('debrief: 409 if user was not confirmed', async () => {
-  const eventId = await proposeEvent(admin.idToken);
-  await fetch(`${config.apiUrl}/events/${eventId}/schedule`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${admin.idToken}` },
-    body: JSON.stringify({ commandId: randomUUID() }),
-  });
-  await jumpClockTo(AFTER_END);
+  const eventId = await makeDebriefableEvent({ confirmOther: false });
 
-  const res = await fetch(`${config.apiUrl}/events/${eventId}/debrief`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${other.idToken}` },
-    body: JSON.stringify({ commandId: randomUUID(), rating: 4 }),
+  const res = await submitDebrief(other.idToken, eventId, {
+    attended: true, again: 'yes',
   });
   assert.equal(res.status, 409);
 });
@@ -181,10 +224,15 @@ test('debrief: 409 if event not yet over', async () => {
   });
   await setLevel(other.idToken, eventId, 'confirmed');
 
-  const res = await fetch(`${config.apiUrl}/events/${eventId}/debrief`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${other.idToken}` },
-    body: JSON.stringify({ commandId: randomUUID(), rating: 4 }),
+  const res = await submitDebrief(other.idToken, eventId, {
+    attended: true, again: 'yes',
   });
   assert.equal(res.status, 409);
+});
+
+test('debrief: stale payload shape (rating) is rejected, not silently accepted', async () => {
+  const eventId = await makeDebriefableEvent();
+
+  const res = await submitDebrief(other.idToken, eventId, { rating: 4, notes: 'Lovely.' });
+  assert.equal(res.status, 400);
 });
