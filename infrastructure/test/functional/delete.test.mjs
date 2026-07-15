@@ -109,20 +109,29 @@ test('DELETE /me: removes state row, shreds the key, deletes Cognito, leaves an 
   // Cognito user is gone — email is freed.
   assert.equal(await cognitoUserExists(user.email), false);
 
-  // Event log: registered + profile + deleted = 3 events; last is UserDeleted.
+  // Event log: registered + profile + deleted + key-shredded = 4 events.
+  // UserDeleted lands atomically with the state-row delete (seq 3);
+  // UserKeyShredded is the shred audit that follows the key deletion
+  // (seq 4, D42) — no PII in either, so both survive the shred readably.
   const events = await ddb.send(new QueryCommand({
     TableName: config.tables.eventsLog,
     KeyConditionExpression: 'aggregateId = :a',
     ExpressionAttributeValues: { ':a': `user#${user.sub}` },
     ConsistentRead: true,
   }));
-  assert.equal(events.Items.length, 3);
+  assert.equal(events.Items.length, 4);
   const deleted = events.Items.find((e) => e.eventType === 'UserDeleted');
   assert.ok(deleted, 'expected a UserDeleted audit event');
   assert.equal(deleted.seq, 3);
   assert.deepEqual(deleted.data, { userId: user.sub });
   // wallTime is enriched by the runner — proves the audit timestamp is there.
   assert.ok(deleted.wallTime);
+
+  const shredded = events.Items.find((e) => e.eventType === 'UserKeyShredded');
+  assert.ok(shredded, 'expected a UserKeyShredded audit event');
+  assert.equal(shredded.seq, 4);
+  assert.deepEqual(shredded.data, { userId: user.sub });
+  assert.equal(shredded.actorId, 'system');
 });
 
 test('DELETE /me: a prior-user PII event in the log is no longer decryptable after the shred', async () => {
