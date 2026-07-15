@@ -20,7 +20,7 @@ Understanding of a person is **seeded** at onboarding and **grown** from what th
 
 ## Reading order
 
-**Start:** `decisions.md` (the decision register) · `hypotheses.md` (the hypothesis register — every embedded analysis as a testable, tunable, reversible hypothesis) · `open-risks.md` (known gaps) · `radar.md` (tracked workstreams not yet designed, R1–R7) · **`flows.md` (the visual map — all processes and flows as diagrams, TBD elements dashed)** · this README.
+**Start:** `backlog.md` (**the source of truth for progress** — what's built, what's next, dependency-ordered) · `decisions.md` (the decision register) · `hypotheses.md` (the hypothesis register — every embedded analysis as a testable, tunable, reversible hypothesis) · `open-risks.md` (known gaps) · `radar.md` (tracked workstreams not yet designed, R1–R7) · **`flows.md` (the visual map — all processes and flows as diagrams, TBD elements dashed)** · this README.
 
 **Foundations (Group 0)**
 - `event-sourcing.md` — hybrid event sourcing: event log + synchronous state tables, replay, crypto-shredding, tracing.
