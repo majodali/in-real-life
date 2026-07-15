@@ -467,3 +467,48 @@ test('edit: meetingSpot is editable, trimmed, and clearable', async () => {
   assert.equal(clear.statusCode, 201);
   assert.equal(runner.runCommand.calls[1][0].events[0].data.fields.meetingSpot, null);
 });
+
+// ─── Edit: shape correction (D56) ───
+
+test('edit: a valid shape is normalized and stamped source organizer', async () => {
+  const res = await edit(makeEvent({
+    claims: organizerClaims,
+    body: {
+      commandId: 'c1',
+      shape: {
+        activityTags: ['Board Games!', 'board games'],
+        structure: 'structured',
+        doors: ['connect'],
+      },
+    },
+  }));
+  assert.equal(res.statusCode, 201);
+  const fields = runner.runCommand.calls[0][0].events[0].data.fields;
+  assert.deepEqual(fields.shape, {
+    activityTags: ['board games'],
+    structure: 'structured',
+    doors: ['connect'],
+    source: 'organizer',
+  });
+});
+
+test('edit: shape null clears the shape', async () => {
+  const res = await edit(makeEvent({
+    claims: organizerClaims,
+    body: { commandId: 'c1', shape: null },
+  }));
+  assert.equal(res.statusCode, 201);
+  const fields = runner.runCommand.calls[0][0].events[0].data.fields;
+  assert.equal(fields.shape, null);
+});
+
+test('edit: invalid shape is a 400', async () => {
+  for (const shape of ['text', { activityTags: [], structure: 'loose', doors: [] },
+    { activityTags: [], structure: 'structured', doors: ['fun'] }]) {
+    const res = await edit(makeEvent({
+      claims: organizerClaims,
+      body: { commandId: 'c1', shape },
+    }));
+    assert.equal(res.statusCode, 400, JSON.stringify(shape));
+  }
+});

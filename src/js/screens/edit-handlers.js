@@ -18,6 +18,9 @@ export async function handleEditSubmit({
   costCovers,
   maxAttendance,
   meetingSpot,
+  shapeTags,
+  shapeStructure,
+  shapeDoors,
   commands,
   showToast,
   onSuccess,
@@ -114,6 +117,26 @@ export async function handleEditSubmit({
     nextMax = n;
   }
 
+  // Event shape (D56): the organizer's correction replaces the extracted
+  // shape wholesale. Blanking the whole group clears it; tags or doors
+  // without a structure pick is the one invalid combination.
+  const tags = (shapeTags ?? '')
+    .split(',')
+    .map((t) => t.trim())
+    .filter(Boolean);
+  const doors = shapeDoors ?? [];
+  const structure = (shapeStructure ?? '').trim();
+  let nextShape;
+  if (!structure && tags.length === 0 && doors.length === 0) {
+    nextShape = current.shape ? null : undefined;
+  } else if (!structure) {
+    onValidationError?.('shapeStructure');
+    showToast('Pick how structured it is — or clear the tags and doors too.');
+    return;
+  } else {
+    nextShape = { activityTags: tags, structure, doors };
+  }
+
   // Send only what changed.
   const fields = {};
   if (trimmedTitle !== current.title) fields.title = trimmedTitle;
@@ -137,6 +160,9 @@ export async function handleEditSubmit({
   const nextSpot = (meetingSpot ?? '').trim() || null;
   const currentSpot = current.meetingSpot ?? null;
   if (nextSpot !== currentSpot) fields.meetingSpot = nextSpot;
+  if (nextShape !== undefined && shapeChanged(nextShape, current.shape ?? null)) {
+    fields.shape = nextShape;
+  }
 
   if (Object.keys(fields).length === 0) {
     onNoop?.();
@@ -149,6 +175,18 @@ export async function handleEditSubmit({
   } catch (err) {
     showToast(err?.message || 'Couldn\'t save those changes.');
   }
+}
+
+// Compare shape ignoring provenance — the server re-stamps source anyway.
+function shapeChanged(next, currentShape) {
+  if (next === null) return currentShape !== null;
+  if (currentShape === null) return true;
+  const norm = (s) => JSON.stringify({
+    activityTags: (s.activityTags ?? []).map((t) => t.toLowerCase()),
+    structure: s.structure,
+    doors: [...(s.doors ?? [])].sort(),
+  });
+  return norm(next) !== norm(currentShape);
 }
 
 function toIso(value) {

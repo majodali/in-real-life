@@ -203,12 +203,31 @@ export function stubReflectionTurn(request) {
   };
 }
 
+// Canned event-shape extraction — deterministic from the listing title so
+// workshop events get stable, distinguishable shapes. Schema-valid against
+// EVENT_SHAPE_SCHEMA (docs/event-shape-prompt.md).
+export function stubEventShape(request) {
+  const content = request?.messages?.[0]?.content ?? '';
+  const title = (content.match(/^TITLE: (.*)$/m) || [])[1] ?? '';
+  const activityTags = title
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .filter((t) => t.length > 3)
+    .slice(0, 2);
+  return {
+    activityTags,
+    structure: 'semi-structured',
+    doors: ['connect'],
+  };
+}
+
 const DEFAULT_CANNED = {
   'onboarding-extraction': STUB_ONBOARDING_EXTRACTION,
   'onboarding-turn': stubOnboardingTurn,
   'debrief-extraction': STUB_DEBRIEF_EXTRACTION,
   'reflection-turn': stubReflectionTurn,
   'reflection-extraction': STUB_DEBRIEF_EXTRACTION,
+  'event-shape': stubEventShape,
 };
 
 // Deterministic stub provider. Outputs are keyed by `task`; workshop robots

@@ -74,6 +74,7 @@ import {
 } from './events/lifecycle-projections.mjs';
 import { createProposeEventHandler } from './events/propose.mjs';
 import { createListEventsHandler } from './events/list.mjs';
+import { createRecommender } from './matching/recommend.mjs';
 import { createListAttendeesHandler } from './events/attendees.mjs';
 import {
   createSetInteractionHandler,
@@ -306,18 +307,30 @@ const notifyListHandler = createNotifyListHandler({
   client,
   eventsLogTable: process.env.EVENTS_LOG_TABLE,
 });
-const proposeEventHandler = createProposeEventHandler({ runner, makeEventId: ulid });
+const proposeEventHandler = createProposeEventHandler({ runner, makeEventId: ulid, llm });
 const listAttendeesHandler = createListAttendeesHandler({
   client,
   eventsTable: tables.eventsTable,
   interactionsTable: tables.interactionsTable,
   keyStore,
 });
+// Feed ranking v1 (docs/matching-spec.md): reads the user-model store the
+// async projector maintains. Optional — a stack without the table (or an
+// unset env var) simply serves an unranked feed.
+const recommender = process.env.USER_MODEL_TABLE
+  ? createRecommender({
+    client,
+    userModelTable: process.env.USER_MODEL_TABLE,
+    interactionsTable: tables.interactionsTable,
+    keyStore,
+  })
+  : null;
 const listEventsHandler = createListEventsHandler({
   client,
   eventsTable: tables.eventsTable,
   interactionsTable: tables.interactionsTable,
   getOffset: getWorkshopOffset,
+  recommender,
 });
 const setInteractionHandler = createSetInteractionHandler({
   runner, client,

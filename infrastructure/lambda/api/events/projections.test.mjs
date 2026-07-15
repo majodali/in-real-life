@@ -116,3 +116,13 @@ test('projectEventProposed: community events still start proposed', () => {
   }, { eventsTable: 't' });
   assert.equal(write.Put.Item.lifecycleState, 'proposed');
 });
+
+test('projectEventProposed: shape (D56) lands on the event row when present', () => {
+  const withShape = structuredClone(proposed);
+  withShape.data.shape = {
+    activityTags: ['coffee walk'], structure: 'semi-structured',
+    doors: ['connect'], source: 'extracted',
+  };
+  const out = projectEventProposed(withShape, { eventsTable: 'irl-events-test' });
+  assert.deepEqual(out.Put.Item.shape, withShape.data.shape);
+});

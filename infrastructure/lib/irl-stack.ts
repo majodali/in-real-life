@@ -414,6 +414,7 @@ export class IrlStack extends cdk.Stack {
       EVENTS_LOG_TABLE: eventsLogTable.tableName,
       COMMANDS_TABLE: commandsTable.tableName,
       USER_KEYS_TABLE: userKeysTable.tableName,
+      USER_MODEL_TABLE: userModelTable.tableName,
       CLAUDE_API_KEY_SECRET_ARN: claudeApiKeySecret.secretArn,
       COGNITO_USER_POOL_ID: userPool.userPoolId,
       STAGE: stage,
@@ -445,6 +446,9 @@ export class IrlStack extends cdk.Stack {
     eventsLogTable.grantReadWriteData(apiFn);
     commandsTable.grantReadWriteData(apiFn);
     userKeysTable.grantReadWriteData(apiFn);
+    // Feed ranking v1 reads the derived user-model store (read-only — the
+    // async projector remains its sole writer).
+    userModelTable.grantReadData(apiFn);
     if (feedbackBucket) {
       feedbackBucket.grantRead(apiFn);
     }

@@ -29,6 +29,7 @@ export function projectEventProposed(event, tables) {
   if (d.cost !== undefined) item.cost = d.cost;
   if (d.maxAttendance !== undefined) item.maxAttendance = d.maxAttendance;
   if (d.meetingSpot !== undefined) item.meetingSpot = d.meetingSpot;
+  if (d.shape !== undefined) item.shape = d.shape;
   if (d.minimumAttendance !== undefined) item.minimumAttendance = d.minimumAttendance;
   item.timesApproximate = d.timesApproximate === true;
   item.autoPlanOnThreshold = d.autoPlanOnThreshold === true;

@@ -20,7 +20,7 @@ Understanding of a person is **seeded** at onboarding and **grown** from what th
 
 ## Reading order
 
-**Start:** `decisions.md` (the decision register) · `hypotheses.md` (the hypothesis register — every embedded analysis as a testable, tunable, reversible hypothesis) · `open-risks.md` (known gaps) · `radar.md` (tracked workstreams not yet designed, R1–R7) · **`flows.md` (the visual map — all processes and flows as diagrams, TBD elements dashed)** · this README.
+**Start:** `backlog.md` (**the source of truth for progress** — what's built, what's next, dependency-ordered) · `decisions.md` (the decision register) · `hypotheses.md` (the hypothesis register — every embedded analysis as a testable, tunable, reversible hypothesis) · `open-risks.md` (known gaps) · `radar.md` (tracked workstreams not yet designed, R1–R7) · **`flows.md` (the visual map — all processes and flows as diagrams, TBD elements dashed)** · this README.
 
 **Foundations (Group 0)**
 - `event-sourcing.md` — hybrid event sourcing: event log + synchronous state tables, replay, crypto-shredding, tracing.
@@ -49,6 +49,8 @@ Understanding of a person is **seeded** at onboarding and **grown** from what th
 **Matching & recommendation (Group 3)**
 - `success-and-progress.md` — **the keystone: what IRL is *for*.** Success = real-world connection & belonging, not engagement; distributional; indicators-not-targets. Everything downstream is evaluated against this.
 - `matching.md` — how fit, affinity, rating, crews, constraints, avoidance, and newcomer status combine into what a member sees; fit-first, bounded soft nudges, exploration/inclusion floor; the definitions + influence map; the gaming/negative-scenario register.
+- `matching-spec.md` — the implemented, versioned ranking spec (v2): tunables + defaults, hard constraints, the honest register of what it omits and where each piece lands.
+- `event-shape-prompt.md` — the propose-time event-shape extraction (D56): activityTags / structure / doors, organizer-correctable, feeding the fit tiers in `matching-spec.md`.
 - `scenario-walkthroughs.md` — the matching + success test scenarios run concretely through the design as written; two passes (F1–F12 triaged → D46–D51; second pass re-verifies all twelve and adversarially probes the new machinery, F13–F14 fixed). All scenarios currently `holds`.
 
 **Trust & safety (Group 4)**

@@ -374,3 +374,66 @@ test('meetingSpot is trimmed, bounded, and carried for any source', async () => 
   }));
   assert.equal('meetingSpot' in runner.runCommand.calls[0][0].events[0].data, false);
 });
+
+// ─── Event shape extraction (D56, docs/event-shape-prompt.md) ───
+
+test('an injected llm yields one event-shape call; the shape rides in EventProposed', async () => {
+  const seen = [];
+  const llm = {
+    complete: spy(async (req) => {
+      seen.push(req);
+      return { activityTags: ['coffee walk'], structure: 'semi-structured', doors: ['connect'] };
+    }),
+  };
+  handler = createProposeEventHandler({ runner, makeEventId: makeId, llm });
+
+  const response = await handler(makeEvent({ claims: validClaims, body: validBody }));
+  assert.equal(response.statusCode, 201);
+  assert.equal(llm.complete.calls.length, 1);
+  assert.equal(seen[0].task, 'event-shape');
+  assert.match(seen[0].messages[0].content, /^TITLE: Morning coffee & walk$/m);
+  const data = runner.runCommand.calls[0][0].events[0].data;
+  assert.deepEqual(data.shape, {
+    activityTags: ['coffee walk'],
+    structure: 'semi-structured',
+    doors: ['connect'],
+    source: 'extracted',
+  });
+});
+
+test('extraction failure never fails the propose — event lands without shape', async () => {
+  handler = createProposeEventHandler({
+    runner, makeEventId: makeId,
+    llm: { complete: async () => { throw new Error('provider down'); } },
+  });
+  const response = await handler(makeEvent({ claims: validClaims, body: validBody }));
+  assert.equal(response.statusCode, 201);
+  const data = runner.runCommand.calls[0][0].events[0].data;
+  assert.equal('shape' in data, false);
+});
+
+test('no llm injected (legacy wiring) — propose still works, no shape', async () => {
+  const response = await handler(makeEvent({ claims: validClaims, body: validBody }));
+  assert.equal(response.statusCode, 201);
+  const data = runner.runCommand.calls[0][0].events[0].data;
+  assert.equal('shape' in data, false);
+});
+
+test('idea proposals (title only) extract shape from the title alone', async () => {
+  const seen = [];
+  const llm = {
+    complete: spy(async (req) => {
+      seen.push(req);
+      return { activityTags: ['scrabble'], structure: 'structured', doors: ['connect'] };
+    }),
+  };
+  handler = createProposeEventHandler({ runner, makeEventId: makeId, llm });
+  const response = await handler(makeEvent({
+    claims: validClaims,
+    body: { commandId: 'c1', title: 'Anyone into scrabble?' },
+  }));
+  assert.equal(response.statusCode, 201);
+  assert.match(seen[0].messages[0].content, /^DESCRIPTION: \(none\)$/m);
+  const data = runner.runCommand.calls[0][0].events[0].data;
+  assert.deepEqual(data.shape.activityTags, ['scrabble']);
+});

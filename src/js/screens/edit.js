@@ -118,6 +118,32 @@ export async function renderEdit(eventId) {
                value="${escapeAttr(event.location)}">
       </div>
 
+      <div class="profile-field">
+        <label class="profile-field-label" for="editShapeTags">Activity tags (comma-separated${event.shape?.source === 'extracted' ? ' — our guess, correct freely' : ''})</label>
+        <input class="profile-field-input" id="editShapeTags" type="text" maxlength="220"
+               value="${escapeAttr((event.shape?.activityTags ?? []).join(', '))}">
+      </div>
+
+      <div class="profile-field">
+        <label class="profile-field-label" for="editShapeStructure">How structured?</label>
+        <select class="profile-field-input" id="editShapeStructure">
+          <option value="">—</option>
+          ${['structured', 'semi-structured', 'unstructured'].map((s) => `
+            <option value="${s}" ${event.shape?.structure === s ? 'selected' : ''}>${s}</option>
+          `).join('')}
+        </select>
+      </div>
+
+      <div class="profile-field">
+        <span class="profile-field-label">What it offers</span>
+        ${[['useful', 'A way to be useful'], ['make-learn', 'Make or learn something'], ['connect', 'Time with people']].map(([door, label]) => `
+          <label class="edit-door-option">
+            <input type="checkbox" class="edit-door" value="${door}"
+                   ${event.shape?.doors?.includes(door) ? 'checked' : ''}> ${label}
+          </label>
+        `).join('')}
+      </div>
+
       <button class="btn-primary" id="editSubmit" type="submit">Save changes</button>
     </form>
   `;
@@ -141,6 +167,9 @@ export async function renderEdit(eventId) {
         costCovers: document.getElementById('editCostCovers').value,
         maxAttendance: document.getElementById('editMax').value,
         meetingSpot: document.getElementById('editMeetingSpot').value,
+        shapeTags: document.getElementById('editShapeTags').value,
+        shapeStructure: document.getElementById('editShapeStructure').value,
+        shapeDoors: [...form.querySelectorAll('.edit-door:checked')].map((el) => el.value),
         commands,
         showToast,
         onSuccess: () => {
@@ -153,6 +182,7 @@ export async function renderEdit(eventId) {
             startTime: 'editStart',
             endTime: 'editEnd',
             location: 'editLocation',
+            shapeStructure: 'editShapeStructure',
           };
           const el = document.getElementById(map[field]);
           if (el) {

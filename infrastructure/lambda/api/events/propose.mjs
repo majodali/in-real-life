@@ -6,6 +6,7 @@
 // renames to the user's profile after this don't update the event card.
 
 import { validateCost, validateMaxAttendance } from './event-fields.mjs';
+import { extractEventShape } from './event-shape.mjs';
 
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
 const VALID_SOURCES = new Set(['community', 'external', 'platform']);
@@ -18,7 +19,7 @@ function reply(statusCode, body) {
   };
 }
 
-export function createProposeEventHandler({ runner, makeEventId }) {
+export function createProposeEventHandler({ runner, makeEventId, llm }) {
   return async function handler(event) {
     const claims = event?.requestContext?.authorizer?.jwt?.claims;
     if (!claims || !claims.sub) return reply(401, { error: 'unauthorized' });
@@ -105,6 +106,13 @@ export function createProposeEventHandler({ runner, makeEventId }) {
       if (!meetingSpot) meetingSpot = undefined;
     }
 
+    // Event shape (D56, docs/event-shape-prompt.md): one extraction call
+    // gives the listing a machine-readable shape for matching. Failure is
+    // never propose failure — a shapeless event ranks via text fallback.
+    const shape = llm
+      ? await extractEventShape({ llm, title, description })
+      : undefined;
+
     const eventId = makeEventId();
     const aggregateId = `event#${eventId}`;
 
@@ -122,6 +130,7 @@ export function createProposeEventHandler({ runner, makeEventId }) {
     if (cost !== undefined) data.cost = cost;
     if (maxAttendance !== undefined) data.maxAttendance = maxAttendance;
     if (meetingSpot !== undefined) data.meetingSpot = meetingSpot;
+    if (shape !== undefined) data.shape = shape;
     data.timesApproximate = body.timesApproximate === true;
     if (source !== 'external') {
       data.minimumAttendance = minimumAttendance;

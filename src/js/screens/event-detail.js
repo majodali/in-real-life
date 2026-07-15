@@ -102,6 +102,12 @@ export async function renderEventDetail(eventId) {
           <span class="event-fact-value">${escapeHtml(event.meetingSpot)}</span>
         </div>
         ` : ''}
+        ${event.shape ? `
+        <div class="event-fact">
+          <span class="event-fact-label">What it's like</span>
+          <span class="event-fact-value">${escapeHtml(describeShape(event.shape))}</span>
+        </div>
+        ` : ''}
         <div class="event-fact">
           <span class="event-fact-label">${event.source === 'external' ? 'Listed by' : 'Organizer'}</span>
           <span class="event-fact-value">${escapeHtml(event.organizerName)}</span>
@@ -816,6 +822,22 @@ const SOURCE_LABELS = {
   external: 'Listed locally',
   platform: 'IRL pick',
 };
+
+// Event shape (D56) as one readable line — tags, then how structured,
+// then which doors it opens. Never a score, just what it's like.
+const DOOR_LABELS = {
+  useful: 'be useful',
+  'make-learn': 'make & learn',
+  connect: 'connect',
+};
+
+function describeShape(shape) {
+  return [
+    ...(shape.activityTags ?? []),
+    shape.structure,
+    ...(shape.doors ?? []).map((d) => DOOR_LABELS[d] ?? d),
+  ].filter(Boolean).join(' · ');
+}
 
 function formatDateRange(startIso, endIso) {
   if (!startIso) return '—';

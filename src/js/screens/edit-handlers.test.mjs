@@ -197,3 +197,81 @@ test('meetingSpot: change sends the trimmed value; clearing sends null', async (
   });
   assert.equal(commands.editEvent.calls[0][0].meetingSpot, null);
 });
+
+// ─── Event shape (D56) ───
+
+const baseArgs = () => ({
+  title: 'Coffee walk',
+  description: 'Easy walk',
+  startTime: '2026-06-01T16:00:00.000Z',
+  endTime: '2026-06-01T17:30:00.000Z',
+  location: 'Blackbird',
+});
+
+test('a changed shape is sent as a full replacement', async () => {
+  current.shape = {
+    activityTags: ['coffee walk'], structure: 'semi-structured',
+    doors: ['connect'], source: 'extracted',
+  };
+  await handleEditSubmit({
+    current, ...baseArgs(),
+    shapeTags: 'coffee walk, board games',
+    shapeStructure: 'semi-structured',
+    shapeDoors: ['connect'],
+    commands, showToast, onSuccess, onValidationError, onNoop,
+  });
+  const args = commands.editEvent.calls[0][0];
+  assert.deepEqual(args.shape, {
+    activityTags: ['coffee walk', 'board games'],
+    structure: 'semi-structured',
+    doors: ['connect'],
+  });
+});
+
+test('an unchanged shape is not sent (source ignored in comparison)', async () => {
+  current.shape = {
+    activityTags: ['coffee walk'], structure: 'semi-structured',
+    doors: ['connect'], source: 'extracted',
+  };
+  await handleEditSubmit({
+    current, ...baseArgs(),
+    shapeTags: 'coffee walk',
+    shapeStructure: 'semi-structured',
+    shapeDoors: ['connect'],
+    commands, showToast, onSuccess, onValidationError, onNoop,
+  });
+  assert.equal(commands.editEvent.calls.length, 0);
+  assert.equal(onNoop.calls.length, 1);
+});
+
+test('blanking the whole shape group clears it', async () => {
+  current.shape = {
+    activityTags: ['coffee walk'], structure: 'semi-structured',
+    doors: ['connect'], source: 'organizer',
+  };
+  await handleEditSubmit({
+    current, ...baseArgs(),
+    shapeTags: '', shapeStructure: '', shapeDoors: [],
+    commands, showToast, onSuccess, onValidationError, onNoop,
+  });
+  assert.equal(commands.editEvent.calls[0][0].shape, null);
+});
+
+test('tags without a structure pick is a validation error', async () => {
+  await handleEditSubmit({
+    current, ...baseArgs(),
+    shapeTags: 'board games', shapeStructure: '', shapeDoors: [],
+    commands, showToast, onSuccess, onValidationError, onNoop,
+  });
+  assert.equal(commands.editEvent.calls.length, 0);
+  assert.equal(onValidationError.calls[0][0], 'shapeStructure');
+});
+
+test('no shape params and no existing shape — nothing shape-related happens', async () => {
+  await handleEditSubmit({
+    current, ...baseArgs(), title: 'New title',
+    commands, showToast, onSuccess, onValidationError, onNoop,
+  });
+  const args = commands.editEvent.calls[0][0];
+  assert.equal('shape' in args, false);
+});
