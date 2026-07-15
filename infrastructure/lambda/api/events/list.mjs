@@ -20,7 +20,9 @@ function reply(statusCode, body) {
   };
 }
 
-export function createListEventsHandler({ client, eventsTable, interactionsTable, getOffset }) {
+export function createListEventsHandler({
+  client, eventsTable, interactionsTable, getOffset, recommender,
+}) {
   return async function handler(event) {
     const claims = event?.requestContext?.authorizer?.jwt?.claims;
     if (!claims || !claims.sub) return reply(401, { error: 'unauthorized' });
@@ -97,7 +99,25 @@ export function createListEventsHandler({ client, eventsTable, interactionsTable
       if (overlapping.length) e.conflictsWith = overlapping;
     }
 
-    return reply(200, { events, count: events.length, simulatedTime: nowIso });
+    // Feed ranking v1 (docs/matching-spec.md): an ordered eventId list —
+    // never scores; ordering is the only thing that leaves the server.
+    // The feed must not die because ranking did: degrade to empty.
+    let recommendations = [];
+    if (recommender) {
+      try {
+        recommendations = await recommender.recommend({
+          userId: claims.sub, events, nowIso,
+        });
+      } catch (err) {
+        console.log(JSON.stringify({
+          level: 'error', msg: 'recommender failed', error: err?.message,
+        }));
+      }
+    }
+
+    return reply(200, {
+      events, count: events.length, simulatedTime: nowIso, recommendations,
+    });
   };
 }
 

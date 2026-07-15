@@ -6,7 +6,7 @@ A mobile-first web app for a local community meetup platform. Users go through a
 
 ## Design documentation
 
-`docs/README.md` is the index to the design notes; `docs/decisions.md` is the canonical decision register (D1–D54), `docs/open-risks.md` the known-gaps tracker, and `docs/radar.md` the register of tracked-but-undesigned workstreams (R1–R7: decision registers & feedback intake, A/B testing UX, age/locality verification, staff↔member support comms, community launch playbook, broad community feedback, pricing & sponsorship). Read those before extending any designed area — most conceptual decisions (user model, onboarding, debrief, matching, policy, trust) are already made and recorded there.
+`docs/README.md` is the index to the design notes; `docs/decisions.md` is the canonical decision register (D1–D55), `docs/open-risks.md` the known-gaps tracker, and `docs/radar.md` the register of tracked-but-undesigned workstreams (R1–R7: decision registers & feedback intake, A/B testing UX, age/locality verification, staff↔member support comms, community launch playbook, broad community feedback, pricing & sponsorship). Read those before extending any designed area — most conceptual decisions (user model, onboarding, debrief, matching, policy, trust) are already made and recorded there.
 
 ## Architecture
 
@@ -211,7 +211,7 @@ Once profiles and events are real, decide who sees what.
 - [ ] User preferences for kinds of people / mark friends or preferred companions
 - [ ] Soft de-prioritize others (without blocking) — needs careful design
 - [ ] Travel willingness — distance, preferred locations, fine-grained per event type / company
-- [ ] Matching/prioritization algorithm — recommendations of people, groups, events
+- [x] Matching/prioritization algorithm (v1 — feed ranking) — the first implemented, versioned ranking spec (`docs/matching-spec.md`, D55; `lambda/api/matching/tunables.mjs` mirrors every default, all tunable to zero): hard constraints are the only gate (joinable / not full / no overlap with the caller's live confirmed commitments / not already committed), fit = interests-only token match against title+description (deliberately thin — envelope/doors fit waits on structured event shape), outgoing-affinity nudge (positive taps only, generosity self-discounted per D47's H2-lite transform, capped below fitCap so nudges structurally never dominate), deterministic exploration (hash noise on simulated time reshuffling weekly + guaranteed exploratory share). `GET /events` gains an ordered `recommendations` list — ordering only, never scores; the feed renders Your plans / Suggested for you / More on the calendar. People/group recommendation, mutual-affinity strength, crews, rating, avoidance, injection stay open — each named in the spec with its landing slice
 - [ ] Register of event types, operators, venues — safety rating, suitability, positive/negative attributes
 - [ ] Real Claude API for event matching + suggestions
 - [ ] Structured profile model — extracted from interviews (personality, availability, comfort, social energy)

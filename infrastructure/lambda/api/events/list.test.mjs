@@ -336,3 +336,62 @@ test('full: true only while joinable and out of member spots', async () => {
   assert.equal('full' in byId['evt-3'], false, 'cancelled events are not "full"');
   assert.equal('full' in byId['evt-4'], false, 'uncapped events are never full');
 });
+
+// ─── Feed ranking v1 (docs/matching-spec.md) ───
+
+test('recommendations ride on the response when a recommender is wired', async () => {
+  client.send = spy(async (cmd) => (cmd.constructor.name === 'ScanCommand'
+    ? { Items: [sampleRow()] }
+    : { Items: [] }));
+  const recommender = {
+    recommend: spy(async () => ['evt-1']),
+  };
+  handler = createListEventsHandler({
+    client, eventsTable: 'irl-events-test', interactionsTable: 'irl-interactions-test',
+    recommender,
+  });
+  const response = await handler(makeEvent({ claims: validClaims }));
+  const body = JSON.parse(response.body);
+  assert.deepEqual(body.recommendations, ['evt-1']);
+  // The recommender sees the caller and the annotated rows
+  const [args] = recommender.recommend.calls[0];
+  assert.equal(args.userId, 'user-abc');
+  assert.equal(args.events[0].eventId, 'evt-1');
+  assert.ok(args.nowIso);
+});
+
+test('no scores ever leave the server — event rows carry no fit/score fields', async () => {
+  client.send = spy(async (cmd) => (cmd.constructor.name === 'ScanCommand'
+    ? { Items: [sampleRow()] }
+    : { Items: [] }));
+  handler = createListEventsHandler({
+    client, eventsTable: 'irl-events-test', interactionsTable: 'irl-interactions-test',
+    recommender: { recommend: async () => ['evt-1'] },
+  });
+  const body = JSON.parse((await handler(makeEvent({ claims: validClaims }))).body);
+  for (const e of body.events) {
+    assert.equal('fit' in e, false);
+    assert.equal('score' in e, false);
+    assert.equal('nudge' in e, false);
+  }
+});
+
+test('a failing recommender degrades to an empty list — the feed never dies', async () => {
+  client.send = spy(async (cmd) => (cmd.constructor.name === 'ScanCommand'
+    ? { Items: [sampleRow()] }
+    : { Items: [] }));
+  handler = createListEventsHandler({
+    client, eventsTable: 'irl-events-test', interactionsTable: 'irl-interactions-test',
+    recommender: { recommend: async () => { throw new Error('boom'); } },
+  });
+  const response = await handler(makeEvent({ claims: validClaims }));
+  assert.equal(response.statusCode, 200);
+  const body = JSON.parse(response.body);
+  assert.equal(body.events.length, 1);
+  assert.deepEqual(body.recommendations, []);
+});
+
+test('without a recommender the response still carries an empty recommendations array', async () => {
+  const body = JSON.parse((await handler(makeEvent({ claims: validClaims }))).body);
+  assert.deepEqual(body.recommendations, []);
+});

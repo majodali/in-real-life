@@ -99,6 +99,9 @@ Why not the simpler "avoidance always wins": a hard override would re-open #17's
 
 ## The ranking spec is explicit, versioned, and hypothesis-tuned
 
+**v1 is implemented: `matching-spec.md` is the live spec (D55)** — including
+the register of what v1 deliberately omits and where each omission lands.
+
 How recommendations are ranked is never implicit or emergent-from-code:
 
 - **Every input, transformation, weight, and cap is a named tunable** with a documented default — configuration, not constants. Tunable includes tunable to zero.

@@ -12,6 +12,7 @@ import { getAltSelection } from '../alternatives.js';
 import { renderEllipsisButton, bindEllipsis } from '../components/ellipsis-menu.js';
 import { commands } from '../services.js';
 import { unseenCancellations, noticeMessage, readSeen, markSeen } from '../cancellation-notices.js';
+import { sectionFeed } from './feed-sections.js';
 
 const LIFECYCLE_LABELS = {
   idea: 'Idea',
@@ -97,7 +98,18 @@ export async function renderFeed() {
     markSeen(localStorage, fresh.map((e) => e.eventId));
   }
 
-  scroll.innerHTML = events.map(renderCard).join('');
+  // Ranking v1 (docs/matching-spec.md): the server sends an ordered
+  // recommendations list — sections render plans first, then suggestions
+  // in ranked order, then the remaining calendar in time order.
+  const { plans, suggested, rest } = sectionFeed(events, data.recommendations);
+  const section = (label, list) => (list.length
+    ? `<div class="feed-section-label">${label}</div>${list.map(renderCard).join('')}`
+    : '');
+  scroll.innerHTML = (plans.length || suggested.length)
+    ? section('Your plans', plans)
+      + section('Suggested for you', suggested)
+      + section('More on the calendar', rest)
+    : events.map(renderCard).join('');
   scroll.querySelectorAll('[data-event-id]').forEach((el) => {
     el.addEventListener('click', () => navigate('event', el.dataset.eventId));
   });
