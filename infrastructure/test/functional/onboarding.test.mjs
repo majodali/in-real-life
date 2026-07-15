@@ -17,6 +17,7 @@ import { loadTestConfig } from '../helpers/config.mjs';
 import { createTestUser, deleteTestUser } from '../helpers/auth.mjs';
 import { ddb, purgeUserAggregate, purgeEventAggregate, readDataKey } from '../helpers/cleanup.mjs';
 import { waitFor } from '../helpers/poll.mjs';
+import { projectorDiagnostics } from '../helpers/diagnose.mjs';
 import { HOUR } from '../helpers/time.mjs';
 import { decryptValue } from '../../lambda/api/lib/crypto-shred.mjs';
 
@@ -121,8 +122,18 @@ test('onboarding: turn loop runs to a close, completion lands, and the projector
     }));
     return out.Item ?? null;
   };
-  const core = await waitFor(() => readModelRow('profile#core'), { label: 'profile#core seed' });
-  const interest = await waitFor(() => readModelRow('interest#pottery'), { label: 'interest seed' });
+  // On timeout, fold the projector's own state (DLQ depth, recent error
+  // logs, whether the store has ever been written) into the failure so a
+  // red run diagnoses itself instead of just saying "timed out".
+  const waitForSeed = async (sk, label) => {
+    try {
+      return await waitFor(() => readModelRow(sk), { label });
+    } catch (err) {
+      throw new Error(`${err.message}\n  ${await projectorDiagnostics(config)}`);
+    }
+  };
+  const core = await waitForSeed('profile#core', 'profile#core seed');
+  const interest = await waitForSeed('interest#pottery', 'interest seed');
 
   const dataKey = await readDataKey({ aggregateId: `user#${user.sub}`, tables: config.tables });
   assert.ok(dataKey, 'user data key expected');
