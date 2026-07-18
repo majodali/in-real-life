@@ -649,5 +649,17 @@ export class IrlStack extends cdk.Stack {
       value: userPoolClient.userPoolClientId,
       description: 'Cognito User Pool Client ID',
     });
+
+    // Projector observability — lets the functional suite self-diagnose a
+    // stalled/failing Streams pipeline instead of timing out blind.
+    new cdk.CfnOutput(this, 'ProjectorFunctionName', {
+      value: projectorFn.functionName,
+      description: 'User-model Streams projector Lambda name (log group = /aws/lambda/<name>)',
+    });
+
+    new cdk.CfnOutput(this, 'ProjectorDlqUrl', {
+      value: projectorDlq.queueUrl,
+      description: 'Dead-letter queue for projector stream batches',
+    });
   }
 }

@@ -19,6 +19,9 @@ export async function loadTestConfig() {
     apiUrl: get('ApiUrl'),
     userPoolId: get('UserPoolId'),
     userPoolClientId: get('UserPoolClientId'),
+    // Optional (older deploys may predate them): projector observability.
+    projectorFunctionName: get('ProjectorFunctionName'),
+    projectorDlqUrl: get('ProjectorDlqUrl'),
     stage,
     region: REGION,
     tables: {
