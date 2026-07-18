@@ -8,7 +8,8 @@
 
 import { test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { marshall, unmarshall } from '@aws-sdk/util-dynamodb';
+import { marshall } from '@aws-sdk/util-dynamodb';
+import { unmarshallImage } from '../lib/dynamo-unmarshall.mjs';
 import { createStreamHandler } from './stream-handler.mjs';
 import { createUserModelProjector } from './user-model.mjs';
 import { generateDataKey, encryptValue, encryptPii, decryptValue } from '../lib/crypto-shred.mjs';
@@ -31,9 +32,12 @@ beforeEach(() => {
     },
   };
   keyStore = { getKey: async () => dataKey };
+  // Wired exactly as production (projector.mjs): marshall with the real
+  // SDK package, unmarshall with OUR local implementation — the runtime
+  // can't import util-dynamodb, so the production path must never use it.
   handler = createStreamHandler({
     projectors: [createUserModelProjector({ client, userModelTable: 't', keyStore })],
-    unmarshall,
+    unmarshall: unmarshallImage,
   });
 });
 

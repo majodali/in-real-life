@@ -6,7 +6,11 @@
 
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
-import { unmarshall } from '@aws-sdk/util-dynamodb';
+// NOT @aws-sdk/util-dynamodb: this Lambda deploys unbundled and the
+// runtime's built-in SDK doesn't ship that util package — importing it
+// crashed the function at INIT and dead-lettered every stream batch
+// (see lib/dynamo-unmarshall.mjs).
+import { unmarshallImage } from './lib/dynamo-unmarshall.mjs';
 import { createKeyStore } from './lib/key-store.mjs';
 import { createUserModelProjector } from './projector/user-model.mjs';
 import { createStreamHandler } from './projector/stream-handler.mjs';
@@ -26,5 +30,5 @@ const userModelProjector = createUserModelProjector({
 
 export const handler = createStreamHandler({
   projectors: [userModelProjector],
-  unmarshall,
+  unmarshall: unmarshallImage,
 });
