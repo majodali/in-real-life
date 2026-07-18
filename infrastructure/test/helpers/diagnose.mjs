@@ -13,6 +13,12 @@
 //
 // Every probe is best-effort: missing outputs, missing IAM, or a missing
 // log group degrade to a note, never a throw.
+//
+// The CI test-runner role needs (grant in the ops repo; each denial below
+// names its own requirement):
+//   dynamodb:Scan          on table/irl-user-model-*
+//   sqs:GetQueueAttributes + sqs:ReceiveMessage on the projector DLQ
+//   logs:FilterLogEvents   on log-group:/aws/lambda/<projector fn>*
 
 import { SQSClient, GetQueueAttributesCommand, ReceiveMessageCommand } from '@aws-sdk/client-sqs';
 import { CloudWatchLogsClient, FilterLogEventsCommand } from '@aws-sdk/client-cloudwatch-logs';
@@ -44,7 +50,7 @@ export async function projectorDiagnostics(config) {
         if (body) notes.push(`DLQ sample: ${body.slice(0, 400)}`);
       }
     } catch (err) {
-      notes.push(`DLQ peek unavailable (${err?.name})`);
+      notes.push(`DLQ peek unavailable (${err?.name}) — CI role needs sqs:GetQueueAttributes + sqs:ReceiveMessage on the projector DLQ`);
     }
   } else {
     notes.push('DLQ URL not in stack outputs (deploy predates ProjectorDlqUrl?)');
@@ -65,7 +71,7 @@ export async function projectorDiagnostics(config) {
         ? `recent projector errors:\n    ${lines.join('\n    ')}`
         : 'no projector errors in the last 30m');
     } catch (err) {
-      notes.push(`log peek unavailable (${err?.name})`);
+      notes.push(`log peek unavailable (${err?.name}) — CI role needs logs:FilterLogEvents on /aws/lambda/<projector fn>`);
     }
   } else {
     notes.push('projector function name not in stack outputs');
@@ -83,7 +89,7 @@ export async function projectorDiagnostics(config) {
       ? `user-model has rows (sample: ${rows.map((r) => r.sk).join(', ')})`
       : 'user-model table is EMPTY — the projector may never have written');
   } catch (err) {
-    notes.push(`user-model scan unavailable (${err?.name})`);
+    notes.push(`user-model scan unavailable (${err?.name}) — CI role needs dynamodb:Scan on irl-user-model-*`);
   }
 
   return notes.join('\n  ');
