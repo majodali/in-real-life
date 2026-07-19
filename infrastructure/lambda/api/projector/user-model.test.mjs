@@ -63,7 +63,7 @@ function buildClient() {
       const name = cmd.constructor.name;
       if (name === 'PutCommand') {
         if (cmd.input.ConditionExpression === 'attribute_not_exists(userId)'
-          && writes.some((w) => w.sk === cmd.input.Item.sk)) {
+          && writes.some((w) => w.sk === cmd.input.Item.sk && w.userId === cmd.input.Item.userId)) {
           const err = new Error('exists');
           err.name = 'ConditionalCheckFailedException';
           throw err;
@@ -76,10 +76,16 @@ function buildClient() {
         return {};
       }
       if (name === 'QueryCommand') {
-        return queryPages.shift() ?? { Items: [] };
+        // Queued pages win (purge tests); otherwise serve the live
+        // partition so crew detection sees what earlier deltas wrote.
+        return queryPages.shift()
+          ?? { Items: writes.filter((w) => w.userId === cmd.input.ExpressionAttributeValues[':u']) };
       }
       if (name === 'GetCommand') {
-        const found = writes.find((w) => w.sk === cmd.input.Key.sk);
+        // Latest write wins — the mock appends on update, so serve the tail.
+        const found = writes.findLast(
+          (w) => w.sk === cmd.input.Key.sk && w.userId === cmd.input.Key.userId,
+        );
         return found ? { Item: found } : {};
       }
       throw new Error(`unexpected command ${name}`);
@@ -444,4 +450,82 @@ test('people taps maintain stats#affinity running totals (the generosity input, 
 test('a tap-free debrief (no people) writes no stats item', async () => {
   await projector.applyEvent(debriefEvent({ attended: true, again: 'yes' }));
   assert.equal(writes.find((w) => w.sk === 'stats#affinity'), undefined);
+});
+
+// ─── Crew detection (D47, spec v4) ───
+
+// Pre-seed an encrypted edge row directly into the store mock.
+function seedEdge(ownerId, otherId, payload) {
+  writes.push({
+    userId: ownerId,
+    sk: `affinity#${otherId}`,
+    model: encryptValue({ otherUserId: otherId, sources: [], ...payload }, dataKey),
+    version: 1,
+    lastEventId: 'SEED',
+    asOf: '2026-07-01T00:00:00.000Z',
+  });
+}
+
+test('a tap completing a triad of mutual-strong pairs forms a crew on all three partitions', async () => {
+  // abc↔p1 and abc↔p2 both mutual-strong after this debrief; p1↔p2 too.
+  seedEdge('abc', 'p1', { met: 2, seeAgain: 1 });   // becomes met 3 via this debrief
+  seedEdge('abc', 'p2', { met: 2, seeAgain: 1 });
+  seedEdge('p1', 'abc', { met: 2, seeAgain: 1 });
+  seedEdge('p2', 'abc', { met: 2, seeAgain: 1 });
+  seedEdge('p1', 'p2', { met: 2, seeAgain: 1 });
+  seedEdge('p2', 'p1', { met: 2, seeAgain: 1 });
+
+  await projector.applyEvent(debriefEvent({
+    attended: true, again: 'yes',
+    people: [{ userId: 'p1', met: true, seeAgain: true }],
+  }));
+
+  const crewRows = writes.filter((w) => w.sk.startsWith('crew#'));
+  assert.equal(crewRows.length, 3, 'crew written to every member partition');
+  assert.deepEqual(crewRows.map((w) => w.userId).sort(), ['abc', 'p1', 'p2']);
+  const crew = decryptValue(crewRows[0].model, dataKey);
+  assert.deepEqual(crew.members, ['abc', 'p1', 'p2']);
+  assert.equal(crew.affirmations, 1);
+  assert.equal(crew.lastAffirmedAt, '2026-07-20T10:00:00.000Z');
+});
+
+test('no crew when the third pair is not mutual-strong (one-sided or under the met pivot)', async () => {
+  seedEdge('abc', 'p1', { met: 3, seeAgain: 1 });
+  seedEdge('abc', 'p2', { met: 3, seeAgain: 1 });
+  seedEdge('p1', 'abc', { met: 3, seeAgain: 1 });
+  seedEdge('p2', 'abc', { met: 3, seeAgain: 1 });
+  // p1↔p2: p2 never tapped back — the pair is one-sided.
+  seedEdge('p1', 'p2', { met: 3, seeAgain: 1 });
+  seedEdge('p2', 'p1', { met: 3, seeAgain: 0 });
+
+  await projector.applyEvent(debriefEvent({
+    attended: true, again: 'yes',
+    people: [{ userId: 'p1', met: true, seeAgain: true }],
+  }));
+
+  assert.equal(writes.filter((w) => w.sk.startsWith('crew#')).length, 0);
+});
+
+test('re-detection re-affirms: lastAffirmedAt advances, affirmations count up', async () => {
+  seedEdge('abc', 'p1', { met: 3, seeAgain: 2 });
+  seedEdge('abc', 'p2', { met: 3, seeAgain: 1 });
+  seedEdge('p1', 'abc', { met: 3, seeAgain: 1 });
+  seedEdge('p2', 'abc', { met: 3, seeAgain: 1 });
+  seedEdge('p1', 'p2', { met: 3, seeAgain: 1 });
+  seedEdge('p2', 'p1', { met: 3, seeAgain: 1 });
+
+  await projector.applyEvent(debriefEvent({
+    attended: true, again: 'yes',
+    people: [{ userId: 'p1', met: true, seeAgain: true }],
+  }));
+  await projector.applyEvent(debriefEvent({
+    attended: true, again: 'yes',
+    people: [{ userId: 'p2', met: true, seeAgain: true }],
+  }, { eventId: '01DEBRIEF-2', simulatedTime: '2026-08-01T10:00:00.000Z' }));
+
+  const myCrew = writes.filter((w) => w.sk.startsWith('crew#') && w.userId === 'abc').at(-1);
+  const crew = decryptValue(myCrew.model, dataKey);
+  assert.equal(crew.affirmations, 2);
+  assert.equal(crew.lastAffirmedAt, '2026-08-01T10:00:00.000Z');
+  assert.equal(crew.formedAt, '2026-07-20T10:00:00.000Z');
 });

@@ -26,7 +26,7 @@ import { GetCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
 import { decryptValue } from '../lib/crypto-shred.mjs';
 import { eventsOverlap } from '../events/overlap.mjs';
 import { rankCandidates } from './rank.mjs';
-import { generosityWeight, edgeStrength } from './affinity.mjs';
+import { generosityWeight, edgeStrength, crewNudge } from './affinity.mjs';
 import { RANKING_TUNABLES } from './tunables.mjs';
 
 const JOINABLE = new Set(['idea', 'proposed', 'planned']);
@@ -53,7 +53,7 @@ export function createRecommender({
   // exploration-only ranking.
   async function loadModel(userId) {
     const dataKey = await keyStore.getKey(`user#${userId}`);
-    if (!dataKey) return { interests: [], doors: [], affinities: [], stats: null };
+    if (!dataKey) return { interests: [], doors: [], affinities: [], crews: [], stats: null };
     const rows = await queryAll({
       TableName: userModelTable,
       KeyConditionExpression: 'userId = :u',
@@ -61,6 +61,7 @@ export function createRecommender({
     });
     const interests = [];
     const affinities = [];
+    const crews = [];
     let doors = [];
     let stats = null;
     for (const row of rows) {
@@ -69,13 +70,15 @@ export function createRecommender({
         interests.push(decryptValue(row.model, dataKey));
       } else if (row.sk.startsWith('affinity#')) {
         affinities.push(decryptValue(row.model, dataKey));
+      } else if (row.sk.startsWith('crew#')) {
+        crews.push(decryptValue(row.model, dataKey));
       } else if (row.sk === 'profile#core') {
         doors = decryptValue(row.model, dataKey)?.doors ?? [];
       } else if (row.sk === 'stats#affinity') {
         stats = decryptValue(row.model, dataKey);
       }
     }
-    return { interests, doors, affinities, stats };
+    return { interests, doors, affinities, crews, stats };
   }
 
   // Read one decrypted facet of ANOTHER member's model — backstage only.
@@ -91,27 +94,38 @@ export function createRecommender({
     return decryptValue(out.Item.model, key);
   }
 
-  // For each positively-tapped person (strongest edges first, bounded),
-  // find which candidate events they're interested/confirmed on.
-  async function affinityPresence(affinities, candidateIds) {
+  // For each positively-tapped person (strongest edges first, bounded)
+  // plus every crew-mate, find which candidate events they're
+  // interested/confirmed on. Crew-mates are by construction tapped, but
+  // the edge limit could truncate them — the union keeps a gathering
+  // visible regardless.
+  async function affinityPresence(affinities, crews, userId, candidateIds) {
     const positive = affinities
       .filter((a) => (a?.seeAgain ?? 0) > 0 && a.otherUserId)
       .sort((a, b) => b.seeAgain - a.seeAgain)
       .slice(0, tunables.affinityEdgeLimit);
+    const edgeById = new Map(positive.map((a) => [a.otherUserId, a]));
+    const watchIds = new Set(edgeById.keys());
+    for (const crew of crews) {
+      for (const m of crew.members ?? []) {
+        if (m !== userId) watchIds.add(m);
+      }
+    }
     const presentByEvent = new Map();
-    const presentPeople = new Map(); // otherUserId → my edge
-    for (const edge of positive) {
+    const presentPeople = new Map(); // otherUserId → my edge (if within limit)
+    for (const otherUserId of watchIds) {
       const rows = await queryAll({
         TableName: interactionsTable,
         KeyConditionExpression: 'userId = :u',
-        ExpressionAttributeValues: { ':u': edge.otherUserId },
+        ExpressionAttributeValues: { ':u': otherUserId },
       });
       for (const row of rows) {
         if (!candidateIds.has(row.eventId)) continue;
         if (row.level !== 'interested' && row.level !== 'confirmed') continue;
         if (!presentByEvent.has(row.eventId)) presentByEvent.set(row.eventId, []);
-        presentByEvent.get(row.eventId).push(edge.otherUserId);
-        presentPeople.set(edge.otherUserId, edge);
+        presentByEvent.get(row.eventId).push(otherUserId);
+        const edge = edgeById.get(otherUserId);
+        if (edge) presentPeople.set(otherUserId, edge);
       }
     }
     return { presentByEvent, presentPeople };
@@ -128,11 +142,12 @@ export function createRecommender({
       && !myCommitted.some((c) => eventsOverlap(e, c)));
     if (candidates.length === 0) return [];
 
-    const { interests, doors, affinities, stats } = await loadModel(userId);
+    const { interests, doors, affinities, crews, stats } = await loadModel(userId);
 
     const affinityOn = tunables.affinityPerPersonNudge > 0
       || tunables.affinityMutualBonus > 0
-      || tunables.affinityConfirmedBonus > 0;
+      || tunables.affinityConfirmedBonus > 0
+      || (tunables.crewBonus > 0 && crews.length > 0);
 
     const affinityNudges = new Map();
     if (affinityOn) {
@@ -143,7 +158,7 @@ export function createRecommender({
       const myWeight = generosityWeight(myTaps, tunables.affinityGenerosityPivot);
 
       const { presentByEvent, presentPeople } = await affinityPresence(
-        affinities, new Set(candidates.map((e) => e.eventId)),
+        affinities, crews, userId, new Set(candidates.map((e) => e.eventId)),
       );
 
       // Per-person strength once, then summed per event; rank applies
@@ -163,10 +178,18 @@ export function createRecommender({
           myEdge, reverseEdge, myWeight, theirWeight, nowIso, tunables,
         }));
       }
+      // Per-event nudge = capped affinity strength + capped crew-gathering
+      // bonus; the total ceiling (affinityNudgeCap + crewNudgeCap) is
+      // applied in rank.mjs and stays below fitCap by invariant.
       for (const [eventId, people] of presentByEvent) {
-        affinityNudges.set(eventId, people.reduce(
-          (sum, p) => sum + (strengthByPerson.get(p) ?? 0), 0,
-        ));
+        const affinity = Math.min(
+          tunables.affinityNudgeCap,
+          people.reduce((sum, p) => sum + (strengthByPerson.get(p) ?? 0), 0),
+        );
+        const crew = crewNudge({
+          crews, userId, presentPeople: people, nowIso, tunables,
+        });
+        affinityNudges.set(eventId, affinity + crew);
       }
     }
 

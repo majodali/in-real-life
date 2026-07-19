@@ -84,3 +84,22 @@ export function edgeStrength({ myEdge, reverseEdge, myWeight, theirWeight, nowIs
   }
   return strength;
 }
+
+// Crew nudge (D47, spec v4): a crew GATHERING — at least two fellow
+// members present on the candidate — adds a bonus decayed by how long
+// since the crew was last affirmed. Summed across crews, capped by the
+// caller at crewNudgeCap. A lone crew-mate is just an affinity edge;
+// the crew signal is specifically the cluster forming again.
+export function crewNudge({ crews, userId, presentPeople, nowIso, tunables }) {
+  if (!crews?.length || tunables.crewBonus <= 0) return 0;
+  const present = new Set(presentPeople);
+  let sum = 0;
+  for (const crew of crews) {
+    const fellows = (crew.members ?? []).filter((m) => m !== userId && present.has(m));
+    if (fellows.length >= 2) {
+      sum += tunables.crewBonus
+        * decayFactor(nowIso, crew.lastAffirmedAt, tunables.crewHalfLifeDays);
+    }
+  }
+  return Math.min(tunables.crewNudgeCap, sum);
+}

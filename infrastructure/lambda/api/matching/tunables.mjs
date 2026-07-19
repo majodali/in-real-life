@@ -7,7 +7,7 @@
 // hash so a spec bump reshuffles deterministic noise rather than freezing
 // it across versions.
 
-export const RANKING_SPEC_VERSION = 3;
+export const RANKING_SPEC_VERSION = 4;
 
 export const RANKING_TUNABLES = {
   // Fit — interest tags vs event shape (D56) with text fallback, plus
@@ -30,6 +30,17 @@ export const RANKING_TUNABLES = {
   affinityNudgeCap: 0.24, // invariant: < fitCap (open-risks #6, structural)
   affinityGenerosityPivot: 12,
   affinityEdgeLimit: 20,
+
+  // Crews (D47): triads whose three pairs are all mutual-strong —
+  // reciprocal-met is the co-attendance proxy, never tap counts.
+  // Consumption: a crew GATHERING (≥2 fellow members present) nudges,
+  // capped separately; affinityNudgeCap + crewNudgeCap is the total
+  // soft-nudge ceiling and must stay below fitCap (must-not-ossify is
+  // structural, not aspirational).
+  crewMutualMetPivot: 2,
+  crewBonus: 0.1,
+  crewNudgeCap: 0.12,
+  crewHalfLifeDays: 180,
 
   // Exploration — deterministic noise + guaranteed exploratory share
   explorationNoise: 0.2,

@@ -265,3 +265,59 @@ test('own stats#affinity discounts a heavy tapper\'s one-sided nudges', async ()
   const out = await recommender(heavy).recommend({ userId: 'me', events, nowIso: NOW });
   assert.deepEqual(out, ['e-run', 'e-tapped']);
 });
+
+// ─── Crews (spec v4) ───
+
+test('a crew gathering outranks the same people as mere affinity edges', async () => {
+  const p1Key = generateDataKey();
+  const p2Key = generateDataKey();
+  keysById['user#p1'] = p1Key;
+  keysById['user#p2'] = p2Key;
+
+  modelRows = [
+    modelRow('affinity#p1', { otherUserId: 'p1', met: 3, seeAgain: 1, sources: [] }),
+    modelRow('affinity#p2', { otherUserId: 'p2', met: 3, seeAgain: 1, sources: [] }),
+    modelRow('crew#abc123', {
+      crewId: 'abc123', members: ['me', 'p1', 'p2'],
+      formedAt: NOW, lastAffirmedAt: NOW, affirmations: 3,
+    }),
+  ];
+  // Both crew-mates on e-gathering; both ALSO on e-split — but split
+  // across nothing: use one mate each so only e-gathering is a gathering.
+  interactionsByUser.p1 = [
+    { userId: 'p1', eventId: 'e-gathering', level: 'confirmed' },
+    { userId: 'p1', eventId: 'e-split', level: 'confirmed' },
+  ];
+  interactionsByUser.p2 = [
+    { userId: 'p2', eventId: 'e-gathering', level: 'confirmed' },
+  ];
+
+  const events = [evt('e-split'), evt('e-gathering')];
+  const out = await recommender(NO_NOISE).recommend({ userId: 'me', events, nowIso: NOW });
+  assert.deepEqual(out, ['e-gathering', 'e-split']);
+});
+
+test('crew-mates beyond the affinity edge limit still register a gathering', async () => {
+  const tunables = { ...NO_NOISE, affinityEdgeLimit: 1 };
+  const p1Key = generateDataKey();
+  const p2Key = generateDataKey();
+  keysById['user#p1'] = p1Key;
+  keysById['user#p2'] = p2Key;
+
+  modelRows = [
+    // p3 has the most taps and hogs the single edge slot.
+    modelRow('affinity#p3', { otherUserId: 'p3', met: 9, seeAgain: 9, sources: [] }),
+    modelRow('affinity#p1', { otherUserId: 'p1', met: 3, seeAgain: 1, sources: [] }),
+    modelRow('affinity#p2', { otherUserId: 'p2', met: 3, seeAgain: 1, sources: [] }),
+    modelRow('crew#abc123', {
+      crewId: 'abc123', members: ['me', 'p1', 'p2'],
+      formedAt: NOW, lastAffirmedAt: NOW, affirmations: 2,
+    }),
+  ];
+  interactionsByUser.p1 = [{ userId: 'p1', eventId: 'e-gathering', level: 'confirmed' }];
+  interactionsByUser.p2 = [{ userId: 'p2', eventId: 'e-gathering', level: 'confirmed' }];
+
+  const events = [evt('e-plain'), evt('e-gathering')];
+  const out = await recommender(tunables).recommend({ userId: 'me', events, nowIso: NOW });
+  assert.deepEqual(out, ['e-gathering', 'e-plain']);
+});
