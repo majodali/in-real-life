@@ -3,6 +3,13 @@
 // The async read-side counterpart to index.mjs: consumes the irl-events-log
 // DynamoDB stream and maintains derived stores (today: irl-user-model per
 // docs/projection-store.md). Wiring only — behaviour lives in projector/.
+//
+// Named stream-projector.mjs, NOT projector.mjs: the Lambda runtime
+// resolves the handler module extensionless, and a sibling projector/
+// DIRECTORY shadows a projector.mjs file — require('/var/task/projector')
+// finds the directory, not the file, and the function dies at INIT with
+// Runtime.ImportModuleError. The entry file must never share a name with
+// a sibling directory (index.mjs is safe only because no index/ exists).
 
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';

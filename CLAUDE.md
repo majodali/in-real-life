@@ -99,7 +99,8 @@ infrastructure/
       events/                 Propose, list, lifecycle, interactions, suggestions, polls (+ projections)
       workshop/               get-time, admin-time (simulated clock)
       notify/  admin/         Location-notify signup + admin list
-      projector.mjs           Streams projector Lambda entry point (same asset, own function)
+      stream-projector.mjs    Streams projector Lambda entry point (same asset, own function;
+                              named to avoid shadowing by the projector/ directory)
       projector/              Async user-model projector → irl-user-model read store
     feedback/index.mjs        Feedback Lambda (S3 writer)
   test/
