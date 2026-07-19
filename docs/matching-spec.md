@@ -1,4 +1,4 @@
-# Ranking Spec — v3 (implemented)
+# Ranking Spec — v4 (implemented)
 
 The **explicit, versioned ranking spec** that `matching.md` requires ("how
 recommendations are ranked is never implicit or emergent-from-code"). This
@@ -109,16 +109,48 @@ nudge(event) = min( affinityNudgeCap, Σ strengths of tapped people present )
   the two sides' latest met. All decay anchors to simulated time
   (replay-safe).
 - **Reverse edges are read pointwise** — the typed sort key
-  `affinity#<otherUserId>` makes "did they tap me back" a `GetItem`, so
-  the `otherUserId` GSI flagged in `projection-store.md` is deliberately
-  NOT built yet: it becomes necessary when crew detection asks set-level
-  questions ("who taps into this cluster"), and lands with that slice.
+  `affinity#<otherUserId>` makes "did they tap me back" a `GetItem`. The
+  `otherUserId` GSI flagged in `projection-store.md` remains deliberately
+  unbuilt: crew formation and consumption also turned out to be
+  pointwise/partition reads, so it now waits for the ossification
+  aggregate read ("who taps into this cluster") — see Crews below.
 - **Own feed only.** All of this shapes the *tapper's* recommendations;
   reverse edges and stats are decrypted server-side, backstage, and never
   alter the tapped person's or any third party's ranking.
 - **Do-not-interact zeroing** (D47/D49) has nothing to zero yet —
   avoidance capture is Group 3/4 work. When it lands, it zeroes the pair's
   strength here outright (a boost must never fight a de-weight).
+
+## Crews (D47) — gathering bonus, capped
+
+**Formation (projector, incremental):** a crew is a triad whose three
+pairs are all **mutual-strong** — both directions tapped positive AND
+reciprocal met counts ≥ `crewMutualMetPivot` (weighted co-attendance,
+never tap counts or boolean mutuals). Checked whenever a debrief lands a
+positive tap; every re-detection **re-affirms** the crew
+(`lastAffirmedAt`, `affirmations`). Crew rows live on every member's
+partition (`crew#<hash of sorted members>`), each encrypted under that
+member's own key — a shredded member simply stops carrying the crew.
+
+**Consumption (ranker):** the crew signal is specifically the cluster
+forming again — a **gathering** (≥2 fellow members present on the
+candidate) adds `crewBonus × decay(lastAffirmedAt, crewHalfLifeDays)`,
+summed across crews and capped at `crewNudgeCap`. A lone crew-mate is
+just an affinity edge. Crew-mates are unioned into the presence watch
+set so the edge limit can never hide a gathering.
+
+**Must-not-ossify is structural:** `affinityNudgeCap + crewNudgeCap`
+(0.36) is the total soft-nudge ceiling, re-applied in the ranker and
+asserted below `fitCap` in tests — a crew can tilt a member toward their
+people, never wall newcomers out of the score. The aggregate ossification
+read (newcomer share of recurring events trending down — the gaming
+register's detection signal) is future backstage work and is where the
+`otherUserId` GSI finally earns its keep.
+
+Deliberate v1 bounds, named: **triads only** (size-4 via crew merge is
+future work); detection cost is O(strong partners) reverse reads per
+tapped debrief — fine at community scale; the chance-rate co-attendance
+baseline is the same H4 tuning work as edge confirmation.
 
 ## Exploration (noise + floor)
 
@@ -142,7 +174,7 @@ events-only, and a newcomer's own cold-start is already served (fit works
 from onboarding, and with a thin model the noise share dominates —
 their feed is naturally exploratory).
 
-## Tunables (v3 defaults)
+## Tunables (v4 defaults)
 
 Every value is configuration, not a constant; **tunable to zero** (zeroing
 `affinityPerPersonNudge` removes affinity entirely; zeroing
@@ -162,22 +194,27 @@ Every value is configuration, not a constant; **tunable to zero** (zeroing
 | `affinityTapHalfLifeDays` | 90 | tap-derived strength half-life |
 | `affinityConfirmedHalfLifeDays` | 270 | confirmed strength half-life (observed decays slower) |
 | `affinityNudgeCap` | 0.24 | max total affinity contribution per event |
+| `crewMutualMetPivot` | 2 | reciprocal met count for a pair to be crew-strong |
+| `crewBonus` | 0.1 | per crew gathering (≥2 fellows present), × affirmation decay |
+| `crewNudgeCap` | 0.12 | max total crew contribution per event |
+| `crewHalfLifeDays` | 180 | crew affirmation half-life |
 | `affinityGenerosityPivot` | 12 | positive taps before self-discount begins |
 | `affinityEdgeLimit` | 20 | strongest edges consulted per ranking |
 | `explorationNoise` | 0.2 | amplitude of the per-event deterministic noise |
 | `explorationShare` | 0.25 | guaranteed exploratory share of list slots |
 
-**Invariant (open-risks #6, structural):** `affinityNudgeCap <
-fitCap` — all soft nudges together stay below what fit can express, so no
-outcome is ever driven solely by a backstage signal. The unit tests assert
-this relationship against the defaults.
+**Invariant (open-risks #6, structural):** `affinityNudgeCap +
+crewNudgeCap < fitCap` — all soft nudges together stay below what fit can
+express, so no outcome is ever driven solely by a backstage signal. The
+unit tests assert this relationship against the defaults.
 
 ## Deliberately absent (and where each lands)
 
 | Input | Why absent | Lands with |
 |---|---|---|
 | Envelope fit (size/structure) | member envelope is free text — shape's `structure` captured, not used | structured profile form (member-model re-extraction, Group 3) |
-| Crews | needs weighted co-attendance accumulation + the `otherUserId` GSI (set-level queries — pointwise reverse reads sufficed for mutuals) | crews slice |
+| Crew size 4 / crew merge | v1 detects triads only | crews follow-up |
+| Ossification aggregate read | newcomer-share trend per recurring event (gaming register signal); this is where the `otherUserId` GSI becomes necessary | backstage/admin slice |
 | Co-attendance chance-rate baseline | v1 confirmation uses raw reciprocal met counts; thin-calendar correction is tuning work | H4 evidence loop |
 | Contributor rating | not built (Group 4); composition-only anyway | rating slice |
 | Avoidance / didn't-click | capture not built | preferences/safety slices |
@@ -187,6 +224,12 @@ this relationship against the defaults.
 
 ## Version history
 
+- **v4** — crews (D47/D57): triad formation on mutual-strong pairs
+  (reciprocal-met pivot), per-member encrypted crew rows, gathering bonus
+  with affirmation decay, separate cap; total soft-nudge ceiling
+  `affinityNudgeCap + crewNudgeCap` still below fitCap. GSI deferred a
+  third time, now to the ossification aggregate read — formation and
+  consumption are both pointwise/partition reads.
 - **v3** — affinity becomes strength-weighted (D47/H4 v1): mutual
   amplification gated by the weaker side's generosity (`stats#affinity`
   substrate maintained by the projector), reciprocal-met confirmation with

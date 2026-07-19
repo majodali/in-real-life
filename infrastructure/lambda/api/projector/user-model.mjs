@@ -30,8 +30,10 @@
 // (shredding the key makes this store unreadable even before the purge);
 // only structural metadata (sk, version, lastEventId, asOf) stays clear.
 
+import { createHash } from 'node:crypto';
 import { GetCommand, PutCommand, QueryCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
 import { decryptValue, encryptValue, decryptPii } from '../lib/crypto-shred.mjs';
+import { RANKING_TUNABLES } from '../matching/tunables.mjs';
 
 // Deterministic sort-key slug for variable-set items. Collisions merge,
 // which is the semantics we want (two mentions of "pottery" are one
@@ -131,6 +133,15 @@ export function createUserModelProjector({ client, userModelTable, keyStore }) {
       });
     }
 
+    // Crew detection (D47): a fresh positive tap can complete a triad
+    // whose three pairs are all mutual-strong.
+    const tappedNow = (clear.people ?? [])
+      .filter((p) => p.seeAgain === true)
+      .map((p) => p.userId);
+    if (tappedNow.length > 0) {
+      await detectCrews(userId, dataKey, tappedNow, asOf, event.eventId);
+    }
+
     // No-show reason → situational barrier (observed).
     if (clear.attended === false || d.attended === false) {
       if (clear.noShowReason) {
@@ -195,6 +206,104 @@ export function createUserModelProjector({ client, userModelTable, keyStore }) {
     }
     // forecastError: storage waits for outcome#{eventType} (Group 3 —
     // event-type register); the frozen delta stays on the log for replay.
+  }
+
+  // ── Crew detection (D47, docs/matching-spec.md → Crews) ──
+  //
+  // A crew is a triad whose three pairs are all MUTUAL-STRONG: both
+  // directions tapped positive AND reciprocal met counts at the pivot —
+  // weighted co-attendance, never tap counts or boolean mutuals. Detected
+  // incrementally when a debrief lands a positive tap; each re-detection
+  // re-affirms (continuity signal, decayed by consumers). Crew rows are
+  // written to EVERY member's partition, each encrypted under that
+  // member's own key — a shredded member simply stops carrying the crew.
+  //
+  // Deliberate v1 bounds, named in the spec: triads only (size-4 via
+  // merge is future work); detection cost is O(strong partners) reverse
+  // reads per tapped debrief — fine at community scale; the chance-rate
+  // co-attendance baseline is shared H4 tuning work.
+
+  function crewIdOf(members) {
+    return createHash('sha256').update([...members].sort().join('|')).digest('hex').slice(0, 16);
+  }
+
+  function mutualStrong(edgeAtoB, edgeBtoA) {
+    return (edgeAtoB?.seeAgain ?? 0) > 0
+      && (edgeBtoA?.seeAgain ?? 0) > 0
+      && Math.min(edgeAtoB?.met ?? 0, edgeBtoA?.met ?? 0) >= RANKING_TUNABLES.crewMutualMetPivot;
+  }
+
+  // One member's decrypted edge toward another; null for missing rows or
+  // shredded owners.
+  async function readEdgeOf(ownerId, otherId, ownerKey) {
+    const out = await client.send(new GetCommand({
+      TableName: userModelTable,
+      Key: { userId: ownerId, sk: `affinity#${otherId}` },
+    }));
+    if (!out.Item?.model) return null;
+    return decryptValue(out.Item.model, ownerKey);
+  }
+
+  async function detectCrews(userId, myKey, tappedNow, asOf, eventId) {
+    // My strong mutual partners: outgoing positive edges whose reverse
+    // side is also strong.
+    const rows = [];
+    let lastKey;
+    do {
+      const page = await client.send(new QueryCommand({
+        TableName: userModelTable,
+        KeyConditionExpression: 'userId = :u',
+        ExpressionAttributeValues: { ':u': userId },
+        ...(lastKey ? { ExclusiveStartKey: lastKey } : {}),
+      }));
+      rows.push(...(page.Items ?? []));
+      lastKey = page.LastEvaluatedKey;
+    } while (lastKey);
+
+    const partners = new Map(); // otherId → { key }
+    for (const row of rows) {
+      if (typeof row.sk !== 'string' || !row.sk.startsWith('affinity#') || !row.model) continue;
+      const otherId = row.sk.slice('affinity#'.length);
+      const myEdge = decryptValue(row.model, myKey);
+      if ((myEdge?.seeAgain ?? 0) === 0) continue;
+      const theirKey = await keyStore.getKey(`user#${otherId}`);
+      if (!theirKey) continue;
+      const reverse = await readEdgeOf(otherId, userId, theirKey);
+      if (mutualStrong(myEdge, reverse)) partners.set(otherId, { key: theirKey });
+    }
+
+    for (const p of tappedNow) {
+      if (!partners.has(p)) continue;
+      for (const [q, { key: qKey }] of partners) {
+        if (q === p) continue;
+        const pToQ = await readEdgeOf(p, q, partners.get(p).key);
+        const qToP = await readEdgeOf(q, p, qKey);
+        if (!mutualStrong(pToQ, qToP)) continue;
+        await affirmCrew({
+          members: [userId, p, q],
+          keys: { [userId]: myKey, [p]: partners.get(p).key, [q]: qKey },
+          asOf,
+          eventId,
+        });
+      }
+    }
+  }
+
+  // Write/re-affirm the crew on every member's partition. lastEventId
+  // idempotency also dedupes the symmetric double-detection when one
+  // debrief taps two crew-mates (same crewId, same event → no-op).
+  async function affirmCrew({ members, keys, asOf, eventId }) {
+    const crewId = crewIdOf(members);
+    const sorted = [...members].sort();
+    for (const member of members) {
+      await applyDelta(member, `crew#${crewId}`, keys[member], eventId, asOf, (current) => ({
+        crewId,
+        members: sorted,
+        formedAt: current?.formedAt ?? asOf,
+        lastAffirmedAt: asOf,
+        affirmations: (current?.affirmations ?? 0) + 1,
+      }));
+    }
   }
 
   // Read → apply → conditional write on version, with lastEventId

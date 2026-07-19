@@ -59,9 +59,10 @@ export function blendExploration(byScore, byExplore, share) {
 
 // candidates: feasible events (already hard-constraint filtered).
 // model: { interests, doors } — the member-side fit inputs.
-// affinityNudges: Map eventId → summed edge strength of tapped people
-// present on that event (recommend.mjs computes it via affinity.mjs);
-// the cap is applied here so no accumulation can outgrow it.
+// affinityNudges: Map eventId → soft-nudge total for that event
+// (recommend.mjs: capped affinity strength + capped crew bonus); the
+// TOTAL ceiling (affinityNudgeCap + crewNudgeCap) is re-applied here so
+// no accumulation can outgrow it.
 // Returns an ordered array of eventIds. Deterministic for fixed inputs.
 export function rankCandidates({
   userId, candidates, model, affinityNudges, nowIso, tunables,
@@ -70,7 +71,7 @@ export function rankCandidates({
   const scored = candidates.map((event) => {
     const fit = eventFit(model ?? {}, event, tunables);
     const nudge = Math.min(
-      tunables.affinityNudgeCap,
+      tunables.affinityNudgeCap + (tunables.crewNudgeCap ?? 0),
       affinityNudges?.get(event.eventId) ?? 0,
     );
     const noise = hash01(userId, event.eventId, RANKING_SPEC_VERSION, bucket);

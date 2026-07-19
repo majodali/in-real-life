@@ -6,7 +6,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  generosityWeight, decayFactor, latestTapAt, latestMetAt, edgeStrength,
+  generosityWeight, decayFactor, latestTapAt, latestMetAt, edgeStrength, crewNudge,
 } from './affinity.mjs';
 import { RANKING_TUNABLES } from './tunables.mjs';
 
@@ -124,4 +124,49 @@ test('tunable to zero restores raw mutuals: huge pivot → all weights 1', () =>
     nowIso: NOW, tunables: raw,
   });
   assert.ok(s >= raw.affinityPerPersonNudge + raw.affinityMutualBonus);
+});
+
+// ─── Crew nudge (spec v4) ───
+
+test('crew nudge fires only when the crew gathers (≥2 fellows present)', () => {
+  const crews = [{ crewId: 'c1', members: ['me', 'p', 'q'], lastAffirmedAt: NOW }];
+  const gathered = crewNudge({
+    crews, userId: 'me', presentPeople: ['p', 'q'], nowIso: NOW, tunables: t,
+  });
+  assert.ok(Math.abs(gathered - t.crewBonus) < 1e-9);
+
+  const lone = crewNudge({
+    crews, userId: 'me', presentPeople: ['p'], nowIso: NOW, tunables: t,
+  });
+  assert.equal(lone, 0, 'a lone crew-mate is just an affinity edge');
+});
+
+test('crew nudge decays from lastAffirmedAt and caps across crews', () => {
+  const halfLifeAgo = '2026-01-16T00:00:00.000Z'; // 180d before NOW
+  const aged = crewNudge({
+    crews: [{ crewId: 'c1', members: ['me', 'p', 'q'], lastAffirmedAt: halfLifeAgo }],
+    userId: 'me', presentPeople: ['p', 'q'], nowIso: NOW, tunables: t,
+  });
+  assert.ok(Math.abs(aged - t.crewBonus * 0.5) < 1e-6);
+
+  const many = crewNudge({
+    crews: Array.from({ length: 5 }, (_, i) => ({
+      crewId: `c${i}`, members: ['me', 'p', 'q'], lastAffirmedAt: NOW,
+    })),
+    userId: 'me', presentPeople: ['p', 'q'], nowIso: NOW, tunables: t,
+  });
+  assert.equal(many, t.crewNudgeCap);
+});
+
+test('structural invariant: total soft nudges stay below fitCap', () => {
+  assert.ok(t.affinityNudgeCap + t.crewNudgeCap < t.fitCap);
+});
+
+test('crewBonus zero disables the crew signal entirely', () => {
+  const out = crewNudge({
+    crews: [{ crewId: 'c1', members: ['me', 'p', 'q'], lastAffirmedAt: NOW }],
+    userId: 'me', presentPeople: ['p', 'q'], nowIso: NOW,
+    tunables: { ...t, crewBonus: 0 },
+  });
+  assert.equal(out, 0);
 });
