@@ -1,4 +1,4 @@
-# Ranking Spec — v5 (implemented)
+# Ranking Spec — v6 (implemented)
 
 The **explicit, versioned ranking spec** that `matching.md` requires ("how
 recommendations are ranked is never implicit or emergent-from-code"). This
@@ -103,6 +103,11 @@ strength = affinityPerPersonNudge × w_me × tapDecay              (one-sided)
              × min(1, reciprocalMet / affinityConfirmationPivot)   reciprocally met)
              × confirmedDecay
 
+decay(Δ, halfLife, floor) = floor + (1 − floor) × 2^(−Δ / halfLife)
+  tapDecay:       Δ = MY debriefed events since MY last tap of them
+  confirmedDecay: Δ = min(both sides' debriefed events since their own
+                         last met-mark of the pair)
+
 nudge(event) = min( affinityNudgeCap, Σ strengths of tapped people present )
 ```
 
@@ -120,11 +125,28 @@ nudge(event) = min( affinityNudgeCap, Σ strengths of tapped people present )
   structural). Deliberately **not** weight-gated: observed beats inferred —
   behaviour confirms what taps can't. v1 uses raw reciprocal counts; the
   above-calendar-chance-rate baseline is named H4 tuning work.
-- **Dual half-lives**: tap-derived strength decays on
-  `affinityTapHalfLifeDays`, confirmed strength on the longer
-  `affinityConfirmedHalfLifeDays`; confirmed freshness takes the OLDER of
-  the two sides' latest met. All decay anchors to simulated time
-  (replay-safe).
+- **Evidence-based decay (D60, `evidence-decay.md`)**: no clock
+  anywhere. The axis is the member's own **debriefed events** (the
+  projector-maintained `debriefedEvents` counter on `stats#affinity`;
+  anchors are activity snapshots stamped on the edge at tap/met time),
+  and every component decays toward a **floor**, never zero — the
+  incompleteness prior. Tap-derived strength halves per
+  `affinityTapHalfLifeEvents` (floor `affinityTapDecayFloor`, default 0);
+  confirmed strength per `affinityConfirmedHalfLifeEvents` of
+  `min(both sides' activity since their own last met-mark)` — divergence
+  only counts when BOTH members are living without each other — with
+  floor `affinityConfirmedDecayFloor` (default 0.5: an established pair
+  never falls below half on silence alone). Zero activity → zero decay
+  (the away-and-return member keeps their graph); missing anchors or
+  counters → no decay (restraint over guessing); recovery on fresh
+  evidence is instant and total. Below-floor is reserved for grounded
+  counter-evidence: D49 avoidance zeroing when it lands, D50 blocks.
+- **Met-without-tap is captured, not used**: edge `sources` already
+  record co-attendance without a re-tap, but normalization (an
+  established tie signaling less, not more) is indistinguishable from
+  cooling — so `metWithoutTapMultiplier` ships at 1.0 with **no
+  consumption path built**; promoting it is a spec bump with
+  hypothesis-register evidence.
 - **Reverse edges are read pointwise** — the typed sort key
   `affinity#<otherUserId>` makes "did they tap me back" a `GetItem`. The
   `otherUserId` GSI flagged in `projection-store.md` remains deliberately
@@ -151,8 +173,12 @@ member's own key — a shredded member simply stops carrying the crew.
 
 **Consumption (ranker):** the crew signal is specifically the cluster
 forming again — a **gathering** (≥2 fellow members present on the
-candidate) adds `crewBonus × decay(lastAffirmedAt, crewHalfLifeDays)`,
-summed across crews and capped at `crewNudgeCap`. A lone crew-mate is
+candidate) adds `crewBonus × decay(myActivitySinceAffirmation,
+crewHalfLifeEvents, crewDecayFloor)`, summed across crews and capped at
+`crewNudgeCap`. Decay is evidence-based (D60): each member's crew row
+stamps THAT member's own lived-events counter at affirmation, so the
+crew fades — toward its floor (default 0.5), never below on silence —
+at the pace of each member's own lived experience. A lone crew-mate is
 just an affinity edge. Crew-mates are unioned into the presence watch
 set so the edge limit can never hide a gathering.
 
@@ -191,7 +217,7 @@ events-only, and a newcomer's own cold-start is already served (fit works
 from onboarding, and with a thin model the noise share dominates —
 their feed is naturally exploratory).
 
-## Tunables (v5 defaults)
+## Tunables (v6 defaults)
 
 Every value is configuration, not a constant; **tunable to zero** (zeroing
 `affinityPerPersonNudge` removes affinity entirely; zeroing
@@ -211,13 +237,17 @@ Every value is configuration, not a constant; **tunable to zero** (zeroing
 | `affinityMutualBonus` | 0.12 | mutual amplification, × min(w_me, w_them) |
 | `affinityConfirmedBonus` | 0.08 | reciprocal-met confirmation, × scale (not weight-gated) |
 | `affinityConfirmationPivot` | 3 | reciprocal met count at which confirmation saturates |
-| `affinityTapHalfLifeDays` | 90 | tap-derived strength half-life |
-| `affinityConfirmedHalfLifeDays` | 270 | confirmed strength half-life (observed decays slower) |
+| `affinityTapHalfLifeEvents` | 12 | tap-strength half-life in MY lived events (was 90 days ≈ 12 weekly events) |
+| `affinityConfirmedHalfLifeEvents` | 36 | confirmed half-life in min-of-both-sides lived events (was 270 days) |
+| `affinityTapDecayFloor` | 0 | tap-decay asymptote — a fresh one-sided tap may fade out |
+| `affinityConfirmedDecayFloor` | 0.5 | confirmed-decay asymptote — silence never conclusive for established pairs |
+| `metWithoutTapMultiplier` | 1.0 | captured-not-used; no consumption path built (promoting it = spec bump) |
 | `affinityNudgeCap` | 0.24 | max total affinity contribution per event |
 | `crewMutualMetPivot` | 2 | reciprocal met count for a pair to be crew-strong |
 | `crewBonus` | 0.1 | per crew gathering (≥2 fellows present), × affirmation decay |
 | `crewNudgeCap` | 0.12 | max total crew contribution per event |
-| `crewHalfLifeDays` | 180 | crew affirmation half-life |
+| `crewHalfLifeEvents` | 24 | crew half-life in MY lived events since affirmation (was 180 days) |
+| `crewDecayFloor` | 0.5 | crew-decay asymptote — a crew is never unearned by silence |
 | `affinityGenerosityPivot` | 12 | positive taps before self-discount begins |
 | `affinityEdgeLimit` | 20 | strongest edges consulted per ranking |
 | `explorationNoise` | 0.2 | amplitude of the per-event deterministic noise |
@@ -244,6 +274,16 @@ unit tests assert this relationship against the defaults.
 
 ## Version history
 
+- **v6** — evidence-based decay (D60, `evidence-decay.md`): the three
+  clock half-lives replaced by the lived-events axis (own debriefed
+  events for tap strength and crews; min-of-both-sides for confirmed
+  strength) with decay floors as the incompleteness prior (tap 0,
+  confirmed 0.5, crew 0.5 — below-floor reserved for grounded
+  counter-evidence, D49/D50). Zero activity → zero decay; recovery on
+  fresh evidence instant and total; met-without-tap captured-not-used.
+  A workshop time-advance alone no longer ages the social graph —
+  strengths change only when events happen (replay determinism
+  improves). Calibrated to ≈ v5 rates for a weekly-cadence member.
 - **v5** — envelope fit (D58/D59): member 3-position placements
   (`lib/envelope.mjs`) become fit inputs — structure via the 1:1 shape
   map, group size via attendance banding, known-face comfort as a

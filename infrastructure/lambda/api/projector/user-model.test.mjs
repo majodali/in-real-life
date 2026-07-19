@@ -432,6 +432,7 @@ test('people taps maintain stats#affinity running totals (the generosity input, 
   let model = decryptValue(stats.model, dataKey);
   assert.equal(model.peopleMet, 2);
   assert.equal(model.tapsGiven, 1);
+  assert.equal(model.debriefedEvents, 1);
 
   // A second debrief accumulates; redelivery of the same event is a no-op.
   const second = () => debriefEvent({
@@ -445,11 +446,56 @@ test('people taps maintain stats#affinity running totals (the generosity input, 
   model = decryptValue(after.model, dataKey);
   assert.equal(model.peopleMet, 3);
   assert.equal(model.tapsGiven, 2);
+  assert.equal(model.debriefedEvents, 2);
 });
 
-test('a tap-free debrief (no people) writes no stats item', async () => {
+test('every attended debrief counts as lived activity — even tap-free (the D60 axis)', async () => {
   await projector.applyEvent(debriefEvent({ attended: true, again: 'yes' }));
+  const stats = writes.find((w) => w.sk === 'stats#affinity');
+  assert.ok(stats, 'the activity counter advances on a tap-free debrief');
+  const model = decryptValue(stats.model, dataKey);
+  assert.equal(model.debriefedEvents, 1);
+  assert.equal(model.peopleMet, 0);
+  assert.equal(model.tapsGiven, 0);
+});
+
+test('a no-show is not a lived event: no activity increment, no stats item', async () => {
+  await projector.applyEvent(debriefEvent({ attended: false, noShowReason: 'nerves' }));
   assert.equal(writes.find((w) => w.sk === 'stats#affinity'), undefined);
+});
+
+test('edges carry activity snapshots: met stamps activityAtLastMet, taps also activityAtLastTap', async () => {
+  // Two lived events first — the counter the snapshots must reference.
+  await projector.applyEvent(debriefEvent({ attended: true, again: 'yes' }));
+  await projector.applyEvent(debriefEvent({ attended: true, again: 'yes' },
+    { eventId: '01LIVED-2', aggregateId: 'interaction#abc#evt-8' }));
+
+  await projector.applyEvent(debriefEvent({
+    attended: true, again: 'yes',
+    people: [
+      { userId: 'tapped', met: true, seeAgain: true },
+      { userId: 'met-only', met: true, seeAgain: false },
+    ],
+  }, { eventId: '01LIVED-3', aggregateId: 'interaction#abc#evt-9' }));
+
+  const tapped = decryptValue(writes.findLast((w) => w.sk === 'affinity#tapped').model, dataKey);
+  assert.equal(tapped.activityAtLastMet, 3, 'the counter includes the stamping debrief');
+  assert.equal(tapped.activityAtLastTap, 3);
+  const metOnly = decryptValue(writes.findLast((w) => w.sk === 'affinity#met-only').model, dataKey);
+  assert.equal(metOnly.activityAtLastMet, 3);
+  assert.equal(metOnly.activityAtLastTap, undefined, 'no tap → no tap anchor');
+
+  // Redelivery stamps identically: the stats delta skips via lastEventId
+  // but still hands back the already-incremented counter (replay-exact).
+  const count = writes.length;
+  await projector.applyEvent(debriefEvent({
+    attended: true, again: 'yes',
+    people: [
+      { userId: 'tapped', met: true, seeAgain: true },
+      { userId: 'met-only', met: true, seeAgain: false },
+    ],
+  }, { eventId: '01LIVED-3', aggregateId: 'interaction#abc#evt-9' }));
+  assert.equal(writes.length, count, 'redelivered record is a no-op');
 });
 
 // ─── Crew detection (D47, spec v4) ───
@@ -487,6 +533,13 @@ test('a tap completing a triad of mutual-strong pairs forms a crew on all three 
   assert.deepEqual(crew.members, ['abc', 'p1', 'p2']);
   assert.equal(crew.affirmations, 1);
   assert.equal(crew.lastAffirmedAt, '2026-07-20T10:00:00.000Z');
+
+  // Each member's copy stamps THEIR OWN lived-events counter (D60): the
+  // debriefing member just lived one; the others have no stats yet.
+  const byOwner = Object.fromEntries(crewRows.map((w) => [w.userId, decryptValue(w.model, dataKey)]));
+  assert.equal(byOwner.abc.activityAtAffirmation, 1);
+  assert.equal(byOwner.p1.activityAtAffirmation, 0);
+  assert.equal(byOwner.p2.activityAtAffirmation, 0);
 });
 
 test('no crew when the third pair is not mutual-strong (one-sided or under the met pivot)', async () => {

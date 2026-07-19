@@ -32,14 +32,11 @@ reasoning, because it will govern future extensions:
   information; only new grounded information can do that. Be candid
   about the mechanism, never pushy. No counters, no expiry clocks.
 
-**Flagged for future discussion (not reworked in this slice):** the same
-evidence-not-clocks philosophy sits in tension with spec v4's clock-based
-half-lives (`affinityTapHalfLifeDays`, `affinityConfirmedHalfLifeDays`,
-`crewHalfLifeDays`), which decay affinity strength on elapsed simulated
-time rather than on new grounded evidence. Those predate this decision
-and keep working as specced; whether they should become evidence-anchored
-(e.g. decay per *events attended without re-affirmation* rather than per
-day) is an open register item — see `decisions.md` D59 watch note.
+**Flagged at sign-off, since resolved:** the same evidence-not-clocks
+philosophy sat in tension with spec v4's clock-based affinity/crew
+half-lives. That tension was taken up as its own design and decided —
+D60, `evidence-decay.md`, implemented in ranking spec v6 (the
+lived-events axis with decay floors as the incompleteness prior).
 
 ## 1. The machine-comparable envelope form
 
