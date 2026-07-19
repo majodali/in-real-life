@@ -29,6 +29,7 @@ Understanding of a person is **seeded** at onboarding and **grown** from what th
 
 **The person (Groups 1 & 3)**
 - `user-model.md` — model situations not traits; three layers (narrative / annotated index / earned relational); the comfort envelope; compatibility stance; *difference is not incompatibility* + demographic affinity lives on the event.
+- `profile-and-legibility.md` — **(proposal)** the machine-comparable envelope form (coarse positions + growth edge alongside the stories) and the member-visible correction surface ("How we understand you", `UserModelCorrected`, the D7 correction-precedence rule made concrete).
 
 **Onboarding (Group 1)**
 - `onboarding-interview.md` — architecture of the adaptive interview (per-turn structured calls, Opus 4.8).

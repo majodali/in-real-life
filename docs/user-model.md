@@ -209,6 +209,6 @@ This is an analytics/admin surface (Group 4 admin UI), and it must respect the p
 
 - Layer 2/3 storage — **resolved in `projection-store.md`** (async Streams projection into a per-item `irl-user-model` store).
 - Decay function specifics: how fast `stated` confidence fades, what counts as "enough" observations to flip a dimension.
-- Legibility UX: where the user sees/edits "what IRL believes about me" (profile screen extension; Group 1 `Profile view + edit` item).
+- Legibility UX — **designed in `profile-and-legibility.md` (proposal)**: the "How we understand you" surface, correction events, and the concrete correction-precedence rule.
 - Cold start for ranking: with empty Layer 3, how heavily to lean on soft priors vs. near-random exposure with good situational fit (connects to Group 3 cold-start item).
 - Whether barriers should ever influence *visibility* of events (probably not — lower friction, don't filter), needs a firm rule before recommendation work.
