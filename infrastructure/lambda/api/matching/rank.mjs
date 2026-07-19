@@ -64,12 +64,17 @@ export function blendExploration(byScore, byExplore, share) {
 // TOTAL ceiling (affinityNudgeCap + crewNudgeCap) is re-applied here so
 // no accumulation can outgrow it.
 // Returns an ordered array of eventIds. Deterministic for fixed inputs.
+// fitBoosts: Map eventId → presence-dependent FIT additions (known-face
+// comfort, spec v5) — applied inside fitCap, since they are fit, not nudge.
 export function rankCandidates({
-  userId, candidates, model, affinityNudges, nowIso, tunables,
+  userId, candidates, model, affinityNudges, fitBoosts, nowIso, tunables,
 }) {
   const bucket = weekBucket(nowIso);
   const scored = candidates.map((event) => {
-    const fit = eventFit(model ?? {}, event, tunables);
+    const fit = Math.min(
+      tunables.fitCap,
+      eventFit(model ?? {}, event, tunables) + (fitBoosts?.get(event.eventId) ?? 0),
+    );
     const nudge = Math.min(
       tunables.affinityNudgeCap + (tunables.crewNudgeCap ?? 0),
       affinityNudges?.get(event.eventId) ?? 0,

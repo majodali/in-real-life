@@ -2,7 +2,7 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { tokenize, tagMatches, interestFit, doorFit, eventFit } from './fit.mjs';
+import { tokenize, tagMatches, interestFit, doorFit, eventFit, structureFit, sizeFit, sizeBandOf } from './fit.mjs';
 import { RANKING_TUNABLES } from './tunables.mjs';
 
 const t = RANKING_TUNABLES;
@@ -117,4 +117,54 @@ test('eventFit sums interest and door fit, capped at fitCap', () => {
     event, t,
   );
   assert.ok(Math.abs(modest - (t.fitActivityTagWeight + t.fitDoorWeight)) < 1e-9);
+});
+
+// ─── Envelope fit (D58, spec v5) ───
+
+test('structure fit maps member position onto the shape enum: exact / adjacent / opposite', () => {
+  const shaped = (structure) => ({
+    title: 'x', shape: { activityTags: [], structure, doors: [] },
+  });
+  const env = (position) => ({ structure: { position } });
+  assert.ok(Math.abs(
+    structureFit(env('activity-anchored'), shaped('structured'), t) - t.fitStructureWeight,
+  ) < 1e-9);
+  assert.ok(Math.abs(
+    structureFit(env('balanced'), shaped('structured'), t) - t.fitStructureWeight * 0.5,
+  ) < 1e-9);
+  assert.equal(structureFit(env('open-conversation'), shaped('structured'), t), 0);
+  assert.equal(structureFit(env('activity-anchored'), { title: 'no shape' }, t), 0);
+  assert.equal(structureFit({}, shaped('structured'), t), 0);
+});
+
+test('size banding: cap wins, else threshold vs current interest', () => {
+  assert.equal(sizeBandOf({ maxAttendance: 4 }), 'intimate');
+  assert.equal(sizeBandOf({ maxAttendance: 8 }), 'small');
+  assert.equal(sizeBandOf({ maxAttendance: 20 }), 'large');
+  assert.equal(sizeBandOf({ minimumAttendance: 3, confirmedCount: 1, interestCount: 1 }), 'intimate');
+  assert.equal(sizeBandOf({ minimumAttendance: 3, confirmedCount: 6, interestCount: 4 }), 'large');
+});
+
+test('size fit compares member band to event band with adjacency', () => {
+  const env = { groupSize: { position: 'intimate' } };
+  assert.ok(Math.abs(sizeFit(env, { maxAttendance: 4 }, t) - t.fitSizeWeight) < 1e-9);
+  assert.ok(Math.abs(sizeFit(env, { maxAttendance: 8 }, t) - t.fitSizeWeight * 0.5) < 1e-9);
+  assert.equal(sizeFit(env, { maxAttendance: 30 }, t), 0);
+  assert.equal(sizeFit({}, { maxAttendance: 4 }, t), 0); // no position → no component
+});
+
+test('eventFit sums envelope components inside fitCap', () => {
+  const event = {
+    title: 'Pottery night',
+    maxAttendance: 6,
+    shape: { activityTags: ['pottery'], structure: 'structured', doors: ['make-learn'] },
+  };
+  const model = {
+    interests: [{ tag: 'pottery', weight: 1 }],
+    doors: [{ door: 'make-learn', weight: 1 }],
+    envelope: { structure: { position: 'activity-anchored' }, groupSize: { position: 'small' } },
+  };
+  const expected = t.fitActivityTagWeight + t.fitDoorWeight
+    + t.fitStructureWeight + t.fitSizeWeight;
+  assert.ok(Math.abs(eventFit(model, event, t) - Math.min(t.fitCap, expected)) < 1e-9);
 });

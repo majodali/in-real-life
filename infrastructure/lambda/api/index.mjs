@@ -35,6 +35,7 @@ import {
   projectUserKeyShredded,
   projectUserAgreementReaccepted,
   projectReflectionRecorded,
+  projectUserModelCorrected,
 } from './users/projections.mjs';
 import { createReacceptAgreementHandler } from './users/agreement.mjs';
 import {
@@ -74,6 +75,7 @@ import {
 } from './events/lifecycle-projections.mjs';
 import { createProposeEventHandler } from './events/propose.mjs';
 import { createListEventsHandler } from './events/list.mjs';
+import { createGetModelHandler, createCorrectModelHandler } from './users/model.mjs';
 import { createRecommender } from './matching/recommend.mjs';
 import { createListAttendeesHandler } from './events/attendees.mjs';
 import {
@@ -202,6 +204,7 @@ const projector = createProjector({
     PollVoteRetracted: projectPollVoteRetracted,
     UserAgreementReaccepted: projectUserAgreementReaccepted,
     ReflectionRecorded: projectReflectionRecorded,
+    UserModelCorrected: projectUserModelCorrected,
     RequiredAgreementVersionUpdated: projectRequiredAgreementVersionUpdated,
   },
   tables,
@@ -325,6 +328,14 @@ const recommender = process.env.USER_MODEL_TABLE
     keyStore,
   })
   : null;
+const getModelHandler = createGetModelHandler({
+  client,
+  userModelTable: process.env.USER_MODEL_TABLE,
+  keyStore,
+});
+const correctModelHandler = createCorrectModelHandler({
+  runner, client, usersTable: tables.usersTable,
+});
 const listEventsHandler = createListEventsHandler({
   client,
   eventsTable: tables.eventsTable,
@@ -442,6 +453,9 @@ router.add('GET', '/health', async () => ({
 
 router.add('GET', '/me', getMeHandler);
 router.add('GET', '/me/export', exportHandler);
+// Legibility is a data right, like export — deliberately NOT behind the
+// agreement gate (D59: the member can always see what we believe).
+router.add('GET', '/me/model', getModelHandler);
 router.add('DELETE', '/me', deleteHandler);
 router.add('POST', '/me/register', registerHandler);
 router.add('POST', '/me/agreement', reacceptAgreementHandler);
@@ -452,6 +466,7 @@ router.add('POST', '/me/reflection/turn', requireCurrentAgreement(reflectionTurn
 router.add('POST', '/me/reflection', requireCurrentAgreement(completeReflectionHandler));
 router.add('PUT', '/me/profile', requireCurrentAgreement(updateProfileHandler));
 router.add('POST', '/me/locality', requireCurrentAgreement(localityHandler));
+router.add('POST', '/me/model/correction', requireCurrentAgreement(correctModelHandler));
 router.add('GET', '/locality/check', localityCheckHandler);
 router.add('POST', '/notify', notifyHandler);
 router.add('GET', '/time', getTimeHandler);

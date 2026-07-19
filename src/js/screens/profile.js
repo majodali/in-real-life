@@ -11,6 +11,12 @@ import {
   handleDataExport,
   handleAccountDelete,
 } from './profile-handlers.js';
+import {
+  envelopeRows,
+  chipLists,
+  handleModelLoad,
+  handleCorrection,
+} from './model-handlers.js';
 import { renderEllipsisButton, bindEllipsis } from '../components/ellipsis-menu.js';
 
 export function renderProfile() {
@@ -64,6 +70,18 @@ export function renderProfile() {
           </span>
           <span class="persona-arrow">\u2192</span>
         </button>
+      </div>
+
+      <div class="profile-section">
+        <button class="profile-tellmore-btn" id="modelBtn">
+          <span class="tellmore-icon">\u{1FAB4}</span>
+          <span class="tellmore-text">
+            <strong>How we understand you</strong>
+            <small>See and correct what we've picked up</small>
+          </span>
+          <span class="persona-arrow" id="modelArrow">↓</span>
+        </button>
+        <div class="model-panel" id="modelPanel" hidden></div>
       </div>
 
       <div class="profile-section">
@@ -198,6 +216,15 @@ export function renderProfile() {
     });
   });
 
+  // How we understand you (D59) — lazy-loaded, inline corrections.
+  const modelPanel = document.getElementById('modelPanel');
+  document.getElementById('modelBtn').addEventListener('click', async () => {
+    const opening = modelPanel.hidden;
+    modelPanel.hidden = !opening;
+    document.getElementById('modelArrow').textContent = opening ? '↑' : '↓';
+    if (opening) await loadModelPanel(modelPanel);
+  });
+
   // Download my data
   const exportBtn = document.getElementById('exportBtn');
   exportBtn.addEventListener('click', async () => {
@@ -253,6 +280,113 @@ export function renderProfile() {
         stillHere.disabled = false;
         stillHere.textContent = 'Yes, delete';
       }
+    });
+  });
+}
+
+// ─── "How we understand you" panel (D59) ───
+
+async function loadModelPanel(panel) {
+  panel.innerHTML = '<p class="model-note">One moment…</p>';
+  const model = await handleModelLoad({ commands, showToast });
+  if (model === undefined) {
+    panel.innerHTML = '<p class="model-note">Couldn’t load this right now.</p>';
+    return;
+  }
+  if (model === null) {
+    panel.innerHTML = '<p class="model-note">Nothing here yet — this fills in after your welcome conversation.</p>';
+    return;
+  }
+  renderModelPanel(panel, model);
+}
+
+function renderModelPanel(panel, model) {
+  const rows = envelopeRows(model.envelope ?? {});
+  const chips = chipLists(model);
+
+  const chipSection = (title, items, emptyHint) => `
+    <div class="model-group">
+      <div class="model-group-title">${title}</div>
+      <div class="model-chips">
+        ${items.map((c, i) => `
+          <span class="model-chip">
+            ${escapeHtml(c.label)}${c.easing ? ' <em>(easing)</em>' : ''}
+            ${c.removable ? `<button class="model-chip-x" data-chip="${title}" data-index="${i}" aria-label="Remove ${escapeHtml(c.label)}">×</button>` : ''}
+          </span>
+        `).join('')}
+        ${items.length === 0 ? `<span class="model-note">${emptyHint}</span>` : ''}
+      </div>
+    </div>
+  `;
+
+  panel.innerHTML = `
+    <p class="model-note">
+      This is what we’ve picked up so far — it only shapes the order of
+      your suggestions, never what you can see or join. Tap anything that’s
+      off; your word wins.
+    </p>
+    ${rows.map((row) => `
+      <div class="model-dim" data-dimension="${row.dimension}">
+        <div class="model-dim-head">
+          <span class="model-dim-title">${row.title}</span>
+          ${row.source ? `<span class="model-source">${escapeHtml(row.source)}</span>` : ''}
+        </div>
+        <div class="model-positions">
+          ${row.positionChoices.map((choice) => `
+            <button class="model-pos-btn ${choice.value === row.position ? 'selected' : ''}"
+              data-dimension="${row.dimension}" data-position="${choice.value}">
+              ${choice.label}
+            </button>
+          `).join('')}
+        </div>
+        ${row.edgeLabel ? `<div class="model-note">Stretching toward: ${row.edgeLabel}</div>` : ''}
+        ${row.story ? `<div class="model-story">“${escapeHtml(row.story)}”</div>` : ''}
+      </div>
+    `).join('')}
+    ${chipSection('Interests', chips.interests, 'None yet')}
+    ${chipSection('What opens the door', chips.doors, 'None yet')}
+    ${chipSection('What you bring', chips.strengths, 'None yet')}
+    ${chipSection('What gets in the way', chips.barriers, 'Nothing — great')}
+    <div class="model-add">
+      <input class="profile-field-input" id="modelAddInterest" type="text"
+        placeholder="Add an interest…" maxlength="60">
+      <button class="btn-small" id="modelAddBtn">Add</button>
+    </div>
+  `;
+
+  const reload = () => loadModelPanel(panel);
+
+  panel.querySelectorAll('.model-pos-btn').forEach((btn) => {
+    btn.addEventListener('click', () => handleCorrection({
+      commands,
+      correction: {
+        type: 'envelope',
+        dimension: btn.dataset.dimension,
+        position: btn.dataset.position,
+      },
+      showToast,
+      onDone: reload,
+    }));
+  });
+
+  const chipItems = { Interests: chips.interests, 'What gets in the way': chips.barriers };
+  panel.querySelectorAll('.model-chip-x').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const item = chipItems[btn.dataset.chip]?.[Number(btn.dataset.index)];
+      if (!item) return;
+      handleCorrection({ commands, correction: item.correction, showToast, onDone: reload });
+    });
+  });
+
+  document.getElementById('modelAddBtn').addEventListener('click', () => {
+    const input = document.getElementById('modelAddInterest');
+    const tag = input.value.trim();
+    if (!tag) return;
+    handleCorrection({
+      commands,
+      correction: { type: 'interest-add', tag },
+      showToast,
+      onDone: reload,
     });
   });
 }

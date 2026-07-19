@@ -7,7 +7,7 @@
 // hash so a spec bump reshuffles deterministic noise rather than freezing
 // it across versions.
 
-export const RANKING_SPEC_VERSION = 4;
+export const RANKING_SPEC_VERSION = 5;
 
 export const RANKING_TUNABLES = {
   // Fit — interest tags vs event shape (D56) with text fallback, plus
@@ -17,6 +17,12 @@ export const RANKING_TUNABLES = {
   fitDoorWeight: 0.15,
   fitCap: 1.0,
   interestDefaultWeight: 0.5,
+  // Envelope fit (D58, spec v5): structured positions vs event shape/size.
+  // knownFace is a FIT component, not a nudge — for a needs-known-face
+  // member a familiar face is what makes the room feasible at all.
+  fitStructureWeight: 0.25,
+  fitSizeWeight: 0.2,
+  fitKnownFaceWeight: 0.2,
 
   // Affinity — strength-weighted (D47/H4): one-sided tap at own weight,
   // mutual amplification gated by the weaker side, reciprocal-met

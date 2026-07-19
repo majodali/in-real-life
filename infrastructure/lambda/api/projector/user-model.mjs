@@ -34,6 +34,7 @@ import { createHash } from 'node:crypto';
 import { GetCommand, PutCommand, QueryCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
 import { decryptValue, encryptValue, decryptPii } from '../lib/crypto-shred.mjs';
 import { RANKING_TUNABLES } from '../matching/tunables.mjs';
+import { ENVELOPE_DIMENSIONS, isValidPosition, isValidEdge, stepToward } from '../lib/envelope.mjs';
 
 // Deterministic sort-key slug for variable-set items. Collisions merge,
 // which is the semantics we want (two mentions of "pottery" are one
@@ -59,6 +60,8 @@ export function createUserModelProjector({ client, userModelTable, keyStore }) {
     switch (event.eventType) {
       case 'OnboardingCompleted':
         return seedFromOnboarding(event);
+      case 'UserModelCorrected':
+        return applyCorrection(event);
       case 'ReflectionRecorded':
         return applyReflection(event);
       case 'UserDeleted':
@@ -86,6 +89,69 @@ export function createUserModelProjector({ client, userModelTable, keyStore }) {
     const asOf = event.simulatedTime;
     const source = { eventId: d.eventId, sourceEventId: event.eventId, asOf };
     await applyExtractedDeltas(userId, dataKey, clear.deltas, source, asOf, event.eventId);
+  }
+
+  // ── Member corrections (D59, docs/profile-and-legibility.md) ──
+  //
+  // A correction is the member's own word about themselves. Precedence,
+  // made concrete: provenance `corrected` + `correctedAt` beat every
+  // piece of evidence OLDER than the correction; evidence arriving
+  // after resumes normal D7 precedence. No counters, no expiry clocks —
+  // the correction is simply the newest word until life says otherwise.
+  async function applyCorrection(event) {
+    const d = event.data;
+    const userId = d.userId;
+    const dataKey = await keyStore.getKey(`user#${userId}`);
+    if (!dataKey) return;
+    const clear = decryptPii(d, ['correction'], dataKey);
+    const correction = clear.correction;
+    if (!correction || typeof correction !== 'object') return;
+    const asOf = event.simulatedTime;
+
+    if (correction.type === 'envelope' && correction.dimension in ENVELOPE_DIMENSIONS) {
+      await applyDelta(userId, 'profile#core', dataKey, event.eventId, asOf, (current) => {
+        const payload = current ?? { envelope: {}, doors: [], constraints: {}, growthEdges: [], provisional: true };
+        const dim = { ...(payload.envelope[correction.dimension] ?? {}) };
+        if (correction.position !== undefined && isValidPosition(correction.dimension, correction.position)) {
+          dim.position = correction.position;
+        }
+        if (correction.edgeToward !== undefined) {
+          if (correction.edgeToward === null) delete dim.edgeToward;
+          else if (isValidEdge(correction.dimension, correction.edgeToward)) {
+            dim.edgeToward = correction.edgeToward;
+          }
+        }
+        dim.positionProvenance = 'corrected';
+        dim.correctedAt = asOf;
+        delete dim.pendingShift;
+        payload.envelope[correction.dimension] = dim;
+        return payload;
+      });
+      return;
+    }
+
+    if (correction.type === 'interest-add' && correction.tag) {
+      await applyDelta(userId, `interest#${modelSlug(correction.tag)}`, dataKey, event.eventId, asOf, (current) => {
+        const payload = current ?? { tag: correction.tag, weight: 0.6, observations: [] };
+        payload.provenance = 'corrected';
+        payload.correctedAt = asOf;
+        return payload;
+      });
+      return;
+    }
+
+    if ((correction.type === 'interest-remove' && correction.tag)
+      || (correction.type === 'barrier-remove' && correction.what)) {
+      const sk = correction.type === 'interest-remove'
+        ? `interest#${modelSlug(correction.tag)}`
+        : `barrier#${modelSlug(correction.what)}`;
+      // Removal is a genuine delete — the event on the log is the record
+      // (replay re-deletes); deleting an absent row is a no-op.
+      await client.send(new DeleteCommand({
+        TableName: userModelTable,
+        Key: { userId, sk },
+      }));
+    }
   }
 
   // ── Debrief deltas (docs/debrief.md → Projection-update mechanism) ──
@@ -178,6 +244,23 @@ export function createUserModelProjector({ client, userModelTable, keyStore }) {
             ...source,
           }].slice(-5);
           dim.provenance = 'observed';
+          // D58 position shift: a position moves one step only when
+          // shifts REPEAT in the same direction — never on one story.
+          // Correction precedence (D59): evidence older than the
+          // member's correction is spent; only later evidence moves it.
+          if (u.shiftToward !== undefined
+            && isValidPosition(u.dimension, u.shiftToward)
+            && !(dim.correctedAt && asOf <= dim.correctedAt)) {
+            if (dim.pendingShift === u.shiftToward) {
+              dim.position = dim.position !== undefined
+                ? stepToward(u.dimension, dim.position, u.shiftToward)
+                : u.shiftToward;
+              dim.positionProvenance = 'observed';
+              delete dim.pendingShift;
+            } else {
+              dim.pendingShift = u.shiftToward;
+            }
+          }
           payload.envelope[u.dimension] = dim;
         }
         return payload;
@@ -371,6 +454,25 @@ export function createUserModelProjector({ client, userModelTable, keyStore }) {
     }
   }
 
+  // D58: keep a dim's position/edgeToward only when the vocabulary
+  // recognises them — the schema carries strings by convention and the
+  // projector is the validator (restraint over coverage: an invalid
+  // placement is dropped, never guessed at).
+  function sanitizeEnvelope(envelope) {
+    const out = {};
+    for (const [dimension, dim] of Object.entries(envelope ?? {})) {
+      const clean = { ...dim };
+      if (clean.position !== undefined && !isValidPosition(dimension, clean.position)) {
+        delete clean.position;
+      }
+      if (clean.edgeToward !== undefined && !isValidEdge(dimension, clean.edgeToward)) {
+        delete clean.edgeToward;
+      }
+      out[dimension] = clean;
+    }
+    return out;
+  }
+
   function coreItem(extraction) {
     // Growth edges live on the envelope dims in the extraction; surface
     // them as their own facet of profile#core per the store design.
@@ -385,7 +487,7 @@ export function createUserModelProjector({ client, userModelTable, keyStore }) {
     return {
       sk: 'profile#core',
       payload: {
-        envelope: extraction.envelope ?? {},
+        envelope: sanitizeEnvelope(extraction.envelope),
         doors: extraction.doors ?? [],
         constraints: extraction.constraints ?? {},
         growthEdges,

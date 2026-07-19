@@ -297,6 +297,63 @@ test('a crew gathering outranks the same people as mere affinity edges', async (
   assert.deepEqual(out, ['e-gathering', 'e-split']);
 });
 
+// ─── Known-face comfort (D58, spec v5): a FIT input, not a nudge ───
+
+test('for a needs-known-face member, a tapped person present boosts FIT beyond the nudge cap', async () => {
+  const p1Key = generateDataKey();
+  keysById['user#p1'] = p1Key;
+
+  modelRows = [
+    modelRow('profile#core', {
+      envelope: { familiarity: { position: 'needs-known-face', provenance: 'stated' } },
+      doors: [], constraints: {},
+    }),
+    modelRow('affinity#p1', { otherUserId: 'p1', met: 1, seeAgain: 1, sources: [] }),
+    // Interest that matches ONLY the stranger event — the known face must
+    // outweigh it (fitKnownFaceWeight 0.2 > fitInterestWeight 0.4 × 0.4).
+    modelRow('interest#running', { tag: 'running', weight: 0.4 }),
+  ];
+  interactionsByUser.p1 = [{ userId: 'p1', eventId: 'e-familiar', level: 'confirmed' }];
+
+  // Zero the nudges so ordering can only come from the fit boost.
+  const tunables = {
+    ...NO_NOISE, affinityPerPersonNudge: 0, affinityMutualBonus: 0,
+    affinityConfirmedBonus: 0, crewBonus: 0,
+  };
+  const events = [
+    evt('e-strangers', { title: 'Morning running club' }),
+    evt('e-familiar', { title: 'Quiet hall gathering' }),
+  ];
+  const out = await recommender(tunables).recommend({ userId: 'me', events, nowIso: NOW });
+  assert.deepEqual(out, ['e-familiar', 'e-strangers']);
+});
+
+test('the same presence gives no fit boost to a fine-with-strangers member', async () => {
+  const p1Key = generateDataKey();
+  keysById['user#p1'] = p1Key;
+
+  modelRows = [
+    modelRow('profile#core', {
+      envelope: { familiarity: { position: 'fine-with-strangers', provenance: 'stated' } },
+      doors: [], constraints: {},
+    }),
+    modelRow('affinity#p1', { otherUserId: 'p1', met: 1, seeAgain: 1, sources: [] }),
+    modelRow('interest#running', { tag: 'running', weight: 0.4 }),
+  ];
+  interactionsByUser.p1 = [{ userId: 'p1', eventId: 'e-familiar', level: 'confirmed' }];
+
+  const tunables = {
+    ...NO_NOISE, affinityPerPersonNudge: 0, affinityMutualBonus: 0,
+    affinityConfirmedBonus: 0, crewBonus: 0,
+  };
+  const events = [
+    evt('e-strangers', { title: 'Morning running club' }),
+    evt('e-familiar', { title: 'Quiet hall gathering' }),
+  ];
+  const out = await recommender(tunables).recommend({ userId: 'me', events, nowIso: NOW });
+  assert.deepEqual(out, ['e-strangers', 'e-familiar'], 'interest fit decides — no boost');
+});
+
 test('crew-mates beyond the affinity edge limit still register a gathering', async () => {
   const tunables = { ...NO_NOISE, affinityEdgeLimit: 1 };
   const p1Key = generateDataKey();

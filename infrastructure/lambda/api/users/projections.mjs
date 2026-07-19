@@ -243,3 +243,23 @@ export function projectUserDeleted(event, tables) {
 export function projectUserKeyShredded() {
   return null;
 }
+
+// UserModelCorrected bumps the row seq (the correction itself is applied
+// asynchronously by the user-model projector with provenance `corrected`,
+// D59 — the state row just records that the aggregate advanced).
+export function projectUserModelCorrected(event, tables) {
+  return {
+    Update: {
+      TableName: tables.usersTable,
+      Key: { userId: event.data.userId },
+      UpdateExpression: 'SET #seq = :seq, updatedAt = :now, lastModelCorrectionAt = :now',
+      ConditionExpression: '#seq = :expectedSeq',
+      ExpressionAttributeNames: { '#seq': 'seq' },
+      ExpressionAttributeValues: {
+        ':seq': event.seq,
+        ':expectedSeq': event.seq - 1,
+        ':now': event.wallTime,
+      },
+    },
+  };
+}

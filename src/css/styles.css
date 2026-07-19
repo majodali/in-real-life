@@ -1980,3 +1980,69 @@ html, body {
   font-size: 11px; color: var(--soft); margin-top: 4px;
 }
 
+
+/* ─── "How we understand you" panel (D59) ─── */
+
+.model-panel {
+  margin-top: 10px;
+  background: var(--cream);
+  border-radius: 12px;
+  padding: 14px;
+  display: flex; flex-direction: column; gap: 14px;
+}
+
+.model-note { font-size: 12px; color: var(--soft); line-height: 1.5; }
+
+.model-dim { display: flex; flex-direction: column; gap: 6px; }
+
+.model-dim-head {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 8px;
+}
+
+.model-dim-title { font-size: 13px; font-weight: 600; color: var(--text); }
+
+.model-source { font-size: 11px; color: var(--soft); font-style: italic; }
+
+.model-positions { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.model-pos-btn {
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1.5px solid var(--mist);
+  background: none;
+  color: var(--text);
+}
+
+.model-pos-btn.selected {
+  border-color: var(--moss);
+  background: var(--moss);
+  color: #fff;
+}
+
+.model-story { font-size: 12px; color: var(--soft); font-style: italic; }
+
+.model-group { display: flex; flex-direction: column; gap: 6px; }
+
+.model-group-title { font-size: 13px; font-weight: 600; color: var(--text); }
+
+.model-chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+
+.model-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 12px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: var(--mist);
+  color: var(--text);
+}
+
+.model-chip em { font-style: italic; color: var(--soft); }
+
+.model-chip-x {
+  border: none; background: none; color: var(--soft);
+  font-size: 14px; line-height: 1; padding: 0 2px;
+}
+
+.model-add { display: flex; gap: 8px; align-items: center; }
+.model-add .profile-field-input { flex: 1; }

@@ -1,11 +1,16 @@
-// Fit scoring v2 — interests + doors (docs/matching-spec.md → Fit).
+import { ENVELOPE_DIMENSIONS, adjacencyScore } from '../lib/envelope.mjs';
+
+// Fit scoring — interests + doors + envelope positions
+// (docs/matching-spec.md → Fit; envelope form per D58).
 //
 // Interests match two-tiered: against the event's extracted activityTags
 // (D56 shape — the high-confidence tier) first, falling back to the
 // title + description token match (shapeless/older events still rank).
 // Doors match structured-to-structured: the member's onboarding door
-// weights vs the shape's doors. Envelope fit still waits on a comparable
-// member-side form — the shape's `structure` is captured, not used.
+// weights vs the shape's doors. Envelope positions (D58) now compare
+// directly: structure via the 1:1 shape map, group size via attendance
+// banding. role/novelty positions stay captured-not-used until their
+// comparands exist.
 
 export function tokenize(text) {
   const tokens = new Set();
@@ -71,11 +76,43 @@ export function doorFit(doors, event, tunables) {
   return score;
 }
 
-// model: { interests, doors } — the member-side fit inputs.
+// Structure fit (spec v5): the member's position compared against the
+// event shape's structure via the 1:1 map — exact 1, adjacent 0.5,
+// opposite 0. Absent on either side → the component simply doesn't apply.
+export function structureFit(envelope, event, tunables) {
+  const position = envelope?.structure?.position;
+  const shapeStructure = event.shape?.structure;
+  if (!position || !shapeStructure) return 0;
+  const map = ENVELOPE_DIMENSIONS.structure.shapeMap;
+  const eventPosition = Object.keys(map).find((k) => map[k] === shapeStructure);
+  const score = adjacencyScore('structure', position, eventPosition);
+  return score === null ? 0 : tunables.fitStructureWeight * score;
+}
+
+// Expected-size banding: the cap when set, else the larger of the
+// threshold and current interest — a coarse read, matching the coarse
+// member scale on purpose.
+export function sizeBandOf(event) {
+  const expected = event.maxAttendance
+    ?? Math.max(event.minimumAttendance ?? 3,
+      (event.confirmedCount ?? 0) + (event.interestCount ?? 0));
+  return expected <= 4 ? 'intimate' : expected <= 8 ? 'small' : 'large';
+}
+
+export function sizeFit(envelope, event, tunables) {
+  const position = envelope?.groupSize?.position;
+  if (!position) return 0;
+  const score = adjacencyScore('groupSize', position, sizeBandOf(event));
+  return score === null ? 0 : tunables.fitSizeWeight * score;
+}
+
+// model: { interests, doors, envelope } — the member-side fit inputs.
 export function eventFit(model, event, tunables) {
   return Math.min(
     tunables.fitCap,
     interestFit(model.interests ?? [], event, tunables)
-      + doorFit(model.doors ?? [], event, tunables),
+      + doorFit(model.doors ?? [], event, tunables)
+      + structureFit(model.envelope, event, tunables)
+      + sizeFit(model.envelope, event, tunables),
   );
 }
