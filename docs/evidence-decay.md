@@ -1,4 +1,4 @@
-# Evidence-Based Decay — Design (proposal for ranking spec v6)
+# Evidence-Based Decay — Design (decided: D60, implemented in ranking spec v6)
 
 The fallout of the decay philosophy recorded at the D58/D59 sign-off
 (`decisions.md` D59 watch note): spec v5 carries three **clock-based
@@ -6,10 +6,11 @@ half-lives** (`affinityTapHalfLifeDays` 90, `affinityConfirmedHalfLifeDays`
 270, `crewHalfLifeDays` 180) that age affinity and crew strength on
 elapsed simulated time. This note redesigns them on evidence instead.
 
-**Status: proposal.** The philosophy is decided and on the record
-(below); the concrete mechanism — the activity axis, the decay floors,
-and the default-off counter-evidence signal — needs sign-off before
-implementation.
+**Status: decided** (2026-07-19, D60) and implemented as ranking spec
+v6: the activity axis, the decay floors, and the default-off
+counter-evidence signal all shipped as designed below.
+`matching-spec.md` carries the implemented mechanics; this note stays
+the reasoning record.
 
 ## The philosophy, on the record (2026-07-19)
 

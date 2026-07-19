@@ -176,25 +176,42 @@ export function createUserModelProjector({ client, userModelTable, keyStore }) {
     const clear = decryptPii(d, fields.filter((f) => d[f] !== undefined), dataKey);
     const asOf = event.simulatedTime;
     const source = { eventId: d.eventId, sourceEventId: event.eventId, asOf };
+    const attended = !(clear.attended === false || d.attended === false);
 
-    // People step → affinity edges (met + positive-only see-again).
+    // Activity counter FIRST (spec v6, docs/evidence-decay.md): every
+    // attended debrief increments the lived-events count on
+    // stats#affinity — the axis all evidence decay runs on — plus the
+    // running tap totals (the D47/H2 generosity input). The ordering is
+    // deliberate: on a redelivered record this delta skips via
+    // lastEventId but still returns the already-incremented payload, so
+    // the edge snapshots below stamp the same value either way
+    // (replay-exact). A no-show is not a lived event — no increment.
+    let activityNow;
+    if (attended) {
+      const stats = await applyDelta(userId, 'stats#affinity', dataKey, event.eventId, asOf, (current) => {
+        const payload = current ?? { debriefedEvents: 0, peopleMet: 0, tapsGiven: 0 };
+        payload.debriefedEvents = (payload.debriefedEvents ?? 0) + 1;
+        payload.peopleMet = (payload.peopleMet ?? 0) + (clear.people ?? []).length;
+        payload.tapsGiven = (payload.tapsGiven ?? 0)
+          + (clear.people ?? []).filter((p) => p.seeAgain === true).length;
+        return payload;
+      });
+      activityNow = stats?.debriefedEvents;
+    }
+
+    // People step → affinity edges (met + positive-only see-again), each
+    // stamped with the owner's activity snapshot at this evidence — the
+    // decay anchors (activityAtLastMet / activityAtLastTap).
     for (const p of clear.people ?? []) {
       await applyDelta(userId, `affinity#${p.userId}`, dataKey, event.eventId, asOf, (current) => {
         const payload = current ?? { otherUserId: p.userId, met: 0, seeAgain: 0, sources: [] };
         payload.met += 1;
-        if (p.seeAgain) payload.seeAgain += 1;
+        if (activityNow !== undefined) payload.activityAtLastMet = activityNow;
+        if (p.seeAgain) {
+          payload.seeAgain += 1;
+          if (activityNow !== undefined) payload.activityAtLastTap = activityNow;
+        }
         payload.sources = [...payload.sources, { ...source, seeAgain: p.seeAgain === true }].slice(-10);
-        return payload;
-      });
-    }
-    // Running tap totals → stats#affinity: the generosity-weight input
-    // (D47/H2 — a tapper's selectivity), maintained here so consumers
-    // read one small item instead of summing a partition.
-    if ((clear.people ?? []).length > 0) {
-      await applyDelta(userId, 'stats#affinity', dataKey, event.eventId, asOf, (current) => {
-        const payload = current ?? { peopleMet: 0, tapsGiven: 0 };
-        payload.peopleMet += clear.people.length;
-        payload.tapsGiven += clear.people.filter((p) => p.seeAgain === true).length;
         return payload;
       });
     }
@@ -209,7 +226,7 @@ export function createUserModelProjector({ client, userModelTable, keyStore }) {
     }
 
     // No-show reason → situational barrier (observed).
-    if (clear.attended === false || d.attended === false) {
+    if (!attended) {
       if (clear.noShowReason) {
         await applyDelta(userId, `barrier#${modelSlug(clear.noShowReason)}`, dataKey, event.eventId, asOf, (current) => {
           const payload = current ?? { what: clear.noShowReason, provenance: 'observed', observations: [] };
@@ -316,15 +333,21 @@ export function createUserModelProjector({ client, userModelTable, keyStore }) {
       && Math.min(edgeAtoB?.met ?? 0, edgeBtoA?.met ?? 0) >= RANKING_TUNABLES.crewMutualMetPivot;
   }
 
-  // One member's decrypted edge toward another; null for missing rows or
-  // shredded owners.
-  async function readEdgeOf(ownerId, otherId, ownerKey) {
+  // One decrypted facet of a member's own partition; null for missing
+  // rows (the caller supplies the owner's key).
+  async function readOwnFacet(ownerId, sk, ownerKey) {
     const out = await client.send(new GetCommand({
       TableName: userModelTable,
-      Key: { userId: ownerId, sk: `affinity#${otherId}` },
+      Key: { userId: ownerId, sk },
     }));
     if (!out.Item?.model) return null;
     return decryptValue(out.Item.model, ownerKey);
+  }
+
+  // One member's decrypted edge toward another; null for missing rows or
+  // shredded owners.
+  function readEdgeOf(ownerId, otherId, ownerKey) {
+    return readOwnFacet(ownerId, `affinity#${otherId}`, ownerKey);
   }
 
   async function detectCrews(userId, myKey, tappedNow, asOf, eventId) {
@@ -375,32 +398,41 @@ export function createUserModelProjector({ client, userModelTable, keyStore }) {
   // Write/re-affirm the crew on every member's partition. lastEventId
   // idempotency also dedupes the symmetric double-detection when one
   // debrief taps two crew-mates (same crewId, same event → no-op).
+  // Each member's copy stamps THAT member's own lived-events counter at
+  // affirmation (spec v6): the crew fades — toward its floor, never
+  // below — at the pace of each member's own lived experience.
   async function affirmCrew({ members, keys, asOf, eventId }) {
     const crewId = crewIdOf(members);
     const sorted = [...members].sort();
     for (const member of members) {
+      const stats = await readOwnFacet(member, 'stats#affinity', keys[member]);
+      const activityAtAffirmation = stats?.debriefedEvents ?? 0;
       await applyDelta(member, `crew#${crewId}`, keys[member], eventId, asOf, (current) => ({
         crewId,
         members: sorted,
         formedAt: current?.formedAt ?? asOf,
         lastAffirmedAt: asOf,
         affirmations: (current?.affirmations ?? 0) + 1,
+        activityAtAffirmation,
       }));
     }
   }
 
   // Read → apply → conditional write on version, with lastEventId
   // idempotency (a redelivered stream record is a no-op) and one retry on
-  // a concurrent-writer conflict.
+  // a concurrent-writer conflict. Returns the item's resulting payload —
+  // on an idempotent skip that's the already-applied state, so callers
+  // that chain deltas (the activity counter → edge snapshots) read the
+  // same value on first delivery and on redelivery (replay-exact).
   async function applyDelta(userId, sk, dataKey, eventId, asOf, applyFn, attempt = 0) {
     const existing = await client.send(new GetCommand({
       TableName: userModelTable,
       Key: { userId, sk },
     }));
     const item = existing.Item;
-    if (item?.lastEventId === eventId) return; // already applied
-
     const currentPayload = item?.model ? decryptValue(item.model, dataKey) : null;
+    if (item?.lastEventId === eventId) return currentPayload; // already applied
+
     const nextPayload = applyFn(currentPayload);
     const version = (item?.version ?? 0) + 1;
 
@@ -429,6 +461,7 @@ export function createUserModelProjector({ client, userModelTable, keyStore }) {
       }
       throw err;
     }
+    return nextPayload;
   }
 
   async function seedFromOnboarding(event) {

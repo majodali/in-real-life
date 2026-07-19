@@ -15,8 +15,10 @@
 //      weaker side (reverse edge read pointwise — the typed sort key
 //      affinity#<otherUserId> makes this a GetItem; no GSI needed until
 //      crew detection asks set-level questions), reciprocal-met
-//      confirmation. All of it backstage: reverse edges and stats are
-//      decrypted server-side and never leave this module,
+//      confirmation. Decay is evidence-based (spec v6): both sides'
+//      lived-events counters ride on the same stats#affinity items
+//      already read for generosity. All of it backstage: reverse edges
+//      and stats are decrypted server-side and never leave this module,
 //   4. returns the ordered eventId list. No score leaves this module.
 //
 // Failure tolerance: the feed must never die because ranking did — the
@@ -166,6 +168,10 @@ export function createRecommender({
       const myTaps = stats?.tapsGiven
         ?? affinities.reduce((sum, a) => sum + (a?.seeAgain ?? 0), 0);
       const myWeight = generosityWeight(myTaps, tunables.affinityGenerosityPivot);
+      // The evidence-decay axis (spec v6): my lived-events counter.
+      // Missing stats → undefined → activityDelta treats every anchor as
+      // fresh (no decay without grounded evidence).
+      const myActivity = stats?.debriefedEvents;
 
       const { presentByEvent, presentPeople } = await affinityPresence(
         affinities, crews, userId, new Set(candidates.map((e) => e.eventId)),
@@ -185,7 +191,13 @@ export function createRecommender({
           theirStats?.tapsGiven ?? 0, tunables.affinityGenerosityPivot,
         );
         strengthByPerson.set(otherUserId, edgeStrength({
-          myEdge, reverseEdge, myWeight, theirWeight, nowIso, tunables,
+          myEdge,
+          reverseEdge,
+          myWeight,
+          theirWeight,
+          myActivity,
+          theirActivity: theirStats?.debriefedEvents,
+          tunables,
         }));
       }
       // Per-event nudge = capped affinity strength + capped crew-gathering
@@ -197,7 +209,7 @@ export function createRecommender({
           people.reduce((sum, p) => sum + (strengthByPerson.get(p) ?? 0), 0),
         );
         const crew = crewNudge({
-          crews, userId, presentPeople: people, nowIso, tunables,
+          crews, userId, presentPeople: people, myActivity, tunables,
         });
         affinityNudges.set(eventId, affinity + crew);
         // A known face = someone this member positively tapped, present.
