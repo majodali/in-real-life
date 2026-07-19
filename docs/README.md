@@ -50,7 +50,8 @@ Understanding of a person is **seeded** at onboarding and **grown** from what th
 **Matching & recommendation (Group 3)**
 - `success-and-progress.md` — **the keystone: what IRL is *for*.** Success = real-world connection & belonging, not engagement; distributional; indicators-not-targets. Everything downstream is evaluated against this.
 - `matching.md` — how fit, affinity, rating, crews, constraints, avoidance, and newcomer status combine into what a member sees; fit-first, bounded soft nudges, exploration/inclusion floor; the definitions + influence map; the gaming/negative-scenario register.
-- `matching-spec.md` — the implemented, versioned ranking spec (v2): tunables + defaults, hard constraints, the honest register of what it omits and where each piece lands.
+- `matching-spec.md` — the implemented, versioned ranking spec (v5): tunables + defaults, hard constraints, the honest register of what it omits and where each piece lands.
+- `evidence-decay.md` — proposal (spec v6): replacing the clock-based affinity/crew half-lives with evidence-based decay — the activity axis, decay floors as the incompleteness prior, ambiguous counter-evidence captured-not-used.
 - `event-shape-prompt.md` — the propose-time event-shape extraction (D56): activityTags / structure / doors, organizer-correctable, feeding the fit tiers in `matching-spec.md`.
 - `scenario-walkthroughs.md` — the matching + success test scenarios run concretely through the design as written; two passes (F1–F12 triaged → D46–D51; second pass re-verifies all twelve and adversarially probes the new machinery, F13–F14 fixed). All scenarios currently `holds`.
 
