@@ -330,6 +330,22 @@ export function createCommands({
     );
   }
 
+  // ─── Model legibility (D59) ───
+
+  async function getModel() {
+    return await api.get('/me/model');
+  }
+
+  // Per-click commandId — each correction is a distinct intent ("set it
+  // again" must take again); a network retry within one press reuses the
+  // id at the API layer naturally.
+  async function correctModel({ correction }) {
+    return await api.post('/me/model/correction', {
+      commandId: makeId(),
+      correction,
+    });
+  }
+
   async function requestNotify({ email, postalCode, country }) {
     const commandId = getOrMakeCommandId(NOTIFY_KEY);
     const body = { commandId, email, postalCode };
@@ -352,6 +368,8 @@ export function createCommands({
     requestNotify,
     exportData,
     deleteAccount,
+    getModel,
+    correctModel,
     getTime,
     advanceTime,
     getNotifyList,

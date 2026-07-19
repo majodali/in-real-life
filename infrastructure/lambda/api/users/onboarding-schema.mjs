@@ -6,7 +6,9 @@
 // Layer 2. Layer 3 is never populated at onboarding (user-model.md).
 // `weight` is 0–1 by convention (structured outputs don't enforce numeric
 // ranges); `comfort` values are free text while the dimension vocabulary is
-// still a hypothesis.
+// still a hypothesis. `position`/`edgeToward` (D58) are validated against
+// lib/envelope.mjs at consumption — same convention: the schema carries
+// strings, the projector drops invalid values rather than choking.
 
 export const ONBOARDING_EXTRACTION_SCHEMA = {
   type: 'object',
@@ -133,6 +135,11 @@ export const ONBOARDING_EXTRACTION_SCHEMA = {
       properties: {
         comfort: { type: 'string' },
         growthEdge: { type: 'string' },
+        // D58: the coarse scale position + the pole they're stretching
+        // toward (docs/profile-and-legibility.md). OPTIONAL — omit when
+        // the story doesn't support a placement; restraint over coverage.
+        position: { type: 'string' },
+        edgeToward: { type: 'string' },
         provenance: { type: 'string', enum: ['stated', 'inferred'] },
         confidence: { type: 'string', enum: ['low', 'medium', 'high'] },
       },

@@ -2,7 +2,7 @@
 
 Design notes for **in·real·life** — a local community meetup app: AI-guided onboarding, discover nearby events and people, coordinate real-world meetups. Privacy-focused (first names only, no messaging — just show up).
 
-These notes are **living and provisional** — current best decisions, revisable as real usage teaches us. `decisions.md` is the map: a register of every decision (D1–D54) with a one-line pointer to the note that holds the reasoning, plus watch-items for emergent effects we're tracking.
+These notes are **living and provisional** — current best decisions, revisable as real usage teaches us. `decisions.md` is the map: a register of every decision (D1–D59) with a one-line pointer to the note that holds the reasoning, plus watch-items for emergent effects we're tracking.
 
 ## How the pieces fit
 
@@ -29,6 +29,7 @@ Understanding of a person is **seeded** at onboarding and **grown** from what th
 
 **The person (Groups 1 & 3)**
 - `user-model.md` — model situations not traits; three layers (narrative / annotated index / earned relational); the comfort envelope; compatibility stance; *difference is not incompatibility* + demographic affinity lives on the event.
+- `profile-and-legibility.md` — **(proposal)** the machine-comparable envelope form (coarse positions + growth edge alongside the stories) and the member-visible correction surface ("How we understand you", `UserModelCorrected`, the D7 correction-precedence rule made concrete).
 
 **Onboarding (Group 1)**
 - `onboarding-interview.md` — architecture of the adaptive interview (per-turn structured calls, Opus 4.8).

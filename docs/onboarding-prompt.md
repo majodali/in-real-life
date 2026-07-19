@@ -335,6 +335,8 @@ Runs once over the full transcript at `done`. Produces the onboarding slice of t
       "properties": {
         "comfort": { "type": "string" },
         "growthEdge": { "type": "string" },
+        "position": { "type": "string" },
+        "edgeToward": { "type": "string" },
         "provenance": { "type": "string", "enum": ["stated", "inferred"] },
         "confidence": { "type": "string", "enum": ["low", "medium", "high"] }
       },
@@ -346,6 +348,7 @@ Runs once over the full transcript at `done`. Produces the onboarding slice of t
 
 Notes:
 - `comfort` per dimension is free text (e.g. `"intimate"`, `"activity-anchored"`, `"needs-known-face"`) rather than a tight enum — the dimension vocabulary is still a hypothesis (`user-model.md` → Model evolution), so we keep it loose at first and tighten once the values stabilize.
+- `position`/`edgeToward` (D58, `profile-and-legibility.md`) are OPTIONAL coarse placements on the 3-position scales in `lib/envelope.mjs` — set `position` only when the member's own words support one (restraint over coverage; the story in `comfort` always travels with it), and `edgeToward` only for a pole they're explicitly stretching toward. The schema carries strings by the weight-range convention; the projector validates against the vocabulary and drops anything it doesn't recognise.
 - `weight` is 0–1 by convention; structured outputs don't enforce numeric ranges, so the app clamps.
 - `willingToFacilitate` is the onboarding seed for the members-as-facilitators path (`coaching-and-engagement.md`); default/absent means unknown, not no.
 - `$ref`/`$defs` are in the supported subset; recursive schemas are not (none here).

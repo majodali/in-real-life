@@ -1,4 +1,4 @@
-# Ranking Spec — v4 (implemented)
+# Ranking Spec — v5 (implemented)
 
 The **explicit, versioned ranking spec** that `matching.md` requires ("how
 recommendations are ranked is never implicit or emergent-from-code"). This
@@ -38,7 +38,8 @@ Filtered out before scoring, per the influence map:
 
 ## Fit (base signal)
 
-`fit = interestFit + doorFit`, capped at `fitCap`.
+`fit = interestFit + doorFit + structureFit + sizeFit [+ knownFaceBoost]`,
+capped at `fitCap`.
 
 **Interest fit is two-tiered** against the event's shape (D56,
 `event-shape-prompt.md` — extracted at propose time, organizer-correctable):
@@ -59,14 +60,30 @@ D7-observed delta; default `interestDefaultWeight` when unset).
 weights (`profile#core` → `doors`) against the shape's doors — each shared
 door scores `fitDoorWeight × memberDoorWeight`.
 
-**Still deliberately thin on the envelope:** the shape's `structure` is
-**captured, not used** (capture ≠ use) — the member-side comfort envelope
-remains free-text annotations (`comfort: "small groups"`), so there is
-nothing honest to compare against yet. When the envelope gets a comparable
-form (a member-model evolution, i.e. a re-extraction job per
-`projection-store.md`), structure/size fit lands with no event-side
-backfill needed. Cold-start still holds: interests and doors both exist
-from onboarding with zero history.
+**Envelope fit (D58, `profile-and-legibility.md`)** — the member's coarse
+3-position placements (`lib/envelope.mjs` vocabulary; onboarding-seeded,
+debrief-shifted, member-correctable) compared against the event:
+
+- **Structure**: member `structure.position` vs the shape's `structure`
+  enum via the 1:1 map (`activity-anchored`↔`structured`, etc.) —
+  `fitStructureWeight ×` adjacency (exact 1, adjacent 0.5, opposite 0).
+- **Size**: member `groupSize.position` vs the event's expected-size band
+  (`maxAttendance` when set, else max(threshold, current interest);
+  ≤4 intimate, ≤8 small, else large) — `fitSizeWeight ×` adjacency. The
+  banding is deliberately coarse, matching the coarse member scale.
+- **Known face**: for a `needs-known-face` member, a positively-tapped
+  person present on the candidate adds `fitKnownFaceWeight` — a **fit**
+  component, not a nudge, because for that member a familiar face is what
+  makes the room feasible at all. Applied inside `fitCap` in the ranker.
+- A missing position on either side means the component simply doesn't
+  apply — never a penalty for an unplaced member or a shapeless event.
+- `role` and `novelty` positions are captured but **not yet consumed** —
+  their comparands (facilitation-need on events, a member's event-history
+  novelty read) don't exist yet. Capture ≠ use, named here so it's never
+  silent.
+
+Cold-start still holds: interests, doors, and (usually) positions all
+exist from onboarding with zero history.
 
 ## Affinity nudge (strength-weighted, capped — D47/H4)
 
@@ -174,7 +191,7 @@ events-only, and a newcomer's own cold-start is already served (fit works
 from onboarding, and with a thin model the noise share dominates —
 their feed is naturally exploratory).
 
-## Tunables (v4 defaults)
+## Tunables (v5 defaults)
 
 Every value is configuration, not a constant; **tunable to zero** (zeroing
 `affinityPerPersonNudge` removes affinity entirely; zeroing
@@ -187,6 +204,9 @@ Every value is configuration, not a constant; **tunable to zero** (zeroing
 | `fitDoorWeight` | 0.15 | score per shared door, × member door weight |
 | `fitCap` | 1.0 | max total fit contribution |
 | `interestDefaultWeight` | 0.5 | interest weight when the item carries none |
+| `fitStructureWeight` | 0.25 | structure position vs shape structure, × adjacency |
+| `fitSizeWeight` | 0.2 | groupSize position vs expected-size band, × adjacency |
+| `fitKnownFaceWeight` | 0.2 | needs-known-face member + tapped person present (fit, not nudge) |
 | `affinityPerPersonNudge` | 0.12 | one-sided component, × own generosity weight |
 | `affinityMutualBonus` | 0.12 | mutual amplification, × min(w_me, w_them) |
 | `affinityConfirmedBonus` | 0.08 | reciprocal-met confirmation, × scale (not weight-gated) |
@@ -212,7 +232,7 @@ unit tests assert this relationship against the defaults.
 
 | Input | Why absent | Lands with |
 |---|---|---|
-| Envelope fit (size/structure) | member envelope is free text — shape's `structure` captured, not used | structured profile form (member-model re-extraction, Group 3) |
+| Role / novelty fit | positions captured (D58) but comparands don't exist yet | facilitation-need on events; event-history novelty read |
 | Crew size 4 / crew merge | v1 detects triads only | crews follow-up |
 | Ossification aggregate read | newcomer-share trend per recurring event (gaming register signal); this is where the `otherUserId` GSI becomes necessary | backstage/admin slice |
 | Co-attendance chance-rate baseline | v1 confirmation uses raw reciprocal met counts; thin-calendar correction is tuning work | H4 evidence loop |
@@ -224,6 +244,13 @@ unit tests assert this relationship against the defaults.
 
 ## Version history
 
+- **v5** — envelope fit (D58/D59): member 3-position placements
+  (`lib/envelope.mjs`) become fit inputs — structure via the 1:1 shape
+  map, group size via attendance banding, known-face comfort as a
+  presence-dependent fit boost inside `fitCap` (fit, not nudge).
+  Positions are member-legible and correctable (`GET /me/model`,
+  `POST /me/model/correction`); a correction beats all older evidence,
+  and observed shifts move a position one step only when they repeat.
 - **v4** — crews (D47/D57): triad formation on mutual-strong pairs
   (reciprocal-met pivot), per-member encrypted crew rows, gathering bonus
   with affirmation decay, separate cap; total soft-nudge ceiling

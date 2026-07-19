@@ -40,6 +40,10 @@ export const DEBRIEF_EXTRACTION_SCHEMA = {
           observation: { type: 'string' },
           condition: { type: 'string' },
           direction: { type: 'string', enum: ['widen', 'confirm', 'narrow'] },
+          // D58: optional pole this observation shifts the position
+          // toward (validated against lib/envelope.mjs; a position moves
+          // one step only when shifts REPEAT — never on one story).
+          shiftToward: { type: 'string' },
           confidence: CONFIDENCE,
         },
         required: ['dimension', 'observation', 'direction', 'confidence'],

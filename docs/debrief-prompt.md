@@ -66,6 +66,7 @@ edges come from the people-step taps (deterministic, never the LLM),
       "observation": "string",          // what the text actually showed
       "condition": "string?",           // the circumstances it held under
       "direction": "widen | confirm | narrow",
+      "shiftToward": "string?",         // pole this evidence points at (D58)
       "confidence": "low | medium | high"
     }
   ],
@@ -86,3 +87,11 @@ edges come from the people-step taps (deterministic, never the LLM),
 All fields optional; the projector stamps provenance `observed`, `asOf`
 (simulated time), and `sourceEventId` — the model never asserts
 provenance.
+
+`shiftToward` names the pole (from the `lib/envelope.mjs` vocabulary)
+this evidence points the member's position toward. Include it only when
+the text clearly shows the member operating at or enjoying a placement
+away from where they said they'd be. The projector applies the D58
+repetition rule: one shift sets a pending marker; only a SECOND shift in
+the same direction moves the position one step. Evidence older than a
+member's own correction never moves a corrected position (D59).

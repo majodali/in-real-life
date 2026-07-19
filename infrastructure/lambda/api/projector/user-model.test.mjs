@@ -506,6 +506,203 @@ test('no crew when the third pair is not mutual-strong (one-sided or under the m
   assert.equal(writes.filter((w) => w.sk.startsWith('crew#')).length, 0);
 });
 
+// ─── Envelope positions (D58): seed sanitization + shift repetition ───
+
+function seedWithEnvelope(envelope) {
+  return makeEvent({
+    data: {
+      userId: 'abc',
+      transcript: encryptValue([], dataKey),
+      extraction: encryptValue({ ...EXTRACTION, envelope }, dataKey),
+    },
+  });
+}
+
+function shiftDebrief(shiftToward, overrides = {}) {
+  return debriefEvent({
+    attended: true,
+    again: 'yes',
+    deltas: {
+      envelopeUpdates: [{
+        dimension: 'groupSize',
+        observation: 'seemed at ease in the bigger room',
+        direction: 'widen',
+        confidence: 'medium',
+        ...(shiftToward !== undefined ? { shiftToward } : {}),
+      }],
+      interestUpdates: [],
+      barrierUpdates: [],
+    },
+  }, overrides);
+}
+
+async function coreEnvelope() {
+  const core = writes.filter((w) => w.sk === 'profile#core').at(-1);
+  return decryptValue(core.model, dataKey).envelope;
+}
+
+test('seed keeps valid positions/edges and drops unrecognised ones', async () => {
+  await projector.applyEvent(seedWithEnvelope({
+    groupSize: { comfort: 'small groups', position: 'small', provenance: 'stated' },
+    structure: { comfort: 'likes a plan', position: 'sitting-down', provenance: 'inferred' },
+    familiarity: { position: 'needs-known-face', edgeToward: 'easier-with-known-face' },
+  }));
+
+  const envelope = await coreEnvelope();
+  assert.equal(envelope.groupSize.position, 'small');
+  assert.equal(envelope.structure.position, undefined, 'invalid position dropped');
+  assert.equal(envelope.structure.comfort, 'likes a plan', 'story text survives');
+  assert.equal(envelope.familiarity.position, 'needs-known-face');
+  assert.equal(envelope.familiarity.edgeToward, undefined, 'middle is not a pole');
+});
+
+test('a position moves one step only when shifts repeat in the same direction', async () => {
+  await projector.applyEvent(seedWithEnvelope({
+    groupSize: { comfort: 'small groups', position: 'small', provenance: 'stated' },
+  }));
+
+  await projector.applyEvent(shiftDebrief('large', { eventId: '01SHIFT-1' }));
+  let envelope = await coreEnvelope();
+  assert.equal(envelope.groupSize.position, 'small', 'one story never moves a position');
+  assert.equal(envelope.groupSize.pendingShift, 'large');
+
+  await projector.applyEvent(shiftDebrief('large', {
+    eventId: '01SHIFT-2', aggregateId: 'interaction#abc#evt-10',
+  }));
+  envelope = await coreEnvelope();
+  assert.equal(envelope.groupSize.position, 'large');
+  assert.equal(envelope.groupSize.positionProvenance, 'observed');
+  assert.equal(envelope.groupSize.pendingShift, undefined, 'pending shift consumed');
+});
+
+test('a shift in the opposite direction resets the pending shift', async () => {
+  await projector.applyEvent(seedWithEnvelope({
+    groupSize: { position: 'small', provenance: 'stated' },
+  }));
+
+  await projector.applyEvent(shiftDebrief('large', { eventId: '01SHIFT-1' }));
+  await projector.applyEvent(shiftDebrief('intimate', {
+    eventId: '01SHIFT-2', aggregateId: 'interaction#abc#evt-10',
+  }));
+  const envelope = await coreEnvelope();
+  assert.equal(envelope.groupSize.position, 'small', 'direction change: no move');
+  assert.equal(envelope.groupSize.pendingShift, 'intimate');
+});
+
+test('a dimension with no position adopts the repeated shift target directly', async () => {
+  await projector.applyEvent(seedWithEnvelope({
+    groupSize: { comfort: 'unsure', provenance: 'inferred' },
+  }));
+
+  await projector.applyEvent(shiftDebrief('large', { eventId: '01SHIFT-1' }));
+  await projector.applyEvent(shiftDebrief('large', {
+    eventId: '01SHIFT-2', aggregateId: 'interaction#abc#evt-10',
+  }));
+  const envelope = await coreEnvelope();
+  assert.equal(envelope.groupSize.position, 'large');
+});
+
+// ─── Member corrections (D59): precedence without counters or clocks ───
+
+function correctionEvent(correction, overrides = {}) {
+  return {
+    aggregateId: 'user#abc',
+    seq: 6,
+    eventId: '01CORRECT',
+    eventType: 'UserModelCorrected',
+    simulatedTime: '2026-07-25T10:00:00.000Z',
+    data: { userId: 'abc', ...encryptPii({ correction }, ['correction'], dataKey) },
+    ...overrides,
+  };
+}
+
+test('an envelope correction sets the position as corrected and clears any pending shift', async () => {
+  await projector.applyEvent(seedWithEnvelope({
+    groupSize: { position: 'large', provenance: 'inferred' },
+  }));
+  await projector.applyEvent(shiftDebrief('intimate', { eventId: '01SHIFT-1' }));
+
+  await projector.applyEvent(correctionEvent({
+    type: 'envelope', dimension: 'groupSize', position: 'small', edgeToward: 'large',
+  }));
+
+  const envelope = await coreEnvelope();
+  assert.equal(envelope.groupSize.position, 'small');
+  assert.equal(envelope.groupSize.edgeToward, 'large');
+  assert.equal(envelope.groupSize.positionProvenance, 'corrected');
+  assert.equal(envelope.groupSize.correctedAt, '2026-07-25T10:00:00.000Z');
+  assert.equal(envelope.groupSize.pendingShift, undefined);
+});
+
+test('a null edgeToward correction clears the growth edge', async () => {
+  await projector.applyEvent(seedWithEnvelope({
+    groupSize: { position: 'small', edgeToward: 'large', provenance: 'stated' },
+  }));
+  await projector.applyEvent(correctionEvent({
+    type: 'envelope', dimension: 'groupSize', edgeToward: null,
+  }));
+  const envelope = await coreEnvelope();
+  assert.equal(envelope.groupSize.edgeToward, undefined);
+  assert.equal(envelope.groupSize.position, 'small', 'position untouched');
+});
+
+test('evidence older than a correction never moves the position; later evidence resumes', async () => {
+  await projector.applyEvent(seedWithEnvelope({
+    groupSize: { position: 'large', provenance: 'inferred' },
+  }));
+  await projector.applyEvent(correctionEvent({
+    type: 'envelope', dimension: 'groupSize', position: 'small',
+  }));
+
+  // Replayed/late evidence from BEFORE the correction: observations are
+  // kept, but the corrected position stands — no counters, no clocks.
+  await projector.applyEvent(shiftDebrief('large', {
+    eventId: '01OLD-1', simulatedTime: '2026-07-20T10:00:00.000Z',
+  }));
+  await projector.applyEvent(shiftDebrief('large', {
+    eventId: '01OLD-2', simulatedTime: '2026-07-21T10:00:00.000Z',
+    aggregateId: 'interaction#abc#evt-10',
+  }));
+  let envelope = await coreEnvelope();
+  assert.equal(envelope.groupSize.position, 'small', 'older shifts are spent');
+  assert.equal(envelope.groupSize.pendingShift, undefined);
+  assert.equal(envelope.groupSize.observations.length, 2, 'stories still recorded');
+
+  // New lived experience AFTER the correction moves it normally again.
+  await projector.applyEvent(shiftDebrief('large', {
+    eventId: '01NEW-1', simulatedTime: '2026-08-02T10:00:00.000Z',
+    aggregateId: 'interaction#abc#evt-11',
+  }));
+  await projector.applyEvent(shiftDebrief('large', {
+    eventId: '01NEW-2', simulatedTime: '2026-08-09T10:00:00.000Z',
+    aggregateId: 'interaction#abc#evt-12',
+  }));
+  envelope = await coreEnvelope();
+  assert.equal(envelope.groupSize.position, 'large', 'repeated later shifts move it');
+  assert.equal(envelope.groupSize.positionProvenance, 'observed');
+});
+
+test('an interest-add correction creates a corrected interest; removals delete rows', async () => {
+  await projector.applyEvent(correctionEvent({ type: 'interest-add', tag: 'Chess Club' }));
+  const interest = writes.find((w) => w.sk === 'interest#chess-club');
+  assert.ok(interest, 'interest row written');
+  const payload = decryptValue(interest.model, dataKey);
+  assert.equal(payload.tag, 'Chess Club');
+  assert.equal(payload.provenance, 'corrected');
+  assert.equal(payload.correctedAt, '2026-07-25T10:00:00.000Z');
+
+  await projector.applyEvent(correctionEvent(
+    { type: 'interest-remove', tag: 'Chess Club' }, { eventId: '01CORRECT-2' },
+  ));
+  await projector.applyEvent(correctionEvent(
+    { type: 'barrier-remove', what: 'walking into rooms of strangers' }, { eventId: '01CORRECT-3' },
+  ));
+  assert.deepEqual(deletes, [
+    { userId: 'abc', sk: 'interest#chess-club' },
+    { userId: 'abc', sk: 'barrier#walking-into-rooms-of-strangers' },
+  ]);
+});
+
 test('re-detection re-affirms: lastAffirmedAt advances, affirmations count up', async () => {
   seedEdge('abc', 'p1', { met: 3, seeAgain: 2 });
   seedEdge('abc', 'p2', { met: 3, seeAgain: 1 });

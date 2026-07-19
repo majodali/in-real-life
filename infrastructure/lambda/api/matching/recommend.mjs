@@ -53,7 +53,7 @@ export function createRecommender({
   // exploration-only ranking.
   async function loadModel(userId) {
     const dataKey = await keyStore.getKey(`user#${userId}`);
-    if (!dataKey) return { interests: [], doors: [], affinities: [], crews: [], stats: null };
+    if (!dataKey) return { interests: [], doors: [], envelope: {}, affinities: [], crews: [], stats: null };
     const rows = await queryAll({
       TableName: userModelTable,
       KeyConditionExpression: 'userId = :u',
@@ -63,6 +63,7 @@ export function createRecommender({
     const affinities = [];
     const crews = [];
     let doors = [];
+    let envelope = {};
     let stats = null;
     for (const row of rows) {
       if (!row.model || typeof row.sk !== 'string') continue;
@@ -73,12 +74,14 @@ export function createRecommender({
       } else if (row.sk.startsWith('crew#')) {
         crews.push(decryptValue(row.model, dataKey));
       } else if (row.sk === 'profile#core') {
-        doors = decryptValue(row.model, dataKey)?.doors ?? [];
+        const core = decryptValue(row.model, dataKey);
+        doors = core?.doors ?? [];
+        envelope = core?.envelope ?? {};
       } else if (row.sk === 'stats#affinity') {
         stats = decryptValue(row.model, dataKey);
       }
     }
-    return { interests, doors, affinities, crews, stats };
+    return { interests, doors, envelope, affinities, crews, stats };
   }
 
   // Read one decrypted facet of ANOTHER member's model — backstage only.
@@ -142,14 +145,21 @@ export function createRecommender({
       && !myCommitted.some((c) => eventsOverlap(e, c)));
     if (candidates.length === 0) return [];
 
-    const { interests, doors, affinities, crews, stats } = await loadModel(userId);
+    const { interests, doors, envelope, affinities, crews, stats } = await loadModel(userId);
+
+    // Known-face comfort (spec v5) needs presence too: for a
+    // needs-known-face member, a familiar face is a FIT input.
+    const needsKnownFace = envelope?.familiarity?.position === 'needs-known-face'
+      && tunables.fitKnownFaceWeight > 0;
 
     const affinityOn = tunables.affinityPerPersonNudge > 0
       || tunables.affinityMutualBonus > 0
       || tunables.affinityConfirmedBonus > 0
-      || (tunables.crewBonus > 0 && crews.length > 0);
+      || (tunables.crewBonus > 0 && crews.length > 0)
+      || needsKnownFace;
 
     const affinityNudges = new Map();
+    const fitBoosts = new Map();
     if (affinityOn) {
       // Own generosity from the projector-maintained stats item; fall
       // back to summing own edges when stats haven't landed (replay gap).
@@ -190,14 +200,19 @@ export function createRecommender({
           crews, userId, presentPeople: people, nowIso, tunables,
         });
         affinityNudges.set(eventId, affinity + crew);
+        // A known face = someone this member positively tapped, present.
+        if (needsKnownFace && people.some((p) => presentPeople.has(p))) {
+          fitBoosts.set(eventId, tunables.fitKnownFaceWeight);
+        }
       }
     }
 
     return rankCandidates({
       userId,
       candidates,
-      model: { interests, doors },
+      model: { interests, doors, envelope },
       affinityNudges,
+      fitBoosts,
       nowIso,
       tunables,
     });

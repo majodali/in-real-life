@@ -37,6 +37,7 @@ const PII_FIELDS = {
   // perspectivesOffered cap keys are cleartext (enum keys, projected
   // onto the state row, no content).
   ReflectionRecorded: ['transcript', 'deltas', 'processFeedback', 'organizerFeedback'],
+  UserModelCorrected: ['correction'],
   // UserKeyShredded is intentionally absent: it's the post-shred audit
   // record and must carry no PII (its aggregate's key no longer exists).
 };
