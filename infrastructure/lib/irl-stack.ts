@@ -479,7 +479,13 @@ export class IrlStack extends cdk.Stack {
 
     const projectorFn = new lambda.Function(this, 'UserModelProjectorFn', {
       runtime: lambda.Runtime.NODEJS_20_X,
-      handler: 'projector.handler',
+      // 'stream-projector', NOT 'projector': the asset also contains a
+      // projector/ DIRECTORY, and the runtime resolves the handler module
+      // extensionless — a same-named directory shadows the .mjs file and
+      // the function dies at INIT with "Cannot find module
+      // '/var/task/projector'". The entry file must never share a name
+      // with a sibling directory.
+      handler: 'stream-projector.handler',
       code: lambda.Code.fromAsset(path.join(__dirname, '../lambda/api'), {
         exclude: ['**/*.test.mjs'],
       }),
