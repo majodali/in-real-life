@@ -51,7 +51,8 @@ Tier 0–1 is taps and needs no model call. Tier 2 spends a call to capture bett
 Two light taps over the attendee list, and it does real work:
 
 - **Who did you actually meet?** Tap the people you connected or spent time with. This makes the debrief feel complete (especially at a large gathering where you met 3 of 20, or when someone didn't show), grounds affinity (you can only want to see again someone you met), and cross-validates who was really there.
-- **Anyone you'd want to see again?** A positive-only second mark on the people you met. Untapped is neutral; there is no per-person "no."
+- **Anyone you'd want to see again?** A positive-only second mark on the people you met. Untapped is neutral; there is no per-person "no" **chip** in the main flow.
+- **Avoidance is a deliberate act, not a rating** (D49/D61): behind a tucked-away ⋯ affordance on a met person sit two quiet options — "we didn't really click" and "I'd rather not cross paths" — with honest capture-time copy (reduces co-placement, can't prevent co-attendance, never visible to them) and explicit safety routing to the conduct question. A tap and an avoid are contradictory and rejected together; the newest word wins over time (a later tap clears an avoid). Consumption is soft-only (`matching-spec.md` → Avoidance).
 
 **Kudos are deliberately not here.** Structured encouragement gestures (D45, `coaching-and-engagement.md`) live on the past-event surface as a separate act — if they shared a flow with the affinity tap, reciprocity norms would contaminate the observed signal.
 
@@ -63,6 +64,7 @@ Two light taps over the attendee list, and it does real work:
 | Worth another go? | door confirmation; event-type outcome; re-surfacing | L2 doors, L3 outcomes (`observed`) |
 | Who you met | grounds affinity; attendance cross-check | L3 relational |
 | Want to see again | people-affinity edge; mutual = strongest, seeds crews | L3 relational (`observed`) |
+| Didn't click / do-not-interact | zeroes the pair's boost; soft de-weight in the namer's feed (D49/D61) | L3 relational (`observed`, never visible) |
 | Texture (size, things-to-do, role, energy) | envelope nudges — comfort and growth-edge | L2 envelope (`observed`) |
 | Surprise vs expectation | forecast-error calibration | L2/L3 calibration |
 | Free reflection (if the user opens that door) | narrative append + LLM-extracted deltas | L1 + L2/L3 |

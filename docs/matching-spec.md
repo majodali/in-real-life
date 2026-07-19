@@ -1,4 +1,4 @@
-# Ranking Spec — v6 (implemented)
+# Ranking Spec — v7 (implemented)
 
 The **explicit, versioned ranking spec** that `matching.md` requires ("how
 recommendations are ranked is never implicit or emergent-from-code"). This
@@ -156,9 +156,13 @@ nudge(event) = min( affinityNudgeCap, Σ strengths of tapped people present )
 - **Own feed only.** All of this shapes the *tapper's* recommendations;
   reverse edges and stats are decrypted server-side, backstage, and never
   alter the tapped person's or any third party's ranking.
-- **Do-not-interact zeroing** (D47/D49) has nothing to zero yet —
-  avoidance capture is Group 3/4 work. When it lands, it zeroes the pair's
-  strength here outright (a boost must never fight a de-weight).
+- **Avoidance zeroes the pair outright** (D47/D49/D61, spec v7): an
+  `avoid` mark on EITHER direction of the edge returns strength 0 —
+  structurally, in `edgeStrength` itself (a boost must never fight a
+  de-weight). Either feed quietly stops being pulled toward the pair;
+  nothing observable changes for anyone (information-symmetric,
+  non-legible under noise). See the Avoidance section below for the
+  de-weight side.
 
 ## Crews (D47) — gathering bonus, capped
 
@@ -195,6 +199,53 @@ future work); detection cost is O(strong partners) reverse reads per
 tapped debrief — fine at community scale; the chance-rate co-attendance
 baseline is the same H4 tuning work as edge confirmation.
 
+## Avoidance (D49/D61) — comfort tier, soft de-weight, never a gate
+
+**Capture** (D61): the debrief people step, behind a deliberately
+tucked-away ⋯ affordance — never a per-person "no" chip in the main flow
+(the step stays positive-first; untapped remains neutral, D21 signal
+hygiene). Two typed tiers: `didnt-click` ("we didn't really click") and
+`do-not-interact` ("I'd rather not cross paths"). Contradictory input
+(tap + avoid on one person) is rejected at the command. The capture copy
+is honest at capture time (`matching.md` #17's commitment): it reduces
+co-placement, it cannot prevent co-attendance, and the named person
+never knows. Safety routing is explicit in the copy: anything unsafe
+belongs in the conduct question (a person reads it), never here.
+
+**Storage**: `avoid` + `avoidedAt` on the member's own `affinity#` edge —
+the newest word about the pair (D7): a later positive tap clears it, a
+later avoidance replaces a tap's standing; historical counts are never
+rewritten; every act stays on the edge's sources record.
+
+**Consumption** (spec v7) — today's only surface is passive feed
+suggestion, D49's SOFTEST tier; injection/composition apply their
+stronger tiers when those surfaces exist:
+
+- The pair's positive strength is zeroed structurally, either direction
+  (above). An avoided person never counts as a known face (D58 fit
+  boost) and never counts toward a crew gathering; an avoided pair can't
+  form or re-affirm a crew at all (projector-side `mutualStrong`).
+- Events where an avoided person is present take a capped de-weight in
+  the NAMER's feed only: `avoidancePenalty` per do-not-interact person,
+  `didntClickPenalty` per didn't-click person, summed and capped at
+  `avoidanceDeweightCap`, subtracted from the event's soft nudge. Their
+  room sinks; it never disappears — noise and the exploratory share
+  still apply (no negative-space leak; open-risks #17).
+- The de-weight never touches the named person's feed (a de-weight in
+  their feed would be a snub they could eventually read).
+
+**Deliberate v1 bounds, named**: capture happens only where members
+actually cross paths (a debriefed event) — standalone naming of someone
+you haven't met at an IRL event needs a people-picker that collides with
+the no-directory privacy stance and waits for the blocks design (Group
+4, D50/D52 — where "selective visibility" also lives). Conduct-flagged
+debriefs carry no avoidance (safety ≠ preference, D22): the quarantine
+drops the people step whole, and the safety path leads to a human, then
+to blocks. Avoidance is Layer 3 — never shown to anyone, including the
+member's own model view (D59); un-naming happens the same way naming
+did: at the next shared event's debrief, or via the future blocks-tier
+management surface. Tracked as H6.
+
 ## Exploration (noise + floor)
 
 Two mechanisms, per `matching.md`:
@@ -217,7 +268,7 @@ events-only, and a newcomer's own cold-start is already served (fit works
 from onboarding, and with a thin model the noise share dominates —
 their feed is naturally exploratory).
 
-## Tunables (v6 defaults)
+## Tunables (v7 defaults)
 
 Every value is configuration, not a constant; **tunable to zero** (zeroing
 `affinityPerPersonNudge` removes affinity entirely; zeroing
@@ -250,6 +301,9 @@ Every value is configuration, not a constant; **tunable to zero** (zeroing
 | `crewDecayFloor` | 0.5 | crew-decay asymptote — a crew is never unearned by silence |
 | `affinityGenerosityPivot` | 12 | positive taps before self-discount begins |
 | `affinityEdgeLimit` | 20 | strongest edges consulted per ranking |
+| `avoidancePenalty` | 0.12 | de-weight per do-not-interact person present (namer's feed only) |
+| `didntClickPenalty` | 0.04 | de-weight per didn't-click person present |
+| `avoidanceDeweightCap` | 0.24 | max total avoidance de-weight per event |
 | `explorationNoise` | 0.2 | amplitude of the per-event deterministic noise |
 | `explorationShare` | 0.25 | guaranteed exploratory share of list slots |
 
@@ -267,13 +321,23 @@ unit tests assert this relationship against the defaults.
 | Ossification aggregate read | newcomer-share trend per recurring event (gaming register signal); this is where the `otherUserId` GSI becomes necessary | backstage/admin slice |
 | Co-attendance chance-rate baseline | v1 confirmation uses raw reciprocal met counts; thin-calendar correction is tuning work | H4 evidence loop |
 | Contributor rating | not built (Group 4); composition-only anyway | rating slice |
-| Avoidance / didn't-click | capture not built | preferences/safety slices |
+| Standalone avoidance naming (no shared event) | needs a people-picker vs. the no-directory stance | blocks design (Group 4, D50/D52) |
+| Graduated avoidance tiers (injection / composition) | those surfaces don't exist yet — passive feed is D49's softest tier | group formation / composition slices |
 | Newcomer injection into others' feeds | no people-surfaces/composition yet | group formation slice |
 | Blocks (D50/D52) | Group 4; advocate review first | protective-blocks build |
 | Travel/distance | no structured locality model | travel-willingness slice |
 
 ## Version history
 
+- **v7** — avoidance (D49/D61): comfort-tier capture in the debrief
+  people step (two typed tiers behind a tucked-away affordance;
+  contradictory tap+avoid rejected), pair zeroing either-direction
+  inside `edgeStrength` (no crew formation, no known-face, no gathering
+  through an avoided pair), capped soft de-weight in the namer's feed
+  only (`avoidancePenalty` / `didntClickPenalty` / `avoidanceDeweightCap`).
+  Soft-only, information-symmetric, never shown to anyone. This is the
+  grounded counter-evidence path the D60 floors reserve below-floor
+  space for. Tracked as H6.
 - **v6** — evidence-based decay (D60, `evidence-decay.md`): the three
   clock half-lives replaced by the lived-events axis (own debriefed
   events for tap strength and crews; min-of-both-sides for confirmed

@@ -202,6 +202,11 @@ export function createUserModelProjector({ client, userModelTable, keyStore }) {
     // People step → affinity edges (met + positive-only see-again), each
     // stamped with the owner's activity snapshot at this evidence — the
     // decay anchors (activityAtLastMet / activityAtLastTap).
+    //
+    // Avoidance (D49/D61) rides the same edge: `avoid` is the member's
+    // newest word about the pair — a later positive tap clears it, a
+    // later avoidance replaces any tap's effect (D7: the newest grounded
+    // word wins; consumption zeroes the pair while `avoid` is set).
     for (const p of clear.people ?? []) {
       await applyDelta(userId, `affinity#${p.userId}`, dataKey, event.eventId, asOf, (current) => {
         const payload = current ?? { otherUserId: p.userId, met: 0, seeAgain: 0, sources: [] };
@@ -210,8 +215,17 @@ export function createUserModelProjector({ client, userModelTable, keyStore }) {
         if (p.seeAgain) {
           payload.seeAgain += 1;
           if (activityNow !== undefined) payload.activityAtLastTap = activityNow;
+          delete payload.avoid;
+          delete payload.avoidedAt;
+        } else if (p.avoid === 'didnt-click' || p.avoid === 'do-not-interact') {
+          payload.avoid = p.avoid;
+          payload.avoidedAt = asOf;
         }
-        payload.sources = [...payload.sources, { ...source, seeAgain: p.seeAgain === true }].slice(-10);
+        payload.sources = [...payload.sources, {
+          ...source,
+          seeAgain: p.seeAgain === true,
+          ...(p.avoid ? { avoid: p.avoid } : {}),
+        }].slice(-10);
         return payload;
       });
     }
@@ -327,9 +341,13 @@ export function createUserModelProjector({ client, userModelTable, keyStore }) {
     return createHash('sha256').update([...members].sort().join('|')).digest('hex').slice(0, 16);
   }
 
+  // Avoidance in EITHER direction disqualifies the pair (D49: a boost
+  // must never fight a de-weight — a crew is the strongest boost there is).
   function mutualStrong(edgeAtoB, edgeBtoA) {
     return (edgeAtoB?.seeAgain ?? 0) > 0
       && (edgeBtoA?.seeAgain ?? 0) > 0
+      && !edgeAtoB?.avoid
+      && !edgeBtoA?.avoid
       && Math.min(edgeAtoB?.met ?? 0, edgeBtoA?.met ?? 0) >= RANKING_TUNABLES.crewMutualMetPivot;
   }
 

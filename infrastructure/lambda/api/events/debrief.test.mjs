@@ -134,6 +134,48 @@ test('unknown attendee ref is a 400', async () => {
   assert.match(JSON.parse(res.body).error, /unknown attendee ref/);
 });
 
+// ─── Avoidance capture (D49/D61): tucked-away, typed, never a rating ───
+
+test('avoid rides on the resolved people entry, both tiers', async () => {
+  await handler(makeEvent({
+    claims: validClaims,
+    body: {
+      commandId: 'c1', attended: true, again: 'yes',
+      people: [
+        { ref: refOf('user-p'), avoid: 'didnt-click' },
+        { ref: refOf('user-q'), avoid: 'do-not-interact' },
+      ],
+    },
+  }));
+  const data = runner.runCommand.calls[0][0].events[0].data;
+  assert.deepEqual(data.people, [
+    { userId: 'user-p', met: true, seeAgain: false, avoid: 'didnt-click' },
+    { userId: 'user-q', met: true, seeAgain: false, avoid: 'do-not-interact' },
+  ]);
+});
+
+test('avoid vocabulary is closed and contradicts seeAgain', async () => {
+  const bad = await handler(makeEvent({
+    claims: validClaims,
+    body: {
+      commandId: 'c1', attended: true, again: 'yes',
+      people: [{ ref: refOf('user-p'), avoid: 'hate' }],
+    },
+  }));
+  assert.equal(bad.statusCode, 400);
+  assert.match(JSON.parse(bad.body).error, /didnt-click or do-not-interact/);
+
+  const contradictory = await handler(makeEvent({
+    claims: validClaims,
+    body: {
+      commandId: 'c2', attended: true, again: 'yes',
+      people: [{ ref: refOf('user-p'), seeAgain: true, avoid: 'didnt-click' }],
+    },
+  }));
+  assert.equal(contradictory.statusCode, 400);
+  assert.match(JSON.parse(contradictory.body).error, /contradictory/);
+});
+
 // ─── Tier 2: extraction only on free text ───
 
 test('free text triggers exactly one extraction call; deltas ride in the event', async () => {

@@ -498,6 +498,64 @@ test('edges carry activity snapshots: met stamps activityAtLastMet, taps also ac
   assert.equal(writes.length, count, 'redelivered record is a no-op');
 });
 
+// ─── Avoidance (D49/D61): the newest word about a pair ───
+
+test('avoid stamps the edge; a later positive tap clears it (newest word wins)', async () => {
+  await projector.applyEvent(debriefEvent({
+    attended: true, again: 'yes',
+    people: [{ userId: 'other-1', met: true, seeAgain: false, avoid: 'do-not-interact' }],
+  }));
+
+  let edge = decryptValue(writes.findLast((w) => w.sk === 'affinity#other-1').model, dataKey);
+  assert.equal(edge.avoid, 'do-not-interact');
+  assert.equal(edge.avoidedAt, '2026-07-20T10:00:00.000Z');
+  assert.equal(edge.sources.at(-1).avoid, 'do-not-interact', 'the act stays on the record');
+
+  await projector.applyEvent(debriefEvent({
+    attended: true, again: 'yes',
+    people: [{ userId: 'other-1', met: true, seeAgain: true }],
+  }, { eventId: '01RECONNECT', aggregateId: 'interaction#abc#evt-10' }));
+
+  edge = decryptValue(writes.findLast((w) => w.sk === 'affinity#other-1').model, dataKey);
+  assert.equal(edge.avoid, undefined, 'a fresh tap is newer grounded word');
+  assert.equal(edge.avoidedAt, undefined);
+  assert.equal(edge.seeAgain, 1);
+});
+
+test('a later avoidance replaces an earlier tap\'s standing (both survive as history)', async () => {
+  await projector.applyEvent(debriefEvent({
+    attended: true, again: 'yes',
+    people: [{ userId: 'other-1', met: true, seeAgain: true }],
+  }));
+  await projector.applyEvent(debriefEvent({
+    attended: true, again: 'yes',
+    people: [{ userId: 'other-1', met: true, seeAgain: false, avoid: 'didnt-click' }],
+  }, { eventId: '01SOURED', aggregateId: 'interaction#abc#evt-10' }));
+
+  const edge = decryptValue(writes.findLast((w) => w.sk === 'affinity#other-1').model, dataKey);
+  assert.equal(edge.avoid, 'didnt-click');
+  assert.equal(edge.seeAgain, 1, 'the historical tap count is never rewritten');
+});
+
+test('an avoided pair can never form or re-affirm a crew, either direction', async () => {
+  // The exact mutual-strong triad from the formation test — except abc's
+  // edge to p2 carries an avoid.
+  seedEdge('abc', 'p1', { met: 3, seeAgain: 1 });
+  seedEdge('abc', 'p2', { met: 3, seeAgain: 1, avoid: 'didnt-click' });
+  seedEdge('p1', 'abc', { met: 3, seeAgain: 1 });
+  seedEdge('p2', 'abc', { met: 3, seeAgain: 1 });
+  seedEdge('p1', 'p2', { met: 3, seeAgain: 1 });
+  seedEdge('p2', 'p1', { met: 3, seeAgain: 1 });
+
+  await projector.applyEvent(debriefEvent({
+    attended: true, again: 'yes',
+    people: [{ userId: 'p1', met: true, seeAgain: true }],
+  }));
+
+  assert.equal(writes.filter((w) => w.sk.startsWith('crew#')).length, 0,
+    'a boost must never fight a de-weight — no crew through an avoided pair');
+});
+
 // ─── Crew detection (D47, spec v4) ───
 
 // Pre-seed an encrypted edge row directly into the store mock.

@@ -73,6 +73,12 @@ export function flooredDecay(deltaEvents, halfLifeEvents, floor = 0) {
 export function edgeStrength({
   myEdge, reverseEdge, myWeight, theirWeight, myActivity, theirActivity, tunables,
 }) {
+  // Avoidance zeroes the PAIR outright, either direction (D47/D49: a
+  // boost must never fight a de-weight). Non-legible by construction —
+  // the other member's feed just quietly stops being pulled toward the
+  // pair; nothing observable changes for anyone.
+  if (myEdge?.avoid || reverseEdge?.avoid) return 0;
+
   const tapDecay = flooredDecay(
     activityDelta(myActivity, myEdge?.activityAtLastTap),
     tunables.affinityTapHalfLifeEvents,

@@ -7,7 +7,7 @@
 // hash so a spec bump reshuffles deterministic noise rather than freezing
 // it across versions.
 
-export const RANKING_SPEC_VERSION = 6;
+export const RANKING_SPEC_VERSION = 7;
 
 export const RANKING_TUNABLES = {
   // Fit — interest tags vs event shape (D56) with text fallback, plus
@@ -62,6 +62,19 @@ export const RANKING_TUNABLES = {
   crewNudgeCap: 0.12,
   crewHalfLifeEvents: 24, // was 180 days; own-activity axis, floored
   crewDecayFloor: 0.5, // crews never halve-below on silence alone
+
+  // Avoidance (D49/D61, spec v7) — comfort-tier only, SOFT de-weight
+  // only: never a hard filter, never visible, information-symmetric.
+  // A named pair's positive strength is zeroed structurally
+  // (edgeStrength); these penalties additionally de-prioritize events
+  // where an avoided person is present — in the NAMER's feed only, and
+  // graduated by tier. Today's only consumption surface is passive feed
+  // suggestion — D49's softest tier; injection/composition surfaces
+  // apply their stronger tiers when they exist. The safety tier is
+  // blocks (D50): hard, and not this mechanism.
+  avoidancePenalty: 0.12, // per do-not-interact person present
+  didntClickPenalty: 0.04, // per didn't-click person present
+  avoidanceDeweightCap: 0.24, // max total de-weight per event
 
   // Exploration — deterministic noise + guaranteed exploratory share
   explorationNoise: 0.2,

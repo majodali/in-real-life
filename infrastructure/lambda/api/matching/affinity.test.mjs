@@ -193,6 +193,17 @@ test('unanchored edges (pre-v6 or replay gap) never decay — restraint over gue
   assert.ok(Math.abs(s - full) < 1e-9);
 });
 
+test('avoidance zeroes the pair outright, either direction (D49)', () => {
+  const full = edgeStrength(fresh());
+  assert.ok(full > 0);
+  assert.equal(edgeStrength(fresh({
+    myEdge: edge({ met: 3, activityAtLastTap: 10, activityAtLastMet: 10, avoid: 'didnt-click' }),
+  })), 0, 'my own avoid kills my boost toward them');
+  assert.equal(edgeStrength(fresh({
+    reverseEdge: edge({ met: 3, activityAtLastMet: 7, avoid: 'do-not-interact' }),
+  })), 0, 'their avoid quietly stops my feed pulling toward the pair');
+});
+
 test('tunable to zero restores raw mutuals: huge pivot → all weights 1', () => {
   const raw = { ...t, affinityGenerosityPivot: Number.MAX_SAFE_INTEGER };
   const w = generosityWeight(100_000, raw.affinityGenerosityPivot);

@@ -32,12 +32,27 @@ export function chooseFollowUp({ attended, again, textures, conductConcern }) {
   return null;
 }
 
+// The people step's marks → API entries. Avoidance (D49) is a quiet,
+// deliberate act behind the ⋯ affordance — mutually exclusive with the
+// see-again tap by construction (the UI enforces it; this mapping
+// guarantees it: a tap outranks a stale avoid mark and vice versa is
+// impossible because setting either clears the other).
+export function buildPeopleEntries(peopleMarks) {
+  return [...peopleMarks.entries()]
+    .filter(([, v]) => v.met)
+    .map(([ref, v]) => ({
+      ref,
+      seeAgain: v.seeAgain === true,
+      ...(v.avoid && v.seeAgain !== true ? { avoid: v.avoid } : {}),
+    }));
+}
+
 export function buildDebriefPayload({
   attended,
   again,
   noShowReason,
   textures,
-  people,          // [{ ref, seeAgain }]
+  people,          // [{ ref, seeAgain, avoid? }]
   reflection,
   followUp,        // { question, answer } from the one invited question
   conductConcern,
