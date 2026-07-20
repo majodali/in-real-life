@@ -2,7 +2,32 @@
 
 import { test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildDebriefPayload, handleDebriefSubmit, chooseFollowUp } from './debrief-handlers.js';
+import {
+  buildDebriefPayload, buildPeopleEntries, handleDebriefSubmit, chooseFollowUp,
+} from './debrief-handlers.js';
+
+// ─── buildPeopleEntries (people step marks → API entries) ───
+
+test('people entries: met filter, positive-only seeAgain, avoid rides quietly', () => {
+  const marks = new Map([
+    ['ref-a', { met: true, seeAgain: true }],
+    ['ref-b', { met: true, seeAgain: false, avoid: 'didnt-click' }],
+    ['ref-c', { met: true, seeAgain: false, avoid: 'do-not-interact' }],
+    ['ref-d', { met: false, seeAgain: false, avoid: 'didnt-click' }], // not met → dropped
+    ['ref-e', { met: true, seeAgain: false }],
+  ]);
+  assert.deepEqual(buildPeopleEntries(marks), [
+    { ref: 'ref-a', seeAgain: true },
+    { ref: 'ref-b', seeAgain: false, avoid: 'didnt-click' },
+    { ref: 'ref-c', seeAgain: false, avoid: 'do-not-interact' },
+    { ref: 'ref-e', seeAgain: false },
+  ]);
+});
+
+test('a see-again tap always outranks a stale avoid mark — never both', () => {
+  const marks = new Map([['ref-a', { met: true, seeAgain: true, avoid: 'didnt-click' }]]);
+  assert.deepEqual(buildPeopleEntries(marks), [{ ref: 'ref-a', seeAgain: true }]);
+});
 
 function spy(impl) {
   const fn = (...args) => { fn.calls.push(args); return impl(...args); };

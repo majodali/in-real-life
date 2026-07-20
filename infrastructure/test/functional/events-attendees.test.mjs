@@ -182,6 +182,17 @@ test('attendees: roster refs round-trip through the debrief people step', async 
   });
   assert.equal(bad.status, 400);
 
+  // A contradictory mark (tap + avoid) is rejected whole (D49 capture).
+  const contradictory = await fetch(`${config.apiUrl}/events/${eventId}/debrief`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${m1.idToken}` },
+    body: JSON.stringify({
+      commandId: randomUUID(), attended: true, again: 'yes',
+      people: [{ ref: otherRef, seeAgain: true, avoid: 'didnt-click' }],
+    }),
+  });
+  assert.equal(contradictory.status, 400);
+
   // A real ref resolves server-side and the debrief lands.
   const good = await fetch(`${config.apiUrl}/events/${eventId}/debrief`, {
     method: 'POST',
@@ -192,6 +203,23 @@ test('attendees: roster refs round-trip through the debrief people step', async 
     }),
   });
   assert.equal(good.status, 201);
+
+  // The other member's debrief carries a quiet avoidance mark (D49) —
+  // accepted, soft de-weight only, and the response reveals nothing.
+  const m2Roster = await fetch(`${config.apiUrl}/events/${eventId}/attendees`, {
+    headers: { Authorization: `Bearer ${m2.idToken}` },
+  }).then((r) => r.json());
+  const m1Ref = m2Roster.confirmed.find((e) => !e.me).ref;
+  const avoided = await fetch(`${config.apiUrl}/events/${eventId}/debrief`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${m2.idToken}` },
+    body: JSON.stringify({
+      commandId: randomUUID(), attended: true, again: 'yes',
+      people: [{ ref: m1Ref, avoid: 'didnt-click' }],
+    }),
+  });
+  assert.equal(avoided.status, 201);
+  assert.doesNotMatch(JSON.stringify(await avoided.json()), /avoid/);
 });
 
 test('attendees: 404 for an unknown event', async () => {

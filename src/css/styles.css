@@ -1222,7 +1222,7 @@ html, body {
 }
 
 .debrief-person {
-  display: flex; align-items: center; gap: 10px;
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
   padding: 10px 12px; border-radius: 12px;
   background: white; cursor: pointer;
   box-shadow: 0 1px 4px rgba(0,0,0,0.04);
@@ -1403,7 +1403,7 @@ html, body {
 .debrief-q { display: block; font-size: 12.5px; color: var(--earth); margin-bottom: 6px; }
 .debrief-chip-row { flex-wrap: wrap; }
 .debrief-chip.selected { background: var(--moss); color: #fff; border-color: var(--moss); }
-.debrief-person { display: flex; gap: 6px; margin: 4px 0; align-items: center; }
+.debrief-person { display: flex; gap: 6px; margin: 4px 0; align-items: center; flex-wrap: wrap; }
 .debrief-see-again.selected { background: var(--amber); border-color: var(--amber); color: #fff; }
 .reflection-thread { margin: 8px 0; }
 .reflection-line {
@@ -2046,3 +2046,18 @@ html, body {
 
 .model-add { display: flex; gap: 8px; align-items: center; }
 .model-add .profile-field-input { flex: 1; }
+
+/* ─── Debrief avoidance (D49): tucked-away, never a rating ─── */
+
+.debrief-more-btn { min-width: 34px; }
+
+.debrief-avoid-options {
+  flex-basis: 100%;
+  display: flex; flex-wrap: wrap; gap: 6px;
+  margin: 2px 0 4px 4px;
+}
+
+.debrief-avoid-note {
+  font-size: 12px; color: var(--soft); line-height: 1.5;
+  margin-top: 8px;
+}

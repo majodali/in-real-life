@@ -11,7 +11,7 @@ import * as store from '../store.js';
 import { commands } from '../services.js';
 import { navigate, showToast } from '../app.js';
 import { handleInteraction } from './interaction-handlers.js';
-import { handleDebriefSubmit, chooseFollowUp } from './debrief-handlers.js';
+import { handleDebriefSubmit, chooseFollowUp, buildPeopleEntries } from './debrief-handlers.js';
 import {
   appendExchange,
   collectPerspectives,
@@ -452,9 +452,7 @@ function bindDebriefForm(container, event) {
       eventId: event.eventId,
       state: {
         ...state,
-        people: [...peopleMarks.entries()]
-          .filter(([, v]) => v.met)
-          .map(([ref, v]) => ({ ref, seeAgain: v.seeAgain === true })),
+        people: buildPeopleEntries(peopleMarks),
         reflection: form.querySelector('#debriefReflection')?.value,
         followUp,
         conductNote: form.querySelector('#debriefConductNote')?.value,
@@ -477,7 +475,8 @@ function bindDebriefForm(container, event) {
 
 // The people step: who you met (tap), then a positive-only "see again"
 // star on the people you met. Untapped is neutral; there is no per-person
-// "no" (docs/debrief.md).
+// "no" CHIP (docs/debrief.md) — avoidance (D49/D61) is a deliberate act
+// tucked behind the ⋯ affordance, never a rating in the main flow.
 async function loadDebriefPeople(form, event, peopleMarks) {
   const wrap = form.querySelector('#debriefPeople');
   const list = form.querySelector('#debriefPeopleList');
@@ -494,26 +493,65 @@ async function loadDebriefPeople(form, event, peopleMarks) {
         <button type="button" class="btn-small debrief-chip" data-person-met>${escapeHtml(p.name)}</button>
         <button type="button" class="btn-small debrief-chip debrief-see-again" data-person-again
                 style="display:none" title="Want to see again?">★ see again</button>
+        <button type="button" class="btn-small debrief-chip debrief-more-btn" data-person-more
+                style="display:none" title="More options" aria-label="More options for ${escapeHtml(p.name)}">⋯</button>
+        <div class="debrief-avoid-options" data-person-avoid-options style="display:none">
+          <button type="button" class="btn-small debrief-chip" data-avoid="didnt-click">we didn’t really click</button>
+          <button type="button" class="btn-small debrief-chip" data-avoid="do-not-interact">I’d rather not cross paths</button>
+        </div>
       </div>
-    `).join('');
+    `).join('') + `
+      <p class="debrief-avoid-note" id="debriefAvoidNote" style="display:none">
+        Noted, just between us. We’ll gently suggest fewer of the same
+        rooms — it can’t prevent being at the same event, and they’ll
+        never know. If someone made you feel unsafe, use the conduct
+        question below instead — that reaches a person, not the ranking.
+      </p>`;
+    const avoidNote = list.querySelector('#debriefAvoidNote');
     list.querySelectorAll('.debrief-person').forEach((row) => {
       const ref = row.dataset.ref;
       const metBtn = row.querySelector('[data-person-met]');
       const againBtn = row.querySelector('[data-person-again]');
+      const moreBtn = row.querySelector('[data-person-more]');
+      const options = row.querySelector('[data-person-avoid-options]');
+      const avoidBtns = [...options.querySelectorAll('[data-avoid]')];
+      const paint = (mark) => {
+        againBtn.classList.toggle('selected', mark.seeAgain === true);
+        avoidBtns.forEach((b) => b.classList.toggle('selected', mark.avoid === b.dataset.avoid));
+        if (mark.avoid) avoidNote.style.display = '';
+      };
       metBtn.addEventListener('click', () => {
         const mark = peopleMarks.get(ref) ?? { met: false, seeAgain: false };
         mark.met = !mark.met;
-        if (!mark.met) { mark.seeAgain = false; againBtn.classList.remove('selected'); }
+        if (!mark.met) {
+          mark.seeAgain = false;
+          delete mark.avoid;
+          options.style.display = 'none';
+        }
         peopleMarks.set(ref, mark);
         metBtn.classList.toggle('selected', mark.met);
         againBtn.style.display = mark.met ? '' : 'none';
+        moreBtn.style.display = mark.met ? '' : 'none';
+        paint(mark);
       });
       againBtn.addEventListener('click', () => {
         const mark = peopleMarks.get(ref) ?? { met: true, seeAgain: false };
         mark.seeAgain = !mark.seeAgain;
+        if (mark.seeAgain) delete mark.avoid; // the newest word wins
         peopleMarks.set(ref, mark);
-        againBtn.classList.toggle('selected', mark.seeAgain);
+        paint(mark);
       });
+      moreBtn.addEventListener('click', () => {
+        options.style.display = options.style.display === 'none' ? '' : 'none';
+      });
+      avoidBtns.forEach((btn) => btn.addEventListener('click', () => {
+        const mark = peopleMarks.get(ref) ?? { met: true, seeAgain: false };
+        mark.avoid = mark.avoid === btn.dataset.avoid ? undefined : btn.dataset.avoid;
+        if (!mark.avoid) delete mark.avoid;
+        else mark.seeAgain = false; // mutually exclusive by construction
+        peopleMarks.set(ref, mark);
+        paint(mark);
+      }));
     });
   } catch {
     // People step is enrichment; the rest of the debrief works without it.

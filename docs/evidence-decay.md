@@ -188,10 +188,12 @@ how slowly a nudge fades, never how large it can be.
   ties, not where every edge ends up.
 - **Stale-steer complaints**: the one thing clocks did unconditionally
   was eventually silence everything. With floors, a persistent unwanted
-  (but not block-worthy) nudge has no off-switch until avoidance capture
-  (D49) lands — watch debrief texture around known-face events that
-  disappoint, and treat it as pressure to prioritize D49, never to
-  re-add clocks silently.
+  (but not block-worthy) nudge needs an explicit off-switch — landed as
+  avoidance capture (D61, spec v7) in the very next slice: naming the
+  pair zeroes it below the floor, exactly the grounded counter-evidence
+  this design reserved that space for. Watch debrief texture around
+  known-face events that disappoint for members who haven't found the
+  affordance.
 
 ## Open questions
 

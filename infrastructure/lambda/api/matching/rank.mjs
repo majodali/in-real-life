@@ -59,10 +59,12 @@ export function blendExploration(byScore, byExplore, share) {
 
 // candidates: feasible events (already hard-constraint filtered).
 // model: { interests, doors } — the member-side fit inputs.
-// affinityNudges: Map eventId → soft-nudge total for that event
-// (recommend.mjs: capped affinity strength + capped crew bonus); the
-// TOTAL ceiling (affinityNudgeCap + crewNudgeCap) is re-applied here so
-// no accumulation can outgrow it.
+// affinityNudges: Map eventId → soft-nudge NET for that event
+// (recommend.mjs: capped affinity strength + capped crew bonus − capped
+// avoidance de-weight, spec v7); the positive ceiling (affinityNudgeCap
+// + crewNudgeCap) is re-applied here so no accumulation can outgrow it —
+// negative nets pass through untouched (a de-weight is soft ordering
+// pressure, bounded by its own cap upstream, never a gate).
 // Returns an ordered array of eventIds. Deterministic for fixed inputs.
 // fitBoosts: Map eventId → presence-dependent FIT additions (known-face
 // comfort, spec v5) — applied inside fitCap, since they are fit, not nudge.

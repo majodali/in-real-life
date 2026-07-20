@@ -25,6 +25,11 @@ import { DEBRIEF_EXTRACTION_SYSTEM, DEBRIEF_EXTRACTION_SCHEMA } from './debrief-
 
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
 const AGAIN = new Set(['yes', 'maybe', 'no']);
+// Comfort-tier avoidance (D49/D61, docs/matching.md → Avoidance): a
+// deliberate, tucked-away act — never a rating. Soft de-weight only;
+// the safety tier is blocks (D50, Group 4), reached via conductConcern
+// routing until then.
+const AVOID = new Set(['didnt-click', 'do-not-interact']);
 const TEXT_MAX = 1000;
 const SHORT_MAX = 200;
 const TEXTURE_MAX_CHIPS = 8;
@@ -67,7 +72,12 @@ export function createSubmitDebriefHandler({
       const userId = byRef.get(p.ref);
       if (!userId) return { error: 'unknown attendee ref' };
       if (userId === selfUserId) continue; // tapping yourself carries nothing
-      resolved.push({ userId, met: true, seeAgain: p.seeAgain === true });
+      resolved.push({
+        userId,
+        met: true,
+        seeAgain: p.seeAgain === true,
+        ...(p.avoid ? { avoid: p.avoid } : {}),
+      });
     }
     return { resolved };
   }
@@ -111,7 +121,15 @@ export function createSubmitDebriefHandler({
       if (!body.attended) return reply(400, { error: 'people step applies only when you attended' });
       if (!Array.isArray(body.people)
         || body.people.some((p) => !p || typeof p.ref !== 'string')) {
-        return reply(400, { error: 'people must be an array of { ref, seeAgain? }' });
+        return reply(400, { error: 'people must be an array of { ref, seeAgain?, avoid? }' });
+      }
+      for (const p of body.people) {
+        if (p.avoid !== undefined && !AVOID.has(p.avoid)) {
+          return reply(400, { error: 'avoid must be didnt-click or do-not-interact' });
+        }
+        if (p.avoid !== undefined && p.seeAgain === true) {
+          return reply(400, { error: 'seeAgain and avoid are contradictory — pick one' });
+        }
       }
       people = body.people;
     }

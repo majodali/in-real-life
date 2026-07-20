@@ -297,6 +297,86 @@ test('a crew gathering outranks the same people as mere affinity edges', async (
   assert.deepEqual(out, ['e-gathering', 'e-split']);
 });
 
+// ─── Avoidance (D49/D61, spec v7): soft de-weight, never a gate ───
+
+test('a do-not-interact person present de-prioritizes the event; the edge never boosts', async () => {
+  modelRows = [
+    // Historically tapped AND now avoided — the avoid is the newest word.
+    modelRow('affinity#p1', { otherUserId: 'p1', met: 3, seeAgain: 2, sources: [], avoid: 'do-not-interact' }),
+  ];
+  interactionsByUser.p1 = [{ userId: 'p1', eventId: 'e-theirs', level: 'confirmed' }];
+
+  const events = [evt('e-theirs'), evt('e-plain')];
+  const out = await recommender(NO_NOISE).recommend({ userId: 'me', events, nowIso: NOW });
+  assert.deepEqual(out, ['e-plain', 'e-theirs'], 'their room sinks, never disappears');
+  assert.equal(out.length, 2, 'soft only — the event is still there to choose');
+});
+
+test('didnt-click removes the boost and applies its milder de-weight', async () => {
+  modelRows = [
+    modelRow('affinity#p1', { otherUserId: 'p1', met: 2, seeAgain: 2, sources: [], avoid: 'didnt-click' }),
+  ];
+  interactionsByUser.p1 = [{ userId: 'p1', eventId: 'e-theirs', level: 'confirmed' }];
+
+  const events = [evt('e-theirs'), evt('e-plain')];
+  const out = await recommender(NO_NOISE).recommend({ userId: 'me', events, nowIso: NOW });
+  assert.deepEqual(out, ['e-plain', 'e-theirs']);
+});
+
+test('an avoided person is never a known face', async () => {
+  modelRows = [
+    modelRow('profile#core', {
+      envelope: { familiarity: { position: 'needs-known-face', provenance: 'stated' } },
+      doors: [], constraints: {},
+    }),
+    modelRow('affinity#p1', { otherUserId: 'p1', met: 1, seeAgain: 1, sources: [], avoid: 'didnt-click' }),
+    modelRow('interest#running', { tag: 'running', weight: 0.4 }),
+  ];
+  interactionsByUser.p1 = [{ userId: 'p1', eventId: 'e-familiar', level: 'confirmed' }];
+
+  const tunables = {
+    ...NO_NOISE, affinityPerPersonNudge: 0, affinityMutualBonus: 0,
+    affinityConfirmedBonus: 0, crewBonus: 0, didntClickPenalty: 0, avoidancePenalty: 0,
+  };
+  const events = [
+    evt('e-strangers', { title: 'Morning running club' }),
+    evt('e-familiar', { title: 'Quiet hall gathering' }),
+  ];
+  const out = await recommender(tunables).recommend({ userId: 'me', events, nowIso: NOW });
+  assert.deepEqual(out, ['e-strangers', 'e-familiar'],
+    'no comfort boost from someone the member named');
+});
+
+test('an avoided crew-mate cannot make a gathering', async () => {
+  modelRows = [
+    modelRow('affinity#p1', { otherUserId: 'p1', met: 3, seeAgain: 1, sources: [] }),
+    modelRow('affinity#p2', { otherUserId: 'p2', met: 3, seeAgain: 1, sources: [], avoid: 'do-not-interact' }),
+    modelRow('crew#abc123', {
+      crewId: 'abc123', members: ['me', 'p1', 'p2'],
+      formedAt: NOW, lastAffirmedAt: NOW, affirmations: 3,
+    }),
+    // A modest interest on the OTHER event (fit 0.4 × 0.2 = 0.08): the
+    // crew bonus (0.1) would outrank it if the gathering wrongly fired.
+    modelRow('interest#running', { tag: 'running', weight: 0.2 }),
+  ];
+  // Zero the pairwise/per-person signals so ONLY a crew gathering could
+  // lift e-gathering; with p2 avoided, one countable fellow remains.
+  const tunables = {
+    ...NO_NOISE, affinityPerPersonNudge: 0, affinityMutualBonus: 0,
+    affinityConfirmedBonus: 0, avoidancePenalty: 0, didntClickPenalty: 0,
+  };
+  interactionsByUser.p1 = [{ userId: 'p1', eventId: 'e-gathering', level: 'confirmed' }];
+  interactionsByUser.p2 = [{ userId: 'p2', eventId: 'e-gathering', level: 'confirmed' }];
+
+  const events = [
+    evt('e-run', { title: 'Morning running club' }),
+    evt('e-gathering', { title: 'Thursday thing' }),
+  ];
+  const out = await recommender(tunables).recommend({ userId: 'me', events, nowIso: NOW });
+  assert.deepEqual(out, ['e-run', 'e-gathering'],
+    'no gathering bonus through an avoided fellow — the modest fit wins');
+});
+
 // ─── Known-face comfort (D58, spec v5): a FIT input, not a nudge ───
 
 test('for a needs-known-face member, a tapped person present boosts FIT beyond the nudge cap', async () => {

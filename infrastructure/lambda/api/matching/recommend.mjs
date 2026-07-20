@@ -103,10 +103,12 @@ export function createRecommender({
   // plus every crew-mate, find which candidate events they're
   // interested/confirmed on. Crew-mates are by construction tapped, but
   // the edge limit could truncate them — the union keeps a gathering
-  // visible regardless.
-  async function affinityPresence(affinities, crews, userId, candidateIds) {
+  // visible regardless. Avoided people (D49) are excluded from the
+  // positive set outright and instead watched for the de-weight — the
+  // namer's feed gently steers away from rooms they're already in.
+  async function affinityPresence(affinities, crews, userId, candidateIds, avoided) {
     const positive = affinities
-      .filter((a) => (a?.seeAgain ?? 0) > 0 && a.otherUserId)
+      .filter((a) => (a?.seeAgain ?? 0) > 0 && a.otherUserId && !a.avoid)
       .sort((a, b) => b.seeAgain - a.seeAgain)
       .slice(0, tunables.affinityEdgeLimit);
     const edgeById = new Map(positive.map((a) => [a.otherUserId, a]));
@@ -116,6 +118,7 @@ export function createRecommender({
         if (m !== userId) watchIds.add(m);
       }
     }
+    for (const otherUserId of avoided?.keys() ?? []) watchIds.add(otherUserId);
     const presentByEvent = new Map();
     const presentPeople = new Map(); // otherUserId → my edge (if within limit)
     for (const otherUserId of watchIds) {
@@ -154,11 +157,20 @@ export function createRecommender({
     const needsKnownFace = envelope?.familiarity?.position === 'needs-known-face'
       && tunables.fitKnownFaceWeight > 0;
 
+    // Named avoidance (D49): pair-level, comfort-tier, the member's own
+    // edges only. Watched for the de-weight when the penalties are on.
+    const avoided = new Map(affinities
+      .filter((a) => a?.avoid && a.otherUserId)
+      .map((a) => [a.otherUserId, a.avoid]));
+    const avoidanceOn = avoided.size > 0
+      && (tunables.avoidancePenalty > 0 || tunables.didntClickPenalty > 0);
+
     const affinityOn = tunables.affinityPerPersonNudge > 0
       || tunables.affinityMutualBonus > 0
       || tunables.affinityConfirmedBonus > 0
       || (tunables.crewBonus > 0 && crews.length > 0)
-      || needsKnownFace;
+      || needsKnownFace
+      || avoidanceOn;
 
     const affinityNudges = new Map();
     const fitBoosts = new Map();
@@ -175,6 +187,7 @@ export function createRecommender({
 
       const { presentByEvent, presentPeople } = await affinityPresence(
         affinities, crews, userId, new Set(candidates.map((e) => e.eventId)),
+        avoidanceOn ? avoided : null,
       );
 
       // Per-person strength once, then summed per event; rank applies
@@ -201,19 +214,31 @@ export function createRecommender({
         }));
       }
       // Per-event nudge = capped affinity strength + capped crew-gathering
-      // bonus; the total ceiling (affinityNudgeCap + crewNudgeCap) is
-      // applied in rank.mjs and stays below fitCap by invariant.
+      // bonus − capped avoidance de-weight; the positive ceiling
+      // (affinityNudgeCap + crewNudgeCap) is applied in rank.mjs and
+      // stays below fitCap by invariant. Avoided people never count as
+      // fellows, known faces, or strength — only toward the de-weight.
       for (const [eventId, people] of presentByEvent) {
+        const friendly = people.filter((p) => !avoided.has(p));
         const affinity = Math.min(
           tunables.affinityNudgeCap,
-          people.reduce((sum, p) => sum + (strengthByPerson.get(p) ?? 0), 0),
+          friendly.reduce((sum, p) => sum + (strengthByPerson.get(p) ?? 0), 0),
         );
         const crew = crewNudge({
-          crews, userId, presentPeople: people, myActivity, tunables,
+          crews, userId, presentPeople: friendly, myActivity, tunables,
         });
-        affinityNudges.set(eventId, affinity + crew);
+        const deweight = Math.min(
+          tunables.avoidanceDeweightCap,
+          people.reduce((sum, p) => {
+            const tier = avoided.get(p);
+            if (tier === 'do-not-interact') return sum + tunables.avoidancePenalty;
+            if (tier === 'didnt-click') return sum + tunables.didntClickPenalty;
+            return sum;
+          }, 0),
+        );
+        affinityNudges.set(eventId, affinity + crew - deweight);
         // A known face = someone this member positively tapped, present.
-        if (needsKnownFace && people.some((p) => presentPeople.has(p))) {
+        if (needsKnownFace && friendly.some((p) => presentPeople.has(p))) {
           fitBoosts.set(eventId, tunables.fitKnownFaceWeight);
         }
       }
