@@ -22,6 +22,7 @@ how scope calcifies.
 | R5 | Community launch playbook | second locality |
 | R6 | Broad community feedback | first community big enough to poll |
 | R7 | Pricing & sponsorship | Group 5 (billing) design start |
+| R8 | Demand signals & event suggestions | wish captures accruing (localities slice), or the first thin-calendar complaint |
 
 ## R1 — Decision registers & feedback intake process
 
@@ -155,3 +156,32 @@ question that precedes mechanics:
 - Equity across members: ability to pay must not gate belonging
   (scholarships/waivers, community-funded seats), or the inclusion floor
   (H2) is hollow at the paywall.
+
+## R8 — Demand signals & event suggestions
+
+The follow-up named at the localities review
+(`localities-and-constraints.md` §2d): members will tell us what they
+wish existed — starting with "I wish this was closer" on a distant
+event — and that sentiment is two things at once: travel-preference
+evidence, and **demand signal for what should exist locally**. The
+localities slice captures the first wish type onto the log
+(`EventWishRecorded`, consumed by nothing yet — capture ≠ use); this
+workstream designs the consumption:
+
+- **The wish family** — closer / different-time / "more like this" —
+  and where each capture lives without becoming a complaint box or a
+  voting surface (D21 signal hygiene applies to demand too: a wish is
+  evidence, never a queue).
+- **Aggregation** under D51's demand-sensing rules: surfaced aggregate
+  + de-identified, minimum-cohort threshold (small-community
+  de-anonymisation guard), reaching trust-graduated organisers and the
+  supply loop ("three members wished the Bremerton wood-shop night were
+  on-island" is an invitation-to-propose seed, D51's bar-free
+  idea-stage path).
+- **Feeding event suggestions** — the backlog's "app-suggested
+  activities based on AI understanding": wishes + fit-gap reads +
+  debrief texture as the grounded inputs, D27 modesty on anything the
+  app phrases, and the D14/D30 bounds on invitations to propose.
+- The travel-evidence half loops back into the effort-is-personal watch
+  signals (a wish followed by non-attendance = wanting-but-constrained,
+  distinct from silence).

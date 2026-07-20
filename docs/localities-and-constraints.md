@@ -173,6 +173,56 @@ pattern is a *company × locality* interaction and ties to the deferred
 per-company travel granularity — both wait for the coarse model to
 demonstrably chafe.
 
+## 2c. Per-locality adjustments — the member's exceptions to the median
+
+Decided at review: alongside the default banding + reach, members can
+**manually bump specific localities closer or further** — the
+exceptions layer. (The register itself still bands honestly on effort —
+Bremerton *is* legitimately a long way around — the exception exists
+because members genuinely differ from the median, in both directions.)
+
+- **Shape**: `constraints.localityAdjustments` —
+  `{ [localityId]: 'closer' | 'further' }`. An adjustment shifts that
+  locality's **effective band one step** for this member (clamped at
+  `here`/`far`); the travel de-weight computes from the effective band.
+  One step only, deliberately: this is "the band is wrong about me,"
+  not a per-place score — and `further` combined with a tight reach
+  already sinks a locality hard without ever hiding it.
+- **Capture, three surfaces**: onboarding extraction (only when the
+  member's own words name the place — restraint over coverage); **the
+  event detail** — viewing an event that carries a travel band offers
+  a quiet "feels closer to me / feels further to me"; and the D59
+  `constraint` correction type (set or clear an adjustment). All
+  `stated` provenance, visible in "How we understand you" as their own
+  word.
+
+## 2d. "I wish this was closer" — capture now, the follow-up it opens
+
+Named at review: a member sees a Bremerton or Seattle event and thinks
+*"I wish this was closer."* That sentiment is worth recording for two
+distinct reasons —
+
+1. **Travel-preference evidence**: a wish followed by non-attendance is
+   fundamentally different from silence — wanting-but-constrained, the
+   exact distinction the effort-is-personal watch signals can't see on
+   their own.
+2. **Demand signal** (the more important one): it's a member telling us
+   *what they'd like to exist locally* — the explicit-wish channel
+   D51's demand sensing already names, now with its first concrete
+   capture surface, feeding organizer surfacing and eventually
+   app-suggested activities.
+
+**This slice captures; consumption is the follow-up** (capture ≠ use,
+the standing discipline): a light tap on a distant event's detail emits
+`EventWishRecorded` — eventId, the event's locality and band, the
+member's home locality, frozen at tap time — onto the log, and nothing
+consumes it yet. The full design — the wish family (closer /
+different-time / "more like this"), aggregation with D51's
+minimum-cohort de-identification, how it reaches organizers and the
+supply loop, and how it seeds event suggestions — is a radar
+workstream (**R8, Demand signals & event suggestions**), activated once
+wishes are accruing.
+
 ## 3. Time windows — structured, but never a gate
 
 `constraints.timeWindows` gains a small vocabulary:
@@ -215,13 +265,16 @@ dimension we want to gently stretch.
    register).
 2. **Backend**: event `localityId` (propose/edit/external, projection,
    detail/list annotation), onboarding schema + prompt docs
-   (`travelReach`, window slugs), projector validation, `constraint`
-   correction type, recommend travel de-weight + `fitTimeWindowWeight`,
-   spec v8, tunables (`travelPenaltyPerBand`, `travelDeweightCap`),
-   tests.
+   (`travelReach`, `localityAdjustments`, window slugs), projector
+   validation, `constraint` correction type (reach / adjustment /
+   windows), recommend travel de-weight over effective bands +
+   `fitTimeWindowWeight`, `EventWishRecorded` capture route, spec v8,
+   tunables (`travelPenaltyPerBand`, `travelDeweightCap`), tests.
 3. **Frontend (minimal)**: locality picker on propose/edit (default
-   home), reach + windows in "How we understand you" with correction
-   affordances, band label on event detail ("a ferry trip away").
+   home), reach + windows + locality adjustments in "How we understand
+   you" with correction affordances, band label on event detail ("a
+   ferry trip away") with the feels-closer/further and
+   wish-this-was-closer affordances.
 4. **Registers**: D62, backlog (travel willingness item), matching-spec
    version history, functional coverage.
 
