@@ -2,7 +2,7 @@
 
 Design notes for **in·real·life** — a local community meetup app: AI-guided onboarding, discover nearby events and people, coordinate real-world meetups. Privacy-focused (first names only, no messaging — just show up).
 
-These notes are **living and provisional** — current best decisions, revisable as real usage teaches us. `decisions.md` is the map: a register of every decision (D1–D61) with a one-line pointer to the note that holds the reasoning, plus watch-items for emergent effects we're tracking.
+These notes are **living and provisional** — current best decisions, revisable as real usage teaches us. `decisions.md` is the map: a register of every decision (D1–D62) with a one-line pointer to the note that holds the reasoning, plus watch-items for emergent effects we're tracking.
 
 ## How the pieces fit
 
@@ -50,9 +50,9 @@ Understanding of a person is **seeded** at onboarding and **grown** from what th
 **Matching & recommendation (Group 3)**
 - `success-and-progress.md` — **the keystone: what IRL is *for*.** Success = real-world connection & belonging, not engagement; distributional; indicators-not-targets. Everything downstream is evaluated against this.
 - `matching.md` — how fit, affinity, rating, crews, constraints, avoidance, and newcomer status combine into what a member sees; fit-first, bounded soft nudges, exploration/inclusion floor; the definitions + influence map; the gaming/negative-scenario register.
-- `matching-spec.md` — the implemented, versioned ranking spec (v7): tunables + defaults, hard constraints, the honest register of what it omits and where each piece lands.
+- `matching-spec.md` — the implemented, versioned ranking spec (v8): tunables + defaults, hard constraints, the honest register of what it omits and where each piece lands.
 - `evidence-decay.md` — **(decided: D60, spec v6)** clock half-lives replaced by evidence-based decay — the lived-events axis, decay floors as the incompleteness prior, ambiguous counter-evidence captured-not-used.
-- `localities-and-constraints.md` — **(proposal, revised)** the curated locality register (effort bands — here/nearby/a-trip/far — no coordinates) and structured constraints: travel reach as a graduated de-weight (prioritization, never filtering), time windows as soft fit, both member-correctable; effort-is-personal watch signals.
+- `localities-and-constraints.md` — **(decided: D62, spec v8)** the curated locality register (effort bands — here/nearby/a-trip/far — no coordinates, draft launch register awaiting local correction) and structured constraints: travel reach as a graduated de-weight (prioritization, never filtering), per-locality adjustments, time windows as soft fit, the "wish this was closer" capture (consumption = R8); effort-is-personal watch signals.
 - `event-shape-prompt.md` — the propose-time event-shape extraction (D56): activityTags / structure / doors, organizer-correctable, feeding the fit tiers in `matching-spec.md`.
 - `scenario-walkthroughs.md` — the matching + success test scenarios run concretely through the design as written; two passes (F1–F12 triaged → D46–D51; second pass re-verifies all twelve and adversarially probes the new machinery, F13–F14 fixed). All scenarios currently `holds`.
 

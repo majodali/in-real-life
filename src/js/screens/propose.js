@@ -8,6 +8,7 @@ import * as store from '../store.js';
 import { commands } from '../services.js';
 import { navigate, showToast } from '../app.js';
 import { handleProposeSubmit } from './propose-handlers.js';
+import { loadLocalities } from '../localities.js';
 
 export function renderPropose() {
   const user = store.getActiveUser();
@@ -74,6 +75,15 @@ export function renderPropose() {
         </div>
 
         <div class="profile-field">
+          <label class="profile-field-label" for="proposeLocality">Which town?</label>
+          <select class="profile-field-input" id="proposeLocality"></select>
+          <small class="profile-field-hint">
+            Helps people judge the trip — suggestions gently favor what's
+            within each member's reach, but nothing is ever hidden.
+          </small>
+        </div>
+
+        <div class="profile-field">
           <label class="profile-field-label" for="proposeMeetingSpot">How to find the group (optional)</label>
           <input class="profile-field-input" id="proposeMeetingSpot" type="text" maxlength="200"
                  placeholder="e.g. back tables — look for the blue scarf">
@@ -134,6 +144,18 @@ export function renderPropose() {
 
   document.getElementById('proposeBack').addEventListener('click', () => navigate('feed'));
 
+  // Locality select (D62): served register, home preselected. If the
+  // register can't load, the select stays empty and the proposal simply
+  // defaults to home server-side.
+  loadLocalities({ commands }).then((register) => {
+    const select = document.getElementById('proposeLocality');
+    if (!select) return;
+    const home = register.community.homeLocalityId;
+    select.innerHTML = [...register.byId.values()]
+      .map((l) => `<option value="${l.id}"${l.id === home ? ' selected' : ''}>${l.name}</option>`)
+      .join('');
+  }).catch(() => {});
+
   const form = document.getElementById('proposeForm');
   const submit = document.getElementById('proposeSubmit');
 
@@ -153,6 +175,7 @@ export function renderPropose() {
         isExternal: document.getElementById('proposeExternal').checked,
         endTime: document.getElementById('proposeEnd').value,
         location: document.getElementById('proposeLocation').value,
+        localityId: document.getElementById('proposeLocality').value || undefined,
         organizerName: user.name,
         minimumAttendance: document.getElementById('proposeMin').value,
         autoPlanOnThreshold: document.getElementById('proposeAutoPlan').checked,

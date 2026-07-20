@@ -7,7 +7,7 @@
 // hash so a spec bump reshuffles deterministic noise rather than freezing
 // it across versions.
 
-export const RANKING_SPEC_VERSION = 7;
+export const RANKING_SPEC_VERSION = 8;
 
 export const RANKING_TUNABLES = {
   // Fit — interest tags vs event shape (D56) with text fallback, plus
@@ -23,6 +23,16 @@ export const RANKING_TUNABLES = {
   fitStructureWeight: 0.25,
   fitSizeWeight: 0.2,
   fitKnownFaceWeight: 0.2,
+  // Time-window fit (D62, spec v8): rhythm is preference, never a gate —
+  // a matching window adds, a mismatch subtracts nothing.
+  fitTimeWindowWeight: 0.1,
+
+  // Travel (D62, spec v8) — prioritization, never filtering: events
+  // beyond the member's stated reach sink by band of excess, capped
+  // below fitCap so the right event still wins, and the exploratory
+  // share ignores penalties entirely (the whim door is structural).
+  travelPenaltyPerBand: 0.15,
+  travelDeweightCap: 0.45,
 
   // Affinity — strength-weighted (D47/H4): one-sided tap at own weight,
   // mutual amplification gated by the weaker side, reciprocal-met

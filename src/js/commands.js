@@ -158,6 +158,20 @@ export function createCommands({
     return await api.get('/events');
   }
 
+  // The curated locality register (D62) — public reference data.
+  async function getLocalities() {
+    return await api.get('/localities');
+  }
+
+  // "I wish this was closer" (D62/R8) — capture-only demand signal.
+  // Per-click commandId: wishing again on another day is a fresh act.
+  async function wishCloser({ eventId }) {
+    return await api.post(`/events/${encodeURIComponent(eventId)}/wish`, {
+      commandId: makeId(),
+      wish: 'closer',
+    });
+  }
+
   // One reflection turn (ephemeral, no commandId — nothing persists per
   // turn); the close records ReflectionRecorded with a per-event
   // persisted commandId so retries converge.
@@ -375,6 +389,8 @@ export function createCommands({
     getNotifyList,
     proposeEvent,
     listEvents,
+    getLocalities,
+    wishCloser,
     listAttendees,
     reflectionTurn,
     completeReflection,

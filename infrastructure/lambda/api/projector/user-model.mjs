@@ -35,6 +35,8 @@ import { GetCommand, PutCommand, QueryCommand, DeleteCommand } from '@aws-sdk/li
 import { decryptValue, encryptValue, decryptPii } from '../lib/crypto-shred.mjs';
 import { RANKING_TUNABLES } from '../matching/tunables.mjs';
 import { ENVELOPE_DIMENSIONS, isValidPosition, isValidEdge, stepToward } from '../lib/envelope.mjs';
+import { isValidReach, isValidAdjustment, isValidLocalityId } from '../lib/localities.mjs';
+import { isValidTimeWindow } from '../lib/time-windows.mjs';
 
 // Deterministic sort-key slug for variable-set items. Collisions merge,
 // which is the semantics we want (two mentions of "pottery" are one
@@ -135,6 +137,43 @@ export function createUserModelProjector({ client, userModelTable, keyStore }) {
         const payload = current ?? { tag: correction.tag, weight: 0.6, observations: [] };
         payload.provenance = 'corrected';
         payload.correctedAt = asOf;
+        return payload;
+      });
+      return;
+    }
+
+    // D62: structured-constraint corrections — the member's word about
+    // their own reach, per-locality exceptions, and rhythm. Direct sets
+    // on profile#core's constraints; null clears.
+    if (correction.type === 'constraint') {
+      await applyDelta(userId, 'profile#core', dataKey, event.eventId, asOf, (current) => {
+        const payload = current ?? { envelope: {}, doors: [], constraints: {}, growthEdges: [], provisional: true };
+        const constraints = { ...(payload.constraints ?? {}) };
+        if (correction.travelReach === null) delete constraints.travelReach;
+        else if (isValidReach(correction.travelReach)) {
+          constraints.travelReach = correction.travelReach;
+        }
+        if (isValidLocalityId(correction.localityId)) {
+          const adjustments = { ...(constraints.localityAdjustments ?? {}) };
+          if (correction.feels === null) delete adjustments[correction.localityId];
+          else if (isValidAdjustment(correction.feels)) {
+            adjustments[correction.localityId] = correction.feels;
+          }
+          if (Object.keys(adjustments).length > 0) constraints.localityAdjustments = adjustments;
+          else delete constraints.localityAdjustments;
+        }
+        if (isValidTimeWindow(correction.addTimeWindow)) {
+          const windows = new Set(constraints.timeWindows ?? []);
+          windows.add(correction.addTimeWindow);
+          constraints.timeWindows = [...windows];
+        }
+        if (correction.removeTimeWindow !== undefined) {
+          constraints.timeWindows = (constraints.timeWindows ?? [])
+            .filter((w) => w !== correction.removeTimeWindow);
+          if (constraints.timeWindows.length === 0) delete constraints.timeWindows;
+        }
+        constraints.correctedAt = asOf;
+        payload.constraints = constraints;
         return payload;
       });
       return;
@@ -505,6 +544,28 @@ export function createUserModelProjector({ client, userModelTable, keyStore }) {
     }
   }
 
+  // D62: same restraint for structured constraints — an unrecognised
+  // reach or adjustment is dropped, never guessed at. Free-text fields
+  // (maxTravel, accessibility, legacy window phrasings) pass through
+  // untouched: they're the story, not the structure.
+  function sanitizeConstraints(constraints) {
+    const clean = { ...(constraints ?? {}) };
+    if (clean.travelReach !== undefined && !isValidReach(clean.travelReach)) {
+      delete clean.travelReach;
+    }
+    if (clean.localityAdjustments !== undefined) {
+      const adjustments = {};
+      for (const [localityId, feels] of Object.entries(clean.localityAdjustments ?? {})) {
+        if (isValidLocalityId(localityId) && isValidAdjustment(feels)) {
+          adjustments[localityId] = feels;
+        }
+      }
+      if (Object.keys(adjustments).length > 0) clean.localityAdjustments = adjustments;
+      else delete clean.localityAdjustments;
+    }
+    return clean;
+  }
+
   // D58: keep a dim's position/edgeToward only when the vocabulary
   // recognises them — the schema carries strings by convention and the
   // projector is the validator (restraint over coverage: an invalid
@@ -540,7 +601,7 @@ export function createUserModelProjector({ client, userModelTable, keyStore }) {
       payload: {
         envelope: sanitizeEnvelope(extraction.envelope),
         doors: extraction.doors ?? [],
-        constraints: extraction.constraints ?? {},
+        constraints: sanitizeConstraints(extraction.constraints),
         growthEdges,
         provisional: extraction.provisional !== false,
       },

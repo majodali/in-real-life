@@ -793,6 +793,59 @@ test('evidence older than a correction never moves the position; later evidence 
   assert.equal(envelope.groupSize.positionProvenance, 'observed');
 });
 
+// ─── Structured constraints (D62): seed sanitization + corrections ───
+
+test('seed keeps valid structured constraints, drops unrecognised, passes free text', async () => {
+  await projector.applyEvent(makeEvent({
+    data: {
+      userId: 'abc',
+      transcript: encryptValue([], dataKey),
+      extraction: encryptValue({
+        ...EXTRACTION,
+        constraints: {
+          maxTravel: 'on-island mostly',
+          travelReach: 'nearby',
+          localityAdjustments: { seattle: 'closer', atlantis: 'closer', poulsbo: 'sometimes' },
+          timeWindows: ['weekday evenings'],
+        },
+      }, dataKey),
+    },
+  }));
+  const core = decryptValue(writes.find((w) => w.sk === 'profile#core').model, dataKey);
+  assert.equal(core.constraints.travelReach, 'nearby');
+  assert.deepEqual(core.constraints.localityAdjustments, { seattle: 'closer' },
+    'unknown locality and unknown feels dropped');
+  assert.equal(core.constraints.maxTravel, 'on-island mostly', 'the story survives');
+  assert.deepEqual(core.constraints.timeWindows, ['weekday evenings'],
+    'legacy free-text windows pass through (never match a slug at consumption)');
+});
+
+test('constraint corrections: reach, locality adjustment, and windows — the member\'s word', async () => {
+  await projector.applyEvent(makeEvent());
+
+  await projector.applyEvent(correctionEvent({
+    type: 'constraint', travelReach: 'here', localityId: 'seattle', feels: 'closer',
+  }));
+  let constraints = decryptValue(
+    writes.filter((w) => w.sk === 'profile#core').at(-1).model, dataKey,
+  ).constraints;
+  assert.equal(constraints.travelReach, 'here');
+  assert.deepEqual(constraints.localityAdjustments, { seattle: 'closer' });
+  assert.equal(constraints.correctedAt, '2026-07-25T10:00:00.000Z');
+
+  await projector.applyEvent(correctionEvent({
+    type: 'constraint', travelReach: null, localityId: 'seattle', feels: null,
+    addTimeWindow: 'weekend-daytime',
+  }, { eventId: '01CORRECT-2' }));
+  constraints = decryptValue(
+    writes.filter((w) => w.sk === 'profile#core').at(-1).model, dataKey,
+  ).constraints;
+  assert.equal(constraints.travelReach, undefined, 'null clears back to anywhere');
+  assert.equal(constraints.localityAdjustments, undefined, 'cleared adjustment map removed');
+  assert.deepEqual(constraints.timeWindows.at(-1), 'weekend-daytime');
+  assert.deepEqual(constraints.maxTravel, EXTRACTION.constraints.maxTravel, 'stories untouched');
+});
+
 test('an interest-add correction creates a corrected interest; removals delete rows', async () => {
   await projector.applyEvent(correctionEvent({ type: 'interest-add', tag: 'Chess Club' }));
   const interest = writes.find((w) => w.sk === 'interest#chess-club');

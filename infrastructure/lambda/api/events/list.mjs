@@ -5,10 +5,11 @@
 // with a proper GSI. Paginated Scan is acceptable at the current scale
 // (sub-thousand events per locality).
 
-import { ScanCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
+import { ScanCommand, QueryCommand, GetCommand } from '@aws-sdk/lib-dynamodb';
 import { computeEffectiveState } from '../lib/lifecycle-state.mjs';
 import { eventsOverlap } from './overlap.mjs';
 import { isFull } from './event-fields.mjs';
+import { COMMUNITY, localityForPostalCode } from '../lib/localities.mjs';
 
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
 
@@ -21,7 +22,7 @@ function reply(statusCode, body) {
 }
 
 export function createListEventsHandler({
-  client, eventsTable, interactionsTable, getOffset, recommender,
+  client, eventsTable, interactionsTable, usersTable, getOffset, recommender,
 }) {
   return async function handler(event) {
     const claims = event?.requestContext?.authorizer?.jwt?.claims;
@@ -99,6 +100,20 @@ export function createListEventsHandler({
       if (overlapping.length) e.conflictsWith = overlapping;
     }
 
+    // The caller's home locality (D62): verified postal → register id;
+    // absent or unresolvable → the community home. Feeds the travel
+    // de-weight and lets the client label bands without guessing.
+    let homeLocalityId = COMMUNITY.homeLocalityId;
+    if (usersTable) {
+      try {
+        const me = await client.send(new GetCommand({
+          TableName: usersTable, Key: { userId: claims.sub },
+        }));
+        homeLocalityId = localityForPostalCode(me.Item?.postalCode)
+          ?? COMMUNITY.homeLocalityId;
+      } catch { /* home default stands — the feed never dies for this */ }
+    }
+
     // Feed ranking v1 (docs/matching-spec.md): an ordered eventId list —
     // never scores; ordering is the only thing that leaves the server.
     // The feed must not die because ranking did: degrade to empty.
@@ -106,7 +121,7 @@ export function createListEventsHandler({
     if (recommender) {
       try {
         recommendations = await recommender.recommend({
-          userId: claims.sub, events, nowIso,
+          userId: claims.sub, events, nowIso, homeLocalityId,
         });
       } catch (err) {
         console.log(JSON.stringify({
@@ -117,6 +132,7 @@ export function createListEventsHandler({
 
     return reply(200, {
       events, count: events.length, simulatedTime: nowIso, recommendations,
+      homeLocalityId,
     });
   };
 }

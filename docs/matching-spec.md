@@ -1,4 +1,4 @@
-# Ranking Spec — v7 (implemented)
+# Ranking Spec — v8 (implemented)
 
 The **explicit, versioned ranking spec** that `matching.md` requires ("how
 recommendations are ranked is never implicit or emergent-from-code"). This
@@ -34,12 +34,12 @@ Filtered out before scoring, per the influence map:
 | Already committed | implemented — an event the caller already confirmed is a plan, not a recommendation |
 | Protective blocks (D50) | **not built** (Group 4). Noted here so the gap is never silent: when blocks land, the candidate filter is where they apply |
 | Adults-only | enforced at registration, not per-event |
-| Distance / travel willingness | **not built** — no structured locality/travel model yet (single-locality launch; `constraints.maxTravel` in the store is free text) |
+| Distance / travel willingness | **deliberately NOT a gate** (D62 revision of this table's old assumption): a stated reach de-prioritizes, never filters — see Travel de-weight below. "Prioritization, not filtering — you never know when someone wants to travel further for the right event, or on a whim" |
 
 ## Fit (base signal)
 
-`fit = interestFit + doorFit + structureFit + sizeFit [+ knownFaceBoost]`,
-capped at `fitCap`.
+`fit = interestFit + doorFit + structureFit + sizeFit + timeWindowFit
+[+ knownFaceBoost]`, capped at `fitCap`.
 
 **Interest fit is two-tiered** against the event's shape (D56,
 `event-shape-prompt.md` — extracted at propose time, organizer-correctable):
@@ -81,6 +81,15 @@ debrief-shifted, member-correctable) compared against the event:
   their comparands (facilitation-need on events, a member's event-history
   novelty read) don't exist yet. Capture ≠ use, named here so it's never
   silent.
+
+**Time-window fit (D62)**: the event's window — `startTime` classified
+in the community timezone (`lib/time-windows.mjs`: weekday/weekend ×
+daytime/evening) — against the member's structured `timeWindows`. A
+match adds `fitTimeWindowWeight`; a mismatch adds nothing. **Never a
+gate**: rhythm is preference (a Tuesday-evenings member can make one
+Saturday brunch, and exploration wants that door open); distance is the
+feasibility-shaped one, and even it only de-prioritizes (below).
+Legacy free-text window phrasings simply never match a slug.
 
 Cold-start still holds: interests, doors, and (usually) positions all
 exist from onboarding with zero history.
@@ -246,6 +255,39 @@ member's own model view (D59); un-naming happens the same way naming
 did: at the next shared event's debrief, or via the future blocks-tier
 management surface. Tracked as H6.
 
+## Travel de-weight (D62) — prioritization, never filtering
+
+The locality register (`lib/localities.mjs`, served at `GET
+/localities`) bands every event's declared locality against the
+member's home by **curated effort, not distance**: `here` / `nearby` /
+`a-trip` / `far`, from direct neighbor/crossing edges only. The member
+states a **reach** (`constraints.travelReach`, default `anywhere` — no
+silent narrowing) and may hold **per-locality exceptions**
+(`localityAdjustments`: shift one locality's effective band a step
+`closer`/`further` — the D62 exceptions layer, captured at onboarding,
+on the event detail, or by correction).
+
+```
+penalty(event) = min( travelDeweightCap,
+                      travelPenaltyPerBand
+                        × bandsBeyondReach(effectiveBand(home, event), reach) )
+```
+
+subtracted from the event's soft-nudge net. The founder's principle,
+verbatim: *"prioritization, not filtering — you never know when someone
+wants to travel further for the right event, or on a whim."*
+Structurally honored three ways: the cap sits below `fitCap` (a great
+fit still wins), the exploratory share fills its slots from the noise
+ordering which ignores penalties entirely (the whim door), and nothing
+is ever hidden — the calendar is whole; only suggestion order moves.
+
+**"I wish this was closer"** (`POST /events/:eventId/wish` →
+`EventWishRecorded`) is captured alongside — event, locality, band, and
+home frozen at tap time — and consumed by **nothing** yet: the demand
+side (organizer surfacing, event suggestions) is radar R8; the
+travel-evidence side joins the effort-is-personal watch signals in
+`localities-and-constraints.md` §2b.
+
 ## Exploration (noise + floor)
 
 Two mechanisms, per `matching.md`:
@@ -268,7 +310,7 @@ events-only, and a newcomer's own cold-start is already served (fit works
 from onboarding, and with a thin model the noise share dominates —
 their feed is naturally exploratory).
 
-## Tunables (v7 defaults)
+## Tunables (v8 defaults)
 
 Every value is configuration, not a constant; **tunable to zero** (zeroing
 `affinityPerPersonNudge` removes affinity entirely; zeroing
@@ -284,6 +326,9 @@ Every value is configuration, not a constant; **tunable to zero** (zeroing
 | `fitStructureWeight` | 0.25 | structure position vs shape structure, × adjacency |
 | `fitSizeWeight` | 0.2 | groupSize position vs expected-size band, × adjacency |
 | `fitKnownFaceWeight` | 0.2 | needs-known-face member + tapped person present (fit, not nudge) |
+| `fitTimeWindowWeight` | 0.1 | event window ∈ member's structured windows (never a gate) |
+| `travelPenaltyPerBand` | 0.15 | de-weight per effective band beyond the stated reach |
+| `travelDeweightCap` | 0.45 | max travel de-weight per event (< fitCap — the right event wins) |
 | `affinityPerPersonNudge` | 0.12 | one-sided component, × own generosity weight |
 | `affinityMutualBonus` | 0.12 | mutual amplification, × min(w_me, w_them) |
 | `affinityConfirmedBonus` | 0.08 | reciprocal-met confirmation, × scale (not weight-gated) |
@@ -325,10 +370,21 @@ unit tests assert this relationship against the defaults.
 | Graduated avoidance tiers (injection / composition) | those surfaces don't exist yet — passive feed is D49's softest tier | group formation / composition slices |
 | Newcomer injection into others' feeds | no people-surfaces/composition yet | group formation slice |
 | Blocks (D50/D52) | Group 4; advocate review first | protective-blocks build |
-| Travel/distance | no structured locality model | travel-willingness slice |
+| Per-member × locality observed affinity | the coarse median bands must demonstrably chafe first | effort-is-personal refinement (`localities-and-constraints.md` §2b) |
+| Wish consumption (demand → suggestions) | captured, deliberately unconsumed | radar R8 |
 
 ## Version history
 
+- **v8** — localities & structured constraints (D62,
+  `localities-and-constraints.md`): the curated effort-band register
+  (no coordinates, direct edges only, served at `GET /localities`,
+  absorbing the sign-up allowlist), organizer-declared event locality,
+  travel reach as a **graduated de-weight** over per-member effective
+  bands (adjustments = the exceptions layer) — prioritization, never
+  filtering; time-window fit as a soft component; the
+  "wish this was closer" capture (`EventWishRecorded`, consumed by
+  nothing — R8). The hard-constraints table's old distance row
+  deliberately softened.
 - **v7** — avoidance (D49/D61): comfort-tier capture in the debrief
   people step (two typed tiers behind a tucked-away affordance;
   contradictory tap+avoid rejected), pair zeroing either-direction
