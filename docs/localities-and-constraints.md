@@ -4,11 +4,15 @@ The structured-constraints follow-up named at the D58/D59 sign-off
 (`profile-and-legibility.md` §3), plus its hidden dependency, named by
 the founder: **a model of nearby localities and distances**, so a member
 never types out every place they won't go — they state a reach once,
-and everything farther simply stops being suggested.
+and everything farther gently falls down the suggestion order.
 
-**Status: proposal.** Two sign-off points: the shape of the locality
-register (curated effort bands, no coordinates), and the consumption
-split (travel gates *suggestions only*; time windows never gate).
+**Status: proposal, revised after founder review.** The first review
+settled two things (recorded in §2 and §4): **prioritization, not
+filtering** — reach de-prioritizes, it never gates, "you never know
+when someone wants to travel further for the right event, or on a
+whim"; and **effort is personal** — the register's bands are the
+community's median judgment, the personal variance is named, watched,
+and deliberately not modeled in v1.
 
 ## 1. The locality register — curated effort bands, not coordinates
 
@@ -75,28 +79,43 @@ home community.
   every existing event with zero backfill. External events identical
   (the steward declares it).
 
-## 2. Travel reach — one setting, suggestions-only gate
+## 2. Travel reach — prioritization, never filtering
 
 The member states a **reach**: `here` | `nearby` | `a-trip` |
 `anywhere`. **Default `anywhere`** — the constraint exists only when
 the member (or their own onboarding words) sets it; we never narrow
 anyone's world silently.
 
-**Consumption (ranking spec v8): reach gates the candidate set for
-`recommendations` — it never hides an event.** An event whose band
-(member home → event locality) exceeds the member's reach simply isn't
-*suggested*; it stays on the calendar, browsable and joinable like any
-other (the feed's "More on the calendar" is untouched). This is the
-distance row of `matching.md`'s hard-constraint table finally landing —
-and it's a **member-set** gate, the same class as "already committed",
-not a ranking weight to tune. Changing reach takes effect on the next
-feed read.
+**Consumption (ranking spec v8): a graduated de-weight, not a gate.**
+The founder's principle, recorded: *"as always this is prioritization,
+not filtering — you never know when someone wants to travel further
+for the right event, or on a whim."* An event's band (member home →
+event locality) beyond the member's reach subtracts
+`travelPenaltyPerBand` per band of excess, capped at
+`travelDeweightCap` — beyond-reach rooms **sink in the suggestions,
+they never leave them**:
 
-Why gate suggestions rather than de-weight: a member who said
-"on-island only" and keeps seeing Bremerton suggestions learns that
-their word doesn't govern their own constraint — the exact opposite of
-D59's lesson. Their stated reach is theirs; the calendar staying whole
-keeps it from ever becoming a wall.
+```
+penalty = min( travelDeweightCap,
+               travelPenaltyPerBand × max(0, band − reach) )
+```
+
+- **The right event still wins**: the cap sits below `fitCap`, so a
+  genuinely great fit outranks the distance penalty — a pottery
+  intensive in Seattle can still top an island member's feed.
+- **The whim door is structural**: the exploratory share fills its
+  slots from the noise ordering, which ignores penalties entirely —
+  distant rooms keep appearing on their own merits, tunably often.
+- Nothing is ever hidden: the calendar is whole regardless; this only
+  shapes suggestion order. Changing reach takes effect on the next
+  feed read; a member who said "on-island only" sees island rooms
+  *first*, not Bremerton *never*.
+
+This softens the old influence-map assumption that distance would land
+as a hard constraint — deliberately: in this design nothing gates
+except true feasibility (capacity, conflicts, commitments, and one day
+blocks). A stated reach is a strong preference about effort, not a
+fact about possibility.
 
 ### Sources, D7-ordered (same pattern as D58 positions)
 
@@ -108,6 +127,51 @@ keeps it from ever becoming a wall.
 2. **Correction (D59)**: a new correction type `constraint` — set
    `travelReach` (or clear to `anywhere`). Shown in `GET /me/model`
    with the usual provenance language; the member's word wins.
+
+## 2b. Effort is personal — the v1 stance, and the patterns we watch
+
+Named at review, and true: the register's bands are the **community's
+median judgment**, but effort differs per person in both perception
+and reality —
+
+- **Mode**: most people drive for anything past 200 yards; some bike,
+  walk, or ride transit and happily cover more ground.
+- **Ferry sociology**: the crossing isn't one thing — some members
+  will only socialize in Seattle with people *from the island*; others
+  find their people over there.
+- **Non-monotonic locality preference**: a member who'll drive to Port
+  Orchard or Gig Harbor but not to closer Bremerton. Liking a place is
+  not a distance function.
+
+**v1 deliberately models none of this.** Small community, small range;
+the personal dial v1 offers is the reach itself, and — because reach
+de-prioritizes rather than gates — a band that's wrong about a person
+costs them *ordering*, never *access*. The exploration floor keeps
+disconfirming evidence arriving (distant rooms keep surfacing; if the
+member keeps choosing them, that's data).
+
+**Watch signals** (the patterns worth knowing, all readable from the
+event log — attendance already carries member home, event locality,
+and the debrief its outcome):
+
+1. **Beyond-reach confirmations** and their debrief outcomes — members
+   repeatedly traveling past their stated reach, happily: the reach
+   was stated tight, or the right-event effect is real. Either way,
+   grounded evidence for the personalization below.
+2. **Within-reach abstention by locality** — a member never choosing a
+   locality their band says is easy (the Bremerton pattern): personal
+   locality preference the median band can't see.
+3. **Reach correction rates** — many members correcting the same way
+   = the register's band judgments are miscalibrated community-wide
+   (the same aggregate-correction signal as D58's dimensions).
+
+**Future refinement path (named, not built)**: per-member × locality
+*observed* affinity — the member's lived attendance choices adjusting
+their own effective bands, in the D60 spirit (grounded evidence, no
+questionnaires about transport modes, no clocks). The ferry-sociology
+pattern is a *company × locality* interaction and ties to the deferred
+per-company travel granularity — both wait for the coarse model to
+demonstrably chafe.
 
 ## 3. Time windows — structured, but never a gate
 
@@ -152,8 +216,9 @@ dimension we want to gently stretch.
 2. **Backend**: event `localityId` (propose/edit/external, projection,
    detail/list annotation), onboarding schema + prompt docs
    (`travelReach`, window slugs), projector validation, `constraint`
-   correction type, recommend gate + `fitTimeWindowWeight`, spec v8,
-   tunables, tests.
+   correction type, recommend travel de-weight + `fitTimeWindowWeight`,
+   spec v8, tunables (`travelPenaltyPerBand`, `travelDeweightCap`),
+   tests.
 3. **Frontend (minimal)**: locality picker on propose/edit (default
    home), reach + windows in "How we understand you" with correction
    affordances, band label on event detail ("a ferry trip away").
