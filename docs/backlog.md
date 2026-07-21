@@ -111,6 +111,7 @@ Trust & safety surface, internal admin/support tooling.
 - [ ] Reporting mechanism for inappropriate behavior at events
 - [ ] Mutual blocks UX — event visibility, attendee counts
 - [ ] Internal user contributor rating — trustworthy, positive contributor; private, used for group composition
+- [ ] Locality register store + management tool (D62 follow-up) — the register ships as an in-code strawman (`lib/localities.mjs`), held as-is by founder decision until real issues or advisor/workshop feedback move it; when it moves, it needs a data store (multi-community operation, non-developer curators, edits without deploys) and a view/update/manage surface — naturally part of the admin UI below. Watch inputs: reach correction rates + the effort-is-personal signals (`localities-and-constraints.md` §2b)
 - [ ] Admin & support UI — system metrics, health, logs/traces, support requests, data management, workshop controls (time, seed, automated activity)
 - [ ] User support — support info, request for support, assistant chat, support staff chat; communication design first (radar R4)
 

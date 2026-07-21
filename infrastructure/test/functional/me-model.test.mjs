@@ -100,8 +100,16 @@ test('me-model: legible before onboarding (null), seeded after, corrections take
 
   // Seeded model appears, member-facing: positions with provenance
   // language, the growth edge, doors/interests/barriers as chips.
+  // The poll waits for the FULL seeded shape: the projector writes
+  // profile#core first and the collection rows (interests, strengths,
+  // barriers) after it, and this route reads eventually-consistent —
+  // polling on the position alone raced the later rows (a real deploy
+  // flake caught by CI, 2026-07-20).
   const model = await waitForModel(
-    (m) => m?.envelope?.groupSize?.position === 'small',
+    (m) => m?.envelope?.groupSize?.position === 'small'
+      && m.interests?.some((i) => i.tag === 'pottery')
+      && m.barriers?.some((b) => b.what === 'walking into rooms of strangers')
+      && m.doors?.some((d) => d.door === 'connect'),
     'seeded model via GET /me/model',
   );
   assert.equal(model.envelope.structure.position, 'activity-anchored');
