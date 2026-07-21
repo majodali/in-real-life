@@ -16,9 +16,14 @@ unmodeled in v1; **per-locality adjustments** are the member's
 exceptions layer; and the **"wish this was closer" capture** ships
 consumption-free, with the demand side tracked as radar R8.
 
-**The launch register is a DRAFT** (`lib/localities.mjs`): first-pass
-Kitsap band judgments written to be corrected by the founder's local
-knowledge — editing it is curation, not a code change.
+**The launch register is a deliberate strawman** (`lib/localities.mjs`):
+first-pass Kitsap band judgments, held as-is by founder decision until
+it either causes real issues or advisor/workshop feedback corrects it —
+the same evidence-first posture as everything else. Two known follow-ups
+are tracked in the backlog, not built: the register belongs in a **data
+store** eventually (in-code curation doesn't survive multi-community
+operation or non-developer curators), with a **view/update/manage tool**
+alongside — naturally part of the Group 4 admin surface.
 
 ## 1. The locality register — curated effort bands, not coordinates
 
