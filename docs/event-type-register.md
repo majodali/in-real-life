@@ -86,6 +86,64 @@ informs the novelty read. Consistent with the decay philosophy (D60):
 quiet usage alone never auto-retires — retirement is a curatorial
 judgment prompted by evidence, not a timer.
 
+## 2b. The dataflow, explicit: everything upstream and downstream
+
+Types are **graduated tags** (the founder's frame, adopted): tags that
+earned formality through recurrence so preferences and feedback have a
+stable anchor. Formality has consequences, so the full dataflow is
+enumerated here — nothing reaches or leaves a type assignment silently.
+
+### Upstream — what informs an assignment
+
+1. **The organizer's own words**: title + description → the extracted
+   `activityTags` (D56) → matched against register `matchTags`; title
+   tokens as fallback. Content only.
+2. **The register's curation**: which entries exist, their matchTags —
+   human judgments, editable without migration.
+3. **The organizer's correction**: authoritative, replaces the match,
+   never re-derived over (the D56 pattern).
+
+**Deliberately NOT upstream**: attendance patterns, debrief outcomes,
+who's coming, the venue, the time, member feedback of any kind.
+**Evidence flows into curation, never directly into assignment** —
+outcomes and corrections inform the human judgment to add/split/retire
+entries; they never re-type an event automatically. Automatic
+behavioral reassignment would make types self-confirming and hand the
+community silent recategorization — exactly the dynamic §7 exists to
+prevent.
+
+### Downstream — every consumer of `eventTypeId`
+
+In v1 (this slice):
+
+1. **Member outcome rows** (`outcome#{eventTypeId}`) — tallies +
+   energized-texture + forecast error, in the member's own encrypted
+   partition. Scope: that member's model, nothing else.
+2. **Novelty fit** (spec v9) — a small, capped, per-member fit
+   component from their own history with the type/family. Scope: the
+   member's own suggestion ordering, inside `fitCap`, under noise.
+3. **Display + correction surface** — the type name on the event
+   detail and the organizer's edit picker. (The one member-facing
+   surface; §7 governs its language.)
+
+Named future consumers (each is its own activation, none silent):
+
+4. Coaching/reflection grounding ("workshops leave you energized" —
+   voice pass, D27 modesty).
+5. "How we understand you" outcome sentences (D59 follow-up — never
+   tallies).
+6. R8 demand vocabulary (wishes, "more like this", invitation-to-
+   propose seeds).
+7. D51 fit-gap / supply reads per type (min-cohort, de-identified).
+8. The curated illustration set (Group 7).
+9. Venue/operator suitability cross-reads (deferred registers).
+
+**Deliberately NEVER downstream**: gating or visibility of any kind
+(untyped ranks identically); people-matching (the D58 events-not-people
+line holds — types order events per member, never members); contributor
+rating; pricing/policy treatment; any public popularity or quality read
+of a type. **A type is a key, never a judgment.**
+
 ## 3. How a type is born: earned by recurrence, never taxonomy-first
 
 The wrong way to build this is inventing a taxonomy of gatherings and
@@ -128,6 +186,32 @@ events, and a dead vocabulary within a season. Instead:
 board-game nights" is not the same novelty as "first pottery class."
 Families are few and obvious (games, making, food, outdoors, learning,
 conversation, service); a type belongs to exactly one.
+
+### Not a taxonomy — flat, plus one coarse grouping
+
+Types deliberately do **not** form a taxonomy, strict or otherwise:
+a flat list, plus the single-level `family` grouping — no hierarchy
+among types, no inheritance, no cross-links, no sub-types. Taxonomies
+invite completeness pressure (everything must fit somewhere), boundary
+disputes, and classification politics — the categorization dynamics
+this design keeps refusing. Flat-plus-family is the least structure
+the named consumers need; `family` leans backstage (novelty math), not
+a browsing hierarchy. If browse-by-kind ever becomes a UX want, that's
+a new decision taken with §7 open on the table.
+
+### When multiple types match
+
+Resolution is deterministic and restrained: the type matching the
+**most** matchTags wins; a **tie is treated as ambiguity and assigns
+nothing** — a visible wrong guess is worse than no guess (the locality
+default-to-home reasoning), and the organizer can always pick from the
+register at edit. Two health signals fall out: a high tie-rate between
+two entries is a curation smell (overlapping matchTags — tighten or
+merge), and a genuinely recurring hybrid ("games potluck") earns its
+own entry rather than multi-typing — one event carries **one type or
+none**, because the key exists for clean accumulation, and splitting
+one gathering's outcome across two keys halves the signal and doubles
+the ambiguity.
 
 ## 4. What the register unlocks in v1
 
@@ -206,7 +290,64 @@ GET /me/model surface skips unknown row kinds today, so nothing leaks
 before that copy is designed; surfacing them is a named follow-up, not
 scope here.
 
-## 7. Slice plan (after sign-off)
+## 7. Types as communication — the formality risk, named
+
+Raised at review, and the deepest question here: a type is not just a
+key — the moment it's shown, it's an **element of communication**, and
+because types are constructed and evolved through event creation and
+tag use, we're adding a formality that can produce dynamics nobody
+designed. The concern to hold: **misunderstandings of what we're
+presenting, and behavior forming around those misunderstandings.**
+
+What a type means, to each party — and the misreadings to prevent:
+
+- **To us**: a filing key for accumulation. Nothing more.
+- **To the organizer**: a shorthand their listing gets filed under —
+  correctable, optional. The misreading: type-as-SEO (wording listings
+  to hit or dodge types on a folk theory of ranking). Structural
+  answer: assignment has no observable ranking consequence to build a
+  theory on (novelty fit is small, capped, per-member, under noise),
+  and the honest answer to "does the type matter?" is "barely, and
+  only to filing" — copy should say so wherever organizers meet it.
+- **To a member**: "this is one of those." The misreadings: type-as-
+  promise (a mismatch reads as not-as-described even when the listing
+  was honest — expectation-setting is the SHAPE's job, "What it's
+  like"; policy flags reference the listing text, never the type);
+  type-as-endorsement (an IRL badge or quality tier — so types render
+  as plain descriptive words, never badges, and **untyped shows
+  nothing at all**: absence, not a lesser-status label); and
+  type-as-identity ("I'm a board-games person") — the event-side twin
+  of the D58 segmentation risk the founder named at the envelope
+  sign-off, mitigated by the same forces (exploration floor, novelty
+  fit actively paying seeks-new members to cross kinds) and watched,
+  not modeled away.
+
+**Presentation rules, stated once**: types speak the community's own
+language (register names are curated from how this community actually
+talks, not our labels — that's what keeps our meaning and theirs
+aligned); descriptive chip, never badge; no "official"; no typed-vs-
+untyped visual status; no public per-type popularity reads, ever.
+
+**Watch signals** (all cheap, all from data we already keep):
+
+1. Organizer corrections clustering on one type — its name or
+   matchTags mislead (curation input).
+2. Debrief mismatch texture (`not-as-described`-adjacent chips) higher
+   on typed events than untyped — type-as-promise is happening;
+   revisit the display copy before the register.
+3. Listing wording converging on matchTag phrasing over time —
+   typing-as-SEO folk theories forming.
+4. Untyped share trending toward zero — completeness pressure creeping
+   into curation; untyped is healthy, keep it so.
+5. Member attendance narrowing to fewer types/families post-typing
+   (against the pre-typing baseline) — the segmentation twin, same
+   watch as D58's cross-position co-attendance.
+
+This section extends the **creeping categorization** watch-item
+(`decisions.md`) to events: categorization stays a tool, not a verdict
+— and here, not a vocabulary the community starts performing.
+
+## 8. Slice plan (after sign-off)
 
 1. `lib/event-types.mjs` — strawman register (seeded from the workshop
    calendar's actual kinds), deterministic `classifyEventType(shape,
