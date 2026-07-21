@@ -279,6 +279,50 @@ history. Inside `fitCap` like every component; the member's word can
 be superseded only by their own next word (the next debrief of that
 kind — D7, no clocks, per D60).
 
+### Attribution — what a "yes" is actually about
+
+Raised at review: crediting the *type* with a member's "worth another
+go" assumes the yes was about the kind as the system defined it — it
+might have been the people, the place, the size, the way it was run.
+Two answers, one structural and one additive:
+
+**Structurally, a yes is never single-credited.** The debrief already
+routes each aspect through its own channel: the people step feeds the
+affinity stack (a yes about *who was there* follows those people via
+presence nudges, regardless of kind), texture chips feed the envelope
+(yes-despite-too-big is groupSize evidence), free text feeds interests
+and barriers. The type channel adds *activity* attribution as one
+capped channel among several — misattribution is bounded by
+construction, not by hoping the guess is right.
+
+**Additively, the dig-in the founder asked for — inside the existing
+step (D24-compatible)**:
+
+1. **Positive-attribution texture chips.** The texture step is already
+   the "what aspects" capture; its vocabulary skews
+   structural-negative. Extend it with positive attribution —
+   `the-people-made-it`, `the-activity-itself`, `the-place`,
+   `well-run` (exact set at implementation, voice pass) — so the why
+   of a good night is one optional tap, not a new question. This
+   serves the organizer channel it already feeds AND the member model
+   AND type curation. A deeper *invited* question on a yes ("what made
+   it?") stays a named option if chips prove too coarse — deliberately
+   held, since D24 commits to minimal closes after good experiences.
+2. **Attribution context rides the outcome row**: `lastAgain` is
+   stored with that debrief's texture chips and whether people were
+   tapped. v1 ranking consumes plain `lastAgain`; the context makes
+   the **misattribution loop measurable** (§7 watch signal 6) and
+   funds the named refinement: aspect-weighted again-credit, if
+   evidence shows wholesale crediting misfires.
+3. **The emergent-types mechanism, concrete**: per-member and
+   cross-member outcome splits *correlated with texture* are the
+   curation reads that answer "does the difference warrant a new
+   type?" — bimodal-with-`the-activity-itself` divergence = two kinds
+   wearing one key (split); yes-when-small / no-when-big = the
+   difference is envelope, not kind (no new type); yes-only-when-tag-X
+   = a matchTag or sub-kind is missing. Evidence → curation, never
+   automatic: emergent types with a human deciding what emerged.
+
 Consumption is deliberately thin at first — the rows are the
 **substrate** for coaching ("workshops leave you energized; big
 unstructured rooms don't — want more of the first?"), for D51 fit-gap
@@ -401,6 +445,11 @@ untyped visual status; no public per-type popularity reads, ever.
 5. Member attendance narrowing to fewer types/families post-typing
    (against the pre-typing baseline) — the segmentation twin, same
    watch as D58's cross-position co-attendance.
+6. **The misattribution loop**: members whose again-yes events keep
+   being type-resurfaced who then decline or answer "no" on those
+   suggestions — the yes wasn't about the kind (§4 Attribution);
+   triggers the aspect-weighted-credit refinement, never a silent
+   re-crediting.
 
 This section extends the **creeping categorization** watch-item
 (`decisions.md`) to events: categorization stays a tool, not a verdict
@@ -418,9 +467,11 @@ This section extends the **creeping categorization** watch-item
    display in v1 (§0/§7).
 3. Debrief: `eventTypeId` frozen into `DebriefSubmitted`;
    `eventTypeOutcome` + `forecastError` join the extraction schema
-   (prompt doc first, mirror second); projector writes `outcome#` rows
-   including `lastAgain` (from the debrief's existing `again` answer —
-   no new member-facing question).
+   (prompt doc first, mirror second); positive-attribution texture
+   chips join the adaptive chip set (voice pass on the exact words);
+   projector writes `outcome#` rows including `lastAgain` + its
+   attribution context (that debrief's texture, people-tapped flag) —
+   from existing answers, no new member-facing question.
 4. Ranking spec v9: `fitAgainWeight` (the flagship) +
    `fitNoveltyWeight`, both from own outcome rows.
 5. Registers: decision row, backlog, spec history, functional coverage.
