@@ -85,5 +85,17 @@ export const DEBRIEF_EXTRACTION_SCHEMA = {
       },
       required: ['predicted', 'actual'],
     },
+    // D63: how this KIND of event tends to land for this member —
+    // stored on their outcome#{eventType} row. Extract only when the
+    // text clearly shows it; prefer the condition it held under.
+    eventTypeOutcome: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        energized: { type: 'boolean' },
+        condition: { type: 'string' },
+      },
+      required: ['energized'],
+    },
   },
 };

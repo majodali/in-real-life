@@ -40,6 +40,7 @@ import {
 } from './users/projections.mjs';
 import { createEventWishHandler } from './events/wish.mjs';
 import { LOCALITIES, COMMUNITY } from './lib/localities.mjs';
+import { EVENT_TYPES } from './lib/event-types.mjs';
 import { createReacceptAgreementHandler } from './users/agreement.mjs';
 import {
   createReflectionTurnHandler,
@@ -495,6 +496,14 @@ router.add('GET', '/localities', async () => ({
 }));
 // "I wish this was closer" (D62/R8): capture-only demand signal.
 router.add('POST', '/events/:eventId/wish', requireCurrentAgreement(eventWishHandler));
+// The event-type register (D63): serves the ORGANIZER edit picker —
+// member-facing type display is deliberately deferred (§0/§7 of the
+// design note). Unretired entries only; reference data, ungated.
+router.add('GET', '/event-types', async () => ({
+  statusCode: 200,
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ eventTypes: EVENT_TYPES.filter((t) => !t.retired) }),
+}));
 router.add('GET', '/events/:eventId/attendees', listAttendeesHandler);
 router.add('PUT', '/events/:eventId/interaction', requireCurrentAgreement(setInteractionHandler));
 router.add('DELETE', '/events/:eventId/interaction', requireCurrentAgreement(withdrawInteractionHandler));

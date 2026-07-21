@@ -87,6 +87,47 @@ test('shape: extracted at propose time and lands on the event row', async () => 
   });
 });
 
+test('event type (D63): served register, derived at propose, organizer-corrected, untyped first-class', async () => {
+  // The register serves the organizer picker.
+  const regRes = await fetch(`${config.apiUrl}/event-types`, {
+    headers: { Authorization: `Bearer ${organizer.idToken}` },
+  });
+  assert.equal(regRes.status, 200);
+  const { eventTypes } = await regRes.json();
+  const pottery = eventTypes.find((t) => t.id === 'pottery-class');
+  assert.ok(pottery, 'strawman register served');
+  assert.equal(pottery.family, 'making');
+
+  // Derived deterministically from the stub shape's tags.
+  const eventId = await propose('Pottery wheel intro');
+  let row = await readEvent(eventId);
+  assert.equal(row.eventTypeId, 'pottery-class');
+  assert.equal(row.eventTypeSource, 'derived');
+
+  // The organizer's word replaces the match and is stamped as theirs.
+  const correct = await fetch(`${config.apiUrl}/events/${eventId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${organizer.idToken}` },
+    body: JSON.stringify({ commandId: randomUUID(), eventTypeId: 'board-game-night' }),
+  });
+  assert.equal(correct.status, 201);
+  row = await readEvent(eventId);
+  assert.equal(row.eventTypeId, 'board-game-night');
+  assert.equal(row.eventTypeSource, 'organizer');
+
+  // Unknown types are refused; a one-off matches nothing and stays untyped.
+  const bad = await fetch(`${config.apiUrl}/events/${eventId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${organizer.idToken}` },
+    body: JSON.stringify({ commandId: randomUUID(), eventTypeId: 'disco-fridays' }),
+  });
+  assert.equal(bad.status, 400);
+
+  const oneOffId = await propose('Zorbing extravaganza');
+  const oneOff = await readEvent(oneOffId);
+  assert.equal(oneOff.eventTypeId, undefined, 'untyped, first-class');
+});
+
 test('shape: the organizer\'s correction replaces it wholesale, normalized and stamped', async () => {
   const eventId = await propose('Thursday thing');
 

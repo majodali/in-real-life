@@ -21,6 +21,7 @@ export async function handleEditSubmit({
   shapeTags,
   shapeStructure,
   shapeDoors,
+  eventTypeId,
   commands,
   showToast,
   onSuccess,
@@ -162,6 +163,13 @@ export async function handleEditSubmit({
   if (nextSpot !== currentSpot) fields.meetingSpot = nextSpot;
   if (nextShape !== undefined && shapeChanged(nextShape, current.shape ?? null)) {
     fields.shape = nextShape;
+  }
+  // Event type (D63): the organizer's word; '' from the picker means
+  // untyped (null clears server-side). undefined = field absent (picker
+  // not rendered) — never touched.
+  if (eventTypeId !== undefined) {
+    const nextType = eventTypeId || null;
+    if (nextType !== (current.eventTypeId ?? null)) fields.eventTypeId = nextType;
   }
 
   if (Object.keys(fields).length === 0) {

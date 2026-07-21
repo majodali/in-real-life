@@ -11,6 +11,7 @@ import { computeEffectiveState, CHANGE_OPEN_STATES, simulatedNowIso } from '../l
 import { validateCost, validateMaxAttendance } from './event-fields.mjs';
 import { normalizeShape } from './event-shape.mjs';
 import { isValidLocalityId } from '../lib/localities.mjs';
+import { isAssignableEventTypeId } from '../lib/event-types.mjs';
 
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
 const REASON_MAX = 200;
@@ -151,7 +152,7 @@ export function createCancelEventHandler({ runner, client, eventsTable, getOffse
 // Editable fields on an event. Sparse update — only the keys the
 // organizer touches make it into EventEdited.data.fields. All optional.
 // cost and maxAttendance accept null to clear ("it's free now" / "no cap").
-const EDITABLE_FIELDS = ['title', 'description', 'startTime', 'endTime', 'location', 'timesApproximate', 'cost', 'maxAttendance', 'meetingSpot', 'shape', 'localityId'];
+const EDITABLE_FIELDS = ['title', 'description', 'startTime', 'endTime', 'location', 'timesApproximate', 'cost', 'maxAttendance', 'meetingSpot', 'shape', 'localityId', 'eventTypeId'];
 
 export function createEditEventHandler({ runner, client, eventsTable, getOffset }) {
   return async function handler(httpEvent) {
@@ -239,6 +240,15 @@ export function createEditEventHandler({ runner, client, eventsTable, getOffset 
     if ('localityId' in fields && fields.localityId !== null
       && !isValidLocalityId(fields.localityId)) {
       return reply(400, { error: 'unknown localityId' });
+    }
+    // Event type (D63): the organizer's word replaces the derived match
+    // and is stamped as theirs — including choosing untyped (null).
+    // Retired types can't be newly assigned.
+    if ('eventTypeId' in fields) {
+      if (fields.eventTypeId !== null && !isAssignableEventTypeId(fields.eventTypeId)) {
+        return reply(400, { error: 'unknown or retired event type' });
+      }
+      fields.eventTypeSource = 'organizer';
     }
     // Shape correction (D56): the organizer's word replaces the extracted
     // shape wholesale and is stamped as theirs — re-extraction never

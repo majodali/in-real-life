@@ -6,7 +6,7 @@ A mobile-first web app for a local community meetup platform. Users go through a
 
 ## Design documentation
 
-`docs/README.md` is the index to the design notes; `docs/decisions.md` is the canonical decision register (D1–D62), `docs/open-risks.md` the known-gaps tracker, and `docs/radar.md` the register of tracked-but-undesigned workstreams (R1–R8: decision registers & feedback intake, A/B testing UX, age/locality verification, staff↔member support comms, community launch playbook, broad community feedback, pricing & sponsorship, demand signals & event suggestions). Read those before extending any designed area — most conceptual decisions (user model, onboarding, debrief, matching, policy, trust) are already made and recorded there.
+`docs/README.md` is the index to the design notes; `docs/decisions.md` is the canonical decision register (D1–D63), `docs/open-risks.md` the known-gaps tracker, and `docs/radar.md` the register of tracked-but-undesigned workstreams (R1–R8: decision registers & feedback intake, A/B testing UX, age/locality verification, staff↔member support comms, community launch playbook, broad community feedback, pricing & sponsorship, demand signals & event suggestions). Read those before extending any designed area — most conceptual decisions (user model, onboarding, debrief, matching, policy, trust) are already made and recorded there.
 
 ## Architecture
 

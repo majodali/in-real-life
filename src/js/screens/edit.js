@@ -135,6 +135,17 @@ export async function renderEdit(eventId) {
       </div>
 
       <div class="profile-field">
+        <label class="profile-field-label" for="editEventType">Kind of gathering${event.eventTypeSource === 'derived' ? ' (our guess — correct freely)' : ''}</label>
+        <select class="profile-field-input" id="editEventType" data-loading="1">
+          <option value="">— none / one-off —</option>
+        </select>
+        <small class="profile-field-hint">
+          Filing it right is how the right people's “worth another go”
+          finds your gathering.
+        </small>
+      </div>
+
+      <div class="profile-field">
         <span class="profile-field-label">What it offers</span>
         ${[['useful', 'A way to be useful'], ['make-learn', 'Make or learn something'], ['connect', 'Time with people']].map(([door, label]) => `
           <label class="edit-door-option">
@@ -150,6 +161,16 @@ export async function renderEdit(eventId) {
 
   const form = document.getElementById('editForm');
   const submit = document.getElementById('editSubmit');
+
+  // Kind picker (D63): served register, current type preselected. If it
+  // never loads, the field stays untouched on save (dataset.loading).
+  commands.getEventTypes().then(({ eventTypes }) => {
+    const select = document.getElementById('editEventType');
+    if (!select) return;
+    select.innerHTML = '<option value="">— none / one-off —</option>'
+      + (eventTypes ?? []).map((t) => `<option value="${t.id}"${t.id === event.eventTypeId ? ' selected' : ''}>${t.name}</option>`).join('');
+    delete select.dataset.loading;
+  }).catch(() => {});
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -170,6 +191,11 @@ export async function renderEdit(eventId) {
         shapeTags: document.getElementById('editShapeTags').value,
         shapeStructure: document.getElementById('editShapeStructure').value,
         shapeDoors: [...form.querySelectorAll('.edit-door:checked')].map((el) => el.value),
+        // Only touch the type once the register loaded (a half-loaded
+        // picker must never read as "clear my type").
+        eventTypeId: document.getElementById('editEventType').dataset.loading
+          ? undefined
+          : document.getElementById('editEventType').value,
         commands,
         showToast,
         onSuccess: () => {

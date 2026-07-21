@@ -1,4 +1,4 @@
-# The Event-Type Register — Design (proposal)
+# The Event-Type Register — Design (decided: D63, implemented in ranking spec v9)
 
 The Group 3 construct several built pieces have been explicitly waiting
 on: **shape describes one listing (D56); the register describes
@@ -38,10 +38,13 @@ consumer, and member-facing type display is deferred until a surface
 genuinely serves the member** (no formality presented before it has
 user meaning).
 
-**Status: proposal.** Three sign-off points: how a type is born
-(recurrence-earned, never taxonomy-first), the scope order (types now;
-venues and operators designed here, built later), and the privacy line
-(registers describe kinds, never members).
+**Status: decided** (2026-07-21, D63) after four founder-review rounds
+(types-vs-tags governance, the explicit dataflow, the user-first
+purpose, attribution), and implemented as ranking spec v9. **The
+strawman type register** (`lib/event-types.mjs`, seeded from the
+workshop calendar's actual kinds) carries the same posture as the
+locality register: held until evidence or advisors move it; same
+future data store + management tool.
 
 ## 1. Three registers, one discipline
 
