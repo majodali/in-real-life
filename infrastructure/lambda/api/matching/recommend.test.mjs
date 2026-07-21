@@ -377,6 +377,74 @@ test('an avoided crew-mate cannot make a gathering', async () => {
     'no gathering bonus through an avoided fellow — the modest fit wins');
 });
 
+// ─── Travel de-weight (D62, spec v8): prioritization, never filtering ───
+
+test('beyond-reach events sink by band of excess — and never leave the list', async () => {
+  modelRows = [modelRow('profile#core', {
+    envelope: {}, doors: [],
+    constraints: { travelReach: 'here' },
+  })];
+  const events = [
+    evt('e-bremerton', { localityId: 'bremerton' }), // far: 3 bands beyond
+    evt('e-poulsbo', { localityId: 'poulsbo' }),     // nearby: 1 band beyond
+    evt('e-island'),                                  // no locality = home
+  ];
+  const out = await recommender(NO_NOISE).recommend({
+    userId: 'me', events, nowIso: NOW, homeLocalityId: 'bainbridge-island',
+  });
+  assert.deepEqual(out, ['e-island', 'e-poulsbo', 'e-bremerton']);
+  assert.equal(out.length, 3, 'soft only — everything stays suggested, just ordered');
+});
+
+test('the right event still wins: strong fit outranks the distance penalty', async () => {
+  modelRows = [
+    modelRow('profile#core', { envelope: {}, doors: [], constraints: { travelReach: 'here' } }),
+    modelRow('interest#pottery', { tag: 'pottery', weight: 1 }),
+  ];
+  const events = [
+    evt('e-seattle-pottery', { title: 'Pottery wheel intensive', localityId: 'seattle' }),
+    evt('e-island-plain', { title: 'Tuesday meetup' }),
+  ];
+  const out = await recommender(NO_NOISE).recommend({
+    userId: 'me', events, nowIso: NOW, homeLocalityId: 'bainbridge-island',
+  });
+  // Text-tier interest fit 0.4 beats the a-trip penalty (2 × 0.15 = 0.3).
+  assert.deepEqual(out, ['e-seattle-pottery', 'e-island-plain']);
+});
+
+test('a per-locality adjustment shifts the effective band (the exceptions layer)', async () => {
+  modelRows = [modelRow('profile#core', {
+    envelope: {}, doors: [],
+    constraints: {
+      travelReach: 'nearby',
+      localityAdjustments: { seattle: 'closer', poulsbo: 'further' },
+    },
+  })];
+  const events = [
+    evt('e-seattle', { localityId: 'seattle' }), // a-trip → closer → nearby: no excess
+    evt('e-poulsbo', { localityId: 'poulsbo' }), // nearby → further → a-trip: 1 band beyond
+  ];
+  const out = await recommender(NO_NOISE).recommend({
+    userId: 'me', events, nowIso: NOW, homeLocalityId: 'bainbridge-island',
+  });
+  assert.deepEqual(out, ['e-seattle', 'e-poulsbo']);
+});
+
+test('no stated reach (or anywhere) means no travel penalty for anyone', async () => {
+  modelRows = [modelRow('profile#core', {
+    envelope: {}, doors: [], constraints: { travelReach: 'anywhere' },
+  })];
+  const events = [
+    evt('e-bremerton', { localityId: 'bremerton' }),
+    evt('e-island'),
+  ];
+  const out = await recommender(NO_NOISE).recommend({
+    userId: 'me', events, nowIso: NOW, homeLocalityId: 'bainbridge-island',
+  });
+  // Equal scores → deterministic tie-break (startTime, then eventId).
+  assert.deepEqual(out, ['e-bremerton', 'e-island']);
+});
+
 // ─── Known-face comfort (D58, spec v5): a FIT input, not a nudge ───
 
 test('for a needs-known-face member, a tapped person present boosts FIT beyond the nudge cap', async () => {

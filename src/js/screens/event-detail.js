@@ -20,6 +20,7 @@ import {
 } from './reflection-handlers.js';
 import { renderSuggestionsSection } from './event-suggestions.js';
 import { renderPollsSection } from './event-polls.js';
+import { loadLocalities, localityLine, bandBetween } from '../localities.js';
 
 export async function renderEventDetail(eventId) {
   const container = document.getElementById('screen-event');
@@ -39,8 +40,11 @@ export async function renderEventDetail(eventId) {
 
   let event;
   let events = [];
+  let homeLocalityId;
   try {
-    events = (await commands.listEvents()).events ?? [];
+    const listOut = await commands.listEvents();
+    events = listOut.events ?? [];
+    homeLocalityId = listOut.homeLocalityId;
     event = events.find((e) => e.eventId === eventId);
   } catch (err) {
     container.querySelector('.event-detail-loading').textContent =
@@ -56,6 +60,34 @@ export async function renderEventDetail(eventId) {
   const me = store.getActiveUser();
   const iAmOrganizer = me && me.id === event.organizerId;
   const start = formatDateRange(event.startTime, event.endTime);
+
+  // Locality line (D62): the event's town + the effort read from the
+  // member's own home, with the exceptions affordances (feels closer /
+  // further → constraint correction) and the wish capture. Enrichment
+  // only — the detail renders fine without the register.
+  let localityFact = '';
+  let localityBand = null;
+  try {
+    if (event.localityId) {
+      const register = await loadLocalities({ commands });
+      const line = localityLine(register, homeLocalityId, event.localityId);
+      localityBand = bandBetween(register, homeLocalityId, event.localityId);
+      if (line) {
+        localityFact = `
+        <div class="event-fact">
+          <span class="event-fact-label">Locality</span>
+          <span class="event-fact-value">${escapeHtml(line)}
+            ${localityBand && localityBand !== 'here' ? `
+            <span class="locality-actions">
+              <button type="button" class="btn-small locality-chip" data-feels="closer">feels closer to me</button>
+              <button type="button" class="btn-small locality-chip" data-feels="further">feels further to me</button>
+              <button type="button" class="btn-small locality-chip" id="wishCloserBtn">wish this was closer</button>
+            </span>` : ''}
+          </span>
+        </div>`;
+      }
+    }
+  } catch { /* register unavailable — skip the line */ }
   const effective = event.effectiveState || event.lifecycleState;
   const lifecycleLabel = LIFECYCLE_LABELS[effective] || effective;
   const sourceLabel = SOURCE_LABELS[event.source] || event.source;
@@ -84,6 +116,7 @@ export async function renderEventDetail(eventId) {
           <span class="event-fact-label">Where</span>
           <span class="event-fact-value">${event.location ? escapeHtml(event.location) : 'To be decided'}</span>
         </div>
+        ${localityFact}
         ${event.cost ? `
         <div class="event-fact">
           <span class="event-fact-label">Cost</span>
@@ -157,6 +190,35 @@ export async function renderEventDetail(eventId) {
 
   loadRoster(event);
   if (event.myDebrief) bindReflection(container, event);
+
+  // Locality affordances (D62): the exceptions layer + the wish capture.
+  container.querySelectorAll('[data-feels]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      try {
+        await commands.correctModel({
+          correction: {
+            type: 'constraint',
+            localityId: event.localityId,
+            feels: btn.dataset.feels,
+          },
+        });
+        showToast('Noted — your word wins over the map');
+      } catch {
+        showToast('That didn’t save — try again in a moment');
+      }
+    });
+  });
+  const wishBtn = container.querySelector('#wishCloserBtn');
+  wishBtn?.addEventListener('click', async () => {
+    try {
+      await commands.wishCloser({ eventId: event.eventId });
+      wishBtn.disabled = true;
+      wishBtn.textContent = 'noted — thanks';
+      showToast('Wish recorded — it helps us know what to grow here');
+    } catch {
+      showToast('That didn’t save — try again in a moment');
+    }
+  });
 
   if (showInteractionButtons) {
     bindInteractionButtons(container, event.eventId, event.myLevel);

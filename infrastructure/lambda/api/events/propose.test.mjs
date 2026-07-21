@@ -375,6 +375,23 @@ test('meetingSpot is trimmed, bounded, and carried for any source', async () => 
   assert.equal('meetingSpot' in runner.runCommand.calls[0][0].events[0].data, false);
 });
 
+test('localityId is register-validated and carried; absent means home by convention', async () => {
+  await handler(makeEvent({
+    claims: validClaims,
+    body: { ...validBody, localityId: 'poulsbo' },
+  }));
+  assert.equal(runner.runCommand.calls[0][0].events[0].data.localityId, 'poulsbo');
+
+  runner.runCommand.calls.length = 0;
+  await handler(makeEvent({ claims: validClaims, body: validBody }));
+  assert.equal('localityId' in runner.runCommand.calls[0][0].events[0].data, false);
+
+  const bad = await handler(makeEvent({
+    claims: validClaims, body: { ...validBody, localityId: 'atlantis' },
+  }));
+  assert.equal(bad.statusCode, 400);
+});
+
 // ─── Event shape extraction (D56, docs/event-shape-prompt.md) ───
 
 test('an injected llm yields one event-shape call; the shape rides in EventProposed', async () => {

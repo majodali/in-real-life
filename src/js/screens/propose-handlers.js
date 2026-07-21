@@ -18,6 +18,7 @@ export async function handleProposeSubmit({
   costCovers,
   maxAttendance,
   meetingSpot,
+  localityId,
   isExternal,
   minimumAttendance,
   autoPlanOnThreshold,
@@ -132,6 +133,7 @@ export async function handleProposeSubmit({
       maxAttendance: maxSpots,
       source: isExternal ? 'external' : undefined,
       meetingSpot: (meetingSpot ?? '').trim() || undefined,
+      localityId: localityId || undefined,
       autoPlanOnThreshold: isExternal ? undefined : (autoPlanOnThreshold === true),
       timesApproximate: timesApproximate === true,
     });

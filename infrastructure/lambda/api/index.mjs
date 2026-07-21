@@ -36,7 +36,10 @@ import {
   projectUserAgreementReaccepted,
   projectReflectionRecorded,
   projectUserModelCorrected,
+  projectEventWishRecorded,
 } from './users/projections.mjs';
+import { createEventWishHandler } from './events/wish.mjs';
+import { LOCALITIES, COMMUNITY } from './lib/localities.mjs';
 import { createReacceptAgreementHandler } from './users/agreement.mjs';
 import {
   createReflectionTurnHandler,
@@ -205,6 +208,7 @@ const projector = createProjector({
     UserAgreementReaccepted: projectUserAgreementReaccepted,
     ReflectionRecorded: projectReflectionRecorded,
     UserModelCorrected: projectUserModelCorrected,
+    EventWishRecorded: projectEventWishRecorded,
     RequiredAgreementVersionUpdated: projectRequiredAgreementVersionUpdated,
   },
   tables,
@@ -340,8 +344,14 @@ const listEventsHandler = createListEventsHandler({
   client,
   eventsTable: tables.eventsTable,
   interactionsTable: tables.interactionsTable,
+  usersTable: tables.usersTable,
   getOffset: getWorkshopOffset,
   recommender,
+});
+const eventWishHandler = createEventWishHandler({
+  runner, client,
+  eventsTable: tables.eventsTable,
+  usersTable: tables.usersTable,
 });
 const setInteractionHandler = createSetInteractionHandler({
   runner, client,
@@ -476,6 +486,15 @@ router.add('POST', '/admin/agreement-version', updateAgreementVersionHandler);
 
 router.add('POST', '/events', requireCurrentAgreement(proposeEventHandler));
 router.add('GET', '/events', listEventsHandler);
+// The locality register (D62): public curated data — authed like every
+// route, but not agreement-gated (reference data, like /time).
+router.add('GET', '/localities', async () => ({
+  statusCode: 200,
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ localities: LOCALITIES, community: COMMUNITY }),
+}));
+// "I wish this was closer" (D62/R8): capture-only demand signal.
+router.add('POST', '/events/:eventId/wish', requireCurrentAgreement(eventWishHandler));
 router.add('GET', '/events/:eventId/attendees', listAttendeesHandler);
 router.add('PUT', '/events/:eventId/interaction', requireCurrentAgreement(setInteractionHandler));
 router.add('DELETE', '/events/:eventId/interaction', requireCurrentAgreement(withdrawInteractionHandler));

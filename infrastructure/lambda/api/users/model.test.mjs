@@ -157,6 +157,13 @@ test('POST validates corrections against the vocabulary', async () => {
     { type: 'interest-add', tag: 'x'.repeat(61) },
     { type: 'barrier-remove' },
     { type: 'rewrite-everything' },
+    // D62 constraint corrections:
+    { type: 'constraint' }, // touches nothing
+    { type: 'constraint', travelReach: 'the-moon' },
+    { type: 'constraint', travelReach: 'far' }, // a band, not a reach
+    { type: 'constraint', localityId: 'atlantis', feels: 'closer' },
+    { type: 'constraint', localityId: 'bremerton', feels: 'never' },
+    { type: 'constraint', addTimeWindow: 'weekday evenings' }, // free text, not a slug
   ];
   for (const correction of cases) {
     const res = await correctHandler(makeEvent({ claims: validClaims, body: correctionBody(correction) }));
@@ -191,6 +198,20 @@ test('POST emits UserModelCorrected at the next seq on the user aggregate', asyn
   assert.deepEqual(event.data.correction, {
     type: 'envelope', dimension: 'groupSize', position: 'small', edgeToward: 'large',
   });
+});
+
+test('POST accepts valid constraint corrections, including nulls to clear', async () => {
+  for (const correction of [
+    { type: 'constraint', travelReach: 'nearby' },
+    { type: 'constraint', travelReach: null },
+    { type: 'constraint', localityId: 'bremerton', feels: 'closer' },
+    { type: 'constraint', localityId: 'bremerton', feels: null },
+    { type: 'constraint', addTimeWindow: 'weekend-evening' },
+    { type: 'constraint', removeTimeWindow: 'weekday evenings' }, // removing legacy text is fine
+  ]) {
+    const res = await correctHandler(makeEvent({ claims: validClaims, body: correctionBody(correction) }));
+    assert.equal(res.statusCode, 201, JSON.stringify(correction));
+  }
 });
 
 test('POST clearing a growth edge (edgeToward null) is valid', async () => {

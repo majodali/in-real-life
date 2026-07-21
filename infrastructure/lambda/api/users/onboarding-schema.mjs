@@ -111,6 +111,16 @@ export const ONBOARDING_EXTRACTION_SCHEMA = {
         timeWindows: { type: 'array', items: { type: 'string' } },
         maxTravel: { type: 'string' },
         accessibility: { type: 'string' },
+        // D62: structured travel constraints, OPTIONAL — set only when
+        // the member's own words support them (restraint over
+        // coverage); maxTravel free text stays as the story. Validated
+        // against lib/localities.mjs at consumption per the standing
+        // schema-carries-strings convention.
+        travelReach: { type: 'string' },
+        localityAdjustments: {
+          type: 'object',
+          additionalProperties: { type: 'string' },
+        },
       },
     },
     barriers: {

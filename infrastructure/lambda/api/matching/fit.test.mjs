@@ -2,7 +2,10 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { tokenize, tagMatches, interestFit, doorFit, eventFit, structureFit, sizeFit, sizeBandOf } from './fit.mjs';
+import {
+  tokenize, tagMatches, interestFit, doorFit, eventFit, structureFit,
+  sizeFit, sizeBandOf, timeWindowFit,
+} from './fit.mjs';
 import { RANKING_TUNABLES } from './tunables.mjs';
 
 const t = RANKING_TUNABLES;
@@ -151,6 +154,24 @@ test('size fit compares member band to event band with adjacency', () => {
   assert.ok(Math.abs(sizeFit(env, { maxAttendance: 8 }, t) - t.fitSizeWeight * 0.5) < 1e-9);
   assert.equal(sizeFit(env, { maxAttendance: 30 }, t), 0);
   assert.equal(sizeFit({}, { maxAttendance: 4 }, t), 0); // no position → no component
+});
+
+// ─── Time-window fit (D62, spec v8): rhythm is preference, never a gate ───
+
+test('a matching window adds fitTimeWindowWeight; a mismatch subtracts nothing', () => {
+  // 2026-07-23T02:00Z = Wednesday 19:00 PDT — weekday-evening locally.
+  const eveningEvent = { title: 'x', startTime: '2026-07-23T02:00:00.000Z' };
+  const constraints = { timeWindows: ['weekday-evening'] };
+  assert.ok(Math.abs(
+    timeWindowFit(constraints, eveningEvent, t) - t.fitTimeWindowWeight,
+  ) < 1e-9);
+
+  const daytimeOnly = { timeWindows: ['weekday-daytime'] };
+  assert.equal(timeWindowFit(daytimeOnly, eveningEvent, t), 0, 'mismatch = no component, no penalty');
+  assert.equal(timeWindowFit({ timeWindows: ['weekday evenings'] }, eveningEvent, t), 0,
+    'legacy free text never matches a slug');
+  assert.equal(timeWindowFit({}, eveningEvent, t), 0);
+  assert.equal(timeWindowFit(constraints, { title: 'idea, no time yet' }, t), 0);
 });
 
 test('eventFit sums envelope components inside fitCap', () => {

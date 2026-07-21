@@ -1,4 +1,4 @@
-# Localities & Structured Constraints — Design (proposal)
+# Localities & Structured Constraints — Design (decided: D62, implemented in ranking spec v8)
 
 The structured-constraints follow-up named at the D58/D59 sign-off
 (`profile-and-legibility.md` §3), plus its hidden dependency, named by
@@ -6,13 +6,19 @@ the founder: **a model of nearby localities and distances**, so a member
 never types out every place they won't go — they state a reach once,
 and everything farther gently falls down the suggestion order.
 
-**Status: proposal, revised after founder review.** The first review
-settled two things (recorded in §2 and §4): **prioritization, not
-filtering** — reach de-prioritizes, it never gates, "you never know
+**Status: decided** (2026-07-19, D62) after two founder-review rounds,
+and implemented as ranking spec v8. The reviews settled: **prioritization,
+not filtering** — reach de-prioritizes, it never gates, "you never know
 when someone wants to travel further for the right event, or on a
-whim"; and **effort is personal** — the register's bands are the
-community's median judgment, the personal variance is named, watched,
-and deliberately not modeled in v1.
+whim"; **effort is personal** — the register's bands are the
+community's median judgment, the variance named, watched, deliberately
+unmodeled in v1; **per-locality adjustments** are the member's
+exceptions layer; and the **"wish this was closer" capture** ships
+consumption-free, with the demand side tracked as radar R8.
+
+**The launch register is a DRAFT** (`lib/localities.mjs`): first-pass
+Kitsap band judgments written to be corrected by the founder's local
+knowledge — editing it is curation, not a code change.
 
 ## 1. The locality register — curated effort bands, not coordinates
 

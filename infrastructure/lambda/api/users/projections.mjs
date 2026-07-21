@@ -263,3 +263,23 @@ export function projectUserModelCorrected(event, tables) {
     },
   };
 }
+
+// EventWishRecorded is capture-only (D62/R8): the wish lives on the log
+// for future demand-sensing consumption; the state row just records
+// that the aggregate advanced.
+export function projectEventWishRecorded(event, tables) {
+  return {
+    Update: {
+      TableName: tables.usersTable,
+      Key: { userId: event.data.userId },
+      UpdateExpression: 'SET #seq = :seq, updatedAt = :now',
+      ConditionExpression: '#seq = :expectedSeq',
+      ExpressionAttributeNames: { '#seq': 'seq' },
+      ExpressionAttributeValues: {
+        ':seq': event.seq,
+        ':expectedSeq': event.seq - 1,
+        ':now': event.wallTime,
+      },
+    },
+  };
+}

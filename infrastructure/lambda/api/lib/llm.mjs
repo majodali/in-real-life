@@ -116,7 +116,7 @@ export const STUB_ONBOARDING_EXTRACTION = {
       confidence: 'medium',
     },
   },
-  constraints: { timeWindows: ['weekday-evenings'] },
+  constraints: { timeWindows: ['weekday-evening'], travelReach: 'nearby' },
   barriers: [{ what: 'walking into rooms of strangers', provenance: 'stated' }],
   provisional: true,
 };

@@ -17,6 +17,8 @@
 import { GetCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
 import { decryptValue } from '../lib/crypto-shred.mjs';
 import { ENVELOPE_DIMENSIONS, isValidPosition, isValidEdge } from '../lib/envelope.mjs';
+import { isValidReach, isValidAdjustment, isValidLocalityId } from '../lib/localities.mjs';
+import { isValidTimeWindow } from '../lib/time-windows.mjs';
 
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
 
@@ -164,8 +166,34 @@ export function createCorrectModelHandler({ runner, client, usersTable }) {
         return reply(400, { error: 'what required' });
       }
       c.what = c.what.trim();
+    } else if (c.type === 'constraint') {
+      // D62: reach, per-locality adjustment, and/or time windows — at
+      // least one, each vocabulary-validated (null clears).
+      const touchesReach = c.travelReach !== undefined;
+      const touchesLocality = c.localityId !== undefined || c.feels !== undefined;
+      const touchesWindows = c.addTimeWindow !== undefined || c.removeTimeWindow !== undefined;
+      if (!touchesReach && !touchesLocality && !touchesWindows) {
+        return reply(400, { error: 'a constraint correction sets travelReach, a locality adjustment, and/or a time window' });
+      }
+      if (touchesReach && c.travelReach !== null && !isValidReach(c.travelReach)) {
+        return reply(400, { error: 'travelReach must be here, nearby, a-trip, or anywhere (or null to clear)' });
+      }
+      if (touchesLocality) {
+        if (!isValidLocalityId(c.localityId)) {
+          return reply(400, { error: 'unknown localityId' });
+        }
+        if (c.feels !== null && !isValidAdjustment(c.feels)) {
+          return reply(400, { error: 'feels must be closer or further (or null to clear)' });
+        }
+      }
+      if (c.addTimeWindow !== undefined && !isValidTimeWindow(c.addTimeWindow)) {
+        return reply(400, { error: 'unknown time window' });
+      }
+      if (c.removeTimeWindow !== undefined && typeof c.removeTimeWindow !== 'string') {
+        return reply(400, { error: 'removeTimeWindow must be a string' });
+      }
     } else {
-      return reply(400, { error: 'correction.type must be envelope, interest-add, interest-remove, or barrier-remove' });
+      return reply(400, { error: 'correction.type must be envelope, interest-add, interest-remove, barrier-remove, or constraint' });
     }
 
     const userId = claims.sub;

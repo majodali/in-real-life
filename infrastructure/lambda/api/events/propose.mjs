@@ -7,6 +7,7 @@
 
 import { validateCost, validateMaxAttendance } from './event-fields.mjs';
 import { extractEventShape } from './event-shape.mjs';
+import { isValidLocalityId } from '../lib/localities.mjs';
 
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
 const VALID_SOURCES = new Set(['community', 'external', 'platform']);
@@ -105,6 +106,11 @@ export function createProposeEventHandler({ runner, makeEventId, llm }) {
       meetingSpot = body.meetingSpot.trim().slice(0, 200);
       if (!meetingSpot) meetingSpot = undefined;
     }
+    // Locality (D62): organizer-declared, register-validated, never
+    // inferred from text. Absent = the community's home locality.
+    if (body.localityId !== undefined && !isValidLocalityId(body.localityId)) {
+      return reply(400, { error: 'unknown localityId' });
+    }
 
     // Event shape (D56, docs/event-shape-prompt.md): one extraction call
     // gives the listing a machine-readable shape for matching. Failure is
@@ -130,6 +136,7 @@ export function createProposeEventHandler({ runner, makeEventId, llm }) {
     if (cost !== undefined) data.cost = cost;
     if (maxAttendance !== undefined) data.maxAttendance = maxAttendance;
     if (meetingSpot !== undefined) data.meetingSpot = meetingSpot;
+    if (body.localityId !== undefined) data.localityId = body.localityId;
     if (shape !== undefined) data.shape = shape;
     data.timesApproximate = body.timesApproximate === true;
     if (source !== 'external') {

@@ -1,4 +1,6 @@
 import { ENVELOPE_DIMENSIONS, adjacencyScore } from '../lib/envelope.mjs';
+import { COMMUNITY } from '../lib/localities.mjs';
+import { windowOf, isValidTimeWindow } from '../lib/time-windows.mjs';
 
 // Fit scoring — interests + doors + envelope positions
 // (docs/matching-spec.md → Fit; envelope form per D58).
@@ -106,13 +108,27 @@ export function sizeFit(envelope, event, tunables) {
   return score === null ? 0 : tunables.fitSizeWeight * score;
 }
 
-// model: { interests, doors, envelope } — the member-side fit inputs.
+// Time-window fit (D62, spec v8): the event's window (startTime in the
+// community's clock) against the member's structured windows — a match
+// adds, a mismatch adds nothing (rhythm is preference, never a gate).
+// Free-text legacy windows simply never match a slug.
+export function timeWindowFit(constraints, event, tunables) {
+  const windows = (constraints?.timeWindows ?? []).filter(isValidTimeWindow);
+  if (windows.length === 0) return 0;
+  const eventWindow = windowOf(event.startTime, COMMUNITY.timezone);
+  if (!eventWindow) return 0;
+  return windows.includes(eventWindow) ? tunables.fitTimeWindowWeight : 0;
+}
+
+// model: { interests, doors, envelope, constraints } — the member-side
+// fit inputs.
 export function eventFit(model, event, tunables) {
   return Math.min(
     tunables.fitCap,
     interestFit(model.interests ?? [], event, tunables)
       + doorFit(model.doors ?? [], event, tunables)
       + structureFit(model.envelope, event, tunables)
-      + sizeFit(model.envelope, event, tunables),
+      + sizeFit(model.envelope, event, tunables)
+      + timeWindowFit(model.constraints, event, tunables),
   );
 }

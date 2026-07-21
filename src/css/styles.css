@@ -2061,3 +2061,20 @@ html, body {
   font-size: 12px; color: var(--soft); line-height: 1.5;
   margin-top: 8px;
 }
+
+/* ─── Locality line (D62): effort words + exceptions/wish affordances ─── */
+
+.locality-actions {
+  display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px;
+}
+
+.locality-chip {
+  font-size: 11px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  border: 1.5px solid var(--mist);
+  background: none;
+  color: var(--soft);
+}
+
+.locality-chip:disabled { opacity: 0.7; }

@@ -30,6 +30,7 @@ import { eventsOverlap } from '../events/overlap.mjs';
 import { rankCandidates } from './rank.mjs';
 import { generosityWeight, edgeStrength, crewNudge } from './affinity.mjs';
 import { RANKING_TUNABLES } from './tunables.mjs';
+import { COMMUNITY, effectiveBand, bandsBeyondReach } from '../lib/localities.mjs';
 
 const JOINABLE = new Set(['idea', 'proposed', 'planned']);
 
@@ -55,7 +56,11 @@ export function createRecommender({
   // exploration-only ranking.
   async function loadModel(userId) {
     const dataKey = await keyStore.getKey(`user#${userId}`);
-    if (!dataKey) return { interests: [], doors: [], envelope: {}, affinities: [], crews: [], stats: null };
+    if (!dataKey) {
+      return {
+        interests: [], doors: [], envelope: {}, constraints: {}, affinities: [], crews: [], stats: null,
+      };
+    }
     const rows = await queryAll({
       TableName: userModelTable,
       KeyConditionExpression: 'userId = :u',
@@ -66,6 +71,7 @@ export function createRecommender({
     const crews = [];
     let doors = [];
     let envelope = {};
+    let constraints = {};
     let stats = null;
     for (const row of rows) {
       if (!row.model || typeof row.sk !== 'string') continue;
@@ -79,11 +85,12 @@ export function createRecommender({
         const core = decryptValue(row.model, dataKey);
         doors = core?.doors ?? [];
         envelope = core?.envelope ?? {};
+        constraints = core?.constraints ?? {};
       } else if (row.sk === 'stats#affinity') {
         stats = decryptValue(row.model, dataKey);
       }
     }
-    return { interests, doors, envelope, affinities, crews, stats };
+    return { interests, doors, envelope, constraints, affinities, crews, stats };
   }
 
   // Read one decrypted facet of ANOTHER member's model — backstage only.
@@ -141,7 +148,9 @@ export function createRecommender({
 
   // events: the feed rows already annotated with effectiveState, full,
   // and myLevel (events/list.mjs). nowIso: simulated now.
-  async function recommend({ userId, events, nowIso }) {
+  // homeLocalityId: the caller's verified locality (list.mjs resolves it
+  // from the user row; absent → community home).
+  async function recommend({ userId, events, nowIso, homeLocalityId }) {
     const myCommitted = events.filter((e) => e.myLevel === 'confirmed'
       && e.effectiveState !== 'cancelled' && e.effectiveState !== 'over');
     const candidates = events.filter((e) => JOINABLE.has(e.effectiveState)
@@ -150,7 +159,9 @@ export function createRecommender({
       && !myCommitted.some((c) => eventsOverlap(e, c)));
     if (candidates.length === 0) return [];
 
-    const { interests, doors, envelope, affinities, crews, stats } = await loadModel(userId);
+    const {
+      interests, doors, envelope, constraints, affinities, crews, stats,
+    } = await loadModel(userId);
 
     // Known-face comfort (spec v5) needs presence too: for a
     // needs-known-face member, a familiar face is a FIT input.
@@ -244,10 +255,36 @@ export function createRecommender({
       }
     }
 
+    // Travel de-weight (D62, spec v8) — prioritization, never filtering:
+    // events beyond the member's stated reach (over their own effective
+    // bands, adjustments included) sink by band of excess, capped. The
+    // exploratory share ignores this entirely; nothing leaves the list.
+    if (constraints.travelReach !== undefined && tunables.travelPenaltyPerBand > 0) {
+      const home = homeLocalityId ?? COMMUNITY.homeLocalityId;
+      for (const candidate of candidates) {
+        const band = effectiveBand(
+          home,
+          candidate.localityId ?? COMMUNITY.homeLocalityId,
+          constraints.localityAdjustments,
+        );
+        const excess = bandsBeyondReach(band, constraints.travelReach);
+        if (excess > 0) {
+          const penalty = Math.min(
+            tunables.travelDeweightCap,
+            tunables.travelPenaltyPerBand * excess,
+          );
+          affinityNudges.set(
+            candidate.eventId,
+            (affinityNudges.get(candidate.eventId) ?? 0) - penalty,
+          );
+        }
+      }
+    }
+
     return rankCandidates({
       userId,
       candidates,
-      model: { interests, doors, envelope },
+      model: { interests, doors, envelope, constraints },
       affinityNudges,
       fitBoosts,
       nowIso,

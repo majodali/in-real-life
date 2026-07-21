@@ -1,18 +1,14 @@
-// Allowlist of postal codes we serve and their human-readable area labels.
-//
-// One source of truth for both the public /locality/check gate and the
-// authenticated /me/locality command. Expand by adding entries here; both
-// callers pick up the change with no code edits.
+// The sign-up allowlist — now a thin adapter over the locality register
+// (docs/localities-and-constraints.md): only localities marked `served`
+// accept registrations, so the register can band nearby places for
+// travel purposes without widening the launch gate. Both the public
+// /locality/check gate and the authenticated /me/locality command read
+// through here; expand by editing lib/localities.mjs.
 
-const SUPPORTED = {
-  '98110': 'Bainbridge Island',
-};
+import { servedAreaForPostalCode } from './localities.mjs';
 
 export function getSupportedArea(postalCode) {
-  if (postalCode == null) return null;
-  const key = String(postalCode).trim();
-  if (!key) return null;
-  return SUPPORTED[key] ?? null;
+  return servedAreaForPostalCode(postalCode);
 }
 
 export function isSupportedPostalCode(postalCode) {
