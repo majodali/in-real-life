@@ -10,6 +10,34 @@ comparand), R8's demand vocabulary ("more like this" needs a *this*),
 the curated illustration set (Group 7), and external-event
 source/operator vetting (D31).
 
+## 0. The primary purpose, user-first: repetition
+
+Asked at review — *from the downstream list, could we explain to a
+member why event types exist?* — and the honest answer to the first
+draft was no: every consumer was system-serving. The purpose that
+survives that test:
+
+**Types exist so "worth another go?" can keep its promise.** Every
+debrief asks it; today a "yes" goes nowhere the member can feel —
+nothing in ranking consumes again-intent, and the repetition engine
+the mission leans on has no mechanism for bringing a member the next
+one of the thing they said yes to. A kind is the key that makes
+repetition findable. The one-sentence explanation, owed at every
+level:
+
+- **To the member**: *"When you tell us something was worth doing
+  again, kinds are how we find you the next one."*
+- **To the organizer**: *"Filing your gathering right is how the right
+  people's 'again' finds it."*
+- **To us**: a filing key. Nothing more.
+
+Everything else this note unlocks — outcome substrate, novelty fit,
+demand vocabulary, coaching — is secondary to that, and the v1 scope
+below reflects it: **again-intent re-surfacing is the flagship
+consumer, and member-facing type display is deferred until a surface
+genuinely serves the member** (no formality presented before it has
+user meaning).
+
 **Status: proposal.** Three sign-off points: how a type is born
 (recurrence-earned, never taxonomy-first), the scope order (types now;
 venues and operators designed here, built later), and the privacy line
@@ -116,27 +144,41 @@ prevent.
 
 In v1 (this slice):
 
-1. **Member outcome rows** (`outcome#{eventTypeId}`) — tallies +
-   energized-texture + forecast error, in the member's own encrypted
-   partition. Scope: that member's model, nothing else.
-2. **Novelty fit** (spec v9) — a small, capped, per-member fit
+1. **Again-intent re-surfacing — the flagship (§0)**: the member's
+   outcome row keeps their latest "worth another go?" answer per kind;
+   future events of that kind earn `fitAgainWeight` on a `yes` (half
+   on `maybe`, **nothing on `no`** — never a penalty: a no may have
+   been about that night, not the kind, and the texture/envelope
+   channels already carry the why). The strongest-provenance fit input
+   in the system — the member's own *stated* word, D7's top shelf —
+   and the one that makes the debrief's question consequential.
+2. **Member outcome rows** (`outcome#{eventTypeId}`) — again-intent +
+   tallies + energized-texture + forecast error, in the member's own
+   encrypted partition. Scope: that member's model, nothing else.
+3. **Novelty fit** (spec v9) — a small, capped, per-member fit
    component from their own history with the type/family. Scope: the
    member's own suggestion ordering, inside `fitCap`, under noise.
-3. **Display + correction surface** — the type name on the event
-   detail and the organizer's edit picker. (The one member-facing
-   surface; §7 governs its language.)
+4. **Organizer correction surface** — the edit picker (organizers have
+   a real reason to care: §0's second sentence). **Member-facing type
+   display is deferred** — no chip, no label — until a surface
+   genuinely serves the member ("more like this", illustrations, the
+   "you said you'd do this again" explanation line). §7 governs the
+   language whenever display arrives.
 
 Named future consumers (each is its own activation, none silent):
 
-4. Coaching/reflection grounding ("workshops leave you energized" —
+5. The "you said again" legibility line on suggested events — the
+   rare chance to explain a ranking input honestly, in the member's
+   own words back to them (copy design with the voice pass).
+6. Coaching/reflection grounding ("workshops leave you energized" —
    voice pass, D27 modesty).
-5. "How we understand you" outcome sentences (D59 follow-up — never
+7. "How we understand you" outcome sentences (D59 follow-up — never
    tallies).
-6. R8 demand vocabulary (wishes, "more like this", invitation-to-
+8. R8 demand vocabulary (wishes, "more like this", invitation-to-
    propose seeds).
-7. D51 fit-gap / supply reads per type (min-cohort, de-identified).
-8. The curated illustration set (Group 7).
-9. Venue/operator suitability cross-reads (deferred registers).
+9. D51 fit-gap / supply reads per type (min-cohort, de-identified).
+10. The curated illustration set (Group 7).
+11. Venue/operator suitability cross-reads (deferred registers).
 
 **Deliberately NEVER downstream**: gating or visibility of any kind
 (untyped ranks identically); people-matching (the D58 events-not-people
@@ -219,12 +261,23 @@ the ambiguity.
 
 `DebriefSubmitted` gains the event's `eventTypeId` (frozen at command
 time, like everything else); the projector maintains one encrypted
-`outcome#{eventTypeId}` row per member per type: attended/again tallies
-(`yes`/`maybe`/`no`), the debrief's parked **`eventTypeOutcome`**
-extraction (energized/drained texture, with its condition) and
-**`forecastError`** storage (predicted vs actual — the calibration
-read) finally have their home. All of it is the member's own encrypted
-model — the register itself never holds member data (§6).
+`outcome#{eventTypeId}` row per member per type: **`lastAgain`** (the
+member's latest repetition intent — the flagship's input, D7 newest
+word), attended/again tallies (`yes`/`maybe`/`no`), the debrief's
+parked **`eventTypeOutcome`** extraction (energized/drained texture,
+with its condition) and **`forecastError`** storage (predicted vs
+actual — the calibration read) finally have their home. All of it is
+the member's own encrypted model — the register itself never holds
+member data (§6).
+
+### Again-intent fit — the flagship consumer (spec v9)
+
+`fitAgainWeight` (proposed 0.3 — the member's own stated word deserves
+more than any inference) when the candidate's type carries
+`lastAgain: 'yes'`, half on `'maybe'`, nothing on `'no'` or no
+history. Inside `fitCap` like every component; the member's word can
+be superseded only by their own next word (the next debrief of that
+kind — D7, no clocks, per D60).
 
 Consumption is deliberately thin at first — the rows are the
 **substrate** for coaching ("workshops leave you energized; big
@@ -322,6 +375,12 @@ What a type means, to each party — and the misreadings to prevent:
   fit actively paying seeks-new members to cross kinds) and watched,
   not modeled away.
 
+**v1 sidesteps most of this by deferring member-facing display
+entirely (§0)**: no chip, no label — a member meets a type only
+through what it does for them, and the first display arrives WITH its
+purpose (the "you said again" line, "more like this", illustrations).
+The rules below bind whenever that day comes.
+
 **Presentation rules, stated once**: types speak the community's own
 language (register names are curated from how this community actually
 talks, not our labels — that's what keeps our meaning and theirs
@@ -354,13 +413,16 @@ This section extends the **creeping categorization** watch-item
    title)`, family table; same strawman posture as localities (held
    until evidence or advisors move it; same future store + manager).
 2. Events: `eventTypeId` derived at propose (no LLM call), stamped on
-   the row, organizer-correctable at edit; `GET /localities`-style
-   serving of the register (probably `GET /event-types`) for the edit
-   picker and the client.
+   the row, organizer-correctable at edit; `GET /event-types` serving
+   the register for the **organizer picker only** — no member-facing
+   display in v1 (§0/§7).
 3. Debrief: `eventTypeId` frozen into `DebriefSubmitted`;
    `eventTypeOutcome` + `forecastError` join the extraction schema
-   (prompt doc first, mirror second); projector writes `outcome#` rows.
-4. Ranking spec v9: `fitNoveltyWeight` from own outcome rows.
+   (prompt doc first, mirror second); projector writes `outcome#` rows
+   including `lastAgain` (from the debrief's existing `again` answer —
+   no new member-facing question).
+4. Ranking spec v9: `fitAgainWeight` (the flagship) +
+   `fitNoveltyWeight`, both from own outcome rows.
 5. Registers: decision row, backlog, spec history, functional coverage.
 
 ## Open questions (beyond the sign-off points)
