@@ -377,6 +377,29 @@ test('an avoided crew-mate cannot make a gathering', async () => {
     'no gathering bonus through an avoided fellow — the modest fit wins');
 });
 
+// ─── Again-intent (D63, spec v9): "worth another go" keeps its promise ───
+
+test('a kind the member said yes to outranks a plain event; a no changes nothing', async () => {
+  modelRows = [
+    modelRow('outcome#board-game-night', {
+      eventTypeId: 'board-game-night', lastAgain: 'yes',
+      attended: 2, again: { yes: 2, maybe: 0, no: 0 },
+    }),
+    modelRow('outcome#trivia-night', {
+      eventTypeId: 'trivia-night', lastAgain: 'no',
+      attended: 1, again: { yes: 0, maybe: 0, no: 1 },
+    }),
+  ];
+  const events = [
+    evt('e-trivia', { eventTypeId: 'trivia-night' }),
+    evt('e-plain'),
+    evt('e-games', { eventTypeId: 'board-game-night' }),
+  ];
+  const out = await recommender(NO_NOISE).recommend({ userId: 'me', events, nowIso: NOW });
+  assert.equal(out[0], 'e-games', 'their own yes leads');
+  assert.ok(out.includes('e-trivia'), 'a no never removes — soft everywhere');
+});
+
 // ─── Travel de-weight (D62, spec v8): prioritization, never filtering ───
 
 test('beyond-reach events sink by band of excess — and never leave the list', async () => {

@@ -174,6 +174,9 @@ export function createSubmitDebriefHandler({
 
     // ── Assemble event data ──
     const data = { userId, eventId, attended: body.attended };
+    // The event's kind, frozen at command time (D63) — the key the
+    // member's "worth another go" lands on (outcome#, projector-side).
+    if (eventRow.eventTypeId !== undefined) data.eventTypeId = eventRow.eventTypeId;
 
     if (conductConcern) {
       // Quarantine: attendance/reliability still counts; every preference

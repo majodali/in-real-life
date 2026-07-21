@@ -8,6 +8,7 @@
 import { validateCost, validateMaxAttendance } from './event-fields.mjs';
 import { extractEventShape } from './event-shape.mjs';
 import { isValidLocalityId } from '../lib/localities.mjs';
+import { classifyEventType } from '../lib/event-types.mjs';
 
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
 const VALID_SOURCES = new Set(['community', 'external', 'platform']);
@@ -138,6 +139,14 @@ export function createProposeEventHandler({ runner, makeEventId, llm }) {
     if (meetingSpot !== undefined) data.meetingSpot = meetingSpot;
     if (body.localityId !== undefined) data.localityId = body.localityId;
     if (shape !== undefined) data.shape = shape;
+    // Event type (D63): deterministic tag match against the register —
+    // no LLM call, tie/no-match stays untyped (first-class). The
+    // organizer corrects at edit; their word is never re-derived over.
+    const eventTypeId = classifyEventType({ shape, title });
+    if (eventTypeId !== null) {
+      data.eventTypeId = eventTypeId;
+      data.eventTypeSource = 'derived';
+    }
     data.timesApproximate = body.timesApproximate === true;
     if (source !== 'external') {
       data.minimumAttendance = minimumAttendance;

@@ -392,6 +392,34 @@ test('localityId is register-validated and carried; absent means home by convent
   assert.equal(bad.statusCode, 400);
 });
 
+test('a derived event type rides EventProposed when the register matches; untyped stays absent', async () => {
+  // Shape tags → register match: ['pottery'] → pottery-class, uniquely.
+  const llm = {
+    complete: async () => ({ activityTags: ['pottery'], structure: 'structured', doors: ['make-learn'] }),
+  };
+  handler = createProposeEventHandler({ runner, makeEventId: makeId, llm });
+  await handler(makeEvent({
+    claims: validClaims,
+    body: { ...validBody, title: 'Pottery wheel intro' },
+  }));
+  const data = runner.runCommand.calls[0][0].events[0].data;
+  assert.equal(data.eventTypeId, 'pottery-class');
+  assert.equal(data.eventTypeSource, 'derived');
+
+  runner.runCommand.calls.length = 0;
+  handler = createProposeEventHandler({
+    runner,
+    makeEventId: makeId,
+    llm: { complete: async () => ({ activityTags: ['interpretive dance'], structure: 'unstructured', doors: ['connect'] }) },
+  });
+  await handler(makeEvent({
+    claims: validClaims,
+    body: { ...validBody, title: 'Interpretive dance flashmob' },
+  }));
+  const untyped = runner.runCommand.calls[0][0].events[0].data;
+  assert.equal('eventTypeId' in untyped, false, 'no match → untyped, first-class');
+});
+
 // ─── Event shape extraction (D56, docs/event-shape-prompt.md) ───
 
 test('an injected llm yields one event-shape call; the shape rides in EventProposed', async () => {

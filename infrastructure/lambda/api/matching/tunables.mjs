@@ -7,7 +7,7 @@
 // hash so a spec bump reshuffles deterministic noise rather than freezing
 // it across versions.
 
-export const RANKING_SPEC_VERSION = 8;
+export const RANKING_SPEC_VERSION = 9;
 
 export const RANKING_TUNABLES = {
   // Fit — interest tags vs event shape (D56) with text fallback, plus
@@ -26,6 +26,18 @@ export const RANKING_TUNABLES = {
   // Time-window fit (D62, spec v8): rhythm is preference, never a gate —
   // a matching window adds, a mismatch subtracts nothing.
   fitTimeWindowWeight: 0.1,
+  // Again-intent (D63, spec v9) — the flagship: the member's own stated
+  // "worth another go" on this KIND. The strongest-provenance fit input
+  // in the system (their word, not an inference) — weighted accordingly.
+  // yes → full, maybe → half, no → NOTHING (never a penalty: a no may
+  // have been about that night, not the kind).
+  fitAgainWeight: 0.3,
+  // Novelty fit (D63, spec v9): seeks-new pays on no-history kinds
+  // (family-new fully, type-new-in-familiar-family half);
+  // prefers-ritual pays on kept-returning kinds (attended ≥ pivot).
+  // mix / no position / untyped event → the component doesn't apply.
+  fitNoveltyWeight: 0.1,
+  noveltyRitualPivot: 3,
 
   // Travel (D62, spec v8) — prioritization, never filtering: events
   // beyond the member's stated reach sink by band of excess, capped

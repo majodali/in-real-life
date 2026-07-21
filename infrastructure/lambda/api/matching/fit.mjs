@@ -1,6 +1,7 @@
 import { ENVELOPE_DIMENSIONS, adjacencyScore } from '../lib/envelope.mjs';
 import { COMMUNITY } from '../lib/localities.mjs';
 import { windowOf, isValidTimeWindow } from '../lib/time-windows.mjs';
+import { familyOf } from '../lib/event-types.mjs';
 
 // Fit scoring — interests + doors + envelope positions
 // (docs/matching-spec.md → Fit; envelope form per D58).
@@ -14,34 +15,11 @@ import { windowOf, isValidTimeWindow } from '../lib/time-windows.mjs';
 // banding. role/novelty positions stay captured-not-used until their
 // comparands exist.
 
-export function tokenize(text) {
-  const tokens = new Set();
-  for (const raw of String(text ?? '').toLowerCase().split(/[^a-z0-9]+/)) {
-    if (!raw) continue;
-    tokens.add(stem(raw));
-  }
-  return tokens;
-}
+// Token matching now lives in lib/text-match.mjs (shared with event-type
+// classification); re-exported so existing consumers keep one import site.
+import { tokenize, tagMatches } from '../lib/text-match.mjs';
 
-// Naive plural-stripping: "games" → "game", but never "chess" → "ches".
-function stem(token) {
-  if (token.length > 3 && token.endsWith('s') && !token.endsWith('ss')) {
-    return token.slice(0, -1);
-  }
-  return token;
-}
-
-export function tagMatches(tag, eventTokens) {
-  const tagTokens = [...tokenize(tag)];
-  if (tagTokens.length === 0) return false;
-  const needed = Math.ceil(tagTokens.length / 2);
-  let hits = 0;
-  for (const t of tagTokens) {
-    if (eventTokens.has(t)) hits += 1;
-    if (hits >= needed) return true;
-  }
-  return false;
-}
+export { tokenize, tagMatches } from '../lib/text-match.mjs';
 
 // interests: decrypted interest# payloads [{ tag, weight? }, ...]
 export function interestFit(interests, event, tunables) {
@@ -120,8 +98,48 @@ export function timeWindowFit(constraints, event, tunables) {
   return windows.includes(eventWindow) ? tunables.fitTimeWindowWeight : 0;
 }
 
-// model: { interests, doors, envelope, constraints } — the member-side
-// fit inputs.
+// Again-intent fit (D63, spec v9) — the flagship consumer of the
+// event-type register: the member's own latest "worth another go?" on
+// this kind. yes → full weight, maybe → half, no or no history →
+// nothing (never a penalty). Their word is superseded only by their
+// own next word (the next debrief of this kind — D7, no clocks).
+export function againFit(outcomes, event, tunables) {
+  const typeId = event.eventTypeId;
+  if (!typeId) return 0;
+  const lastAgain = outcomes?.[typeId]?.lastAgain;
+  if (lastAgain === 'yes') return tunables.fitAgainWeight;
+  if (lastAgain === 'maybe') return tunables.fitAgainWeight / 2;
+  return 0;
+}
+
+// Novelty fit (D63): the novelty position finally has its comparand —
+// the member's own outcome history with this kind and its family.
+// seeks-new: no history with the kind pays (family-new fully, new kind
+// in a familiar family half). prefers-ritual: a kept-returning kind
+// pays (ritual is real fit, not a rut — exploration keeps stretching
+// them regardless). mix / no position / untyped → doesn't apply.
+export function noveltyFit(envelope, outcomes, event, tunables) {
+  const position = envelope?.novelty?.position;
+  const typeId = event.eventTypeId;
+  if (!position || !typeId) return 0;
+  const history = outcomes?.[typeId];
+  if (position === 'seeks-new') {
+    if (history) return 0;
+    const family = familyOf(typeId);
+    const familyFamiliar = family !== null
+      && Object.keys(outcomes ?? {}).some((known) => familyOf(known) === family);
+    return familyFamiliar ? tunables.fitNoveltyWeight / 2 : tunables.fitNoveltyWeight;
+  }
+  if (position === 'prefers-ritual') {
+    return (history?.attended ?? 0) >= tunables.noveltyRitualPivot
+      ? tunables.fitNoveltyWeight
+      : 0;
+  }
+  return 0;
+}
+
+// model: { interests, doors, envelope, constraints, outcomes } — the
+// member-side fit inputs.
 export function eventFit(model, event, tunables) {
   return Math.min(
     tunables.fitCap,
@@ -129,6 +147,8 @@ export function eventFit(model, event, tunables) {
       + doorFit(model.doors ?? [], event, tunables)
       + structureFit(model.envelope, event, tunables)
       + sizeFit(model.envelope, event, tunables)
-      + timeWindowFit(model.constraints, event, tunables),
+      + timeWindowFit(model.constraints, event, tunables)
+      + againFit(model.outcomes, event, tunables)
+      + noveltyFit(model.envelope, model.outcomes, event, tunables),
   );
 }

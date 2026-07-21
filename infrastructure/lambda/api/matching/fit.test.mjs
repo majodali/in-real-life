@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   tokenize, tagMatches, interestFit, doorFit, eventFit, structureFit,
-  sizeFit, sizeBandOf, timeWindowFit,
+  sizeFit, sizeBandOf, timeWindowFit, againFit, noveltyFit,
 } from './fit.mjs';
 import { RANKING_TUNABLES } from './tunables.mjs';
 
@@ -172,6 +172,53 @@ test('a matching window adds fitTimeWindowWeight; a mismatch subtracts nothing',
     'legacy free text never matches a slug');
   assert.equal(timeWindowFit({}, eveningEvent, t), 0);
   assert.equal(timeWindowFit(constraints, { title: 'idea, no time yet' }, t), 0);
+});
+
+// ─── Again-intent + novelty fit (D63, spec v9) ───
+
+test('againFit: the member\'s own word — yes full, maybe half, no/none nothing', () => {
+  const event = { title: 'x', eventTypeId: 'board-game-night' };
+  assert.ok(Math.abs(
+    againFit({ 'board-game-night': { lastAgain: 'yes' } }, event, t) - t.fitAgainWeight,
+  ) < 1e-9);
+  assert.ok(Math.abs(
+    againFit({ 'board-game-night': { lastAgain: 'maybe' } }, event, t) - t.fitAgainWeight / 2,
+  ) < 1e-9);
+  assert.equal(againFit({ 'board-game-night': { lastAgain: 'no' } }, event, t), 0,
+    'a no is never a penalty — and never a boost');
+  assert.equal(againFit({}, event, t), 0);
+  assert.equal(againFit({ 'board-game-night': { lastAgain: 'yes' } }, { title: 'untyped' }, t), 0);
+});
+
+test('noveltyFit: seeks-new pays on new kinds, prefers-ritual on kept-returning ones', () => {
+  const seeksNew = { novelty: { position: 'seeks-new' } };
+  const ritual = { novelty: { position: 'prefers-ritual' } };
+  const potteryEvent = { title: 'x', eventTypeId: 'pottery-class' };
+  const gamesEvent = { title: 'x', eventTypeId: 'board-game-night' };
+
+  // Whole family new → full; new kind in a familiar family → half.
+  assert.ok(Math.abs(
+    noveltyFit(seeksNew, { 'board-game-night': { attended: 4 } }, potteryEvent, t)
+      - t.fitNoveltyWeight,
+  ) < 1e-9, 'making is a new family');
+  assert.ok(Math.abs(
+    noveltyFit(seeksNew, { 'trivia-night': { attended: 4 } }, gamesEvent, t)
+      - t.fitNoveltyWeight / 2,
+  ) < 1e-9, 'new kind, familiar family (games)');
+  assert.equal(noveltyFit(seeksNew, { 'pottery-class': { attended: 1 } }, potteryEvent, t), 0,
+    'familiar kind pays nothing to seeks-new');
+
+  // Ritual pays only past the pivot.
+  assert.ok(Math.abs(
+    noveltyFit(ritual, { 'pottery-class': { attended: t.noveltyRitualPivot } }, potteryEvent, t)
+      - t.fitNoveltyWeight,
+  ) < 1e-9);
+  assert.equal(noveltyFit(ritual, { 'pottery-class': { attended: 1 } }, potteryEvent, t), 0);
+
+  // mix / no position / untyped → the component doesn't apply.
+  assert.equal(noveltyFit({ novelty: { position: 'mix' } }, {}, potteryEvent, t), 0);
+  assert.equal(noveltyFit({}, {}, potteryEvent, t), 0);
+  assert.equal(noveltyFit(seeksNew, {}, { title: 'untyped' }, t), 0);
 });
 
 test('eventFit sums envelope components inside fitCap', () => {

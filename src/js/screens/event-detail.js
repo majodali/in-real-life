@@ -241,9 +241,14 @@ export async function renderEventDetail(eventId) {
   }
 }
 
+// Texture = the "what aspects" capture. The last three are the D63
+// positive-attribution chips (§4 of the event-type note): the why of a
+// good night in one optional tap — great-company already covers the
+// people. Exact wording gets the voice pass with the redesign.
 const TEXTURE_CHIPS = [
   'great-company', 'too-big', 'just-right', 'hard-to-break-in',
   'nothing-to-do', 'went-long',
+  'the-activity-itself', 'the-place', 'well-run',
 ];
 const NOSHOW_CHIPS = ['timing', 'distance', 'energy', 'nerves', 'plans-changed'];
 

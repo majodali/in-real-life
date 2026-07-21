@@ -54,9 +54,11 @@ channel. Follow the JSON schema exactly.
 
 Deliberately narrower than the full sketch in `debrief.md`: affinity
 edges come from the people-step taps (deterministic, never the LLM),
-`eventTypeOutcome` waits for the event-type register (Group 3), and
-`narrativeAppend` is unnecessary — the debrief text itself stays on the
-(crypto-shredded) event as Layer 1.
+and `narrativeAppend` is unnecessary — the debrief text itself stays on
+the (crypto-shredded) event as Layer 1. `eventTypeOutcome` landed with
+the event-type register (D63): extracted only when the text clearly
+shows how this KIND of event lands for this member, condition
+preferred, stored on their `outcome#{eventType}` row.
 
 ```jsonc
 {
@@ -80,6 +82,10 @@ edges come from the people-step taps (deterministic, never the LLM),
   ],
   "forecastError": {                     // only when surprise text shows one
     "predicted": "string", "actual": "string"
+  },
+  "eventTypeOutcome": {                  // only when the text clearly shows
+    "energized": true,                   // how this KIND lands for them
+    "condition": "string?"               // the circumstances it held under
   }
 }
 ```

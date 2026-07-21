@@ -498,6 +498,77 @@ test('edges carry activity snapshots: met stamps activityAtLastMet, taps also ac
   assert.equal(writes.length, count, 'redelivered record is a no-op');
 });
 
+// ─── Outcome rows (D63): the member's history with a KIND ───
+
+test('an attended debrief with a typed event grows the outcome row: lastAgain, tallies, context', async () => {
+  await projector.applyEvent(debriefEvent({
+    attended: true, again: 'yes',
+    outcomeTexture: ['great-company', 'the-activity-itself'],
+    people: [{ userId: 'other-1', met: true, seeAgain: true }],
+    eventTypeId: 'board-game-night',
+  }));
+
+  const row = writes.findLast((w) => w.sk === 'outcome#board-game-night');
+  assert.ok(row, 'outcome row written');
+  let payload = decryptValue(row.model, dataKey);
+  assert.equal(payload.lastAgain, 'yes');
+  assert.equal(payload.attended, 1);
+  assert.deepEqual(payload.again, { yes: 1, maybe: 0, no: 0 });
+  assert.equal(payload.lastContext.peopleTapped, true, 'attribution context stored (§4)');
+  assert.deepEqual(payload.lastContext.texture, ['great-company', 'the-activity-itself']);
+
+  // The next debrief of the kind supersedes the word (D7, no clocks).
+  await projector.applyEvent(debriefEvent({
+    attended: true, again: 'no', eventTypeId: 'board-game-night',
+  }, { eventId: '01OUTCOME-2', aggregateId: 'interaction#abc#evt-10' }));
+  payload = decryptValue(writes.findLast((w) => w.sk === 'outcome#board-game-night').model, dataKey);
+  assert.equal(payload.lastAgain, 'no');
+  assert.deepEqual(payload.again, { yes: 1, maybe: 0, no: 1 });
+  assert.equal(payload.attended, 2);
+  assert.equal(payload.lastContext.peopleTapped, false);
+});
+
+test('Tier-2 eventTypeOutcome and forecastError land on the same single write', async () => {
+  await projector.applyEvent(debriefEvent({
+    attended: true, again: 'yes', surprise: 'left buzzing',
+    eventTypeId: 'pottery-class',
+    deltas: {
+      envelopeUpdates: [], interestUpdates: [], barrierUpdates: [],
+      eventTypeOutcome: { energized: true, condition: 'hands busy the whole time' },
+      forecastError: { predicted: 'exhausting', actual: 'energizing' },
+    },
+  }));
+
+  const payload = decryptValue(
+    writes.findLast((w) => w.sk === 'outcome#pottery-class').model, dataKey,
+  );
+  assert.deepEqual(payload.energized, { yes: 1, no: 0 });
+  assert.equal(payload.lastEnergizedCondition, 'hands busy the whole time');
+  assert.equal(payload.forecastErrors.length, 1);
+  assert.equal(payload.forecastErrors[0].predicted, 'exhausting');
+  assert.equal(payload.forecastErrors[0].sourceEventId, '01DEBRIEF');
+});
+
+test('untyped events and no-shows write no outcome row; redelivery is a no-op', async () => {
+  await projector.applyEvent(debriefEvent({ attended: true, again: 'yes' }));
+  await projector.applyEvent(debriefEvent(
+    { attended: false, noShowReason: 'nerves', eventTypeId: 'board-game-night' },
+    { eventId: '01NOSHOW' },
+  ));
+  assert.equal(writes.find((w) => w.sk.startsWith('outcome#')), undefined);
+
+  const typed = () => debriefEvent({
+    attended: true, again: 'maybe', eventTypeId: 'trivia-night',
+  }, { eventId: '01TYPED' });
+  await projector.applyEvent(typed());
+  const count = writes.length;
+  await projector.applyEvent(typed());
+  assert.equal(writes.length, count, 'redelivered record changes nothing');
+  const payload = decryptValue(writes.findLast((w) => w.sk === 'outcome#trivia-night').model, dataKey);
+  assert.deepEqual(payload.again, { yes: 0, maybe: 1, no: 0 });
+  assert.equal(payload.lastAgain, 'maybe');
+});
+
 // ─── Avoidance (D49/D61): the newest word about a pair ───
 
 test('avoid stamps the edge; a later positive tap clears it (newest word wins)', async () => {

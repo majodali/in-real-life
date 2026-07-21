@@ -278,6 +278,46 @@ export function createUserModelProjector({ client, userModelTable, keyStore }) {
       await detectCrews(userId, dataKey, tappedNow, asOf, event.eventId);
     }
 
+    // Outcome row (D63): the member's history with this KIND of event.
+    // ONE write per debrief (lastEventId idempotency forbids two calls
+    // to the same sk for one event): lastAgain — the flagship
+    // again-intent input, the member's newest word (D7, no clocks) —
+    // plus tallies, the attribution context (§4 of the design note:
+    // what the yes was about stays measurable), and the Tier-2
+    // eventTypeOutcome / forecastError extractions when present.
+    if (attended && typeof d.eventTypeId === 'string' && clear.again) {
+      const typeDeltas = clear.deltas ?? {};
+      await applyDelta(userId, `outcome#${d.eventTypeId}`, dataKey, event.eventId, asOf, (current) => {
+        const payload = current ?? {
+          eventTypeId: d.eventTypeId,
+          attended: 0,
+          again: { yes: 0, maybe: 0, no: 0 },
+        };
+        payload.attended += 1;
+        if (payload.again[clear.again] !== undefined) payload.again[clear.again] += 1;
+        payload.lastAgain = clear.again;
+        payload.lastAgainAt = asOf;
+        payload.lastContext = {
+          peopleTapped: (clear.people ?? []).some((p) => p.seeAgain === true),
+          ...(clear.outcomeTexture?.length ? { texture: clear.outcomeTexture } : {}),
+        };
+        if (typeDeltas.eventTypeOutcome) {
+          payload.energized = payload.energized ?? { yes: 0, no: 0 };
+          payload.energized[typeDeltas.eventTypeOutcome.energized ? 'yes' : 'no'] += 1;
+          if (typeDeltas.eventTypeOutcome.condition) {
+            payload.lastEnergizedCondition = typeDeltas.eventTypeOutcome.condition;
+          }
+        }
+        if (typeDeltas.forecastError) {
+          payload.forecastErrors = [
+            ...(payload.forecastErrors ?? []),
+            { ...typeDeltas.forecastError, ...source },
+          ].slice(-5);
+        }
+        return payload;
+      });
+    }
+
     // No-show reason → situational barrier (observed).
     if (!attended) {
       if (clear.noShowReason) {

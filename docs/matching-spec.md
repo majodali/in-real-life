@@ -1,4 +1,4 @@
-# Ranking Spec — v8 (implemented)
+# Ranking Spec — v9 (implemented)
 
 The **explicit, versioned ranking spec** that `matching.md` requires ("how
 recommendations are ranked is never implicit or emergent-from-code"). This
@@ -39,7 +39,7 @@ Filtered out before scoring, per the influence map:
 ## Fit (base signal)
 
 `fit = interestFit + doorFit + structureFit + sizeFit + timeWindowFit
-[+ knownFaceBoost]`, capped at `fitCap`.
++ againFit + noveltyFit [+ knownFaceBoost]`, capped at `fitCap`.
 
 **Interest fit is two-tiered** against the event's shape (D56,
 `event-shape-prompt.md` — extracted at propose time, organizer-correctable):
@@ -90,6 +90,32 @@ gate**: rhythm is preference (a Tuesday-evenings member can make one
 Saturday brunch, and exploration wants that door open); distance is the
 feasibility-shaped one, and even it only de-prioritizes (below).
 Legacy free-text window phrasings simply never match a slug.
+
+**Again-intent fit (D63 — the event-type register's flagship
+consumer)**: the member's own latest "worth another go?" on this KIND
+(`outcome#{eventTypeId}.lastAgain`) — `fitAgainWeight` on a yes, half
+on a maybe, **nothing on a no or no history** (never a penalty; a no
+may have been about that night, not the kind — its why travels the
+texture/envelope channels). The strongest-provenance fit input in the
+system: the member's stated word, superseded only by their own next
+word (D7, no clocks). This is types' user-facing purpose made real:
+*"when you tell us something was worth doing again, kinds are how we
+find you the next one."*
+
+**Novelty fit (D63)**: the novelty position's comparand finally exists —
+the member's own outcome history. `seeks-new` pays `fitNoveltyWeight`
+on kinds with no history (family-new fully; new-kind-in-familiar-family
+half); `prefers-ritual` pays it on kept-returning kinds (attended ≥
+`noveltyRitualPivot` — ritual is real fit, not a rut; exploration keeps
+stretching regardless); `mix` / no position / untyped → doesn't apply.
+
+Attribution note (§4 of the event-type note): a "yes" is never
+single-credited — people-attribution flows through the affinity stack,
+structure through the envelope; the type channel carries the ACTIVITY
+share, capped like everything. `lastAgain` is stored with its
+attribution context (texture, people-tapped), so the misattribution
+loop is measurable (again-yes → type-resurfaced → declined/no) and the
+named refinement is aspect-weighted credit, never silent re-crediting.
 
 Cold-start still holds: interests, doors, and (usually) positions all
 exist from onboarding with zero history.
@@ -310,7 +336,7 @@ events-only, and a newcomer's own cold-start is already served (fit works
 from onboarding, and with a thin model the noise share dominates —
 their feed is naturally exploratory).
 
-## Tunables (v8 defaults)
+## Tunables (v9 defaults)
 
 Every value is configuration, not a constant; **tunable to zero** (zeroing
 `affinityPerPersonNudge` removes affinity entirely; zeroing
@@ -327,6 +353,9 @@ Every value is configuration, not a constant; **tunable to zero** (zeroing
 | `fitSizeWeight` | 0.2 | groupSize position vs expected-size band, × adjacency |
 | `fitKnownFaceWeight` | 0.2 | needs-known-face member + tapped person present (fit, not nudge) |
 | `fitTimeWindowWeight` | 0.1 | event window ∈ member's structured windows (never a gate) |
+| `fitAgainWeight` | 0.3 | their own "worth another go" on this kind: yes full, maybe half, no nothing |
+| `fitNoveltyWeight` | 0.1 | seeks-new on no-history kinds (family-new full, kind-new half); prefers-ritual on kept-returning kinds |
+| `noveltyRitualPivot` | 3 | attendances of a kind before it counts as ritual |
 | `travelPenaltyPerBand` | 0.15 | de-weight per effective band beyond the stated reach |
 | `travelDeweightCap` | 0.45 | max travel de-weight per event (< fitCap — the right event wins) |
 | `affinityPerPersonNudge` | 0.12 | one-sided component, × own generosity weight |
@@ -361,7 +390,8 @@ unit tests assert this relationship against the defaults.
 
 | Input | Why absent | Lands with |
 |---|---|---|
-| Role / novelty fit | positions captured (D58) but comparands don't exist yet | facilitation-need on events; event-history novelty read |
+| Role fit | position captured (D58) but its comparand doesn't exist yet | facilitation-need on events |
+| Aspect-weighted again-credit | plain lastAgain first; refine only if the misattribution loop shows up | event-type note §4 watch signal |
 | Crew size 4 / crew merge | v1 detects triads only | crews follow-up |
 | Ossification aggregate read | newcomer-share trend per recurring event (gaming register signal); this is where the `otherUserId` GSI becomes necessary | backstage/admin slice |
 | Co-attendance chance-rate baseline | v1 confirmation uses raw reciprocal met counts; thin-calendar correction is tuning work | H4 evidence loop |
@@ -375,6 +405,16 @@ unit tests assert this relationship against the defaults.
 
 ## Version history
 
+- **v9** — the event-type register (D63, `event-type-register.md`):
+  recurrence-earned types assigned deterministically from shape tags
+  (tie → untyped, first-class; organizer-correctable, never re-derived
+  over), member `outcome#{eventTypeId}` rows land the parked
+  `eventTypeOutcome` / `forecastError` extractions plus `lastAgain` +
+  attribution context, and two fit components ship: **again-intent**
+  (the flagship — the member's own "worth another go" made
+  consequential) and **novelty** (D58's last unconsumed dimension gets
+  its comparand). Member-facing type display deliberately deferred;
+  positive-attribution texture chips join the debrief.
 - **v8** — localities & structured constraints (D62,
   `localities-and-constraints.md`): the curated effort-band register
   (no coordinates, direct edges only, served at `GET /localities`,

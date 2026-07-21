@@ -26,6 +26,8 @@ export function projectEventProposed(event, tables) {
   if (d.endTime !== undefined) item.endTime = d.endTime;
   if (d.location !== undefined) item.location = d.location;
   if (d.localityId !== undefined) item.localityId = d.localityId;
+  if (d.eventTypeId !== undefined) item.eventTypeId = d.eventTypeId;
+  if (d.eventTypeSource !== undefined) item.eventTypeSource = d.eventTypeSource;
   if (d.description !== undefined) item.description = d.description;
   if (d.cost !== undefined) item.cost = d.cost;
   if (d.maxAttendance !== undefined) item.maxAttendance = d.maxAttendance;

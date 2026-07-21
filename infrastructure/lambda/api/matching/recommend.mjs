@@ -58,7 +58,7 @@ export function createRecommender({
     const dataKey = await keyStore.getKey(`user#${userId}`);
     if (!dataKey) {
       return {
-        interests: [], doors: [], envelope: {}, constraints: {}, affinities: [], crews: [], stats: null,
+        interests: [], doors: [], envelope: {}, constraints: {}, outcomes: {}, affinities: [], crews: [], stats: null,
       };
     }
     const rows = await queryAll({
@@ -69,6 +69,7 @@ export function createRecommender({
     const interests = [];
     const affinities = [];
     const crews = [];
+    const outcomes = {};
     let doors = [];
     let envelope = {};
     let constraints = {};
@@ -81,6 +82,8 @@ export function createRecommender({
         affinities.push(decryptValue(row.model, dataKey));
       } else if (row.sk.startsWith('crew#')) {
         crews.push(decryptValue(row.model, dataKey));
+      } else if (row.sk.startsWith('outcome#')) {
+        outcomes[row.sk.slice('outcome#'.length)] = decryptValue(row.model, dataKey);
       } else if (row.sk === 'profile#core') {
         const core = decryptValue(row.model, dataKey);
         doors = core?.doors ?? [];
@@ -90,7 +93,7 @@ export function createRecommender({
         stats = decryptValue(row.model, dataKey);
       }
     }
-    return { interests, doors, envelope, constraints, affinities, crews, stats };
+    return { interests, doors, envelope, constraints, outcomes, affinities, crews, stats };
   }
 
   // Read one decrypted facet of ANOTHER member's model — backstage only.
@@ -160,7 +163,7 @@ export function createRecommender({
     if (candidates.length === 0) return [];
 
     const {
-      interests, doors, envelope, constraints, affinities, crews, stats,
+      interests, doors, envelope, constraints, outcomes, affinities, crews, stats,
     } = await loadModel(userId);
 
     // Known-face comfort (spec v5) needs presence too: for a
@@ -284,7 +287,7 @@ export function createRecommender({
     return rankCandidates({
       userId,
       candidates,
-      model: { interests, doors, envelope, constraints },
+      model: { interests, doors, envelope, constraints, outcomes },
       affinityNudges,
       fitBoosts,
       nowIso,

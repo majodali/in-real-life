@@ -163,6 +163,11 @@ export function createCommands({
     return await api.get('/localities');
   }
 
+  // The event-type register (D63) — serves the organizer's kind picker.
+  async function getEventTypes() {
+    return await api.get('/event-types');
+  }
+
   // "I wish this was closer" (D62/R8) — capture-only demand signal.
   // Per-click commandId: wishing again on another day is a fresh act.
   async function wishCloser({ eventId }) {
@@ -390,6 +395,7 @@ export function createCommands({
     proposeEvent,
     listEvents,
     getLocalities,
+    getEventTypes,
     wishCloser,
     listAttendees,
     reflectionTurn,
