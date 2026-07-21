@@ -29,7 +29,64 @@ small file a human can read and argue with, promoted to a data store +
 management tool alongside the localities register when the admin
 surface lands (both are the same follow-up).
 
-## 2. How a type is born: earned by recurrence, never taxonomy-first
+## 2. Types vs tags: tags describe, types identify
+
+The five governance questions, asked at review and answered here:
+
+**What's the difference between a type and a tag?** A tag
+(`shape.activityTags`, D56) is a free word about *one listing* — open
+vocabulary, LLM-extracted from the organizer's own words, uncurated,
+disposable. A type is a durable **key** for a *kind* — the thing
+history accumulates against (outcome rows), demand names ("more like
+this"), and an illustration attaches to. Tags can't do the type job
+because accumulation against an open vocabulary fragments: "board
+games" / "boardgames" / "game night" / "tabletop" would each accrue
+separate outcome rows, splitting one member's history four ways. Same
+dual-capture pattern as comfort-stories ↔ envelope positions and
+location-strings ↔ locality register: open words for richness, curated
+keys for accumulation. The bridge runs both ways — recurring tags are
+how a type is born; tags are how a listing finds its type.
+
+**Can event creators mint types?** Tags, yes — freely and forever
+(their words drive extraction; they correct shape at will). Types, no,
+by design: a type is a claim that a kind *recurs in the community* — a
+community-level fact, not a per-listing one; per-organizer minting
+rebuilds the exact fragmentation types exist to solve. No wall, though
+(D30): **their free tags ARE the proposal mechanism** — recurring tags
+with no type is precisely the backstage signal that prompts curation.
+An organizer proposes a type by running that kind of gathering more
+than once.
+
+**Who curates, and how does it stay accurate?** The founder, strawman
+posture (same as localities), graduating to the register store +
+management tool and R1's register-governance process. Three legible
+accuracy checks, all house patterns: assignment is deterministic from
+`matchTags`, so accuracy is auditable by sampling recent assignments
+per type; **organizer corrections away from a type are the
+miscalibration signal** (the same aggregate-correction read as D58
+dimensions and D62 reach); untyped-rate over recurring tag clusters
+flags missing entries. Outcome rows later add a semantic check: one
+type with wildly bimodal outcomes across members is probably two kinds
+wearing one key — a split candidate.
+
+**Can meaning evolve?** Yes, at two speeds. What a type *catches*
+evolves freely — `matchTags` are editable curation (no migration) and
+`name` is display-only (renames free). What a type *is* evolves through
+evidence — outcome rows keep accruing from the newest debriefs, so
+gradual community drift is absorbed while identity continuity holds.
+When drift is really a different kind, the answer is a **split**: new
+type, old one retired; histories never merged or rewritten. The key
+discipline underneath: **an id is never reused.**
+
+**Are unused types retired?** Retirement, never deletion: a `retired`
+flag (the `served` pattern). Retired types stop matching new events and
+leave the organizer picker; existing events and every member's
+`outcome#` rows keep their meaning — history with a retired kind still
+informs the novelty read. Consistent with the decay philosophy (D60):
+quiet usage alone never auto-retires — retirement is a curatorial
+judgment prompted by evidence, not a timer.
+
+## 3. How a type is born: earned by recurrence, never taxonomy-first
 
 The wrong way to build this is inventing a taxonomy of gatherings and
 forcing every listing into it — creeping categorization applied to
@@ -72,7 +129,7 @@ board-game nights" is not the same novelty as "first pottery class."
 Families are few and obvious (games, making, food, outdoors, learning,
 conversation, service); a type belongs to exactly one.
 
-## 3. What the register unlocks in v1
+## 4. What the register unlocks in v1
 
 ### Member outcome rows — `outcome#{eventType}` finally lands
 
@@ -83,7 +140,7 @@ time, like everything else); the projector maintains one encrypted
 extraction (energized/drained texture, with its condition) and
 **`forecastError`** storage (predicted vs actual — the calibration
 read) finally have their home. All of it is the member's own encrypted
-model — the register itself never holds member data (§5).
+model — the register itself never holds member data (§6).
 
 Consumption is deliberately thin at first — the rows are the
 **substrate** for coaching ("workshops leave you energized; big
@@ -112,7 +169,7 @@ Ranking spec **v9**: `fitNoveltyWeight` (small — proposed 0.1) inside
 `fitCap`, computed from the member's own outcome rows already loaded
 with their model. No new reads.
 
-## 4. Venues and operators — designed, deliberately deferred
+## 5. Venues and operators — designed, deliberately deferred
 
 - **Venues** become real when the same `location` string keeps
   recurring — the registry entry gives it identity (name, locality,
@@ -132,7 +189,7 @@ with their model. No new reads.
 Both inherit the types discipline wholesale: earned by recurrence,
 curated with legible judgments, never member data.
 
-## 5. The privacy line, stated once
+## 6. The privacy line, stated once
 
 **Registers describe kinds, places, and operators — never members.**
 Everything member × type lives as `outcome#` rows in that member's own
@@ -149,7 +206,7 @@ GET /me/model surface skips unknown row kinds today, so nothing leaks
 before that copy is designed; surfacing them is a named follow-up, not
 scope here.
 
-## 6. Slice plan (after sign-off)
+## 7. Slice plan (after sign-off)
 
 1. `lib/event-types.mjs` — strawman register (seeded from the workshop
    calendar's actual kinds), deterministic `classifyEventType(shape,
