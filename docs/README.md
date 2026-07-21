@@ -54,6 +54,7 @@ Understanding of a person is **seeded** at onboarding and **grown** from what th
 - `evidence-decay.md` — **(decided: D60, spec v6)** clock half-lives replaced by evidence-based decay — the lived-events axis, decay floors as the incompleteness prior, ambiguous counter-evidence captured-not-used.
 - `localities-and-constraints.md` — **(decided: D62, spec v8)** the curated locality register (effort bands — here/nearby/a-trip/far — no coordinates, draft launch register awaiting local correction) and structured constraints: travel reach as a graduated de-weight (prioritization, never filtering), per-locality adjustments, time windows as soft fit, the "wish this was closer" capture (consumption = R8); effort-is-personal watch signals.
 - `event-shape-prompt.md` — the propose-time event-shape extraction (D56): activityTags / structure / doors, organizer-correctable, feeding the fit tiers in `matching-spec.md`.
+- `event-type-register.md` — **(proposal)** kinds, not listings: recurrence-earned event types (deterministic tag matching, organizer-correctable, untyped first-class), unlocking `outcome#{eventType}` rows, the parked debrief extractions, and novelty fit; venues + operators designed, deferred.
 - `scenario-walkthroughs.md` — the matching + success test scenarios run concretely through the design as written; two passes (F1–F12 triaged → D46–D51; second pass re-verifies all twelve and adversarially probes the new machinery, F13–F14 fixed). All scenarios currently `holds`.
 
 **Trust & safety (Group 4)**
