@@ -57,7 +57,8 @@ Understanding of a person is **seeded** at onboarding and **grown** from what th
 - `event-type-register.md` — **(decided: D63, spec v9)** kinds, not listings — graduated tags, earned by recurrence: types exist so "worth another go" keeps its promise (again-intent fit is the flagship consumer); deterministic tag matching (tie → untyped, first-class), organizer-correctable, member display deferred; `outcome#{eventType}` rows land the parked extractions; attribution kept honest (§4) and the formality risk named (§7); venues + operators designed, deferred.
 - `scenario-walkthroughs.md` — the matching + success test scenarios run concretely through the design as written; two passes (F1–F12 triaged → D46–D51; second pass re-verifies all twelve and adversarially probes the new machinery, F13–F14 fixed). All scenarios currently `holds`.
 
-**Trust & safety (Group 4)**
+**Trust & safety / operations (Group 4)**
+- `admin-and-support.md` — **(proposal)** the operator console (in-app, role-gated, five panels: workshop seed + time, verification queue, registers view, health, policy) with the admin data discipline stated; member support explicitly gated on R4's communication design.
 - `contributor-rating.md` — a private, backstage, multi-faceted trust read; informs, never dominates.
 - `protective-blocks.md` — the safety tier's mechanism (D50/D52): the rendered-world rule, ordinary-power blocker view (awareness/peace), block ≠ accusation; advocate validation planned before build.
 
