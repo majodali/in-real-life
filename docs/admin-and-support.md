@@ -41,29 +41,55 @@ activity — the workshop-mode discipline, applied everywhere).
 ### Workshop — facilitation controls (the R5 dependency)
 
 - **Time** (exists): view/advance/set the simulated clock.
-- **Seed** (new, the biggest build in the slice): load a canned
-  community — personas (register + profile + onboarding via the D37
-  stub seam), events (via real propose commands), interactions/
-  debriefs — so a workshop room starts *populated* and a facilitator
-  can demonstrate feed ranking, debriefs, and "how we understand you"
-  with real machinery. `POST /admin/seed` follows the designed
-  workshop-mode template exactly: mode-gated route registration (not
-  present on production route tables), domain commands, replayable.
-  Seed sets are named fixtures (`seed: "workshop-standard"`), not
-  ad-hoc uploads — a seed is a curated artifact like a register.
+- **Seed** (new, the biggest build in the slice): load canned
+  community members and events — personas (register + profile +
+  onboarding via the D37 stub seam), events (real propose commands),
+  interactions/debriefs — so a workshop room starts *populated* and a
+  facilitator can demonstrate feed ranking, debriefs, and "how we
+  understand you" with real machinery.
+
+  **The fixture is a catalog; seeding is selective** (decided at
+  review): one curated set (~50 personas, ~50 events, each entry
+  individually addressable) from which a facilitator seeds *what the
+  scenario needs* — never all-at-once by default. `POST /admin/seed`
+  takes the fixture plus a selection (specific ids, counts, or filters
+  like locality), is idempotent per entity (re-seeding a persona is a
+  no-op), and follows the workshop-mode template exactly: mode-gated
+  route registration, domain commands, replayable. Named scenarios the
+  selection must serve, recorded: **initial adopters** (seed nothing —
+  the room IS the community), **neighboring community** (personas all
+  from one nearby locality), and targeted single-scenario adds.
+- **Persona control** (decided at review — facilitators must drive
+  seeded personas, not just watch them): two pieces. (a) **Per-tab
+  identity isolation on workshop stacks**: auth tokens live in
+  sessionStorage rather than localStorage in workshop mode, so each
+  browser tab holds its own signed-in persona — a facilitator runs
+  Priya, Tom, and themselves side-by-side without juggling private
+  windows (which remain the zero-code fallback). (b) The Workshop
+  panel lists seeded personas with an **"open as"** affordance — new
+  tab onto sign-in with the persona's fixture credentials
+  (workshop-only accounts; the fixture is public test data by
+  construction, never real member credentials).
 - **Robots — deferred, named**: autonomous scripted members acting on
   a schedule are a bigger design (pacing, believability, workshop
-  choreography); the seed's canned personas cover the near-term
-  facilitation need. Robots activate with the R5 launch-playbook
+  choreography); selectively-seeded, facilitator-driven personas cover
+  the near-term need. Robots activate with the R5 launch-playbook
   design, where the workshop *process* gets written.
 
 ### Members — the verification queue
 
 - **Locality verification queue**: pending requests (requested, not
-  yet verified) with the production verify/decline actions — closing
-  the loop that workshop mode auto-verifies today. Queue rows show the
+  yet verified) with the production **verify** action — closing the
+  loop that workshop mode auto-verifies today. Queue rows show the
   minimum the job needs (name, email, city/postal, requested-at) —
   see §3.
+- **Decline: deliberately NOT in v1** (decided at review). The
+  verification *method and policies themselves* are undesigned (radar
+  R3), and a decline is a staff→member communication (R4) — so v1
+  ships verify-only; unverifiable requests simply stay pending. The
+  principle for when the flow is designed, recorded now: **a decline
+  must be helpful** (D30) — offer an alternative verification path, or
+  suggest the locality that actually fits, never a bare no.
 - **Member lookup** (thin): by email → state row basics (registered /
   verified / activated / agreement version) for support conversations.
   Deliberately NOT a model viewer (§3).
@@ -71,12 +97,15 @@ activity — the workshop-mode discipline, applied everywhere).
 ### Registers — view now, edit on the strawman trigger
 
 Localities and event types render read-only from their served routes
-(`GET /localities`, `GET /event-types`), with the health reads the
-curation loop needs as they land (untyped-rate, correction clustering —
-future). **Editing stays curation-in-code** per the founder's recorded
-posture: the register data store + editor activates when the strawman
-"causes real issues or advisor/workshop feedback moves it" — this
-console is where that editor will live, and the panel is its slot.
+(`GET /localities`, `GET /event-types`). **Editing stays
+curation-in-code** per the founder's recorded posture: the register
+data store + editor activates when the strawman "causes real issues or
+advisor/workshop feedback moves it" — this console is where that
+editor will live, and the panel is its slot. **Curation-loop and
+analytics reads (untyped-rate, correction clustering, demand views)
+wait too** (decided at review): they want real data, or at least
+post-workshop data — building dashboards over an empty community is
+decoration.
 
 ### Health — the self-diagnosing deploy, promoted
 
@@ -149,12 +178,16 @@ its own note; the console gets its staff-side panel then.
    existing time/notify/agreement controls slotted in.
 6. **Registers**: decision row, backlog updates, R4/R5 cross-links.
 
-## Open questions (beyond the sign-off points)
+## Open questions — resolved at review
 
-- The `workshop-standard` seed's contents — how many personas, what
-  spread of envelopes/localities/kinds tells the best workshop story
-  (facilitation input wanted; easy to iterate, it's a fixture).
-- Whether the health panel should surface the curation-loop reads
-  (untyped rate, correction clustering) in v1 or wait for real data.
-- Verification decline: silent, or with a reason the member sees?
-  (Leans R4 — a decline is a staff→member communication.)
+- ~~Seed contents~~ → one catalog fixture (~50 personas / ~50 events),
+  **selective seeding** with scenario-shaped selections (§2 Workshop).
+- ~~Curation-loop reads in v1?~~ → no; wait for real or post-workshop
+  data (§2 Registers).
+- ~~Verification decline~~ → out of v1 entirely; parks with R3 (the
+  verification method/policy design) + R4 (the communication), with
+  the helpful-decline principle recorded (§2 Members).
+
+Remaining: the catalog's actual contents (persona spread across
+envelopes/localities/kinds) — drafted at implementation, iterated with
+facilitation experience; it's a fixture, cheap to change.
