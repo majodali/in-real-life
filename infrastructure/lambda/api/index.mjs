@@ -47,6 +47,14 @@ import {
   createCompleteReflectionHandler,
 } from './users/reflection.mjs';
 import { createUpdateAgreementVersionHandler } from './admin/agreement-version.mjs';
+import { createAdminHealthHandler } from './admin/health.mjs';
+import {
+  createVerificationQueueHandler,
+  createVerifyLocalityHandler,
+  createMemberLookupHandler,
+} from './admin/verification.mjs';
+import { SQSClient, GetQueueAttributesCommand } from '@aws-sdk/client-sqs';
+import { DescribeTableCommand } from '@aws-sdk/client-dynamodb';
 import { projectRequiredAgreementVersionUpdated } from './admin/agreement-projections.mjs';
 import { createOnboardingHandler } from './users/onboarding.mjs';
 import { createInterviewTurnHandler } from './users/interview.mjs';
@@ -129,8 +137,10 @@ const stage = process.env.STAGE || 'workshop';
 const mode = stage === 'prod' ? 'production' : 'workshop';
 const isWorkshop = mode === 'workshop';
 
-const client = DynamoDBDocumentClient.from(new DynamoDBClient({}));
+const ddbControl = new DynamoDBClient({});
+const client = DynamoDBDocumentClient.from(ddbControl);
 const cognito = new CognitoIdentityProviderClient({});
+const sqs = new SQSClient({});
 
 const tables = {
   usersTable: process.env.USERS_TABLE,
@@ -311,6 +321,32 @@ const interviewTurnHandler = createInterviewTurnHandler({
 });
 const getTimeHandler = createGetTimeHandler({ getOffset: getWorkshopOffset });
 const advanceTimeHandler = createAdvanceTimeHandler({ runner, getOffset: getWorkshopOffset });
+const adminHealthHandler = createAdminHealthHandler({
+  client,
+  tables: {
+    ...tables,
+    eventsLogTable: process.env.EVENTS_LOG_TABLE,
+    userModelTable: process.env.USER_MODEL_TABLE,
+    commandsTable: process.env.COMMANDS_TABLE,
+  },
+  stage,
+  mode,
+  sqs,
+  getQueueAttributesCommand: GetQueueAttributesCommand,
+  dlqUrl: process.env.PROJECTOR_DLQ_URL,
+  ddbControl,
+  describeTableCommand: DescribeTableCommand,
+  getOffset: getWorkshopOffset,
+});
+const verificationQueueHandler = createVerificationQueueHandler({
+  client, usersTable: tables.usersTable,
+});
+const verifyLocalityHandler = createVerifyLocalityHandler({
+  runner, client, usersTable: tables.usersTable,
+});
+const memberLookupHandler = createMemberLookupHandler({
+  client, usersTable: tables.usersTable,
+});
 const notifyListHandler = createNotifyListHandler({
   client,
   eventsLogTable: process.env.EVENTS_LOG_TABLE,
@@ -484,6 +520,14 @@ router.add('GET', '/time', getTimeHandler);
 
 router.add('GET', '/admin/notify-list', notifyListHandler);
 router.add('POST', '/admin/agreement-version', updateAgreementVersionHandler);
+// The operator console's panels (docs/admin-and-support.md): health,
+// the production verification queue, thin member lookup. All
+// admin-gated in-handler; every action event-sourced with the admin
+// as actor.
+router.add('GET', '/admin/health', adminHealthHandler);
+router.add('GET', '/admin/verification-queue', verificationQueueHandler);
+router.add('POST', '/admin/verify-locality', verifyLocalityHandler);
+router.add('GET', '/admin/member', memberLookupHandler);
 
 router.add('POST', '/events', requireCurrentAgreement(proposeEventHandler));
 router.add('GET', '/events', listEventsHandler);

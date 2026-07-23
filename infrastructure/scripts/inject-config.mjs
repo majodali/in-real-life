@@ -78,6 +78,9 @@ const config = {
   __IRL_COGNITO_USER_POOL_ID__: required('UserPoolId', 'Cognito user pool id'),
   __IRL_COGNITO_USER_POOL_CLIENT_ID__: required('UserPoolClientId', 'Cognito user pool client id'),
   __IRL_FEEDBACK_URL__: outputs.FeedbackUrl ?? '', // optional
+  // Per-tab identity isolation flag (docs/admin-and-support.md):
+  // everything but prod is a workshop stack, mirroring the API's rule.
+  __IRL_WORKSHOP_MODE__: String((outputs.Stage ?? 'workshop') !== 'prod'),
 };
 
 const htmlIn = readFileSync(join(srcDir, 'app.html'), 'utf-8');

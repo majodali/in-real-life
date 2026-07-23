@@ -1,12 +1,15 @@
-// ─── Admin / workshop screen ───
+// ─── The operator console (docs/admin-and-support.md, D64) ───
 //
-// Time controls (advance / set / reset) and notify-list browser. Gated to
-// custom:role=admin claims; the backend re-verifies on every call. The
-// time-action validation/dispatch lives in admin-handlers.js (unit-tested).
+// In-app, role-gated panels: Workshop (time; seed arrives next slice),
+// Members (verification queue + lookup), Registers (read-only views),
+// Health, Policy (agreement + notify). Gated to custom:role=admin
+// claims; the backend re-verifies on every call. Time-action
+// validation/dispatch lives in admin-handlers.js (unit-tested).
 
 import { commands, auth } from '../services.js';
 import { navigate, showToast } from '../app.js';
 import { handleTimeAction } from './admin-handlers.js';
+import { loadLocalities } from '../localities.js';
 
 export function renderAdmin() {
   const claims = auth.getCurrentClaims();
@@ -63,6 +66,36 @@ export function renderAdmin() {
         <div class="admin-time-row">
           <button class="btn-small admin-reset-btn" id="adminResetBtn">Reset to real time</button>
         </div>
+      </div>
+
+      <div class="profile-card admin-card">
+        <div class="admin-section-title">Members · verification queue</div>
+        <div class="admin-notify-meta" id="adminQueueMeta">Loading…</div>
+        <div class="admin-notify-list" id="adminQueueList"></div>
+      </div>
+
+      <div class="profile-card admin-card">
+        <div class="admin-section-title">Members · lookup</div>
+        <div class="admin-inline-form">
+          <input class="profile-field-input" id="adminLookupEmail" type="email"
+                 placeholder="member email">
+          <button class="btn-small" id="adminLookupBtn">Find</button>
+        </div>
+        <div class="admin-notify-list" id="adminLookupResult"></div>
+      </div>
+
+      <div class="profile-card admin-card">
+        <div class="admin-section-title">Registers · read-only</div>
+        <p class="auth-subtext">
+          Curation stays in code until the strawman posture is revisited;
+          this is the future editor's slot.
+        </p>
+        <div class="admin-notify-meta" id="adminRegisters">Loading…</div>
+      </div>
+
+      <div class="profile-card admin-card">
+        <div class="admin-section-title">Health</div>
+        <div class="admin-notify-meta" id="adminHealth">Loading…</div>
       </div>
 
       <div class="profile-card admin-card">
@@ -126,9 +159,123 @@ export function renderAdmin() {
     }
   });
 
+  // Members · lookup
+  const lookupBtn = document.getElementById('adminLookupBtn');
+  lookupBtn.addEventListener('click', async () => {
+    const email = document.getElementById('adminLookupEmail').value.trim();
+    const out = document.getElementById('adminLookupResult');
+    if (!email) return;
+    lookupBtn.disabled = true;
+    try {
+      const { member } = await commands.findMember({ email });
+      out.innerHTML = `
+        <div class="admin-notify-row">
+          <div class="admin-notify-email">${escapeHtml(member.name || '—')} · ${escapeHtml(member.email)}</div>
+          <div class="admin-notify-meta-line">
+            <span>${member.localityVerified ? 'verified' : 'not verified'}${member.activatedAt ? ' · active' : ''}${member.onboardingCompletedAt ? ' · onboarded' : ''}</span>
+            <span>agreement ${escapeHtml(member.agreementVersion || '—')}</span>
+          </div>
+        </div>`;
+    } catch (err) {
+      out.innerHTML = `<div class="admin-notify-row">${escapeHtml(err?.message || 'Lookup failed.')}</div>`;
+    } finally {
+      lookupBtn.disabled = false;
+    }
+  });
+
   // First loads
   refreshTimeDisplay();
   refreshNotifyList();
+  refreshVerificationQueue();
+  refreshRegisters();
+  refreshHealth();
+}
+
+async function refreshVerificationQueue() {
+  const meta = document.getElementById('adminQueueMeta');
+  const list = document.getElementById('adminQueueList');
+  if (!meta || !list) return;
+  try {
+    const { pending } = await commands.getVerificationQueue();
+    meta.textContent = pending.length === 0
+      ? 'No pending verification requests.'
+      : `${pending.length} waiting.`;
+    list.innerHTML = pending.map((p) => `
+      <div class="admin-notify-row" data-user="${escapeHtml(p.userId)}">
+        <div class="admin-notify-email">${escapeHtml(p.name || '—')} · ${escapeHtml(p.email || '—')}</div>
+        <div class="admin-notify-meta-line">
+          <span>${escapeHtml(p.city || '—')} ${escapeHtml(p.postalCode || '')}</span>
+          <span>${escapeHtml(formatDate(p.localityRequestedAt))}</span>
+        </div>
+        <div class="admin-notify-meta-line">
+          <span></span>
+          <button class="btn-small" data-verify="${escapeHtml(p.userId)}">Verify</button>
+        </div>
+      </div>
+    `).join('');
+    list.querySelectorAll('[data-verify]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        btn.disabled = true;
+        btn.textContent = 'Verifying…';
+        try {
+          await commands.adminVerifyLocality({ userId: btn.dataset.verify });
+          showToast('Verified and activated.');
+          refreshVerificationQueue();
+        } catch (err) {
+          showToast(err?.message || 'Could not verify.');
+          btn.disabled = false;
+          btn.textContent = 'Verify';
+        }
+      });
+    });
+  } catch (err) {
+    meta.textContent = err?.message || 'Could not load the queue.';
+    list.innerHTML = '';
+  }
+}
+
+async function refreshRegisters() {
+  const el = document.getElementById('adminRegisters');
+  if (!el) return;
+  try {
+    const [register, types] = await Promise.all([
+      loadLocalities({ commands }),
+      commands.getEventTypes(),
+    ]);
+    const localities = [...register.byId.values()]
+      .map((l) => `${l.name}${l.served ? ' (served)' : ''}`).join(' · ');
+    const kinds = (types.eventTypes ?? [])
+      .map((t) => `${t.name} [${t.family}]`).join(' · ');
+    el.innerHTML = `
+      <strong>Localities</strong><br>${escapeHtml(localities)}<br><br>
+      <strong>Event types</strong><br>${escapeHtml(kinds)}`;
+  } catch (err) {
+    el.textContent = err?.message || 'Could not load the registers.';
+  }
+}
+
+async function refreshHealth() {
+  const el = document.getElementById('adminHealth');
+  if (!el) return;
+  try {
+    const h = await commands.getAdminHealth();
+    const dlq = h.projector?.ok
+      ? `DLQ depth ${h.projector.dlqDepth ?? '—'}${h.projector.dlqDepth > 0 ? ' ⚠' : ''}`
+      : `projector probe failed: ${h.projector?.error ?? '—'}`;
+    const cfg = h.config?.ok
+      ? `agreement ${h.config.requiredAgreementVersion ?? '—'} · sim ${formatDate(h.config.simulatedTime)}`
+      : `config probe failed: ${h.config?.error ?? '—'}`;
+    const counts = h.storePulse?.ok
+      ? Object.entries(h.storePulse.approximateItemCounts ?? {})
+        .map(([k, v]) => `${k} ${v ?? '—'}`).join(' · ')
+      : `store probe failed: ${h.storePulse?.error ?? '—'}`;
+    el.innerHTML = `
+      <strong>${escapeHtml(h.stage)} · ${escapeHtml(h.mode)}</strong><br>
+      ${escapeHtml(dlq)}<br>${escapeHtml(cfg)}<br>
+      <small>${escapeHtml(counts)} (approximate)</small>`;
+  } catch (err) {
+    el.textContent = err?.message || 'Could not load health.';
+  }
 }
 
 function bindTimeAction(btnId, makeRequest) {

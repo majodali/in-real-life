@@ -2,7 +2,7 @@
 
 Design notes for **in·real·life** — a local community meetup app: AI-guided onboarding, discover nearby events and people, coordinate real-world meetups. Privacy-focused (first names only, no messaging — just show up).
 
-These notes are **living and provisional** — current best decisions, revisable as real usage teaches us. `decisions.md` is the map: a register of every decision (D1–D63) with a one-line pointer to the note that holds the reasoning, plus watch-items for emergent effects we're tracking.
+These notes are **living and provisional** — current best decisions, revisable as real usage teaches us. `decisions.md` is the map: a register of every decision (D1–D64) with a one-line pointer to the note that holds the reasoning, plus watch-items for emergent effects we're tracking.
 
 ## How the pieces fit
 
@@ -58,7 +58,7 @@ Understanding of a person is **seeded** at onboarding and **grown** from what th
 - `scenario-walkthroughs.md` — the matching + success test scenarios run concretely through the design as written; two passes (F1–F12 triaged → D46–D51; second pass re-verifies all twelve and adversarially probes the new machinery, F13–F14 fixed). All scenarios currently `holds`.
 
 **Trust & safety / operations (Group 4)**
-- `admin-and-support.md` — **(proposal)** the operator console (in-app, role-gated, five panels: workshop seed + time, verification queue, registers view, health, policy) with the admin data discipline stated; member support explicitly gated on R4's communication design.
+- `admin-and-support.md` — **(decided: D64)** the operator console (in-app, role-gated, five panels: workshop seed + time, verification queue, registers view, health, policy) with the admin data discipline stated; member support explicitly gated on R4's communication design.
 - `contributor-rating.md` — a private, backstage, multi-faceted trust read; informs, never dominates.
 - `protective-blocks.md` — the safety tier's mechanism (D50/D52): the rendered-world rule, ordinary-power blocker view (awareness/peace), block ≠ accusation; advocate validation planned before build.
 
