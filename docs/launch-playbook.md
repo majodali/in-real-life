@@ -1,4 +1,11 @@
-# Community Launch Playbook — Design (proposed)
+# Community Launch Playbook — Design (decided: D65)
+
+**Status: decided** (2026-07-23, D65) after one founder-review round
+(attendees run the interview themselves rather than watching it;
+robots v1 scoped to batch persona actions; self-serve demo stacks
+named, with the adversarial red-team agent recorded; founder concerns
+#1/#2 registered as R9/R10; founding-cohort gratitude lives outside
+the product). The run-day companion is `workshop-crib-sheets.md`.
 
 Radar R5, graduated — with its trigger corrected on the way in. The
 radar said "second locality," on the theory that a *repeatable* process
@@ -277,9 +284,9 @@ community open):
 
 ## 9. Build items — few, and mostly deferred
 
-1. **Facilitation scripts as materials** (this note's §5 is the
-   source; a one-page-per-session crib sheet ships with the note —
-   docs, not code).
+1. **Facilitation scripts as materials** — shipped:
+   `workshop-crib-sheets.md` (one run-day card per session; §5 stays
+   the source of truth, the cards get corrected after every session).
 2. **Notify-list email path** — deliberately manual for launch #1
    (export + hand-written send); build when a launch's list outgrows
    that. Named, not scheduled.
