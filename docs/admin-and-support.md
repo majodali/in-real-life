@@ -48,17 +48,37 @@ activity — the workshop-mode discipline, applied everywhere).
   facilitator can demonstrate feed ranking, debriefs, and "how we
   understand you" with real machinery.
 
-  **The fixture is a catalog; seeding is selective** (decided at
-  review): one curated set (~50 personas, ~50 events, each entry
-  individually addressable) from which a facilitator seeds *what the
-  scenario needs* — never all-at-once by default. `POST /admin/seed`
-  takes the fixture plus a selection (specific ids, counts, or filters
-  like locality), is idempotent per entity (re-seeding a persona is a
-  no-op), and follows the workshop-mode template exactly: mode-gated
-  route registration, domain commands, replayable. Named scenarios the
-  selection must serve, recorded: **initial adopters** (seed nothing —
-  the room IS the community), **neighboring community** (personas all
-  from one nearby locality), and targeted single-scenario adds.
+  **Personas load whole; events are the selection unit** (decided at
+  review, second pass — and it works because the privacy design
+  already paid for it): workshop members see no evidence of other
+  users except through events they interact with (no directory, no
+  member browsing — rosters are the only exposure surface). So all
+  ~50 catalog personas seed **once at workshop setup**, invisible
+  until used, and the facilitator's live control is **which events to
+  add** — each catalog event carrying its **pre-set roster** (which
+  personas are interested/confirmed, and for past events, canned
+  debriefs so affinities and outcome rows exist). All-personas-upfront
+  also makes canned rosters structurally valid: an event can never
+  reference an unseeded persona. `POST /admin/seed` is two-phase —
+  `{personas: true, localityBindings}` once, then `{events: [ids]}`
+  additively — idempotent per entity, mode-gated per the workshop-mode
+  template, everything through real commands.
+
+  **Localities are symbolic in the fixture** (decided at review):
+  catalog entries reference **slots** — `A` (the workshop's home),
+  `B` (a neighbor), `C` (a crossing/far) — and persona-seeding binds
+  slots to real register localities in one hit
+  (`localityBindings: { A: 'bainbridge-island', B: 'poulsbo', C:
+  'seattle' }`, defaulting to the community home + its nearest
+  edges). Running the same workshop in a different community is a
+  different binding, never a fixture edit.
+
+  Named scenarios, restated in the new shape: **initial adopters** =
+  personas loaded, zero events added (the room IS the community —
+  nothing on the calendar betrays the catalog's existence);
+  **neighboring community** = bind `A` to the neighbor and add its
+  events; targeted scenario adds = pick the one canned event whose
+  roster tells the story.
 - **Persona control** (decided at review — facilitators must drive
   seeded personas, not just watch them): two pieces. (a) **Per-tab
   identity isolation on workshop stacks**: auth tokens live in
