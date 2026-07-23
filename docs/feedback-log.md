@@ -12,6 +12,10 @@ a backlog/radar/open-risks/hypotheses entry, cited) · **recorded**
 (its first gift was a register row that didn't exist — often combined
 with another disposition).
 
+**Sources are de-identified**: this log is public, so rows name a
+role and channel ("safety advisor, round 1"), never a person. The
+founder is the one exception (their rows are self-evidently theirs).
+
 The first rows are retro-recorded from the founder review rounds this
 process grew out of, and say so — the log doesn't pretend to a
 cleaner history than it has.
