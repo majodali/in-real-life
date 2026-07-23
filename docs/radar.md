@@ -19,7 +19,7 @@ how scope calcifies.
 | R2 | A/B testing UX | first UX dispute real usage can settle |
 | R3 | Age & locality verification | before public launch |
 | R4 | Staff ↔ member communication & support | first real members |
-| R5 | Community launch playbook | **activated** — for the FIRST locality (trigger corrected: "second locality" had it backwards); design in `launch-playbook.md` (proposed) |
+| R5 | Community launch playbook | **graduated** — for the FIRST locality (trigger corrected: "second locality" had it backwards); `launch-playbook.md` (decided: D65) |
 | R6 | Broad community feedback | first community big enough to poll |
 | R7 | Pricing & sponsorship | Group 5 (billing) design start |
 | R8 | Demand signals & event suggestions | wish captures accruing (localities slice), or the first thin-calendar complaint |
@@ -105,7 +105,7 @@ requests, assistant chat, staff chat); the radar item is the
 
 ## R5 — Community launch playbook
 
-**Graduated → `launch-playbook.md` (proposed).** The trigger was
+**Graduated → `launch-playbook.md` (decided: D65).** The trigger was
 corrected at activation: the radar said "second locality" on the
 theory that repeatability is only needed on repeat — backwards; the
 first launch is the one run with no muscle memory, and repeatability
