@@ -461,6 +461,11 @@ export class IrlStack extends cdk.Stack {
         'cognito-idp:AdminGetUser',
         'cognito-idp:AdminDeleteUser',
         'cognito-idp:ListUsers',
+        // Workshop seeding (D64 slice 2): fixture personas get the shared
+        // public test password so "open as" works. Workshop-only route,
+        // but the permission is stage-independent by design (same policy
+        // shape everywhere; the route simply doesn't exist on prod).
+        'cognito-idp:AdminSetUserPassword',
       ],
       resources: [userPool.userPoolArn],
     }));

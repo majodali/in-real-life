@@ -76,7 +76,10 @@ const REGISTER = [
   {
     id: 'seattle',
     name: 'Seattle',
-    postalCodes: [], // not a sign-up locality; a place events happen
+    // Not a sign-up locality (`served` stays false — the gate is
+    // unchanged); a downtown postal code so workshop seeding can bind a
+    // locality slot here (D64: personas need a postal → home locality).
+    postalCodes: ['98101'],
   },
 ];
 
