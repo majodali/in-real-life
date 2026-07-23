@@ -19,7 +19,7 @@ how scope calcifies.
 | R2 | A/B testing UX | first UX dispute real usage can settle |
 | R3 | Age & locality verification | before public launch |
 | R4 | Staff ↔ member communication & support | first real members |
-| R5 | Community launch playbook | second locality |
+| R5 | Community launch playbook | **activated** — for the FIRST locality (trigger corrected: "second locality" had it backwards); design in `launch-playbook.md` (proposed) |
 | R6 | Broad community feedback | first community big enough to poll |
 | R7 | Pricing & sponsorship | Group 5 (billing) design start |
 | R8 | Demand signals & event suggestions | wish captures accruing (localities slice), or the first thin-calendar complaint |
@@ -103,8 +103,21 @@ requests, assistant chat, staff chat); the radar item is the
 
 ## R5 — Community launch playbook
 
-The repeatable process for launching IRL in a new community or region.
-Sub-questions, roughly in launch order:
+**Graduated → `launch-playbook.md` (proposed).** The trigger was
+corrected at activation: the radar said "second locality" on the
+theory that repeatability is only needed on repeat — backwards; the
+first launch is the one run with no muscle memory, and repeatability
+falls out of writing the process down and correcting it after launch
+#1. Sub-question dispositions: interest registration, initial
+adopters, advisors, and workshops are designed in the note; languages
+is decided-by-deferral there (per-community scope input at the go
+decision, not a post-launch patch); the D64 robots deferral is
+resolved (not for launch #1, trigger restated to self-serve demo
+stacks / unstaffable scale). The note fixes R1's due date (before the
+advisor round) and names soft open as R4's activation clock.
+
+Original entry, kept for the record. Sub-questions, roughly in launch
+order:
 
 - **Interest registration** — the notify list (`POST /notify`) already
   captures pre-launch interest by postal code; what threshold or shape of
