@@ -25,6 +25,7 @@ how scope calcifies.
 | R8 | Demand signals & event suggestions | wish captures accruing (localities slice), or the first thin-calendar complaint |
 | R9 | Operating at unstaffed scale | founder concern #1 — before any manual queue's latency degrades, and before community #2 runs concurrently |
 | R10 | Languages & localization | founder concern #2 — must be designed BEFORE the first interest read that shows a non-English-first community (launch-playbook §7) |
+| R11 | Organization, entity & governance | **active** — worked in the private org register (existence public, content private by its O1 boundary rule); entity decision due before soft open; R9 is its operations strand |
 
 ## R1 — Decision registers & feedback intake process
 
@@ -259,3 +260,18 @@ either). Options span full per-language design, staged support
 (interview + debrief first, registers later), and community-assisted
 localization — undecided until the workstream activates, which should
 be **before** the first interest read that would need it.
+
+## R11 — Organization, entity & governance
+
+Worked in the **private org register** (`in-real-life-org`), per the
+boundary rule recorded there as O1: the workstream's existence is
+public, its content — legal/entity strategy, money specifics,
+governance candidates, personnel — is not. Five conversations in
+dependency order (purpose & protections → money frame → entity
+decision → governance & board → team/roles/operations); the entity
+decision is due **before soft open** (real events create liability a
+person shouldn't carry alone). R9 (operating at unstaffed scale) is
+this track's operations strand and its public half — R9's mechanics
+graduate into the open register when conversation 5 is worked; names
+and staffing stay private. Private decisions that constrain public
+design surface here as D-rows stating the constraint.
