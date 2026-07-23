@@ -15,7 +15,7 @@ how scope calcifies.
 
 | # | Workstream | Likely trigger |
 |---|---|---|
-| R1 | Decision registers & feedback intake process | **activated** — the advisor round is scheduled (D65 phase 3); design in `registers-and-feedback.md` (proposed) |
+| R1 | Decision registers & feedback intake process | **graduated** — `registers-and-feedback.md` (decided: D66); U/T/FB registers live |
 | R2 | A/B testing UX | first UX dispute real usage can settle |
 | R3 | Age & locality verification | before public launch |
 | R4 | Staff ↔ member communication & support | first real members |
@@ -28,7 +28,7 @@ how scope calcifies.
 
 ## R1 — Decision registers & feedback intake process
 
-**Graduated → `registers-and-feedback.md` (proposed)**, with the
+**Graduated → `registers-and-feedback.md` (decided: D66)**, with the
 U/T/FB registers shipping alongside (`ux-register.md`,
 `tech-register.md`, `feedback-log.md`). Core calls: record-on-contact
 (never retrospective mining), feedback-lands-on-decisions triage with

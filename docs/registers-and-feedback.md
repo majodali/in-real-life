@@ -1,4 +1,8 @@
-# Registers & Feedback Intake — Design (proposed)
+# Registers & Feedback Intake — Design (decided: D66)
+
+**Status: decided** (2026-07-23, D66) — reviewed and merged with the
+reopen discipline ("I disagree" reopens nothing) and the member-signal
+firewall (§4) explicitly affirmed at review.
 
 Radar R1, graduated on its own trigger: "before the first advisor
 round" — and the launch playbook (D65) just scheduled that round.
