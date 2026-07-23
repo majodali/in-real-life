@@ -20,7 +20,7 @@ Understanding of a person is **seeded** at onboarding and **grown** from what th
 
 ## Reading order
 
-**Start:** `backlog.md` (**the source of truth for progress** — what's built, what's next, dependency-ordered) · `decisions.md` (the decision register) · `hypotheses.md` (the hypothesis register — every embedded analysis as a testable, tunable, reversible hypothesis) · `open-risks.md` (known gaps) · `radar.md` (tracked workstreams not yet designed, R1–R7) · **`flows.md` (the visual map — all processes and flows as diagrams, TBD elements dashed)** · this README.
+**Start:** `backlog.md` (**the source of truth for progress** — what's built, what's next, dependency-ordered) · `decisions.md` (the decision register) · `hypotheses.md` (the hypothesis register — every embedded analysis as a testable, tunable, reversible hypothesis) · `open-risks.md` (known gaps) · `radar.md` (tracked workstreams not yet designed, R1–R10) · **`flows.md` (the visual map — all processes and flows as diagrams, TBD elements dashed)** · this README.
 
 **Foundations (Group 0)**
 - `event-sourcing.md` — hybrid event sourcing: event log + synchronous state tables, replay, crypto-shredding, tracing.
@@ -58,6 +58,7 @@ Understanding of a person is **seeded** at onboarding and **grown** from what th
 - `scenario-walkthroughs.md` — the matching + success test scenarios run concretely through the design as written; two passes (F1–F12 triaged → D46–D51; second pass re-verifies all twelve and adversarially probes the new machinery, F13–F14 fixed). All scenarios currently `holds`.
 
 **Trust & safety / operations (Group 4)**
+- `launch-playbook.md` — **(proposed, R5 graduated)** the phased operating process for launch #1 (Bainbridge): interest read as judgment-with-named-inputs, the founding cohort (voice, never knobs), the advisor round (the strawman registers' waiting corrections + D52's advocate validation; opens R1), the three workshop session scripts consuming the D64 tooling (robots evaluated: not for launch #1), soft open → community open, languages decided-by-deferral, and the retro that corrects the playbook itself.
 - `admin-and-support.md` — **(decided: D64)** the operator console (in-app, role-gated, five panels: workshop seed + time, verification queue, registers view, health, policy) with the admin data discipline stated; member support explicitly gated on R4's communication design.
 - `contributor-rating.md` — a private, backstage, multi-faceted trust read; informs, never dominates.
 - `protective-blocks.md` — the safety tier's mechanism (D50/D52): the rendered-world rule, ordinary-power blocker view (awareness/peace), block ≠ accusation; advocate validation planned before build.
