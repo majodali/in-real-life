@@ -502,6 +502,26 @@ export class IrlStack extends cdk.Stack {
     userModelTable.grantReadWriteData(projectorFn);
     userKeysTable.grantReadData(projectorFn);
 
+    // Admin health panel (docs/admin-and-support.md): the API reads the
+    // projector DLQ depth and approximate table counts — read-only
+    // operational probes, nothing more.
+    apiFn.addEnvironment('PROJECTOR_DLQ_URL', projectorDlq.queueUrl);
+    apiFn.addToRolePolicy(new iam.PolicyStatement({
+      actions: ['sqs:GetQueueAttributes'],
+      resources: [projectorDlq.queueArn],
+    }));
+    apiFn.addToRolePolicy(new iam.PolicyStatement({
+      actions: ['dynamodb:DescribeTable'],
+      resources: [
+        usersTable.tableArn,
+        eventsTable.tableArn,
+        interactionsTable.tableArn,
+        eventsLogTable.tableArn,
+        userModelTable.tableArn,
+        commandsTable.tableArn,
+      ],
+    }));
+
     // INSERT-only filter: the log is append-only, so MODIFY/REMOVE are
     // operational noise. Poison events retry with bisection, then land in
     // the DLQ instead of blocking the shard (projection-store.md open

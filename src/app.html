@@ -20,6 +20,9 @@
     cognitoUserPoolId: '__IRL_COGNITO_USER_POOL_ID__',
     cognitoUserPoolClientId: '__IRL_COGNITO_USER_POOL_CLIENT_ID__',
     feedbackUrl: '__IRL_FEEDBACK_URL__',
+    // Workshop stacks isolate identity per browser tab (sessionStorage
+    // tokens) so facilitators can drive several personas side by side.
+    workshopMode: '__IRL_WORKSHOP_MODE__' === 'true',
   };
 </script>
 

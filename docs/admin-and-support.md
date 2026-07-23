@@ -1,4 +1,4 @@
-# Admin Console & Support — Design (proposal)
+# Admin Console & Support — Design (decided: D64)
 
 The Group 4 backlog item ("system metrics, health, logs/traces, support
 requests, data management, workshop controls"), untangled. It bundles
@@ -13,10 +13,13 @@ two different users with two different needs:
   voice, the no-messaging boundary, support-seeking-as-signal). Not
   buildable honestly yet.
 
-**Status: proposal.** Sign-off points: the console's home (in-app,
-role-gated), the v1 panel set, seed-now/robots-later, register editing
-deferred to the strawman trigger, the support boundary (R4 first), and
-the admin data discipline.
+**Status: decided** (2026-07-22, D64) after two founder-review rounds
+(seed selectivity → personas-load-whole/events-select with symbolic
+locality slots; persona control; declines and dashboards deferred).
+**Implementation lands in two slices**: the console shell — health,
+members, registers, policy panels + per-tab identity isolation —
+first; the workshop **seed catalog + "open as"** as its own follow-up
+slice (the fixture deserves undivided review).
 
 ## 1. Where the console lives: in-app, role-gated
 

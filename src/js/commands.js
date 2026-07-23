@@ -130,6 +130,27 @@ export function createCommands({
     return await api.get('/admin/notify-list');
   }
 
+  // ─── Operator console (docs/admin-and-support.md) ───
+
+  async function getAdminHealth() {
+    return await api.get('/admin/health');
+  }
+
+  async function getVerificationQueue() {
+    return await api.get('/admin/verification-queue');
+  }
+
+  // Per-click commandId: each press is a distinct admin intent; the
+  // derived :activate id converges retries mid-chain server-side.
+  // (adminVerifyLocality — verifyLocality is the MEMBER's own request.)
+  async function adminVerifyLocality({ userId }) {
+    return await api.post('/admin/verify-locality', { commandId: makeId(), userId });
+  }
+
+  async function findMember({ email }) {
+    return await api.get(`/admin/member?email=${encodeURIComponent(email)}`);
+  }
+
   async function setRequiredAgreementVersion({ version }) {
     return await api.post('/admin/agreement-version', { commandId: makeId(), version });
   }
@@ -392,6 +413,10 @@ export function createCommands({
     getTime,
     advanceTime,
     getNotifyList,
+    getAdminHealth,
+    getVerificationQueue,
+    adminVerifyLocality,
+    findMember,
     proposeEvent,
     listEvents,
     getLocalities,

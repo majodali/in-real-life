@@ -28,3 +28,6 @@ export const COGNITO_REGION = provided?.cognitoRegion ?? 'us-east-1';
 export const COGNITO_USER_POOL_ID = required('cognitoUserPoolId');
 export const COGNITO_USER_POOL_CLIENT_ID = required('cognitoUserPoolClientId');
 export const FEEDBACK_URL = required('feedbackUrl');
+// Optional (older injected configs lack it): workshop stacks isolate
+// identity per tab so facilitators can drive several personas at once.
+export const WORKSHOP_MODE = provided?.workshopMode === true;
