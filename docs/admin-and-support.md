@@ -16,10 +16,18 @@ two different users with two different needs:
 **Status: decided** (2026-07-22, D64) after two founder-review rounds
 (seed selectivity → personas-load-whole/events-select with symbolic
 locality slots; persona control; declines and dashboards deferred).
-**Implementation lands in two slices**: the console shell — health,
-members, registers, policy panels + per-tab identity isolation —
-first; the workshop **seed catalog + "open as"** as its own follow-up
-slice (the fixture deserves undivided review).
+**Implementation landed in two slices** (both shipped): the console
+shell — health, members, registers, policy panels + per-tab identity
+isolation — first; then the workshop **seed catalog + "open as"**
+(`workshop/seed-fixture.mjs` + `workshop/seed.mjs`). The catalog's
+CONTENTS remain a strawman for facilitation-driven correction — the
+same posture as the locality and event-type registers. One
+implementation decision worth recording: **seed idempotency is
+generation-salted** — `WorkshopSeedConfigured` pins the slot bindings
+plus a generation id, and every seed commandId carries that generation,
+so a torn-down stack re-seeds cleanly past still-cached command
+records while overlapping calls within a generation still converge at
+the idempotency table.
 
 ## 1. Where the console lives: in-app, role-gated
 

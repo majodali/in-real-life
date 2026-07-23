@@ -1,14 +1,15 @@
 // ─── The operator console (docs/admin-and-support.md, D64) ───
 //
-// In-app, role-gated panels: Workshop (time; seed arrives next slice),
-// Members (verification queue + lookup), Registers (read-only views),
-// Health, Policy (agreement + notify). Gated to custom:role=admin
-// claims; the backend re-verifies on every call. Time-action
-// validation/dispatch lives in admin-handlers.js (unit-tested).
+// In-app, role-gated panels: Workshop (time + seed), Members
+// (verification queue + lookup), Registers (read-only views), Health,
+// Policy (agreement + notify). Gated to custom:role=admin claims; the
+// backend re-verifies on every call. Time-action and seed logic live in
+// admin-handlers.js / seed-handlers.js (unit-tested).
 
 import { commands, auth } from '../services.js';
 import { navigate, showToast } from '../app.js';
 import { handleTimeAction } from './admin-handlers.js';
+import { runSeedPersonas, runAddSeedEvent, openAsUrl } from './seed-handlers.js';
 import { loadLocalities } from '../localities.js';
 
 export function renderAdmin() {
@@ -66,6 +67,18 @@ export function renderAdmin() {
         <div class="admin-time-row">
           <button class="btn-small admin-reset-btn" id="adminResetBtn">Reset to real time</button>
         </div>
+      </div>
+
+      <div class="profile-card admin-card">
+        <div class="admin-section-title">Workshop seed</div>
+        <p class="auth-subtext">
+          Personas load whole and stay invisible until an event exposes
+          them; events are the selection unit, each with its pre-set
+          roster (and canned debriefs for past ones).
+        </p>
+        <div class="admin-notify-meta" id="adminSeedStatus">Loading…</div>
+        <div id="adminSeedControls"></div>
+        <div id="adminSeedLists"></div>
       </div>
 
       <div class="profile-card admin-card">
@@ -189,6 +202,166 @@ export function renderAdmin() {
   refreshVerificationQueue();
   refreshRegisters();
   refreshHealth();
+  refreshSeedPanel();
+}
+
+// ─── Workshop seed (D64 slice 2) ───
+
+async function refreshSeedPanel() {
+  const status = document.getElementById('adminSeedStatus');
+  const controls = document.getElementById('adminSeedControls');
+  const lists = document.getElementById('adminSeedLists');
+  if (!status || !controls || !lists) return;
+  let seed;
+  try {
+    seed = await commands.getSeedStatus();
+  } catch (err) {
+    status.textContent = err?.status === 404
+      ? 'Seeding is workshop-only — this stack has no seed route.'
+      : (err?.message || 'Could not load the seed catalog.');
+    controls.innerHTML = '';
+    lists.innerHTML = '';
+    return;
+  }
+
+  const addedCount = seed.events.filter((e) => e.added).length;
+  const bindingLine = seed.bindings
+    ? `bound A→${seed.bindings.A} · B→${seed.bindings.B} · C→${seed.bindings.C}`
+    : 'not seeded yet';
+  status.innerHTML = `
+    <strong>${seed.seededPersonas}/${seed.totalPersonas} personas · ${addedCount}/${seed.events.length} events</strong><br>
+    <small>${escapeHtml(bindingLine)} · fixture password ${escapeHtml(seed.password)}</small>`;
+
+  await renderSeedControls(controls, seed);
+  renderSeedLists(lists, seed);
+}
+
+async function renderSeedControls(controls, seed) {
+  const fullySeeded = seed.seededPersonas >= seed.totalPersonas;
+  if (seed.bindings && fullySeeded) {
+    controls.innerHTML = '';
+    return;
+  }
+
+  // Binding selects only before the first seeding — after that the
+  // bindings are pinned (a different binding is a different stack).
+  let selects = '';
+  if (!seed.bindings) {
+    const register = await loadLocalities({ commands });
+    const options = [...register.byId.values()]
+      .filter((l) => (l.postalCodes ?? []).length > 0);
+    selects = ['A', 'B', 'C'].map((slot) => `
+      <div class="admin-inline-form">
+        <label class="profile-field-label" for="adminSeedSlot${slot}">Slot ${slot}</label>
+        <select class="profile-field-input" id="adminSeedSlot${slot}">
+          ${options.map((l) => `
+            <option value="${escapeHtml(l.id)}"
+              ${l.id === seed.defaultBindings[slot] ? 'selected' : ''}>${escapeHtml(l.name)}</option>
+          `).join('')}
+        </select>
+      </div>`).join('');
+  }
+
+  controls.innerHTML = `
+    ${selects}
+    <div class="admin-time-row">
+      <button class="btn-small" id="adminSeedPersonasBtn">
+        ${seed.bindings ? 'Continue seeding personas' : 'Seed all personas'}
+      </button>
+    </div>`;
+
+  const btn = document.getElementById('adminSeedPersonasBtn');
+  btn.addEventListener('click', async () => {
+    btn.disabled = true;
+    const status = document.getElementById('adminSeedStatus');
+    try {
+      const localityBindings = seed.bindings ? undefined : {
+        A: document.getElementById('adminSeedSlotA').value,
+        B: document.getElementById('adminSeedSlotB').value,
+        C: document.getElementById('adminSeedSlotC').value,
+      };
+      await runSeedPersonas({
+        commands,
+        localityBindings,
+        onProgress: (out) => {
+          if (status) status.textContent = `Seeding… ${out.seeded}/${out.total} personas.`;
+        },
+      });
+      showToast('Personas seeded.');
+    } catch (err) {
+      showToast(err?.message || 'Seeding failed partway — safe to retry.');
+    } finally {
+      refreshSeedPanel();
+    }
+  });
+}
+
+function renderSeedLists(lists, seed) {
+  const seeded = seed.personas.filter((p) => p.seeded);
+  const personaRows = seeded.map((p) => `
+    <div class="admin-notify-row">
+      <div class="admin-notify-meta-line">
+        <span>${escapeHtml(p.name)} · slot ${escapeHtml(p.slot)} · ${escapeHtml(p.email)}</span>
+        <button class="btn-small" data-open-as="${escapeHtml(p.email)}">Open as</button>
+      </div>
+    </div>`).join('');
+
+  const eventRows = seed.events.map((e) => {
+    const when = e.status === 'idea'
+      ? 'idea'
+      : (e.past ? `${-e.offsetDays}d ago` : `in ${e.offsetDays}d`);
+    const meta = [
+      when,
+      `slot ${e.slot}`,
+      e.eventTypeId ?? 'untyped',
+      `${e.confirmedCount}✓ ${e.interestedCount}~`,
+      ...(e.debriefCount ? [`${e.debriefCount} debriefs`] : []),
+      ...(e.status === 'proposed' ? ['proposed'] : []),
+    ].join(' · ');
+    return `
+      <div class="admin-notify-row">
+        <div class="admin-notify-email">${escapeHtml(e.title)}</div>
+        <div class="admin-notify-meta-line">
+          <span>${escapeHtml(meta)}</span>
+          ${e.added
+    ? '<span>added</span>'
+    : `<button class="btn-small" data-add-event="${escapeHtml(e.id)}">Add</button>`}
+        </div>
+      </div>`;
+  }).join('');
+
+  lists.innerHTML = `
+    ${seeded.length ? `
+      <details>
+        <summary>Open as a persona (${seeded.length})</summary>
+        <div class="admin-notify-list">${personaRows}</div>
+      </details>` : ''}
+    <details>
+      <summary>Event catalog (${seed.events.length})</summary>
+      <div class="admin-notify-list">${eventRows}</div>
+    </details>`;
+
+  lists.querySelectorAll('[data-open-as]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      window.open(openAsUrl(btn.dataset.openAs), '_blank');
+    });
+  });
+
+  lists.querySelectorAll('[data-add-event]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      btn.disabled = true;
+      btn.textContent = 'Adding…';
+      try {
+        const result = await runAddSeedEvent({ commands, eventId: btn.dataset.addEvent });
+        showToast(result.status === 'already' ? 'Already on the calendar.' : 'Event added.');
+        refreshSeedPanel();
+      } catch (err) {
+        showToast(err?.message || 'Could not add the event.');
+        btn.disabled = false;
+        btn.textContent = 'Add';
+      }
+    });
+  });
 }
 
 async function refreshVerificationQueue() {

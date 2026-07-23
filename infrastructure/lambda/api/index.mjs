@@ -68,9 +68,10 @@ import { createExportHandler } from './users/export.mjs';
 import { createDeleteHandler } from './users/delete.mjs';
 import { projectLocationNotifyRequested } from './notify/projections.mjs';
 import { createNotifyHandler } from './notify/notify.mjs';
-import { projectWorkshopTimeAdvanced } from './workshop/projections.mjs';
+import { projectWorkshopTimeAdvanced, projectWorkshopSeedConfigured } from './workshop/projections.mjs';
 import { createGetTimeHandler } from './workshop/get-time.mjs';
 import { createAdvanceTimeHandler } from './workshop/admin-time.mjs';
+import { createSeedHandlers } from './workshop/seed.mjs';
 import { createNotifyListHandler } from './admin/notify-list.mjs';
 import { projectEventProposed } from './events/projections.mjs';
 import {
@@ -196,6 +197,7 @@ const projector = createProjector({
     UserKeyShredded: projectUserKeyShredded,
     LocationNotifyRequested: projectLocationNotifyRequested,
     WorkshopTimeAdvanced: projectWorkshopTimeAdvanced,
+    WorkshopSeedConfigured: projectWorkshopSeedConfigured,
     EventProposed: projectEventProposed,
     InterestExpressed: projectInterestExpressed,
     AttendanceConfirmed: projectAttendanceConfirmed,
@@ -574,6 +576,21 @@ router.add('DELETE', '/events/:eventId/polls/:pollId/vote', requireCurrentAgreem
 // on the production Lambda's route table.
 if (isWorkshop) {
   router.add('POST', '/admin/time', advanceTimeHandler);
+  // The workshop seed (D64 slice 2): catalog + status read, and the
+  // two-phase seeding command — admin-gated in-handler like all /admin.
+  const { getSeedHandler, postSeedHandler } = createSeedHandlers({
+    runner,
+    client,
+    cognito,
+    usersTable: tables.usersTable,
+    eventsTable: tables.eventsTable,
+    configTable: tables.configTable,
+    userPoolId: process.env.COGNITO_USER_POOL_ID,
+    getOffset: getWorkshopOffset,
+    getRequiredAgreement,
+  });
+  router.add('GET', '/admin/seed', getSeedHandler);
+  router.add('POST', '/admin/seed', postSeedHandler);
 }
 
 export const handler = router.dispatch;

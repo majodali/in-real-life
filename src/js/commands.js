@@ -155,6 +155,24 @@ export function createCommands({
     return await api.post('/admin/agreement-version', { commandId: makeId(), version });
   }
 
+  // ─── Workshop seed (D64 slice 2; the route only exists on workshop
+  // stacks). No client commandId: the backend derives a deterministic
+  // commandId per catalog entity, so any overlap converges there. ───
+
+  async function getSeedStatus() {
+    return await api.get('/admin/seed');
+  }
+
+  async function seedPersonas({ localityBindings } = {}) {
+    const body = { personas: true };
+    if (localityBindings !== undefined) body.localityBindings = localityBindings;
+    return await api.post('/admin/seed', body);
+  }
+
+  async function seedEvents({ eventIds }) {
+    return await api.post('/admin/seed', { events: eventIds });
+  }
+
   async function proposeEvent({
     title, description, startTime, endTime, location, organizerName,
     minimumAttendance, autoPlanOnThreshold, cost, maxAttendance,
@@ -414,6 +432,9 @@ export function createCommands({
     advanceTime,
     getNotifyList,
     getAdminHealth,
+    getSeedStatus,
+    seedPersonas,
+    seedEvents,
     getVerificationQueue,
     adminVerifyLocality,
     findMember,
