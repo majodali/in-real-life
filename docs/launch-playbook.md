@@ -102,6 +102,10 @@ we ask — stated up front, honestly:
   adjacent — early adopters are exactly the visibility-opted cohort —
   but it stays deferred; launching is not the moment to add a
   visibility regime.)
+- **Gratitude lives outside the product** (decided at review): no
+  "founding member" label, no in-app status, ever — labels calcify.
+  A thank-you letter, a gift, a reminder of the good they did: all
+  in scope, all as people thanking people, none as product surface.
 - **Small-N re-read**: with a dozen members, "who's going" on an event
   identifies people to their neighbors. Acceptable — these are people
   who joined *to meet each other* — but it must be said to them
@@ -136,13 +140,19 @@ scripts (run, then correct):
 
 **Session A — the member's arc** (~60 min; founding cohort, advisors,
 curious locals). Seed personas; add a curated week of events; then:
-walk onboarding live as a fresh member (the interview's warmth is the
-first beat that matters); read the feed and *explain why it's ordered*
-("prioritization, never filtering" is the trust beat); RSVP; advance
-the clock past the event; debrief (the care-not-survey beat); show
-"How we understand you" and correct something live (the legibility
-beat — beliefs are the member's to fix). Close on the privacy frame:
-first names, no messaging, just show up.
+**attendees do the interview themselves** — sign up on the workshop
+stack (locality auto-verifies) and jump straight in, because that IS a
+new member's experience and the session should model it, not narrate
+it. The facilitator fields comments and questions as they go; the
+interview's warmth either lands first-hand or we learn it doesn't.
+Then their own feed over the seeded calendar, read aloud and
+*explained* ("prioritization, never filtering" is the trust beat);
+RSVP as themselves. For the lived-history beats the facilitator
+switches to a seeded persona ("open as"): advance the clock past an
+event; debrief (the care-not-survey beat); show "How we understand
+you" and correct something live (the legibility beat — beliefs are the
+member's to fix). Close on the privacy frame: first names, no
+messaging, just show up.
 
 **Session B — the organizer's arc** (~45 min; organizer-shaped people,
 advisors). Propose live (watch the shape extraction get it right or
@@ -170,15 +180,36 @@ kinds, copy), the confusions (verbatim, not summarized), and one
 structured pass of "would you sign up — and if not, what's missing?"
 — all landing through R1's channel.
 
-**Robots — evaluated here, still not built.** D64 deferred autonomous
-scripted members "to R5, where the workshop process gets written."
-Written, the process doesn't need them: every session shape above is
-facilitator-paced, and canned debriefs already make the world look
-lived-in. Robots' real value would be *ambient believability over
-days* — a stack that evolves between sessions without staffing.
-Restated trigger: **self-serve demo stacks** (a stack we hand someone
-without a facilitator) or **multi-session scale we can't staff**.
-Until then, robots are decoration we'd have to choreograph anyway.
+**Robots — scoped here, still not built for launch #1.** D64 deferred
+autonomous scripted members "to R5, where the workshop process gets
+written." Written, the process doesn't need them: every session shape
+above is facilitator-paced, and canned debriefs already make the world
+look lived-in. And the scope is now decided (founder review): **robots
+v1 is simple automation of pre-defined action sets** — e.g. "wind
+forward past this event and submit the personas' debriefs" as one
+action instead of a tab-juggling sequence. Batch persona actions, a
+natural extension of the seed machinery; no ambition toward
+believable stochastic automata, which would be decoration we'd have
+to choreograph anyway.
+
+**Self-serve demo stacks (SSDS) — named, future.** A workshop stack we
+hand someone *without a facilitator* — controlled personas, canned
+events, the existing machinery. The audience that makes this matter is
+**serious advisors, especially safety-focused ones**, thoroughly
+working scenarios at their own pace (a protective-blocks advocate
+stepping through stalking-adjacent scenarios deserves privacy and
+time, not a facilitator watching). SSDS is where robots v1's batch
+actions earn their keep (no facilitator to drive the clock), and it
+carries the strongest robot use case yet named, recorded now for the
+safety roadmap: **an adversarial agent on an SSDS trying to break our
+safeguards** — red-teaming as a workshop artifact. Trigger: the first
+advisor who needs one, likely the D52 validation round.
+
+The "session scale we can't staff" framing from the first draft is an
+instance of something bigger the founder has named as concern #1 —
+**production usage at a scale we can't staff** — which is now its own
+radar workstream (R9) rather than a clause hidden in a robots
+paragraph.
 
 ## 6. Soft open → community open (phases 5–6)
 
@@ -209,7 +240,7 @@ geography already reaching there (people traveling in), and wish/
 demand captures (R8's travel-evidence half). The second locality is
 also the first *re-run of this playbook*, with phase 1 already warm.
 
-## 7. Languages — decided by deferral
+## 7. Languages — decided by deferral, tracked as its own workstream
 
 English-only for launch #1, decided rather than assumed: the interview
 prompts, extraction schemas, debrief copy, and the one-voice rule all
@@ -218,7 +249,12 @@ a worse product in the second language and quietly break D15/D17/D23.
 The playbook's language question re-enters per community at phase 1:
 if a community's interest read shows a non-English-first population,
 that is a *scope input to its go decision*, not a post-launch patch.
-Full localization design activates on the first such read.
+
+The founder has named this concern #2 — so it is now a radar
+workstream in its own right (**R10 — languages & localization**)
+rather than a paragraph here: the design must exist *before* the first
+interest read that needs it, because "activate on the read" leaves the
+go decision waiting on an undesigned area.
 
 ## 8. What launch #1 must teach us (phase 7)
 
@@ -251,15 +287,15 @@ community open):
    nice-to-have; today's answer is a fresh stack or the functional
    suite's teardown pattern by hand. Trigger: the first time a
    facilitator needs a mid-day reset.
-4. **Robots** — not for launch #1 (§5); trigger restated to self-serve
-   demo stacks / unstaffable session scale.
+4. **Robots v1** — batch persona actions (§5); not for launch #1;
+   builds with the first SSDS.
+5. **Self-serve demo stacks** — the workshop machinery, handed over
+   without a facilitator (§5); trigger: the first advisor who needs
+   one, likely the D52 validation round. The adversarial-agent
+   red-team use case is recorded there for the safety roadmap.
 
 ## Open questions
 
-- Does the founding cohort get any lasting acknowledgment (a "founding
-  member" note on their own profile only, visible to no one else)?
-  Charming, but it's a *label*, and the design has been consistent
-  that labels calcify — parked, default no.
 - Advisor compensation/recognition: civic goodwill carries the first
   round; whether it scales to community #2+ belongs in the retro.
 - Where the go/no-go reads live operationally (a checklist in the

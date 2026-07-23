@@ -23,6 +23,8 @@ how scope calcifies.
 | R6 | Broad community feedback | first community big enough to poll |
 | R7 | Pricing & sponsorship | Group 5 (billing) design start |
 | R8 | Demand signals & event suggestions | wish captures accruing (localities slice), or the first thin-calendar complaint |
+| R9 | Operating at unstaffed scale | founder concern #1 — before any manual queue's latency degrades, and before community #2 runs concurrently |
+| R10 | Languages & localization | founder concern #2 — must be designed BEFORE the first interest read that shows a non-English-first community (launch-playbook §7) |
 
 ## R1 — Decision registers & feedback intake process
 
@@ -198,3 +200,52 @@ workstream designs the consumption:
 - The travel-evidence half loops back into the effort-is-personal watch
   signals (a wish followed by non-attendance = wanting-but-constrained,
   distinct from silence).
+
+## R9 — Operating at unstaffed scale
+
+Named at the launch-playbook review as the founder's **#1 concern**:
+"session scale I can't staff" is a future where we're already living
+"production usage scale I can't staff." Nearly every trust-bearing
+loop in the system is currently a manual queue that assumes
+founder-scale attention: locality verification (the console queue),
+support (R4, when it exists), safety review (conduct concerns,
+protective-blocks operations when built), register curation
+(localities, event types — strawmen awaiting correction by hand),
+notify-list sends, and launch operations themselves (this playbook).
+
+The workstream is a per-loop decision — **automate, staff, or
+redesign so the loop isn't needed** — made deliberately before growth
+forces it, because each answer has a different soul: automation must
+not launder judgment calls (a verification decline is a communication,
+R4; a safety review is due process, D35), staffing collides with the
+one-role console assumption (D64's named split-console trigger), and
+redesign is where ideas like community vouching (R3) and
+trust-graduated organizers actually live. Ties: R3 (automated
+verification is one instance of this, not a separate problem), R4,
+D64's role-granularity trigger, and the SSDS/robots line in
+`launch-playbook.md` §5 (facilitation was merely the first loop to
+hit the wall). First concrete consumer: the launch retro's queue-
+latency read (`launch-playbook.md` §8).
+
+## R10 — Languages & localization
+
+Named at the launch-playbook review as the founder's **#2 concern**.
+The playbook decides English-only for launch #1 and makes language a
+*scope input to each community's go decision* (`launch-playbook.md`
+§7) — which is exactly why the design can't wait for a community to
+need it: a go decision that depends on an undesigned area is a no-go
+in disguise.
+
+What makes this real design and not a translation pass: language is
+load-bearing in the interview prompts and extraction schemas (does
+extraction happen in the member's language, with the model reading it
+natively? does an English-side model read translated stories and lose
+the texture the whole design runs on?), in the one-voice rule
+(D15/D17/D23 — "warm, not familiar" lands differently per language
+and culture, and the "we" doesn't translate mechanically), in every
+piece of debrief and coaching copy, and in mixed-language communities
+(a locality is not a language boundary; matching must not become one
+either). Options span full per-language design, staged support
+(interview + debrief first, registers later), and community-assisted
+localization — undecided until the workstream activates, which should
+be **before** the first interest read that would need it.
