@@ -22,6 +22,8 @@ Understanding of a person is **seeded** at onboarding and **grown** from what th
 
 **Start:** `backlog.md` (**the source of truth for progress** — what's built, what's next, dependency-ordered) · `decisions.md` (the decision register) · `hypotheses.md` (the hypothesis register — every embedded analysis as a testable, tunable, reversible hypothesis) · `open-risks.md` (known gaps) · `radar.md` (tracked workstreams not yet designed, R1–R10) · **`flows.md` (the visual map — all processes and flows as diagrams, TBD elements dashed)** · this README.
 
+**Registers & feedback (R1, proposed):** `registers-and-feedback.md` — how feedback lands on decisions: record-on-contact registers (`ux-register.md` U-rows, `tech-register.md` T-rows), the intake pipeline (`feedback-log.md` FB-rows: solicit → capture → triage → land → answer → reopen), the advisor round pack, and the boundaries (not member signal, not support, not governance).
+
 **Foundations (Group 0)**
 - `event-sourcing.md` — hybrid event sourcing: event log + synchronous state tables, replay, crypto-shredding, tracing.
 - `workshop-mode.md` — one codebase, two modes (production / workshop); time manipulation, gate bypass.

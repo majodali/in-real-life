@@ -15,7 +15,7 @@ how scope calcifies.
 
 | # | Workstream | Likely trigger |
 |---|---|---|
-| R1 | Decision registers & feedback intake process | before the first advisor round |
+| R1 | Decision registers & feedback intake process | **activated** — the advisor round is scheduled (D65 phase 3); design in `registers-and-feedback.md` (proposed) |
 | R2 | A/B testing UX | first UX dispute real usage can settle |
 | R3 | Age & locality verification | before public launch |
 | R4 | Staff ↔ member communication & support | first real members |
@@ -27,6 +27,16 @@ how scope calcifies.
 | R10 | Languages & localization | founder concern #2 — must be designed BEFORE the first interest read that shows a non-English-first community (launch-playbook §7) |
 
 ## R1 — Decision registers & feedback intake process
+
+**Graduated → `registers-and-feedback.md` (proposed)**, with the
+U/T/FB registers shipping alongside (`ux-register.md`,
+`tech-register.md`, `feedback-log.md`). Core calls: record-on-contact
+(never retrospective mining), feedback-lands-on-decisions triage with
+three cases, the answer-back obligation (D30 declines), reopen-by-
+engaging-recorded-reasoning, and the advisor round pack as the first
+consumer. Governance proper stays deferred and named.
+
+Original entry, kept for the record:
 
 Organize **all** decisions — functional, UX, visual design, technical —
 into registers, and formalize the process for taking feedback from
