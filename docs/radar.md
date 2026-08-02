@@ -23,7 +23,7 @@ how scope calcifies.
 | R6 | Broad community feedback | first community big enough to poll |
 | R7 | Pricing & sponsorship | Group 5 (billing) design start |
 | R8 | Demand signals & event suggestions | wish captures accruing (localities slice), or the first thin-calendar complaint |
-| R9 | Operating at unstaffed scale | founder concern #1 — before any manual queue's latency degrades, and before community #2 runs concurrently |
+| R9 | Operating at unstaffed scale | **graduated** — `operations.md` (decided: D67); worked as the org track's operations strand, mechanics public per the R11 boundary |
 | R10 | Languages & localization | founder concern #2 — must be designed BEFORE the first interest read that shows a non-English-first community (launch-playbook §7) |
 | R11 | Organization, entity & governance | **active** — worked in the private org register (existence public, content private by its O1 boundary rule); entity decision due before soft open; R9 is its operations strand |
 
@@ -213,6 +213,14 @@ workstream designs the consumption:
   distinct from silence).
 
 ## R9 — Operating at unstaffed scale
+
+**Graduated → `operations.md` (decided: D67).** The per-loop
+discipline (automate / staff / redesign-away / operator-for-now with
+a named failure signal; automation never launders judgment), the
+public loop map with its triggers, and the automation backlog it
+creates (deploy Lambda, incident runbooks + alerting,
+feedback-routing tooling). The role/staffing half lives in the
+private org register per R11's boundary. Original entry kept below.
 
 Named at the launch-playbook review as the founder's **#1 concern**:
 "session scale I can't staff" is a future where we're already living
