@@ -8,7 +8,8 @@
 // probe reports itself broken; it never takes the panel down.
 // Logs/traces stay in CloudWatch/X-Ray (linked, not rebuilt).
 
-import { GetCommand } from '@aws-sdk/lib-dynamodb';
+import { GetCommand, ScanCommand } from '@aws-sdk/lib-dynamodb';
+import { countOpenConductConcerns } from './conduct.mjs';
 
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
 
@@ -85,6 +86,14 @@ export function createAdminHealthHandler({
       return { approximateItemCounts: counts };
     });
 
-    return reply(200, { stage, mode, projector, config, storePulse });
+    // Safety pulse (activity register E2): the one count that must
+    // never sit unnoticed — open conduct concerns.
+    const safety = await probe(async () => ({
+      openConductConcerns: await countOpenConductConcerns({
+        client, scanCommand: ScanCommand, interactionsTable: tables.interactionsTable,
+      }),
+    }));
+
+    return reply(200, { stage, mode, projector, config, storePulse, safety });
   };
 }

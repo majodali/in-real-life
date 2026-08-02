@@ -53,6 +53,10 @@ import {
   createVerifyLocalityHandler,
   createMemberLookupHandler,
 } from './admin/verification.mjs';
+import {
+  createConductQueueHandler,
+  createAckConductHandler,
+} from './admin/conduct.mjs';
 import { SQSClient, GetQueueAttributesCommand } from '@aws-sdk/client-sqs';
 import { DescribeTableCommand } from '@aws-sdk/client-dynamodb';
 import { projectRequiredAgreementVersionUpdated } from './admin/agreement-projections.mjs';
@@ -79,6 +83,7 @@ import {
   projectAttendanceConfirmed,
   projectAttendanceWithdrawn,
   projectDebriefSubmitted,
+  projectConductConcernAcknowledged,
 } from './events/interaction-projections.mjs';
 import {
   projectEventScheduled,
@@ -203,6 +208,7 @@ const projector = createProjector({
     AttendanceConfirmed: projectAttendanceConfirmed,
     AttendanceWithdrawn: projectAttendanceWithdrawn,
     DebriefSubmitted: projectDebriefSubmitted,
+    ConductConcernAcknowledged: projectConductConcernAcknowledged,
     EventScheduled: projectEventScheduled,
     EventCancelled: projectEventCancelled,
     EventAutoPlanSettingChanged: projectEventAutoPlanSettingChanged,
@@ -348,6 +354,17 @@ const verifyLocalityHandler = createVerifyLocalityHandler({
 });
 const memberLookupHandler = createMemberLookupHandler({
   client, usersTable: tables.usersTable,
+});
+const conductQueueHandler = createConductQueueHandler({
+  client,
+  interactionsTable: tables.interactionsTable,
+  eventsTable: tables.eventsTable,
+  usersTable: tables.usersTable,
+  eventsLogTable: process.env.EVENTS_LOG_TABLE,
+  keyStore,
+});
+const ackConductHandler = createAckConductHandler({
+  runner, client, interactionsTable: tables.interactionsTable,
 });
 const notifyListHandler = createNotifyListHandler({
   client,
@@ -530,6 +547,12 @@ router.add('GET', '/admin/health', adminHealthHandler);
 router.add('GET', '/admin/verification-queue', verificationQueueHandler);
 router.add('POST', '/admin/verify-locality', verifyLocalityHandler);
 router.add('GET', '/admin/member', memberLookupHandler);
+// The Safety panel (activity register E2): a member's conduct concern
+// must reach a human — the queue lists open concerns (with the conduct
+// note, the D64 discipline's one named exception), acknowledgment is
+// event-sourced with the admin as actor.
+router.add('GET', '/admin/conduct-concerns', conductQueueHandler);
+router.add('POST', '/admin/conduct-concerns/ack', ackConductHandler);
 
 router.add('POST', '/events', requireCurrentAgreement(proposeEventHandler));
 router.add('GET', '/events', listEventsHandler);

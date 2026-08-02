@@ -156,6 +156,28 @@ tracing) — the console links out rather than rebuilding a log viewer.
 IAM additions (SQS GetQueueAttributes, DescribeTable) ride the CDK
 change.
 
+### Safety — the conduct-concern queue (added 2026-07-24, post-D64)
+
+The July ops review's activity register surfaced the gap this panel
+closes: a member's `conductConcern` landed on the log and **nothing
+read it**. Now: `GET /admin/conduct-concerns` lists open concerns
+(oldest first — reporter basics, event, and the conduct note), and
+acknowledgment is a real command (`ConductConcernAcknowledged`, the
+admin as audited actor) — the queue empties through the log, never
+through an untracked click. The health probe carries the open count
+so it can alarm (ops alarms stack).
+
+**The one named exception to §3's "debrief content is never shown":
+the conduct note, here and only here.** The conduct quarantine
+(open-risks #11) was designed exactly for this read — the flag stays
+cleartext for safety ops; the note stays PII-encrypted under the
+reporter's key and is decrypted server-side for the reviewing admin.
+A concern without its content is not actionable, and safety review
+is the job this panel exists to do. Acknowledging means "a human has
+taken this up" — follow-up happens between people; the fuller
+due-process machinery (blocks, reporting, adjudication, D35/D50)
+remains Group 4's design work.
+
 ### Policy — what exists, gathered
 
 Agreement version bump (exists), notify list (exists). Event/conduct
@@ -176,7 +198,10 @@ never overrides it:
   understand you" is THEIRS; backstage review of models is its own
   future construct with its own access design), Layer 3 (affinity,
   crews), contributor rating (access-gated for Group 4's own slice,
-  D35 due-process rules), debrief/reflection content.
+  D35 due-process rules), debrief/reflection content — **with one
+  named exception** (2026-07-24): the conduct note, in the Safety
+  panel and only there (see §2 Safety — the read the quarantine was
+  designed to enable).
 - **Every admin action is an event** with the admin as actor — the
   audit trail is the log itself, replayable like everything.
 - Admin reads are queries, not new stores — nothing aggregates member
