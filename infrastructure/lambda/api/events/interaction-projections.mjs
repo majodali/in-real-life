@@ -137,3 +137,27 @@ export function projectAttendanceWithdrawn(event, tables) {
   if (counter) writes.push(counter);
   return writes;
 }
+
+// ConductConcernAcknowledged (activity register E2): an admin has seen
+// and taken up the concern. Stamps the interaction row so the Safety
+// queue's open filter (conductConcern && !conductAckAt) drops it; the
+// acknowledgment itself lives on the log with the admin as actor.
+export function projectConductConcernAcknowledged(event, tables) {
+  const { userId, eventId, acknowledgedBy } = event.data;
+  return [{
+    Update: {
+      TableName: tables.interactionsTable,
+      Key: { userId, eventId },
+      UpdateExpression:
+        'SET conductAckAt = :now, conductAckBy = :by, #seq = :seq, updatedAt = :now',
+      ConditionExpression: '#seq = :prevSeq AND attribute_not_exists(conductAckAt)',
+      ExpressionAttributeNames: { '#seq': 'seq' },
+      ExpressionAttributeValues: {
+        ':now': event.wallTime,
+        ':by': acknowledgedBy,
+        ':seq': event.seq,
+        ':prevSeq': event.seq - 1,
+      },
+    },
+  }];
+}

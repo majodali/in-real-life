@@ -151,6 +151,19 @@ export function createCommands({
     return await api.get(`/admin/member?email=${encodeURIComponent(email)}`);
   }
 
+  // ─── Safety (activity register E2): the conduct-concern queue ───
+
+  async function getConductConcerns() {
+    return await api.get('/admin/conduct-concerns');
+  }
+
+  // Per-click commandId — acknowledging is a distinct, audited act.
+  async function ackConductConcern({ userId, eventId }) {
+    return await api.post('/admin/conduct-concerns/ack', {
+      commandId: makeId(), userId, eventId,
+    });
+  }
+
   async function setRequiredAgreementVersion({ version }) {
     return await api.post('/admin/agreement-version', { commandId: makeId(), version });
   }
@@ -438,6 +451,8 @@ export function createCommands({
     getVerificationQueue,
     adminVerifyLocality,
     findMember,
+    getConductConcerns,
+    ackConductConcern,
     proposeEvent,
     listEvents,
     getLocalities,

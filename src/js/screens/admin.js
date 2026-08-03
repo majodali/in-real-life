@@ -35,6 +35,17 @@ export function renderAdmin() {
     <div class="profile-body">
 
       <div class="profile-card admin-card">
+        <div class="admin-section-title">Safety · conduct concerns</div>
+        <p class="auth-subtext">
+          A concern quarantines the debrief's preference signal; the
+          concern itself lands here. Acknowledging records that a human
+          has taken it up — it is the start of follow-up, not the end.
+        </p>
+        <div class="admin-notify-meta" id="adminConductMeta">Loading…</div>
+        <div class="admin-notify-list" id="adminConductList"></div>
+      </div>
+
+      <div class="profile-card admin-card">
         <div class="admin-section-title">Workshop time</div>
         <div class="admin-time-display" id="adminTimeDisplay">Loading…</div>
 
@@ -203,6 +214,55 @@ export function renderAdmin() {
   refreshRegisters();
   refreshHealth();
   refreshSeedPanel();
+  refreshConductConcerns();
+}
+
+// ─── Safety · conduct concerns (activity register E2) ───
+
+async function refreshConductConcerns() {
+  const meta = document.getElementById('adminConductMeta');
+  const list = document.getElementById('adminConductList');
+  if (!meta || !list) return;
+  try {
+    const { concerns } = await commands.getConductConcerns();
+    meta.textContent = concerns.length === 0
+      ? 'No open concerns.'
+      : `${concerns.length} open — these come first.`;
+    list.innerHTML = concerns.map((c) => `
+      <div class="admin-notify-row">
+        <div class="admin-notify-email">${escapeHtml(c.eventTitle || c.eventId)} · reported by ${escapeHtml(c.reporterName || '—')} (${escapeHtml(c.reporterEmail || '—')})</div>
+        <div class="admin-notify-meta-line">
+          <span>${escapeHtml(formatDate(c.submittedAt))}</span>
+        </div>
+        ${c.note ? `<div class="admin-notify-meta-line"><em>${escapeHtml(c.note)}</em></div>` : '<div class="admin-notify-meta-line"><span>(no note left)</span></div>'}
+        <div class="admin-notify-meta-line">
+          <span></span>
+          <button class="btn-small" data-ack-conduct
+                  data-user="${escapeHtml(c.userId)}" data-event="${escapeHtml(c.eventId)}">
+            Acknowledge — I'm taking this up
+          </button>
+        </div>
+      </div>
+    `).join('');
+    list.querySelectorAll('[data-ack-conduct]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        btn.disabled = true;
+        try {
+          await commands.ackConductConcern({
+            userId: btn.dataset.user, eventId: btn.dataset.event,
+          });
+          showToast('Acknowledged — follow up outside the app.');
+          refreshConductConcerns();
+        } catch (err) {
+          showToast(err?.message || 'Could not acknowledge.');
+          btn.disabled = false;
+        }
+      });
+    });
+  } catch (err) {
+    meta.textContent = err?.message || 'Could not load conduct concerns.';
+    list.innerHTML = '';
+  }
 }
 
 // ─── Workshop seed (D64 slice 2) ───
@@ -442,9 +502,12 @@ async function refreshHealth() {
       ? Object.entries(h.storePulse.approximateItemCounts ?? {})
         .map(([k, v]) => `${k} ${v ?? '—'}`).join(' · ')
       : `store probe failed: ${h.storePulse?.error ?? '—'}`;
+    const safety = h.safety?.ok
+      ? `open conduct concerns ${h.safety.openConductConcerns}${h.safety.openConductConcerns > 0 ? ' ⚠' : ''}`
+      : `safety probe failed: ${h.safety?.error ?? '—'}`;
     el.innerHTML = `
       <strong>${escapeHtml(h.stage)} · ${escapeHtml(h.mode)}</strong><br>
-      ${escapeHtml(dlq)}<br>${escapeHtml(cfg)}<br>
+      ${escapeHtml(dlq)}<br>${escapeHtml(cfg)}<br>${escapeHtml(safety)}<br>
       <small>${escapeHtml(counts)} (approximate)</small>`;
   } catch (err) {
     el.textContent = err?.message || 'Could not load health.';

@@ -108,6 +108,7 @@ Trust & safety surface, internal admin/support tooling.
 
 - [ ] User blocks other users — distinct from "didn't enjoy meeting"
 - [ ] Selective visibility blocking (e.g. ex-spouses) — separate from blocks
+- [x] Conduct-concern surface v1 (D64 revision, 2026-07-24; activity register E2) — the gap the ops review found: a member's `conductConcern` quarantined preference signal correctly but the concern itself reached nobody. Shipped: `GET /admin/conduct-concerns` (open concerns oldest-first with reporter basics, event, and the conduct note — decrypted server-side under the reporter's key; missing key degrades to note-unavailable), `POST /admin/conduct-concerns/ack` (`ConductConcernAcknowledged`, admin as audited actor, projection stamps `conductAckAt` so the open filter drops it), the health probe's `safety.openConductConcerns` count (alarm input for the ops alarms stack), and the console's Safety panel — first card on the screen. The conduct note is the D64 data discipline's ONE named exception, this panel only. Acknowledgment = "a human has taken this up"; adjudication/blocks/reporting remain the items below
 - [ ] Reporting mechanism for inappropriate behavior at events
 - [ ] Mutual blocks UX — event visibility, attendee counts
 - [ ] Internal user contributor rating — trustworthy, positive contributor; private, used for group composition
