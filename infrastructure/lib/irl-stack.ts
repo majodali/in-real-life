@@ -14,6 +14,10 @@ import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import * as sqs from 'aws-cdk-lib/aws-sqs';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import { DynamoEventSource, SqsDlq } from 'aws-cdk-lib/aws-lambda-event-sources';
+import * as sns from 'aws-cdk-lib/aws-sns';
+import * as snsSubscriptions from 'aws-cdk-lib/aws-sns-subscriptions';
+import * as cloudwatch from 'aws-cdk-lib/aws-cloudwatch';
+import * as cloudwatchActions from 'aws-cdk-lib/aws-cloudwatch-actions';
 import * as apigwv2 from 'aws-cdk-lib/aws-apigatewayv2';
 import * as apigwv2int from 'aws-cdk-lib/aws-apigatewayv2-integrations';
 import * as apigwv2auth from 'aws-cdk-lib/aws-apigatewayv2-authorizers';
@@ -33,12 +37,32 @@ export type Stage = string;
 
 export interface IrlStackProps extends cdk.StackProps {
   stage: Stage;
-  // Custom domain configuration. When set, the stack provisions a hosted
-  // zone, ACM certificate, CloudFront distribution, and an api.<apex>
-  // mapping for the HTTP API. Leave undefined for backend-only deployments
-  // (e.g. test) or environments that publish under the raw API Gateway URL.
+  // Custom domain configuration. When set, the stack provisions an ACM
+  // certificate, CloudFront distribution, and an api.<apex> mapping for
+  // the HTTP API. Leave undefined for backend-only deployments (e.g.
+  // test) or environments that publish under the raw API Gateway URL.
   domain?: {
     apex: string;  // e.g. 'in-real.life' — site served from here, API at api.<apex>
+    // Option C (D67 / ops review §4a): reference a SHARED hosted zone
+    // that outlives any one stack, so prod can own the apex while
+    // workshop lives on a subdomain of the same zone. Prefer passing
+    // hostedZoneId (no CDK context lookup needed); zoneName alone
+    // falls back to HostedZone.fromLookup (requires a concrete env
+    // account at synth). When `zone` is absent the stack creates its
+    // own zone — the original behavior — and RETAINs it, so a later
+    // move to a shared zone never kills the registrar's delegation.
+    zone?: {
+      zoneName: string;      // e.g. 'in-real.life'
+      hostedZoneId?: string; // Z... — skip the lookup when known
+    };
+  };
+  // Operational alarms (D67 / ops review §4d): SNS topic + email
+  // subscription + the four alarms that must never sit unread
+  // (projector DLQ depth, API errors, projector errors, API 5xx).
+  // Set on prod (and any env someone actually pages for); leave unset
+  // on test/workshop stacks.
+  alarms?: {
+    email: string;
   };
   // Deploy the static site bucket + CloudFront + DNS record. Defaults to
   // true when domain is set, false otherwise. Useful to override when you
@@ -60,13 +84,34 @@ export class IrlStack extends cdk.Stack {
     // Workshop-only: Route53 + ACM
     // ==========================================
 
-    let hostedZone: route53.PublicHostedZone | undefined;
+    let hostedZone: route53.IHostedZone | undefined;
+    let ownedZone: route53.PublicHostedZone | undefined;
     let certificate: acm.Certificate | undefined;
 
     if (deploySite && domain) {
-      hostedZone = new route53.PublicHostedZone(this, 'HostedZone', {
-        zoneName: domain.apex,
-      });
+      if (domain.zone) {
+        // Shared zone (Option C): reference, never create. Records and
+        // cert validation land in the referenced zone; the zone itself
+        // belongs to whoever holds the registrar delegation.
+        hostedZone = domain.zone.hostedZoneId
+          ? route53.HostedZone.fromHostedZoneAttributes(this, 'HostedZone', {
+            hostedZoneId: domain.zone.hostedZoneId,
+            zoneName: domain.zone.zoneName,
+          })
+          : route53.HostedZone.fromLookup(this, 'HostedZone', {
+            domainName: domain.zone.zoneName,
+          });
+      } else {
+        ownedZone = new route53.PublicHostedZone(this, 'HostedZone', {
+          zoneName: domain.apex,
+        });
+        // If this zone is ever removed from the template (the move to a
+        // shared zone), it must survive the removal — the registrar's NS
+        // delegation points at these name servers and must not die with
+        // the stack.
+        ownedZone.applyRemovalPolicy(cdk.RemovalPolicy.RETAIN);
+        hostedZone = ownedZone;
+      }
 
       certificate = new acm.Certificate(this, 'SiteCertificate', {
         domainName: domain.apex,
@@ -80,8 +125,11 @@ export class IrlStack extends cdk.Stack {
     // ==========================================
 
     if (deploySite && domain) {
+      // Stage-suffixed: two sited stacks (workshop + prod) must coexist
+      // in one account (Option C). Renaming replaces the bucket — rerun
+      // inject-config after the deploy that renames it.
       const siteBucket = new s3.Bucket(this, 'SiteBucket', {
-        bucketName: `irl-dev-${this.account}`,
+        bucketName: `irl-site-${stage}-${this.account}`,
         removalPolicy: cdk.RemovalPolicy.DESTROY,
         autoDeleteObjects: true,
         blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
@@ -114,6 +162,10 @@ export class IrlStack extends cdk.Stack {
 
       new route53.ARecord(this, 'SiteAliasRecord', {
         zone: hostedZone!,
+        // Explicit name: in a shared zone the site may be a subdomain
+        // (workshop.in-real.life inside in-real.life). Ends with the
+        // zone name, so CDK treats it as fully qualified either way.
+        recordName: domain.apex,
         target: route53.RecordTarget.fromAlias(
           new route53Targets.CloudFrontTarget(distribution),
         ),
@@ -159,10 +211,12 @@ export class IrlStack extends cdk.Stack {
         value: distribution.distributionId,
         description: 'CloudFront distribution ID (for invalidation)',
       });
-      new cdk.CfnOutput(this, 'NameServers', {
-        value: cdk.Fn.join(', ', hostedZone!.hostedZoneNameServers!),
-        description: 'Set these as nameservers in GoDaddy',
-      });
+      if (ownedZone) {
+        new cdk.CfnOutput(this, 'NameServers', {
+          value: cdk.Fn.join(', ', ownedZone.hostedZoneNameServers!),
+          description: 'Set these as nameservers in GoDaddy',
+        });
+      }
     }
 
     // ==========================================
@@ -172,8 +226,11 @@ export class IrlStack extends cdk.Stack {
     let feedbackBucket: s3.Bucket | undefined;
 
     if (deploySite) {
+      // Stage-suffixed for the same two-sited-stacks reason as the site
+      // bucket. The previous unsuffixed bucket is RETAINed — drain any
+      // unread feedback from it manually (runbook: data-management D4).
       feedbackBucket = new s3.Bucket(this, 'FeedbackBucket', {
-        bucketName: `irl-feedback-${this.account}`,
+        bucketName: `irl-feedback-${stage}-${this.account}`,
         removalPolicy: cdk.RemovalPolicy.RETAIN,
         blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       });
@@ -642,7 +699,10 @@ export class IrlStack extends cdk.Stack {
 
       new route53.ARecord(this, 'ApiAliasRecord', {
         zone: hostedZone!,
-        recordName: 'api',
+        // Fully qualified (ends with the zone name): in a shared zone,
+        // 'api' relative would resolve to api.<zoneName>, not
+        // api.<apex> — wrong for subdomain sites.
+        recordName: `api.${domain!.apex}`,
         target: route53.RecordTarget.fromAlias(
           new route53Targets.ApiGatewayv2DomainProperties(
             apiDomainName.regionalDomainName,
@@ -650,6 +710,103 @@ export class IrlStack extends cdk.Stack {
           ),
         ),
       });
+    }
+
+    // ==========================================
+    // Prod data-safety hardening (D67 / ops review §4a + register §C)
+    // ==========================================
+    //
+    // Non-prod stages keep DESTROY everywhere — workshop teardown being
+    // clean and total is a FEATURE (destroy + redeploy is the reset).
+    // Prod: every stateful store RETAINed and deletion-protected; PITR
+    // on exactly ONE table — the event log (replay recovers every
+    // derived store, and replay re-applies deletions; PITR here is a
+    // continuous backup with near-zero RPO for the one thing nothing
+    // else can rebuild). irl-user-keys stays OUT of PITR and every
+    // backup plan by design — a restorable key would defeat the shred.
+
+    if (stage === 'prod') {
+      const statefulTables = [
+        usersTable, eventsTable, interactionsTable, suggestionsTable,
+        suggestionVotesTable, pollsTable, pollVotesTable, configTable,
+        eventsLogTable, commandsTable, userKeysTable, userModelTable,
+      ];
+      for (const table of statefulTables) {
+        table.applyRemovalPolicy(cdk.RemovalPolicy.RETAIN);
+        (table.node.defaultChild as dynamodb.CfnTable).deletionProtectionEnabled = true;
+      }
+      (eventsLogTable.node.defaultChild as dynamodb.CfnTable)
+        .pointInTimeRecoverySpecification = { pointInTimeRecoveryEnabled: true };
+
+      // Cognito has no export: losing the pool loses every credential.
+      userPool.applyRemovalPolicy(cdk.RemovalPolicy.RETAIN);
+      (userPool.node.defaultChild as cognito.CfnUserPool).deletionProtection = 'ACTIVE';
+    }
+
+    // ==========================================
+    // Operational alarms (D67 / ops review §4d) — gated by props.alarms
+    // ==========================================
+    //
+    // The health endpoint computes these numbers; alarms make them
+    // ARRIVE. Alarm + OK actions both notify, so recovery is visible
+    // without opening a console.
+
+    if (props.alarms) {
+      const alarmTopic = new sns.Topic(this, 'AlarmTopic', {
+        displayName: `irl-${stage}-alarms`,
+      });
+      alarmTopic.addSubscription(
+        new snsSubscriptions.EmailSubscription(props.alarms.email),
+      );
+      const notify = new cloudwatchActions.SnsAction(alarmTopic);
+      const wire = (alarm: cloudwatch.Alarm) => {
+        alarm.addAlarmAction(notify);
+        alarm.addOkAction(notify);
+      };
+
+      wire(new cloudwatch.Alarm(this, 'ProjectorDlqAlarm', {
+        metric: projectorDlq.metricApproximateNumberOfMessagesVisible({
+          period: cdk.Duration.minutes(1),
+        }),
+        threshold: 1,
+        evaluationPeriods: 1,
+        comparisonOperator:
+          cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+        treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+        alarmDescription:
+          'User-model projector DLQ has messages — the model store is '
+          + 'falling behind (runbook: troubleshooting B4)',
+      }));
+
+      wire(new cloudwatch.Alarm(this, 'ApiErrorsAlarm', {
+        metric: apiFn.metricErrors({ period: cdk.Duration.minutes(5) }),
+        threshold: 1,
+        evaluationPeriods: 1,
+        treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+        alarmDescription:
+          'API Lambda errors (runbook: troubleshooting B3)',
+      }));
+
+      wire(new cloudwatch.Alarm(this, 'ProjectorErrorsAlarm', {
+        metric: projectorFn.metricErrors({ period: cdk.Duration.minutes(5) }),
+        threshold: 1,
+        evaluationPeriods: 1,
+        treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+        alarmDescription:
+          'User-model projector Lambda errors (runbook: troubleshooting B4)',
+      }));
+
+      wire(new cloudwatch.Alarm(this, 'Api5xxAlarm', {
+        metric: httpApi.metricServerError({
+          period: cdk.Duration.minutes(5),
+          statistic: 'sum',
+        }),
+        threshold: 5,
+        evaluationPeriods: 1,
+        treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+        alarmDescription:
+          'HTTP API 5xx responses (runbook: troubleshooting B3)',
+      }));
     }
 
     // ==========================================
