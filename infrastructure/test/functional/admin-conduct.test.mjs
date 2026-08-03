@@ -10,7 +10,7 @@ import { randomUUID } from 'node:crypto';
 import { DeleteCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
 import { loadTestConfig } from '../helpers/config.mjs';
 import { createTestUser, deleteTestUser } from '../helpers/auth.mjs';
-import { ddb } from '../helpers/cleanup.mjs';
+import { ddb, purgeUserAggregate } from '../helpers/cleanup.mjs';
 import { isoFromNow, HOUR } from '../helpers/time.mjs';
 
 let config;
@@ -38,6 +38,15 @@ beforeEach(async () => {
     userPoolClientId: config.userPoolClientId,
     email: `conduct-member-${randomUUID()}@example.test`,
   });
+  // Register the reporter like a real member (the queue reads reporter
+  // basics off the users-table row — a row-less Cognito user is not a
+  // realistic reporter, and the handler correctly nulls their basics).
+  const reg = await fetch(`${config.apiUrl}/me/register`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${other.idToken}` },
+    body: JSON.stringify({ commandId: randomUUID(), agreementVersion: 'v1' }),
+  });
+  if (reg.status !== 201) throw new Error(`member register failed: ${reg.status}`);
   createdEventIds = [];
 });
 
@@ -78,6 +87,9 @@ afterEach(async () => {
   }
   createdEventIds = [];
 
+  if (other) {
+    try { await purgeUserAggregate({ userId: other.sub, tables: config.tables }); } catch { /* ignore */ }
+  }
   for (const u of [admin, other]) {
     if (!u) continue;
     try { await deleteTestUser({ userPoolId: config.userPoolId, email: u.email }); } catch { /* ignore */ }
