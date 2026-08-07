@@ -55,6 +55,15 @@ export interface IrlStackProps extends cdk.StackProps {
       zoneName: string;      // e.g. 'in-real.life'
       hostedZoneId?: string; // Z... — skip the lookup when known
     };
+    // Pre-created CloudFront certificate (account-migration shape):
+    // CloudFront only accepts us-east-1 certificates, so when this
+    // stack deploys in another region the site cert is created in a
+    // companion IrlDnsStack (us-east-1) and passed here via
+    // cross-region reference. When set, the stack creates a separate
+    // REGIONAL certificate for the API custom domain instead of
+    // reusing one cert for both. Leave unset for single-region
+    // us-east-1 stacks — the original in-stack cert still works.
+    siteCertificate?: acm.ICertificate;
   };
   // Operational alarms (D67 / ops review §4d): SNS topic + email
   // subscription + the four alarms that must never sit unread
@@ -86,7 +95,7 @@ export class IrlStack extends cdk.Stack {
 
     let hostedZone: route53.IHostedZone | undefined;
     let ownedZone: route53.PublicHostedZone | undefined;
-    let certificate: acm.Certificate | undefined;
+    let certificate: acm.ICertificate | undefined;
 
     if (deploySite && domain) {
       if (domain.zone) {
@@ -113,7 +122,7 @@ export class IrlStack extends cdk.Stack {
         hostedZone = ownedZone;
       }
 
-      certificate = new acm.Certificate(this, 'SiteCertificate', {
+      certificate = domain.siteCertificate ?? new acm.Certificate(this, 'SiteCertificate', {
         domainName: domain.apex,
         subjectAlternativeNames: [`*.${domain.apex}`],
         validation: acm.CertificateValidation.fromDns(hostedZone),
@@ -687,9 +696,21 @@ export class IrlStack extends cdk.Stack {
     // ==========================================
 
     if (apiDomain && certificate) {
+      // The API Gateway custom domain needs a certificate in THIS
+      // stack's region. A passed-in siteCertificate lives in us-east-1
+      // (CloudFront requirement) — so in that shape the API gets its
+      // own regional cert; otherwise the single in-stack cert covers
+      // both, as it always did.
+      const apiCertificate = domain!.siteCertificate
+        ? new acm.Certificate(this, 'ApiCertificate', {
+          domainName: apiDomain,
+          validation: acm.CertificateValidation.fromDns(hostedZone!),
+        })
+        : certificate;
+
       const apiDomainName = new apigwv2.DomainName(this, 'ApiDomain', {
         domainName: apiDomain,
-        certificate,
+        certificate: apiCertificate,
       });
 
       new apigwv2.ApiMapping(this, 'ApiMapping', {

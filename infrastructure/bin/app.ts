@@ -6,7 +6,12 @@ const app = new cdk.App();
 
 const env = {
   account: process.env.CDK_DEFAULT_ACCOUNT,
-  region: 'us-east-1',
+  // Ambient region (the credentials' default), falling back to
+  // us-east-1 — the legacy shared-account region. The dedicated
+  // accounts deploy workloads in us-west-2 (ops account-strategy);
+  // CI sets the region via its credentials config, and the ops repo
+  // app pins regions explicitly per stack.
+  region: process.env.CDK_DEFAULT_REGION || 'us-east-1',
 };
 
 // Per-stack configuration is read from CDK context so deploying to a
