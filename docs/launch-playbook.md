@@ -229,6 +229,15 @@ thicken the first calendar honestly. The soft-open weeks are the
 first read of the success indicators on real people: RSVP→attend,
 debrief completion, **newcomer second-event rate**.
 
+**Methodology promotion gate** (added at adoption, D68): soft open IS
+the C2→C3 boundary — "production with real users" begins when the
+cohort registers. Before that moment: re-classify
+(`classification.md` → C3) and satisfy K-009 — hosted, current views
+of the decision and risk registers, latest snapshots only. That view
+and D66's advisor-pack excerpts are one build (§9 item 6). C3 also
+tightens the methodology's audit triggers; the re-classification is a
+one-line edit, the hosted views are the real gate.
+
 **Community open**: the served locality opens publicly. Mechanically
 this is nothing — sign-up is already gated only by the `served` flag —
 which is exactly why the *decision* needs inputs: the verification
@@ -300,6 +309,10 @@ community open):
    without a facilitator (§5); trigger: the first advisor who needs
    one, likely the D52 validation round. The adversarial-agent
    red-team use case is recorded there for the safety roadmap.
+6. **Hosted register views** (K-009, D68) — decision + risk registers
+   as hosted latest-snapshot views; REQUIRED before soft open (the C3
+   promotion gate above); one build with the advisor-pack excerpts
+   (D66).
 
 ## Open questions
 

@@ -1,12 +1,22 @@
 # in·real·life — Mobile Web App
 
+## Methodology — binding
+
+This project follows majodali/methodology v1.0.0 as declared in
+docs/classification.md. That file strictly defines this project's
+document lifecycles and workflows. Read it before any work; nothing
+in this file or under .claude/ overrides it.
+
+Classification: C2 / S2 / web-app / serverless-aws
+Deviations: none
+
 ## What This Project Is
 
 A mobile-first web app for a local community meetup platform. Users go through an AI-guided onboarding interview, discover nearby events and people, and coordinate real-world meetups. Privacy-focused: only first names shared, no messaging — just show up.
 
 ## Design documentation
 
-`docs/README.md` is the index to the design notes; `docs/decisions.md` is the canonical decision register (D1–D67), `docs/open-risks.md` the known-gaps tracker, and `docs/radar.md` the register of tracked-but-undesigned workstreams (R1–R11: decision registers & feedback intake — graduated to `registers-and-feedback.md`, A/B testing UX, age/locality verification, staff↔member support comms, community launch playbook — graduated to `launch-playbook.md`, broad community feedback, pricing & sponsorship, demand signals & event suggestions, operating at unstaffed scale — graduated to `operations.md`, languages & localization, organization/entity/governance — worked in the private org register). Read those before extending any designed area — most conceptual decisions (user model, onboarding, debrief, matching, policy, trust) are already made and recorded there.
+`docs/README.md` is the index to the design notes; `docs/classification.md` is the binding methodology declaration (D68); `docs/decisions.md` is the canonical decision register (D1–D68), `docs/open-risks.md` the known-gaps tracker, and `docs/radar.md` the register of tracked-but-undesigned workstreams (R1–R11: decision registers & feedback intake — graduated to `registers-and-feedback.md`, A/B testing UX, age/locality verification, staff↔member support comms, community launch playbook — graduated to `launch-playbook.md`, broad community feedback, pricing & sponsorship, demand signals & event suggestions, operating at unstaffed scale — graduated to `operations.md`, languages & localization, organization/entity/governance — worked in the private org register). Read those before extending any designed area — most conceptual decisions (user model, onboarding, debrief, matching, policy, trust) are already made and recorded there.
 
 ## Architecture
 
