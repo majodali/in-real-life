@@ -15,7 +15,7 @@
 // Optional env:
 //   IRL_BUCKET            Override site bucket name (default: from outputs)
 //   IRL_DISTRIBUTION_ID   Override CloudFront distribution id (default: from outputs)
-//   AWS_REGION            Default: us-east-1
+//   AWS_REGION            Default: the active profile's configured region
 //
 // This script will eventually be wrapped by the deploy Lambda. Keeping
 // it as a CLI for now lets manual deploys keep working through the
@@ -35,7 +35,22 @@ const distDir = join(repoRoot, 'dist');
 
 const stack = process.argv[2];
 const dryRun = process.argv.includes('--dry-run');
-const region = process.env.AWS_REGION || 'us-east-1';
+
+// Region resolution: explicit env wins, then the active profile's
+// configured default (respects AWS_PROFILE). NO hardcoded fallback —
+// this value is not just CLI plumbing, it is substituted into the app
+// as __IRL_COGNITO_REGION__, so a wrong guess ships a site pointed at
+// the wrong Cognito region (and reads stack outputs from the wrong
+// region — "Stack does not exist").
+function profileRegion() {
+  const out = spawnSync('aws', ['configure', 'get', 'region'], { encoding: 'utf-8' });
+  return out.status === 0 ? out.stdout.trim() : '';
+}
+const region = process.env.AWS_REGION || process.env.AWS_DEFAULT_REGION || profileRegion();
+if (!region) {
+  console.error('No AWS region: set AWS_REGION or configure a default region on the active profile.');
+  process.exit(1);
+}
 
 if (!stack) {
   console.error('Usage: node infrastructure/scripts/inject-config.mjs <stack> [--dry-run]');
