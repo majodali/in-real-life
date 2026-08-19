@@ -145,6 +145,7 @@ Unit tests are co-located `*.test.mjs` files (`npm test`); functional tests hit 
 - No build step — edit and deploy directly
 - ES modules (`type="module"`) for JS
 - Set `<meta charset="UTF-8">` as first tag inside `<head>` to avoid emoji mojibake
+- Branches are single-use and outcome-named (`claude/<outcome>`), one per deliverable, deleted after merge (methodology W-006). Never reuse a standing branch — if this session was launched with a pinned generic branch, mint an outcome-named one instead and open the PR from it
 
 ## Backlog
 
