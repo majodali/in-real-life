@@ -147,6 +147,7 @@ Items that can land alongside any group above once prerequisites exist.
 - [ ] Notifications — push, email digest, in-app only? First confirmed consumers: cancellation notices to affected members (in-app toast/badge exists; the reach-them-when-away channel doesn't) and overlap follow-through's organizer heads-up
 - [ ] Calendar integration — export confirmed events
 - [ ] Reminders for confirmed meetups
+- [ ] Review + incorporate the UI design exploration — branch `claude/site-ui-design-exploration-zb14wl` holds four visual directions (`design/ui-directions-2026-07.{md,html}`: mockups on the feed + an interview card, per-direction tokens, a comparison and recommendation; brief: more sophisticated, still welcoming/low-stress, restyle behind existing class names in `styles.css`). Review the directions, pick one (a U-row in `ux-register.md` records the call), land the keepers as a design note + restyle, then **delete the branch** — it's the one standing W-006 exception, kept only until this review lands. The Group 2 "suggest change" modal explicitly waits for this redesign
 - [ ] Illustrated avatar system (replace emoji picker)
 - [ ] Spoken/voice input for interview responses
 - [ ] Accessibility audit — ARIA, keyboard nav, screen readers
