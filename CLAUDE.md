@@ -18,6 +18,24 @@ A mobile-first web app for a local community meetup platform. Users go through a
 
 `docs/README.md` is the index to the design notes; `docs/classification.md` is the binding methodology declaration (D68); `docs/decisions.md` is the canonical decision register (D1–D68), `docs/open-risks.md` the known-gaps tracker, and `docs/radar.md` the register of tracked-but-undesigned workstreams (R1–R11: decision registers & feedback intake — graduated to `registers-and-feedback.md`, A/B testing UX, age/locality verification, staff↔member support comms, community launch playbook — graduated to `launch-playbook.md`, broad community feedback, pricing & sponsorship, demand signals & event suggestions, operating at unstaffed scale — graduated to `operations.md`, languages & localization, organization/entity/governance — worked in the private org register). Read those before extending any designed area — most conceptual decisions (user model, onboarding, debrief, matching, policy, trust) are already made and recorded there.
 
+## Repo family
+
+Three repos, one project (methodology: one Classification each):
+
+- **majodali/in-real-life** (this repo, public) — the app + infra
+  constructs + design docs. Product work happens here.
+- **majodali/in-real-life-ops** (private) — deployment/operations:
+  environment registry, `irl-ops` CLI, runbooks, activity register,
+  ops journal. Anything touching AWS accounts, deploys, DNS, or
+  recovery happens there (clone as a SIBLING directory — its CDK app
+  imports stacks from `../in-real-life/infrastructure`).
+- **majodali/in-real-life-org** (private) — organization/governance:
+  entity, money frame, board, roles (O-register). The R11 boundary:
+  mechanics public, org internals private.
+
+A session attached only to this repo can request the other two by
+name through its repository tools when the deliverable needs them.
+
 ## Architecture
 
 - **Multi-file static app** — HTML + separate CSS/JS modules in `src/`
