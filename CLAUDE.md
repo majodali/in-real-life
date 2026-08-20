@@ -62,7 +62,7 @@ node infrastructure/scripts/inject-config.mjs <stack>
 
 - **Stack construct**: `infrastructure/lib/irl-stack.ts` (parameterized by stage + optional domain)
 - **Default stacks**: `IrlStack` (workshop) and `IrlStackTest` (backend-only); both defined in `infrastructure/bin/app.ts`. Prod and named-workshop stacks are configured from the ops repo.
-- **Region**: workloads in `us-west-2` (dedicated accounts, ops account-strategy decision); `us-east-1` holds only the per-env `IrlDnsStack` companions (hosted zone + CloudFront cert — an AWS constraint) and the legacy shared-account stacks until decommission
+- **Region**: workloads in `us-west-2` (dedicated accounts, ops account-strategy decision); `us-east-1` holds only the per-env `IrlDnsStack` companions (hosted zone + CloudFront cert — an AWS constraint)
 
 ## Design
 
