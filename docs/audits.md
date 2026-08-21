@@ -11,5 +11,10 @@ optional under the migration notes, kept so the trigger is recordable.
 Entry format: `date — kind (form | semantic) — scope — outcome —
 findings pointer (or —)`.
 
-(no audits recorded yet — the first entry lands with the first audit
-run)
+- 2026-08-21 — form — full repo vs pinned v1.1.0, owner-run
+  (family-wide sweep with in-real-life-ops and in-real-life-org, both
+  clean) — one finding: no root `README.md` (W-007; the orientation
+  README had been living as the design-notes index at
+  `docs/README.md`) — fixed same day: root README added,
+  `docs/README.md` renamed to `docs/design-notes.md`, pointers
+  updated
