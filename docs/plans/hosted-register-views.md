@@ -1,6 +1,8 @@
 # Hosted register views
 
-Status: draft
+Status: active (chunk 1 delivered, at its gate; founder answered the
+open questions 2026-08-21: `/registers/` URLs, open-risks verbatim,
+workshop stacks serve the same pages)
 
 Outcome under development: the decision and risk registers published
 as hosted, current, latest-snapshot views on the site (K-009 — the C3
@@ -56,14 +58,16 @@ item 6) and K-008's "current, honest window without reading commits".
 
 <!-- Chunk boundaries proposed; founder adjusts and gates (W-001). -->
 
-### Chunk 1 — renderer + pages, local
+### Chunk 1 — renderer + pages, local — DELIVERED (at gate)
 
-The markdown-subset renderer + register parser with unit tests; the
-three pages generated locally (`--local`) from today's registers;
-short design note (`docs/hosted-register-views.md`) recording the
-decisions above; new D-row.
-Gate: founder reviews the rendered pages (screenshots or local run)
-and the design note; answers the open questions.
+Shipped: `infrastructure/scripts/render-registers.mjs` (zero-dep;
+`--out <dir>`; exported pure functions) + co-located unit tests (the
+`npm test` glob now includes `scripts/`); all three pages render from
+the real registers — every D-row asserted (the register's
+blank-lines-between-rows form handled), risks verbatim, entry-card
+tables, generation date + revision stamped; design note
+`docs/hosted-register-views.md`; D69 recorded.
+Gate: founder reviews the rendered pages and the design note.
 
 ### Chunk 2 — publish wiring
 
