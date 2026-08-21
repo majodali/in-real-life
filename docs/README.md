@@ -2,7 +2,7 @@
 
 Design notes for **in·real·life** — a local community meetup app: AI-guided onboarding, discover nearby events and people, coordinate real-world meetups. Privacy-focused (first names only, no messaging — just show up).
 
-These notes are **living and provisional** — current best decisions, revisable as real usage teaches us. `decisions.md` is the map: a register of every decision (D1–D67) with a one-line pointer to the note that holds the reasoning, plus watch-items for emergent effects we're tracking.
+These notes are **living and provisional** — current best decisions, revisable as real usage teaches us. `decisions.md` is the map: a register of every decision (D1–D68) with a one-line pointer to the note that holds the reasoning, plus watch-items for emergent effects we're tracking.
 
 ## How the pieces fit
 
@@ -20,7 +20,7 @@ Understanding of a person is **seeded** at onboarding and **grown** from what th
 
 ## Reading order
 
-**Start:** `backlog.md` (**the source of truth for progress** — what's built, what's next, dependency-ordered) · `decisions.md` (the decision register) · `hypotheses.md` (the hypothesis register — every embedded analysis as a testable, tunable, reversible hypothesis) · `open-risks.md` (known gaps) · `radar.md` (tracked workstreams not yet designed, R1–R10) · **`flows.md` (the visual map — all processes and flows as diagrams, TBD elements dashed)** · this README.
+**Start:** `backlog.md` (**the source of truth for progress** — what's built, what's next, dependency-ordered) · `decisions.md` (the decision register) · `hypotheses.md` (the hypothesis register — every embedded analysis as a testable, tunable, reversible hypothesis) · `open-risks.md` (known gaps) · `radar.md` (tracked workstreams not yet designed, R1–R11) · **`flows.md` (the visual map — all processes and flows as diagrams, TBD elements dashed)** · this README.
 
 **Registers & feedback (decided: D66, R1 graduated):** `registers-and-feedback.md` — how feedback lands on decisions: record-on-contact registers (`ux-register.md` U-rows, `tech-register.md` T-rows), the intake pipeline (`feedback-log.md` FB-rows: solicit → capture → triage → land → answer → reopen), the advisor round pack, and the boundaries (not member signal, not support, not governance).
 
