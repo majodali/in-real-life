@@ -1,0 +1,38 @@
+{
+  "title": "Advisor round one — review pack",
+  "intro": "Four excerpts from IRL's public design register, each with the questions we're actually asking. Everything here is a current best call written to be corrected — please be direct.",
+  "excerpts": [
+    {
+      "file": "localities-and-constraints.md",
+      "heading": "1. The locality register",
+      "title": "The locality register — draft effort bands",
+      "questions": [
+        "Is Bremerton banded fairly from here?",
+        "Which band would you correct for the places you actually go — and is anything served that shouldn't be, or missing that should?"
+      ]
+    },
+    {
+      "file": "event-type-register.md",
+      "title": "The event-type register — nine seeded kinds",
+      "questions": [
+        "Which of these nine kinds would this community actually recur on?",
+        "What recurring Bainbridge thing is missing from the list?"
+      ]
+    },
+    {
+      "file": "event-policy.md",
+      "title": "Event policy — what belongs on IRL",
+      "questions": [
+        "Does the honesty + non-coercion line cover what you'd worry about at a real event, or does it need a subject-matter line we've refused to draw?"
+      ]
+    },
+    {
+      "file": "protective-blocks.md",
+      "title": "Protective blocks — the safety tier's mechanism",
+      "questions": [
+        "Does the blocker-view design hold for the situations you've seen?",
+        "Where does the rendered-world rule break down in practice?"
+      ]
+    }
+  ]
+}

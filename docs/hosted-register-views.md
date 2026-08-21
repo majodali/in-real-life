@@ -41,13 +41,28 @@ without reading commits"). Plan: `plans/hosted-register-views.md`.
   structural drift in the registers fails the build rather than
   silently dropping entries.
 
-## Advisor-pack mode (chunk 3, the D66 one-build claim)
+## Advisor-pack mode (the D66 one-build claim, shipped)
 
-The same renderer will take an explicit file list + output directory
-to produce a round pack's excerpt pages (excerpts + per-excerpt
-questions + the intake-promise paragraph). The pack stays an
-operating artifact assembled per round (`registers-and-feedback.md`
-§3) — never a standing page.
+The same renderer produces a round pack from a JSON manifest:
+
+```bash
+node infrastructure/scripts/render-registers.mjs \
+  --out <dir> --pack docs/advisor-packs/<round>.json
+```
+
+The manifest names the round's excerpts — each a doc under `docs/`
+(whole note, or one section via a `heading` prefix) with a title and
+the questions we're actually asking — plus the pack title and intro.
+The output is an index page (excerpts + questions + the D66
+intake-promise paragraph: changed / stands / routed, evidence never
+a vote) and one page per excerpt (questions box, rendered content,
+link to the full note). Pack pages carry an "assembled for this
+round" footer, never the registers' deploy-refresh footer, and are
+**not** part of the site deploy — the pack stays an operating
+artifact assembled per round (`registers-and-feedback.md` §3).
+`docs/advisor-packs/round-1.sample.json` is the worked example,
+seeded from §3's round-one excerpt list; copy and edit it when a
+round is actually scheduled.
 
 ## Open questions
 

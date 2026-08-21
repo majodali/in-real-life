@@ -5,7 +5,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   escapeHtml, renderInline, parseBlocks, renderBlocks, renderPage,
-  buildRegisterPages,
+  buildRegisterPages, extractSection, buildPackPages,
 } from './render-registers.mjs';
 
 const META = { date: '2026-08-21', revision: 'abc1234' };
@@ -97,4 +97,61 @@ test('builds all three pages from the real registers', () => {
     assert.ok(!html.includes('\u0000'), 'no placeholder bytes leak');
     assert.ok(html.includes('<!DOCTYPE html>'));
   }
+});
+
+test('extractSection takes one section by heading prefix, up to the next same-level heading', () => {
+  const md = ['# Doc', '', '## 1. First section', 'body one', '', '### Sub', 'sub body', '',
+    '## 2. Second section', 'body two'].join('\n');
+  const section = extractSection(md, '1. First');
+  assert.ok(section.includes('## 1. First section'));
+  assert.ok(section.includes('sub body'));
+  assert.ok(!section.includes('Second section'));
+  assert.throws(() => extractSection(md, 'No such heading'), /No heading starting with/);
+});
+
+test('buildPackPages: index carries intro, questions, and the intake promise; excerpt pages carry questions + content', () => {
+  const manifest = {
+    title: 'Round one pack',
+    intro: 'Two excerpts, **be direct**.',
+    excerpts: [
+      { file: 'a-note.md', title: 'Note A', questions: ['Is A right?'] },
+      { file: 'b-note.md', heading: 'Only this', title: 'Note B (one section)', questions: [] },
+    ],
+  };
+  const docs = {
+    'a-note.md': '# Note A\n\nWhole-file content here.',
+    'b-note.md': '# Note B\n\nPreamble.\n\n## Only this\nSection content.\n\n## Not this\nOther.',
+  };
+  const pages = buildPackPages({ manifest, loadDoc: (f) => docs[f], meta: META });
+  assert.deepEqual(Object.keys(pages).sort(), ['a-note.html', 'b-note.html', 'index.html']);
+  const index = pages['index.html'];
+  assert.ok(index.includes('<strong>be direct</strong>'));
+  assert.ok(index.includes('<a href="a-note.html">Note A</a>'));
+  assert.ok(index.includes('Is A right?'));
+  assert.ok(index.includes('Where your input goes'));
+  assert.ok(index.includes('never a\nvote'));
+  assert.ok(index.includes('Assembled 2026-08-21'));
+  assert.ok(!index.includes('regenerated on every site deploy'));
+  const a = pages['a-note.html'];
+  assert.ok(a.includes("What we're asking"));
+  assert.ok(a.includes('Whole-file content here.'));
+  assert.ok(a.includes('Pack contents'));
+  assert.ok(a.includes('blob/main/docs/a-note.md'));
+  const b = pages['b-note.html'];
+  assert.ok(b.includes('Section content.'));
+  assert.ok(!b.includes('Other.'));
+  assert.ok(!b.includes("What we're asking"), 'no questions box when the excerpt has no questions');
+});
+
+test('the committed round-one sample manifest builds against the real docs', () => {
+  const manifest = JSON.parse(readFileSync(
+    join(repoRoot, 'docs', 'advisor-packs', 'round-1.sample.json'), 'utf-8'));
+  const pages = buildPackPages({
+    manifest,
+    loadDoc: (f) => readFileSync(join(repoRoot, 'docs', f), 'utf-8'),
+    meta: META,
+  });
+  assert.equal(Object.keys(pages).length, manifest.excerpts.length + 1);
+  assert.ok(pages['localities-and-constraints.html'].includes('Bremerton'));
+  assert.ok(pages['index.html'].includes('Advisor round one'));
 });

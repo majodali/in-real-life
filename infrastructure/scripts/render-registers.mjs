@@ -204,11 +204,26 @@ footer.meta {
   color: var(--soft); border-top: 1px solid var(--warm); padding-top: 14px;
 }
 footer.meta p { margin-bottom: 6px; }
+.questions {
+  background: var(--warm); border-radius: 12px; padding: 14px 18px;
+  margin: 0 0 20px;
+}
+.questions h2 { margin: 0 0 8px; font-size: 18px; }
+.questions ul { margin-bottom: 0; }
 `;
 
-export function renderPage({ title, current, bodyHtml, meta }) {
-  const navLink = (href, label, key) =>
-    `<a href="${href}"${current === key ? ' class="current"' : ''}>${label}</a>`;
+export function renderPage({ title, current, bodyHtml, meta, nav, footerHtml }) {
+  const navLink = (href, label, isCurrent) =>
+    `<a href="${href}"${isCurrent ? ' class="current"' : ''}>${label}</a>`;
+  const navLinks = nav
+    ? nav.map((l) => navLink(l.href, escapeHtml(l.label), l.current)).join('\n')
+    : [
+      navLink('index.html', 'How we decide', current === 'index'),
+      navLink('decisions.html', 'Decisions', current === 'decisions'),
+      navLink('risks.html', 'Open risks', current === 'risks'),
+    ].join('\n');
+  const footer = footerHtml
+    ?? `<p>Latest snapshot, generated ${escapeHtml(meta.date)} from revision <code>${escapeHtml(meta.revision)}</code>. The <a href="${REPO_DOCS_URL}">markdown registers on GitHub</a> are the source of truth; these pages are regenerated on every site deploy.</p>`;
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -223,9 +238,7 @@ export function renderPage({ title, current, bodyHtml, meta }) {
 <header class="site">
 <a class="wordmark" href="/">in<span>·</span>real<span>·</span>life</a>
 <nav class="registers">
-${navLink('index.html', 'How we decide', 'index')}
-${navLink('decisions.html', 'Decisions', 'decisions')}
-${navLink('risks.html', 'Open risks', 'risks')}
+${navLinks}
 </nav>
 </header>
 <main>
@@ -233,7 +246,7 @@ ${navLink('risks.html', 'Open risks', 'risks')}
 ${bodyHtml}
 </main>
 <footer class="meta">
-<p>Latest snapshot, generated ${escapeHtml(meta.date)} from revision <code>${escapeHtml(meta.revision)}</code>. The <a href="${REPO_DOCS_URL}">markdown registers on GitHub</a> are the source of truth; these pages are regenerated on every site deploy.</p>
+${footer}
 </footer>
 </body>
 </html>
@@ -286,6 +299,120 @@ export function buildRegisterPages({ decisionsMd, risksMd, meta }) {
   };
 }
 
+// ── Advisor-pack mode (D66's one build; registers-and-feedback.md §3) ──
+//
+// A pack is an operating artifact assembled per advisor round from a
+// manifest: excerpts (whole notes or one section) + the questions
+// we're actually asking + the intake promise. Never a standing page —
+// the founder renders it to wherever the round needs it.
+
+// The D66 intake promise, in the project voice — item 3 of the pack.
+const INTAKE_PROMISE = `
+<p>Everything you tell us lands in our feedback log as its own entry,
+in your words. Each entry is triaged against the recorded decision it
+touches — feedback lands on decisions, or it evaporates. And you will
+receive this round's summary showing what <em>changed</em>, what
+<em>stands</em>, and what was <em>routed</em> elsewhere — with the
+reasoning either way. Feedback here is evidence we weigh, never a
+vote we count; a decline names what would change our minds.</p>
+`;
+
+// Extract one section: the heading whose text starts with `prefix`
+// (any level), through to the next heading of the same or higher level.
+export function extractSection(markdown, prefix) {
+  const lines = markdown.split('\n');
+  const start = lines.findIndex((l) => {
+    const m = l.match(/^(#{1,4}) (.*)$/);
+    return m && m[2].startsWith(prefix);
+  });
+  if (start === -1) {
+    throw new Error(`No heading starting with "${prefix}" found`);
+  }
+  const level = lines[start].match(/^#+/)[0].length;
+  let end = lines.length;
+  for (let i = start + 1; i < lines.length; i += 1) {
+    const m = lines[i].match(/^(#{1,4}) /);
+    if (m && m[1].length <= level) { end = i; break; }
+  }
+  return lines.slice(start, end).join('\n');
+}
+
+function questionsBox(questions) {
+  if (!questions?.length) return '';
+  return `<section class="questions">
+<h2>What we're asking</h2>
+<ul>
+${questions.map((q) => `<li>${renderInline(q)}</li>`).join('\n')}
+</ul>
+</section>`;
+}
+
+export function buildPackPages({ manifest, loadDoc, meta }) {
+  const packFooter = `<p>Assembled ${escapeHtml(meta.date)} from revision <code>${escapeHtml(meta.revision)}</code> for this advisor round. The <a href="${REPO_DOCS_URL}">design notes on GitHub</a> are the source of truth.</p>`;
+  const excerpts = manifest.excerpts.map((ex) => {
+    const md = loadDoc(ex.file);
+    return {
+      ...ex,
+      name: ex.file.replace(/\.md$/, '') + '.html',
+      content: ex.heading ? extractSection(md, ex.heading) : md,
+    };
+  });
+  const pages = {};
+  const indexBody = [
+    `<p>${renderInline(manifest.intro)}</p>`,
+    '<h2>The excerpts under review</h2>',
+    '<ul>',
+    ...excerpts.map((ex) => [
+      `<li><a href="${ex.name}">${escapeHtml(ex.title)}</a>`,
+      ...(ex.questions?.length
+        ? ['<ul>', ...ex.questions.map((q) => `<li>${renderInline(q)}</li>`), '</ul>']
+        : []),
+      '</li>',
+    ].join('\n')),
+    '</ul>',
+    '<h2>Where your input goes</h2>',
+    INTAKE_PROMISE.trim(),
+  ].join('\n');
+  pages['index.html'] = renderPage({
+    title: manifest.title, bodyHtml: indexBody, meta,
+    nav: [{ href: 'index.html', label: 'Pack contents', current: true }],
+    footerHtml: packFooter,
+  });
+  for (const ex of excerpts) {
+    const body = [
+      questionsBox(ex.questions),
+      renderBlocks(parseBlocks(ex.content)), // level-1 headings skip; section headings render
+      `<p><a href="${REPO_DOCS_URL}${escapeHtml(ex.file)}">Read the full note on GitHub</a></p>`,
+    ].join('\n');
+    pages[ex.name] = renderPage({
+      title: ex.title, bodyHtml: body, meta,
+      nav: [{ href: 'index.html', label: '← Pack contents' }],
+      footerHtml: packFooter,
+    });
+  }
+  return pages;
+}
+
+export function renderPack(manifestPath, outDir) {
+  const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
+  const rev = spawnSync('git', ['rev-parse', '--short', 'HEAD'], { cwd: repoRoot, encoding: 'utf-8' });
+  const meta = {
+    date: new Date().toISOString().slice(0, 10),
+    revision: rev.status === 0 ? rev.stdout.trim() : 'unknown',
+  };
+  const manifest = JSON.parse(readFileSync(manifestPath, 'utf-8'));
+  const pages = buildPackPages({
+    manifest,
+    loadDoc: (f) => readFileSync(join(repoRoot, 'docs', f), 'utf-8'),
+    meta,
+  });
+  mkdirSync(outDir, { recursive: true });
+  for (const [name, html] of Object.entries(pages)) {
+    writeFileSync(join(outDir, name), html);
+  }
+  return { count: Object.keys(pages).length, revision: meta.revision };
+}
+
 // Read the real registers, stamp generation metadata, write the pages.
 // Used by the CLI below and by inject-config.mjs during deploys.
 export function renderRegisters(outDir) {
@@ -311,12 +438,16 @@ export function renderRegisters(outDir) {
 
 function main() {
   const outFlag = process.argv.indexOf('--out');
-  if (outFlag === -1 || !process.argv[outFlag + 1]) {
-    console.error('Usage: node infrastructure/scripts/render-registers.mjs --out <dir>');
+  const packFlag = process.argv.indexOf('--pack');
+  if (outFlag === -1 || !process.argv[outFlag + 1]
+    || (packFlag !== -1 && !process.argv[packFlag + 1])) {
+    console.error('Usage: node infrastructure/scripts/render-registers.mjs --out <dir> [--pack <manifest.json>]');
     process.exit(1);
   }
   const outDir = process.argv[outFlag + 1];
-  const { count, revision } = renderRegisters(outDir);
+  const { count, revision } = packFlag === -1
+    ? renderRegisters(outDir)
+    : renderPack(process.argv[packFlag + 1], outDir);
   console.log(`Rendered ${count} pages to ${outDir} (rev ${revision})`);
 }
 

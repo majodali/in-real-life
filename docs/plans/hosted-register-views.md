@@ -1,9 +1,11 @@
 # Hosted register views
 
-Status: active (chunks 1–2 delivered; chunk-1 gate passed 2026-08-21
-— pages + "How we decide" copy approved, and the entry-terseness
-observation became the backlog's register-readability item; chunk-2
-gate pending: live verification at the next workshop deploy)
+Status: active (all three chunks delivered; chunk-1 gate passed
+2026-08-21 — pages + "How we decide" copy approved, the
+entry-terseness observation became the backlog's register-readability
+item; pending: chunk-2 live verification at the next workshop deploy
+and the chunk-3 sample-pack review, both riding the deliverable's PR
+review — close out to the Backlog entry on merge)
 
 Outcome under development: the decision and risk registers published
 as hosted, current, latest-snapshot views on the site (K-009 — the C3
@@ -83,12 +85,16 @@ workshop` — agent sessions carry no AWS credentials) and sees the
 live pages; sign-off makes the prod publish part of the next
 ordinary deploy.
 
-### Chunk 3 — advisor-pack mode
+### Chunk 3 — advisor-pack mode — DELIVERED (at gate)
 
-File-list + output-dir mode producing pack excerpt pages (excerpts +
-per-excerpt questions slot + the intake-promise paragraph, D66);
-documented in the design note; a sample pack rendered from the round-
-one excerpt list (D62 localities, D63 event types, event-policy
-summary, protective-blocks) as the worked example.
+Shipped: `--pack <manifest.json>` mode — JSON manifest (title, intro,
+excerpts: file / optional section `heading` prefix / title /
+questions) → pack index (excerpts + questions + the D66 intake
+promise) and one page per excerpt (questions box, rendered content,
+GitHub link), pack-specific footer, never deploy-synced; section
+extraction + pack build unit-tested (11 tests total); worked example
+`docs/advisor-packs/round-1.sample.json` from `registers-and-feedback.md`
+§3's round-one list, built against the real docs by test.
 Gate: founder reviews the sample pack against what round one actually
-needs; plan closes out to the Backlog entry.
+needs; with the chunk-2 live check, the PR review closes the plan out
+to the Backlog entry.
