@@ -1,8 +1,9 @@
 # Hosted register views
 
-Status: active (chunk 1 delivered, at its gate; founder answered the
-open questions 2026-08-21: `/registers/` URLs, open-risks verbatim,
-workshop stacks serve the same pages)
+Status: active (chunks 1–2 delivered; chunk-1 gate passed 2026-08-21
+— pages + "How we decide" copy approved, and the entry-terseness
+observation became the backlog's register-readability item; chunk-2
+gate pending: live verification at the next workshop deploy)
 
 Outcome under development: the decision and risk registers published
 as hosted, current, latest-snapshot views on the site (K-009 — the C3
@@ -69,13 +70,18 @@ tables, generation date + revision stamped; design note
 `docs/hosted-register-views.md`; D69 recorded.
 Gate: founder reviews the rendered pages and the design note.
 
-### Chunk 2 — publish wiring
+### Chunk 2 — publish wiring — DELIVERED (gate: live verification)
 
-Generator wired into `inject-config.mjs` (+ `--dry-run` respects it);
-homepage footer + terms links; deployed to the workshop stack and
-verified live; backlog updated.
-Gate: founder sees the live pages on the workshop domain; sign-off
-makes the prod publish part of the next ordinary deploy.
+Shipped: `inject-config.mjs` imports `renderRegisters` and generates
+`dist/registers/` right after the dist assembly, so every site deploy
+republishes the snapshot (`--dry-run` unchanged — it still prints the
+substituted app.html and exits before any dist build); "How we
+decide" links added to the homepage footer and the terms page (plain
+`registers/index.html` hrefs — no CloudFront rewrite needed).
+Gate: founder runs the next workshop deploy (`irl-ops deploy
+workshop` — agent sessions carry no AWS credentials) and sees the
+live pages; sign-off makes the prod publish part of the next
+ordinary deploy.
 
 ### Chunk 3 — advisor-pack mode
 

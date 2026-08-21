@@ -286,15 +286,9 @@ export function buildRegisterPages({ decisionsMd, risksMd, meta }) {
   };
 }
 
-// ── CLI ──
-
-function main() {
-  const outFlag = process.argv.indexOf('--out');
-  if (outFlag === -1 || !process.argv[outFlag + 1]) {
-    console.error('Usage: node infrastructure/scripts/render-registers.mjs --out <dir>');
-    process.exit(1);
-  }
-  const outDir = process.argv[outFlag + 1];
+// Read the real registers, stamp generation metadata, write the pages.
+// Used by the CLI below and by inject-config.mjs during deploys.
+export function renderRegisters(outDir) {
   const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
   const rev = spawnSync('git', ['rev-parse', '--short', 'HEAD'], { cwd: repoRoot, encoding: 'utf-8' });
   const meta = {
@@ -310,7 +304,20 @@ function main() {
   for (const [name, html] of Object.entries(pages)) {
     writeFileSync(join(outDir, name), html);
   }
-  console.log(`Rendered ${Object.keys(pages).length} pages to ${outDir} (rev ${meta.revision})`);
+  return { count: Object.keys(pages).length, revision: meta.revision };
+}
+
+// ── CLI ──
+
+function main() {
+  const outFlag = process.argv.indexOf('--out');
+  if (outFlag === -1 || !process.argv[outFlag + 1]) {
+    console.error('Usage: node infrastructure/scripts/render-registers.mjs --out <dir>');
+    process.exit(1);
+  }
+  const outDir = process.argv[outFlag + 1];
+  const { count, revision } = renderRegisters(outDir);
+  console.log(`Rendered ${count} pages to ${outDir} (rev ${revision})`);
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
