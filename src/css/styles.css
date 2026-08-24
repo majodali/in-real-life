@@ -379,6 +379,7 @@ html, body {
   color: var(--soft);
   text-decoration: none;
   letter-spacing: 0.02em;
+  margin: 0 10px;
 }
 
 .landing-footer a:hover { color: var(--moss); }

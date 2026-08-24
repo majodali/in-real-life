@@ -5,7 +5,7 @@ when the root project README landed, since this file is the
 design-notes index, not the repo orientation). Design notes for
 **in·real·life** — a local community meetup app: AI-guided onboarding, discover nearby events and people, coordinate real-world meetups. Privacy-focused (first names only, no messaging — just show up).
 
-These notes are **living and provisional** — current best decisions, revisable as real usage teaches us. `decisions.md` is the map: a register of every decision (D1–D68) with a one-line pointer to the note that holds the reasoning, plus watch-items for emergent effects we're tracking.
+These notes are **living and provisional** — current best decisions, revisable as real usage teaches us. `decisions.md` is the map: a register of every decision (D1–D69) with a one-line pointer to the note that holds the reasoning, plus watch-items for emergent effects we're tracking.
 
 ## How the pieces fit
 
@@ -63,6 +63,7 @@ Understanding of a person is **seeded** at onboarding and **grown** from what th
 - `scenario-walkthroughs.md` — the matching + success test scenarios run concretely through the design as written; two passes (F1–F12 triaged → D46–D51; second pass re-verifies all twelve and adversarially probes the new machinery, F13–F14 fixed). All scenarios currently `holds`.
 
 **Trust & safety / operations (Group 4)**
+- `hosted-register-views.md` — **(decided: D69)** the public register views (K-009, the C3 gate): generated from the markdown registers on every deploy, latest snapshots only, open-risks verbatim; advisor-pack excerpts reuse the build (D66).
 - `operations.md` — **(decided: D67, R9 graduated)** operating at unstaffed scale: the per-loop discipline (automate / staff / redesign-away / operator-for-now with a named failure signal; automation never launders judgment), the public loop map, and the automation backlog it creates; roles and staffing live in the private org register (R11).
 - `launch-playbook.md` — **(decided: D65, R5 graduated)** the phased operating process for launch #1 (Bainbridge): interest read as judgment-with-named-inputs, the founding cohort (voice, never knobs; gratitude outside the product), the advisor round (the strawman registers' waiting corrections + D52's advocate validation; opens R1), the three workshop session scripts consuming the D64 tooling (attendees do the interview themselves; robots v1 scoped to batch persona actions; self-serve demo stacks named with the red-team-agent use case), soft open → community open, languages decided-by-deferral (→ R10), and the retro that corrects the playbook itself. Run-day cards: `workshop-crib-sheets.md`.
 - `admin-and-support.md` — **(decided: D64)** the operator console (in-app, role-gated, five panels: workshop seed + time, verification queue, registers view, health, policy) with the admin data discipline stated; member support explicitly gated on R4's communication design.

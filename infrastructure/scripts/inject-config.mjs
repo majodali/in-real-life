@@ -27,6 +27,7 @@ import {
 } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { renderRegisters } from './render-registers.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const repoRoot = join(__dirname, '..', '..');
@@ -119,6 +120,11 @@ writeFileSync(join(distDir, 'app.html'), htmlOut);
 for (const f of walk(distDir)) {
   if (f.endsWith('.test.mjs')) rmSync(f);
 }
+
+// Generate the public register views (K-009, docs/hosted-register-views.md)
+// into the bundle — every site deploy republishes the latest snapshot.
+const registers = renderRegisters(join(distDir, 'registers'));
+console.log(`Rendered ${registers.count} register pages (rev ${registers.revision})`);
 
 function walk(dir, acc = []) {
   for (const name of readdirSync(dir)) {
