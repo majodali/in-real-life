@@ -10,10 +10,10 @@ for them.
 - **C-tier**: C2 (serious project, pre-users). Promotion to C3 is
   bound to soft open — real members are what "production with real
   users" means here; the gate rides the launch playbook (§6).
-- **Pinned methodology version**: 1.1.0 (compliance target; migrated
-  from 1.0.0 on 2026-08-21 — the v1.1.0 migration notes impose no
-  mandatory duties; the optional audit-log register is adopted as
-  `docs/audits.md`)
+- **Pinned methodology version**: 1.2.0 (compliance target; migrated
+  from 1.1.0 on 2026-08-24 — the v1.2.0 migration notes impose no
+  mandatory duties; the audit-log register at `docs/audits.md` now
+  receives entries by Audit delivery per the v1.2.0 audit process)
 - **S-level**: S2 (member PII: profiles, interview content, debriefs —
   see the crypto-shredding design and PII registry)
 - **Type**: web-app
