@@ -29,7 +29,7 @@ Everything authoritative is under `docs/`
   design notes: how every piece fits, reading order, cross-cutting
   principles
 - [`docs/decisions.md`](docs/decisions.md) — the decision register
-  (D1–D68), with companion registers for risks, radar, hypotheses,
+  (D1–D69), with companion registers for risks, radar, hypotheses,
   and feedback
 
 ## Repo family
