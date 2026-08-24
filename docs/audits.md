@@ -18,3 +18,12 @@ findings pointer (or —)`.
   `docs/README.md`) — fixed same day: root README added,
   `docs/README.md` renamed to `docs/design-notes.md`, pointers
   updated
+- 2026-08-21 — form — full tree — audited 6cb33da against methodology
+  1.2.0 — 0 violations / 1 warning / 1 info — Article 8:
+  `docs/classification.md` (version lag: pinned 1.1.0, latest 1.2.0 —
+  migration pending); info: Workflow declared, format pending the
+  methodology's open item. First
+  [Audit delivery](https://github.com/majodali/methodology/blob/main/docs/audit-process.md)
+  (`mtool audit form`; transition from the owner-run entry above —
+  W-007 confirmed resolved, and the lag warning appeared with the
+  v1.2.0 release)
