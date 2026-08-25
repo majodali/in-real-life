@@ -54,7 +54,11 @@ export function renderInline(text) {
 // ── Block parsing (headings, tables, lists, paragraphs) ──
 
 export function parseBlocks(markdown) {
-  const lines = markdown.split('\n');
+  // Normalize CRLF: a Windows checkout (git autocrlf) hands us \r\n,
+  // and a stray \r defeats `.`/`$` in the line regexes — which once
+  // sent the paragraph fallback below into a zero-progress loop that
+  // ate the heap during a real deploy.
+  const lines = markdown.split(/\r?\n/);
   const blocks = [];
   let i = 0;
   while (i < lines.length) {
@@ -106,6 +110,14 @@ export function parseBlocks(markdown) {
     while (i < lines.length && lines[i].trim()
       && !lines[i].startsWith('|') && !lines[i].startsWith('- ')
       && !/^#{1,4} /.test(lines[i])) {
+      para.push(lines[i].trim());
+      i += 1;
+    }
+    if (para.length === 0) {
+      // The line matched no block form and the paragraph loop refused
+      // it too (the outer and inner conditions diverged). Swallow it
+      // as a one-line paragraph rather than looping forever — every
+      // outer iteration MUST advance.
       para.push(lines[i].trim());
       i += 1;
     }
@@ -320,7 +332,7 @@ vote we count; a decline names what would change our minds.</p>
 // Extract one section: the heading whose text starts with `prefix`
 // (any level), through to the next heading of the same or higher level.
 export function extractSection(markdown, prefix) {
-  const lines = markdown.split('\n');
+  const lines = markdown.split(/\r?\n/); // CRLF-safe, as in parseBlocks
   const start = lines.findIndex((l) => {
     const m = l.match(/^(#{1,4}) (.*)$/);
     return m && m[2].startsWith(prefix);

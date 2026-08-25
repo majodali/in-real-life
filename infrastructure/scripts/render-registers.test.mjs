@@ -155,3 +155,11 @@ test('the committed round-one sample manifest builds against the real docs', () 
   assert.ok(pages['localities-and-constraints.html'].includes('Bremerton'));
   assert.ok(pages['index.html'].includes('Advisor round one'));
 });
+
+test('CRLF input (Windows checkout) parses identically to LF — the deploy-OOM regression', () => {
+  const lf = readFileSync(join(repoRoot, 'docs', 'decisions.md'), 'utf-8');
+  const crlf = lf.replaceAll('\n', '\r\n');
+  const fromLf = renderBlocks(parseBlocks(lf));
+  const fromCrlf = renderBlocks(parseBlocks(crlf));
+  assert.equal(fromCrlf, fromLf);
+});
