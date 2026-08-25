@@ -62,6 +62,9 @@ Understanding of a person is **seeded** at onboarding and **grown** from what th
 - `event-type-register.md` — **(decided: D63, spec v9)** kinds, not listings — graduated tags, earned by recurrence: types exist so "worth another go" keeps its promise (again-intent fit is the flagship consumer); deterministic tag matching (tie → untyped, first-class), organizer-correctable, member display deferred; `outcome#{eventType}` rows land the parked extractions; attribution kept honest (§4) and the formality risk named (§7); venues + operators designed, deferred.
 - `scenario-walkthroughs.md` — the matching + success test scenarios run concretely through the design as written; two passes (F1–F12 triaged → D46–D51; second pass re-verifies all twelve and adversarially probes the new machinery, F13–F14 fixed). All scenarios currently `holds`.
 
+**Product surface (cross-cutting)**
+- `ui-themes.md` — **(decided: U9)** the visual identity (Morning Linen) and the runtime theme system: themes over forks behind existing class names, the workshop switcher as the standing design-review vehicle, Grove/Lantern/Pebble, what's deliberately not done yet.
+
 **Trust & safety / operations (Group 4)**
 - `hosted-register-views.md` — **(decided: D69)** the public register views (K-009, the C3 gate): generated from the markdown registers on every deploy, latest snapshots only, open-risks verbatim; advisor-pack excerpts reuse the build (D66).
 - `operations.md` — **(decided: D67, R9 graduated)** operating at unstaffed scale: the per-loop discipline (automate / staff / redesign-away / operator-for-now with a named failure signal; automation never launders judgment), the public loop map, and the automation backlog it creates; roles and staffing live in the private org register (R11).

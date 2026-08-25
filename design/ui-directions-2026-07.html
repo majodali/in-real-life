@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>in·real·life — UI directions</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+
+
+/* ─── wrapper tokens ─── */
+:root {
+  --bg: #f5f3ec;
+  --panel: #fffefa;
+  --ink: #2b2f28;
+  --muted: #70766a;
+  --line: #e2dfd2;
+  --accent: #57704e;
+  --chip-bg: #ecebe0;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #181b17;
+    --panel: #20241e;
+    --ink: #e7e5d9;
+    --muted: #9aa091;
+    --line: #32382e;
+    --accent: #96ab87;
+    --chip-bg: #272c24;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #181b17; --panel: #20241e; --ink: #e7e5d9; --muted: #9aa091;
+  --line: #32382e; --accent: #96ab87; --chip-bg: #272c24;
+}
+:root[data-theme="light"] {
+  --bg: #f5f3ec; --panel: #fffefa; --ink: #2b2f28; --muted: #70766a;
+  --line: #e2dfd2; --accent: #57704e; --chip-bg: #ecebe0;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.wrap { max-width: 1120px; margin: 0 auto; padding: 56px 28px 96px; }
+
+/* ─── wrapper typography ─── */
+.eyebrow {
+  font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--muted); margin: 0 0 14px;
+}
+h1 {
+  font-family: 'Fraunces', serif; font-weight: 400; font-size: 42px;
+  line-height: 1.12; letter-spacing: -0.01em; margin: 0 0 16px;
+  text-wrap: balance;
+}
+h1 em { font-style: italic; color: var(--accent); }
+.lede { max-width: 62ch; color: var(--muted); font-size: 16px; margin: 0 0 8px; }
+.lede strong { color: var(--ink); font-weight: 500; }
+
+section { margin-top: 72px; }
+h2 {
+  font-family: 'Fraunces', serif; font-weight: 400; font-size: 27px;
+  letter-spacing: -0.005em; line-height: 1.2; margin: 0 0 6px;
+  display: flex; align-items: baseline; gap: 14px; text-wrap: balance;
+}
+.dir-chip {
+  font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 500;
+  letter-spacing: 0.1em; color: var(--bg); background: var(--accent);
+  border-radius: 999px; padding: 3px 11px; transform: translateY(-4px);
+}
+.thesis { color: var(--muted); max-width: 68ch; margin: 0 0 26px; }
+.thesis em { color: var(--ink); font-style: italic; font-family: 'Fraunces', serif; }
+
+/* ─── palette + type rows ─── */
+.spec-row {
+  display: flex; flex-wrap: wrap; gap: 24px; align-items: center;
+  margin: 0 0 26px; padding: 14px 18px;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
+}
+.swatches { display: flex; gap: 6px; }
+.sw { width: 34px; height: 34px; border-radius: 8px; border: 1px solid rgba(0,0,0,0.08); }
+.spec-type { font-size: 13px; color: var(--muted); }
+.spec-type b { color: var(--ink); font-weight: 500; }
+
+/* ─── the gallery row: phones + notes ─── */
+.gallery { display: flex; flex-wrap: wrap; gap: 28px; align-items: flex-start; }
+.phone-col { display: flex; flex-direction: column; gap: 10px; align-items: center; }
+.phone-caption { font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+
+.notes { flex: 1 1 260px; min-width: 250px; max-width: 380px; font-size: 14px; }
+.notes h3 {
+  font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase;
+  font-weight: 500; color: var(--muted); margin: 0 0 6px;
+}
+.notes ul { margin: 0 0 20px; padding-left: 18px; }
+.notes li { margin: 0 0 7px; }
+.notes li::marker { color: var(--accent); }
+
+/* ─── phone frame ─── */
+.phone {
+  width: 332px; flex: 0 0 auto;
+  background: #141613; border-radius: 44px; padding: 10px;
+  box-shadow: 0 2px 6px rgba(20,24,18,0.25), 0 24px 48px rgba(20,24,18,0.22);
+}
+.screen {
+  border-radius: 35px; overflow: hidden; height: 648px;
+  display: flex; flex-direction: column; position: relative;
+}
+.scroll { flex: 1; overflow-y: auto; scrollbar-width: none; }
+.scroll::-webkit-scrollbar { display: none; }
+
+/* status bar shared skeleton (styled per direction) */
+.sb {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 12px 24px 0; font-size: 9px; flex-shrink: 0;
+}
+
+/* ════════ d0 — current UI (faithful reproduction) ════════ */
+.d0 { background: #f5f0e8; font-family: 'DM Sans', sans-serif; color: #1e2a1f; }
+.d0 .sb { color: #6b7c6c; }
+.d0-header { background: #2d3a2e; color: #c8d8b8; padding: 14px 20px 16px; margin-top: 8px; }
+.d0-top { display: flex; justify-content: space-between; align-items: flex-start; }
+.d0-title { font-family: 'Playfair Display', serif; font-size: 22px; line-height: 1.15; }
+.d0-loc { font-size: 11px; color: #7a9e6e; margin-top: 4px; }
+.d0-avatar {
+  width: 36px; height: 36px; background: #4a6741; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; font-size: 18px;
+}
+.d0-propose {
+  margin-top: 14px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18);
+  color: #c8d8b8; border-radius: 12px; padding: 10px 14px; font-size: 13px; font-weight: 500;
+  display: flex; align-items: center; gap: 8px;
+}
+.d0-cards { padding: 12px 16px 40px; display: flex; flex-direction: column; gap: 12px; }
+.d0-label { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #6b7c6c; margin: 6px 4px 0; }
+.d0-card { background: #fff; border-radius: 14px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+.d0-accent { height: 3px; background: #7a9e6e; }
+.d0-accent.amber { background: #c4853a; }
+.d0-body { padding: 12px 14px; }
+.d0-meta { display: flex; justify-content: space-between; margin-bottom: 6px; }
+.d0-type { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: #6b7c6c; }
+.d0-going { font-size: 10px; background: #c8d8b8; color: #4a6741; padding: 3px 8px; border-radius: 20px; font-weight: 500; }
+.d0-ctitle { font-family: 'Playfair Display', serif; font-size: 15px; margin-bottom: 4px; line-height: 1.3; }
+.d0-details { font-size: 11px; color: #6b7c6c; display: flex; gap: 12px; }
+.d0-badge {
+  display: inline-block; margin-top: 8px; font-size: 11px; letter-spacing: 0.06em;
+  padding: 3px 10px; border-radius: 999px; font-weight: 500;
+  background: rgba(122,158,110,0.18); color: #4a6741;
+}
+
+/* ════════ dA — Morning Linen ════════ */
+.dA { background: #f8f3e9; font-family: 'DM Sans', sans-serif; color: #26332a; }
+.dA .sb { color: #92987f; }
+.dA-header { padding: 22px 24px 6px; }
+.dA-top { display: flex; justify-content: space-between; align-items: flex-start; }
+.dA-greet { font-family: 'Playfair Display', serif; font-size: 29px; line-height: 1.16; color: #26332a; letter-spacing: -0.01em; }
+.dA-greet em { font-style: italic; color: #4c6849; }
+.dA-loc { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: #8a927f; margin-top: 8px; }
+.dA-avatar {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: linear-gradient(145deg, #dfe7cf, #c9d6b4);
+  display: flex; align-items: center; justify-content: center; font-size: 19px;
+  border: 1px solid rgba(42,58,47,0.08);
+}
+.dA-propose {
+  margin: 16px 24px 4px; align-self: flex-start;
+  background: #2a3a2f; color: #f0ead9; border-radius: 999px;
+  padding: 11px 20px; font-size: 13px; font-weight: 500; letter-spacing: 0.02em;
+  display: inline-flex; align-items: center; gap: 8px; width: fit-content;
+  box-shadow: 0 8px 20px rgba(42,58,47,0.18);
+}
+.dA-cards { padding: 18px 20px 44px; display: flex; flex-direction: column; gap: 14px; }
+.dA-label {
+  display: flex; align-items: center; gap: 12px;
+  font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: #8a927f;
+  margin: 8px 2px 0; font-weight: 500;
+}
+.dA-label::after { content: ''; flex: 1; height: 1px; background: rgba(42,58,47,0.1); }
+.dA-card {
+  background: #fffdf6; border-radius: 20px; padding: 16px 18px;
+  border: 1px solid rgba(42,58,47,0.07);
+  box-shadow: 0 1px 2px rgba(42,58,47,0.04), 0 10px 30px rgba(42,58,47,0.06);
+}
+.dA-when {
+  display: inline-block; font-size: 11px; font-weight: 500; letter-spacing: 0.06em;
+  color: #a3702f; background: rgba(192,138,69,0.13); border-radius: 999px;
+  padding: 3px 10px; margin-bottom: 9px;
+}
+.dA-ctitle { font-family: 'Playfair Display', serif; font-size: 19px; line-height: 1.25; margin-bottom: 5px; letter-spacing: -0.005em; }
+.dA-place { font-size: 13px; color: #77806f; margin-bottom: 12px; }
+.dA-foot { display: flex; align-items: center; justify-content: space-between; }
+.dA-ppl { display: flex; align-items: center; }
+.dA-pp {
+  width: 26px; height: 26px; border-radius: 50%; background: #e9e2cf;
+  border: 2px solid #fffdf6; display: flex; align-items: center; justify-content: center;
+  font-size: 13px; margin-right: -7px;
+}
+.dA-pcount { font-size: 12px; color: #77806f; margin-left: 14px; }
+.dA-in {
+  font-size: 12px; font-weight: 500; color: #44603f;
+  background: rgba(122,158,110,0.16); border-radius: 999px; padding: 4px 12px;
+}
+/* dA onboarding */
+.dA-ob { padding: 26px 26px 30px; display: flex; flex-direction: column; height: 100%; }
+.dA-dots { display: flex; justify-content: center; gap: 7px; margin-bottom: 8px; }
+.dA-dot { width: 7px; height: 7px; border-radius: 4px; background: rgba(42,58,47,0.14); }
+.dA-dot.done { background: #7a9e6e; }
+.dA-dot.now { width: 22px; background: #2a3a2f; }
+.dA-ob-mid { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+.dA-q { font-family: 'Playfair Display', serif; font-size: 26px; line-height: 1.28; letter-spacing: -0.005em; margin-bottom: 10px; }
+.dA-q em { font-style: italic; color: #4c6849; }
+.dA-sub { font-size: 14px; color: #77806f; line-height: 1.55; margin-bottom: 24px; }
+.dA-input {
+  background: #fffdf6; border: 1px solid rgba(42,58,47,0.12); border-radius: 18px;
+  padding: 16px; font-size: 15px; line-height: 1.5; color: #26332a; min-height: 120px;
+  box-shadow: inset 0 1px 2px rgba(42,58,47,0.03);
+}
+.dA-input span { color: #a9ae9c; }
+.dA-nudge { font-size: 13px; color: #8a927f; margin-top: 12px; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: rgba(42,58,47,0.25); }
+.dA-nav { display: flex; justify-content: space-between; align-items: center; padding-top: 18px; }
+.dA-back { font-size: 14px; color: #8a927f; }
+.dA-next {
+  background: #2a3a2f; color: #f0ead9; border-radius: 999px; padding: 12px 26px;
+  font-size: 14px; font-weight: 500; box-shadow: 0 8px 20px rgba(42,58,47,0.18);
+}
+
+/* ════════ dB — Field Notes ════════ */
+.dB { background: #f3edde; font-family: 'DM Sans', sans-serif; color: #2f2b1f; }
+.dB .sb { color: #97906f; }
+.dB-mast { padding: 20px 26px 0; }
+.dB-brand { font-size: 10px; letter-spacing: 0.28em; text-transform: uppercase; color: #97906f; margin-bottom: 16px; }
+.dB-greet { font-family: 'Fraunces', serif; font-size: 27px; font-weight: 400; line-height: 1.2; letter-spacing: -0.01em; }
+.dB-greet em { font-style: italic; }
+.dB-dateline {
+  display: flex; justify-content: space-between; align-items: baseline;
+  font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: #97906f;
+  padding: 14px 0 12px; border-bottom: 2px solid #2f2b1f; margin-top: 4px;
+}
+.dB-list { padding: 0 26px 30px; }
+.dB-sect {
+  font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: #8b6f2a;
+  padding: 18px 0 2px; font-weight: 500;
+}
+.dB-entry { display: flex; gap: 18px; padding: 16px 0; border-bottom: 1px solid #d9d1b8; }
+.dB-date { flex: 0 0 44px; text-align: center; }
+.dB-day { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: #97906f; }
+.dB-num { font-family: 'Fraunces', serif; font-size: 24px; line-height: 1.15; color: #2f2b1f; font-variant-numeric: tabular-nums; }
+.dB-body { flex: 1; }
+.dB-etitle { font-family: 'Fraunces', serif; font-size: 18px; line-height: 1.25; letter-spacing: -0.005em; margin-bottom: 3px; }
+.dB-meta { font-size: 11.5px; letter-spacing: 0.08em; text-transform: uppercase; color: #97906f; margin-bottom: 5px; }
+.dB-desc { font-family: 'Fraunces', serif; font-style: italic; font-size: 13.5px; color: #6d664d; line-height: 1.45; }
+.dB-you { display: inline-block; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #55663f; margin-top: 7px; font-weight: 500; }
+.dB-you::before { content: '✓ '; }
+.dB-star { color: #8b6f2a; }
+.dB-propose {
+  margin: 20px 0 0; display: inline-block; font-size: 12px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: #2f2b1f; border-bottom: 1px solid #2f2b1f;
+  padding-bottom: 2px; font-weight: 500;
+}
+/* dB onboarding */
+.dB-ob { padding: 24px 28px 30px; display: flex; flex-direction: column; height: 100%; }
+.dB-ob-step { font-size: 10px; letter-spacing: 0.24em; text-transform: uppercase; color: #97906f; text-align: center; padding-bottom: 14px; border-bottom: 2px solid #2f2b1f; }
+.dB-ob-mid { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+.dB-q { font-family: 'Fraunces', serif; font-size: 27px; font-weight: 400; line-height: 1.28; letter-spacing: -0.01em; margin-bottom: 12px; }
+.dB-q em { font-style: italic; }
+.dB-sub { font-family: 'Fraunces', serif; font-style: italic; font-size: 14.5px; color: #6d664d; margin-bottom: 34px; }
+.dB-line { border-bottom: 1px solid #b3a87f; padding: 6px 2px 8px; font-size: 15px; color: #2f2b1f; margin-bottom: 26px; }
+.dB-line span { color: #a89f78; }
+.dB-foot { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: #97906f; }
+.dB-nav { display: flex; justify-content: space-between; padding-top: 16px; align-items: center; }
+.dB-skip { font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: #97906f; }
+.dB-next { font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; font-weight: 500; color: #f3edde; background: #2f2b1f; padding: 12px 22px; border-radius: 2px; }
+
+/* ════════ dC — Lantern ════════ */
+.dC {
+  background: radial-gradient(120% 60% at 30% -5%, rgba(217,154,78,0.10), transparent 60%), #171d17;
+  font-family: 'DM Sans', sans-serif; color: #ede4d0;
+}
+.dC .sb { color: #6f7a68; }
+.dC-header { padding: 22px 24px 8px; }
+.dC-top { display: flex; justify-content: space-between; align-items: flex-start; }
+.dC-greet { font-family: 'Playfair Display', serif; font-size: 28px; line-height: 1.18; letter-spacing: -0.005em; }
+.dC-greet em { font-style: italic; color: #d99a4e; }
+.dC-loc { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: #8fa986; margin-top: 8px; }
+.dC-avatar {
+  width: 40px; height: 40px; border-radius: 50%; background: #26302666;
+  border: 1px solid rgba(237,228,208,0.16);
+  display: flex; align-items: center; justify-content: center; font-size: 19px;
+}
+.dC-propose {
+  margin: 14px 24px 6px; width: fit-content;
+  border: 1px solid rgba(237,228,208,0.22); color: #ede4d0; border-radius: 999px;
+  padding: 10px 18px; font-size: 13px; display: inline-flex; gap: 8px; align-items: center;
+}
+.dC-cards { padding: 16px 20px 44px; display: flex; flex-direction: column; gap: 13px; }
+.dC-label { font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: #7e8874; margin: 8px 2px 0; }
+.dC-card {
+  background: #212822; border-radius: 18px; padding: 16px 18px;
+  border: 1px solid rgba(237,228,208,0.07);
+}
+.dC-card.lit {
+  border-color: rgba(217,154,78,0.35);
+  box-shadow: 0 0 0 1px rgba(217,154,78,0.08), 0 0 30px rgba(217,154,78,0.07);
+}
+.dC-when { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: #d99a4e; margin-bottom: 8px; }
+.dC-ctitle { font-family: 'Playfair Display', serif; font-size: 18.5px; line-height: 1.28; margin-bottom: 5px; }
+.dC-place { font-size: 13px; color: #9fa793; margin-bottom: 12px; }
+.dC-foot { display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #9fa793; }
+.dC-in { color: #171d17; background: #d99a4e; border-radius: 999px; padding: 4px 12px; font-weight: 500; font-size: 12px; }
+.dC-int { color: #8fa986; }
+/* dC onboarding */
+.dC-ob { padding: 26px; display: flex; flex-direction: column; height: 100%; }
+.dC-dots { display: flex; justify-content: center; gap: 7px; margin-bottom: 8px; }
+.dC-dot { width: 7px; height: 7px; border-radius: 4px; background: rgba(237,228,208,0.15); }
+.dC-dot.done { background: #8fa986; }
+.dC-dot.now { width: 22px; background: #d99a4e; }
+.dC-ob-mid { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+.dC-q { font-family: 'Playfair Display', serif; font-size: 26px; line-height: 1.3; margin-bottom: 10px; }
+.dC-q em { font-style: italic; color: #d99a4e; }
+.dC-sub { font-size: 14px; color: #9fa793; line-height: 1.55; margin-bottom: 24px; }
+.dC-input {
+  background: #1d241d; border: 1px solid rgba(237,228,208,0.12); border-radius: 16px;
+  padding: 16px; font-size: 15px; line-height: 1.5; min-height: 120px; color: #ede4d0;
+}
+.dC-input span { color: #6f7a68; }
+.dC-nav { display: flex; justify-content: space-between; align-items: center; padding-top: 18px; }
+.dC-back { font-size: 14px; color: #7e8874; }
+.dC-next { background: #d99a4e; color: #171d17; border-radius: 999px; padding: 12px 26px; font-size: 14px; font-weight: 500; }
+
+/* ════════ dD — Pebble ════════ */
+.dD { background: #eceee8; font-family: 'DM Sans', sans-serif; color: #24413a; }
+.dD .sb { color: #8b9a90; }
+.dD-header { padding: 22px 24px 4px; }
+.dD-top { display: flex; justify-content: space-between; align-items: center; }
+.dD-greet { font-family: 'Fraunces', serif; font-weight: 600; font-size: 26px; letter-spacing: -0.01em; line-height: 1.2; }
+.dD-avatar {
+  width: 42px; height: 42px; border-radius: 50%; background: #fbfcfa;
+  display: flex; align-items: center; justify-content: center; font-size: 20px;
+  box-shadow: 0 4px 14px rgba(36,65,58,0.10);
+}
+.dD-loc {
+  display: inline-flex; align-items: center; gap: 6px; margin-top: 10px;
+  font-size: 12px; font-weight: 500; color: #48685e;
+  background: rgba(127,169,155,0.18); border-radius: 999px; padding: 5px 12px;
+}
+.dD-propose {
+  margin: 16px 24px 6px; width: fit-content;
+  background: #24413a; color: #f4f6f2; border-radius: 999px; padding: 12px 22px;
+  font-size: 13.5px; font-weight: 500; display: inline-flex; gap: 8px; align-items: center;
+  box-shadow: 0 10px 24px rgba(36,65,58,0.22);
+}
+.dD-cards { padding: 16px 18px 44px; display: flex; flex-direction: column; gap: 14px; }
+.dD-label { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: #7d8b81; margin: 8px 6px 0; font-weight: 500; }
+.dD-card {
+  background: #fbfcfa; border-radius: 26px; padding: 18px 20px;
+  box-shadow: 0 6px 22px rgba(36,65,58,0.07);
+}
+.dD-chips { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+.dD-chip {
+  font-size: 11px; font-weight: 500; border-radius: 999px; padding: 4px 11px;
+  background: #efe7d6; color: #85683a;
+}
+.dD-chip.place { background: rgba(127,169,155,0.16); color: #48685e; }
+.dD-ctitle { font-family: 'Fraunces', serif; font-weight: 600; font-size: 18px; letter-spacing: -0.005em; line-height: 1.3; margin-bottom: 12px; }
+.dD-foot { display: flex; justify-content: space-between; align-items: center; }
+.dD-ppl { display: flex; align-items: center; }
+.dD-pp {
+  width: 28px; height: 28px; border-radius: 50%; background: #e4e9e2;
+  border: 2px solid #fbfcfa; display: flex; align-items: center; justify-content: center;
+  font-size: 14px; margin-right: -8px;
+}
+.dD-pcount { font-size: 12.5px; color: #7d8b81; margin-left: 15px; }
+.dD-in { font-size: 12.5px; font-weight: 500; color: #f4f6f2; background: #7fa99b; border-radius: 999px; padding: 5px 13px; }
+.dD-maybe { font-size: 12.5px; font-weight: 500; color: #48685e; border: 1.5px solid rgba(127,169,155,0.5); border-radius: 999px; padding: 4px 12px; }
+/* dD onboarding */
+.dD-ob { padding: 26px; display: flex; flex-direction: column; height: 100%; }
+.dD-bar { display: flex; gap: 5px; margin-bottom: 8px; }
+.dD-seg { flex: 1; height: 4px; border-radius: 2px; background: rgba(36,65,58,0.10); }
+.dD-seg.done { background: #7fa99b; }
+.dD-ob-mid { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+.dD-q { font-family: 'Fraunces', serif; font-weight: 600; font-size: 25px; line-height: 1.28; letter-spacing: -0.01em; margin-bottom: 10px; }
+.dD-sub { font-size: 14px; color: #66756c; line-height: 1.55; margin-bottom: 24px; }
+.dD-input {
+  background: #f4f6f1; border-radius: 20px; padding: 18px; font-size: 15px;
+  line-height: 1.5; min-height: 120px; color: #24413a;
+  border: 2px solid transparent;
+}
+.dD-input.focus { border-color: #7fa99b; background: #fbfcfa; }
+.dD-input span { color: #99a69c; }
+.dD-nav { display: flex; justify-content: space-between; align-items: center; padding-top: 18px; }
+.dD-back { font-size: 14px; color: #7d8b81; }
+.dD-next { background: #24413a; color: #f4f6f2; border-radius: 999px; padding: 13px 28px; font-size: 14px; font-weight: 500; box-shadow: 0 10px 24px rgba(36,65,58,0.22); }
+
+/* ─── comparison table ─── */
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); }
+table { border-collapse: collapse; width: 100%; min-width: 640px; font-size: 14px; }
+th, td { text-align: left; padding: 12px 16px; border-bottom: 1px solid var(--line); vertical-align: top; }
+tr:last-child td { border-bottom: none; }
+th { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
+td b { font-weight: 500; }
+td:first-child { white-space: nowrap; font-weight: 500; }
+
+/* ─── recommendation ─── */
+.reco {
+  background: var(--panel); border: 1px solid var(--line); border-left: 3px solid var(--accent);
+  border-radius: 14px; padding: 24px 28px; max-width: 760px;
+}
+.reco p { margin: 0 0 12px; }
+.reco p:last-child { margin-bottom: 0; }
+
+.shared-list { columns: 2; column-gap: 40px; max-width: 860px; padding-left: 18px; margin: 0; }
+.shared-list li { margin-bottom: 10px; break-inside: avoid; }
+.shared-list li::marker { color: var(--accent); }
+
+@media (max-width: 720px) {
+  .wrap { padding: 36px 16px 72px; }
+  h1 { font-size: 32px; }
+  .shared-list { columns: 1; }
+  .phone { width: 300px; }
+  .screen { height: 600px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+<header>
+  <p class="eyebrow">in·real·life — design exploration · July 2026</p>
+  <h1>Four ways to grow up the UI, <em>without losing the warmth</em></h1>
+  <p class="lede">The brief: a more sophisticated visual language that still feels <strong>welcoming, low-stress, comforting</strong>. Below is where the UI stands today, then four directions — each applied to the same two screens (the feed and one interview card) so they can be compared honestly. Everything uses real app content; nothing here touches the functionality work in flight.</p>
+</header>
+
+<!-- ════════ TODAY ════════ -->
+<section>
+  <h2>Where it is today</h2>
+  <p class="thesis">The bones are good: the earthy palette and the Playfair/DM&nbsp;Sans pairing already say <em>calm, human, unhurried</em>. What holds it back is craft, not concept — type is set small (10–15px nearly everywhere), every card wears identical chrome (white box, 14px radius, accent stripe), there's a single elevation level, and four accent colors compete on one screen. It reads as a capable prototype rather than a considered product.</p>
+
+  <div class="gallery">
+    <div class="phone-col">
+      <div class="phone"><div class="screen d0">
+        <div class="sb"><span>9:41</span><span>●●●</span></div>
+        <div class="d0-header">
+          <div class="d0-top">
+            <div>
+              <div class="d0-title">Good morning,<br>Maya.</div>
+              <div class="d0-loc">📍 Bainbridge Island</div>
+            </div>
+            <div class="d0-avatar">🌾</div>
+          </div>
+          <div class="d0-propose"><span>+</span><span>Propose something</span></div>
+        </div>
+        <div class="scroll"><div class="d0-cards">
+          <div class="d0-label">Your plans</div>
+          <div class="d0-card">
+            <div class="d0-accent"></div>
+            <div class="d0-body">
+              <div class="d0-meta"><span class="d0-type">Coffee walk</span><span class="d0-going">4 going</span></div>
+              <div class="d0-ctitle">Saturday coffee walk</div>
+              <div class="d0-details"><span>Sat · 10:00</span><span>Eagle Harbor waterfront</span></div>
+              <span class="d0-badge">confirmed</span>
+            </div>
+          </div>
+          <div class="d0-label">Suggested for you</div>
+          <div class="d0-card">
+            <div class="d0-accent amber"></div>
+            <div class="d0-body">
+              <div class="d0-meta"><span class="d0-type">Nature</span><span class="d0-going">6 interested</span></div>
+              <div class="d0-ctitle">Low-tide walk at Point White</div>
+              <div class="d0-details"><span>Sun · 8:30</span><span>Point White pier</span></div>
+            </div>
+          </div>
+          <div class="d0-card">
+            <div class="d0-accent"></div>
+            <div class="d0-body">
+              <div class="d0-meta"><span class="d0-type">Books</span><span class="d0-going">5 going</span></div>
+              <div class="d0-ctitle">Book swap &amp; picnic</div>
+              <div class="d0-details"><span>Sat · 14:00</span><span>Battle Point Park</span></div>
+            </div>
+          </div>
+          <div class="d0-label">More on the calendar</div>
+          <div class="d0-card">
+            <div class="d0-accent amber"></div>
+            <div class="d0-body">
+              <div class="d0-meta"><span class="d0-type">Games</span><span class="d0-going">3 going</span></div>
+              <div class="d0-ctitle">Pickup pétanque</div>
+              <div class="d0-details"><span>Thu · 18:00</span><span>Waterfront park courts</span></div>
+            </div>
+          </div>
+        </div></div>
+      </div></div>
+      <span class="phone-caption">Current feed</span>
+    </div>
+
+    <div class="notes">
+      <h3>Worth keeping</h3>
+      <ul>
+        <li>The palette's temperament — greens and warm neutrals, nothing loud.</li>
+        <li>Serif greeting + humanist sans body: the voice already sounds right.</li>
+        <li>Small, calm status pills instead of counters and badges.</li>
+      </ul>
+      <h3>What limits it</h3>
+      <ul>
+        <li>Type scale is timid — the greeting is the only moment of scale; body sits at 11–13px.</li>
+        <li>One card treatment for every kind of content; the accent stripe carries no meaning.</li>
+        <li>Sage, amber, rust and moss all appear on one screen; nothing gets to be <em>the</em> accent.</li>
+        <li>The dark header block is the heaviest element on screen but holds the least information.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ════════ DIRECTION A ════════ -->
+<section>
+  <h2><span class="dir-chip">A</span> Morning Linen</h2>
+  <p class="thesis">The current identity, recrafted rather than replaced. Same world — cream, moss, a single amber note — but with a real typographic scale, one soft elevation system, and air. The dark header goes; the greeting becomes the hero, set large in Playfair with an italic turn. Cards lose the accent stripe and earn a quiet border, deep-but-diffuse shadow, and room to breathe. <em>If the current UI is a sketch, this is the same drawing, inked.</em></p>
+
+  <div class="spec-row">
+    <div class="swatches">
+      <span class="sw" style="background:#f8f3e9"></span>
+      <span class="sw" style="background:#fffdf6"></span>
+      <span class="sw" style="background:#2a3a2f"></span>
+      <span class="sw" style="background:#4c6849"></span>
+      <span class="sw" style="background:#c08a45"></span>
+    </div>
+    <div class="spec-type"><b>Playfair Display</b> for greetings &amp; titles (larger, with italics) · <b>DM Sans</b> body at 14–15px · pills over stripes · one shadow recipe</div>
+  </div>
+
+  <div class="gallery">
+    <div class="phone-col">
+      <div class="phone"><div class="screen dA">
+        <div class="sb"><span>9:41</span><span>●●●</span></div>
+        <div class="dA-header">
+          <div class="dA-top">
+            <div class="dA-greet">Good morning,<br><em>Maya.</em></div>
+            <div class="dA-avatar">🌾</div>
+          </div>
+          <div class="dA-loc">Bainbridge Island</div>
+        </div>
+        <div class="dA-propose"><span>+</span><span>Propose something</span></div>
+        <div class="scroll"><div class="dA-cards">
+          <div class="dA-label">Your plans</div>
+          <div class="dA-card">
+            <span class="dA-when">Saturday · 10:00</span>
+            <div class="dA-ctitle">Saturday coffee walk</div>
+            <div class="dA-place">Eagle Harbor waterfront</div>
+            <div class="dA-foot">
+              <div class="dA-ppl">
+                <span class="dA-pp">🧢</span><span class="dA-pp">🌊</span><span class="dA-pp">🪴</span>
+                <span class="dA-pcount">4 going</span>
+              </div>
+              <span class="dA-in">You're in ✓</span>
+            </div>
+          </div>
+          <div class="dA-label">Suggested for you</div>
+          <div class="dA-card">
+            <span class="dA-when">Sunday · 8:30</span>
+            <div class="dA-ctitle">Low-tide walk at Point White</div>
+            <div class="dA-place">Point White pier</div>
+            <div class="dA-foot">
+              <div class="dA-ppl">
+                <span class="dA-pp">🦀</span><span class="dA-pp">🌿</span>
+                <span class="dA-pcount">6 interested</span>
+              </div>
+            </div>
+          </div>
+          <div class="dA-card">
+            <span class="dA-when">Saturday · 14:00</span>
+            <div class="dA-ctitle">Book swap &amp; picnic</div>
+            <div class="dA-place">Battle Point Park</div>
+            <div class="dA-foot">
+              <div class="dA-ppl">
+                <span class="dA-pp">📚</span><span class="dA-pp">🧺</span><span class="dA-pp">🫖</span>
+                <span class="dA-pcount">5 going</span>
+              </div>
+            </div>
+          </div>
+        </div></div>
+      </div></div>
+      <span class="phone-caption">Feed</span>
+    </div>
+
+    <div class="phone-col">
+      <div class="phone"><div class="screen dA">
+        <div class="sb"><span>9:41</span><span>●●●</span></div>
+        <div class="dA-ob">
+          <div class="dA-dots">
+            <span class="dA-dot done"></span><span class="dA-dot done"></span><span class="dA-dot now"></span><span class="dA-dot"></span><span class="dA-dot"></span><span class="dA-dot"></span>
+          </div>
+          <div class="dA-ob-mid">
+            <div class="dA-q">What does a good <em>Saturday</em> look like?</div>
+            <div class="dA-sub">There's no wrong answer — we're just getting a feel for your pace.</div>
+            <div class="dA-input">Slow morning, coffee outside if it's sunny. Then something<span> …</span></div>
+            <div class="dA-nudge">Need a nudge?</div>
+          </div>
+          <div class="dA-nav">
+            <span class="dA-back">Back</span>
+            <span class="dA-next">Next</span>
+          </div>
+        </div>
+      </div></div>
+      <span class="phone-caption">Interview</span>
+    </div>
+
+    <div class="notes">
+      <h3>Keeps</h3>
+      <ul>
+        <li>The whole documented palette, refined by a degree, not swapped.</li>
+        <li>Playfair + DM Sans — the pairing users have already met.</li>
+      </ul>
+      <h3>Changes</h3>
+      <ul>
+        <li>Light header: the greeting owns the screen; chrome recedes.</li>
+        <li>Time moves into an amber pill — the one warm note per card.</li>
+        <li>Avatar clusters replace the "going" counter pill: people, not numbers.</li>
+        <li>Base type up to 14–15px; titles up to 19px.</li>
+      </ul>
+      <h3>Watch out</h3>
+      <ul>
+        <li>Lowest-risk option — the risk is that it's <em>only</em> a refinement if the craft isn't held everywhere.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ════════ DIRECTION B ════════ -->
+<section>
+  <h2><span class="dir-chip">B</span> Field Notes</h2>
+  <p class="thesis">A naturalist's journal, not an app. Cards disappear entirely: the feed becomes a set week-list — date numerals in a column, hairline rules, small-caps metadata, Fraunces carrying titles and italic asides. The single ochre note marks what's recommended. It borrows the quiet authority of print: nothing pops, nothing pushes, <em>and there is visibly nothing to scroll forever through</em> — which is exactly the product's promise.</p>
+
+  <div class="spec-row">
+    <div class="swatches">
+      <span class="sw" style="background:#f3edde"></span>
+      <span class="sw" style="background:#2f2b1f"></span>
+      <span class="sw" style="background:#55663f"></span>
+      <span class="sw" style="background:#8b6f2a"></span>
+      <span class="sw" style="background:#d9d1b8"></span>
+    </div>
+    <div class="spec-type"><b>Fraunces</b> (roman + italic) for titles &amp; asides · <b>DM Sans</b> small-caps for metadata · rules instead of boxes · ink on paper</div>
+  </div>
+
+  <div class="gallery">
+    <div class="phone-col">
+      <div class="phone"><div class="screen dB">
+        <div class="sb"><span>9:41</span><span>●●●</span></div>
+        <div class="dB-mast">
+          <div class="dB-brand">in · real · life</div>
+          <div class="dB-greet">Good morning, <em>Maya.</em></div>
+          <div class="dB-dateline"><span>This week</span><span>Bainbridge Island</span></div>
+        </div>
+        <div class="scroll"><div class="dB-list">
+          <div class="dB-sect">Your plans</div>
+          <div class="dB-entry">
+            <div class="dB-date"><div class="dB-day">Sat</div><div class="dB-num">19</div></div>
+            <div class="dB-body">
+              <div class="dB-etitle">Saturday coffee walk</div>
+              <div class="dB-meta">10:00 · Eagle Harbor waterfront</div>
+              <div class="dB-desc">An easy loop along the water; four of you so far.</div>
+              <span class="dB-you">You're in</span>
+            </div>
+          </div>
+          <div class="dB-sect">Suggested for you</div>
+          <div class="dB-entry">
+            <div class="dB-date"><div class="dB-day">Sun</div><div class="dB-num">20</div></div>
+            <div class="dB-body">
+              <div class="dB-etitle">Low-tide walk at Point White <span class="dB-star">✳</span></div>
+              <div class="dB-meta">8:30 · Point White pier</div>
+              <div class="dB-desc">Minus tide at nine — anemones, moon snails, six interested.</div>
+            </div>
+          </div>
+          <div class="dB-entry">
+            <div class="dB-date"><div class="dB-day">Sat</div><div class="dB-num">19</div></div>
+            <div class="dB-body">
+              <div class="dB-etitle">Book swap &amp; picnic</div>
+              <div class="dB-meta">14:00 · Battle Point Park</div>
+              <div class="dB-desc">Bring one, take one; blankets on the north lawn.</div>
+            </div>
+          </div>
+          <span class="dB-propose">+ Propose something</span>
+        </div></div>
+      </div></div>
+      <span class="phone-caption">Feed</span>
+    </div>
+
+    <div class="phone-col">
+      <div class="phone"><div class="screen dB">
+        <div class="sb"><span>9:41</span><span>●●●</span></div>
+        <div class="dB-ob">
+          <div class="dB-ob-step">Three of six</div>
+          <div class="dB-ob-mid">
+            <div class="dB-q">What does a good <em>Saturday</em> look like?</div>
+            <div class="dB-sub">There's no wrong answer — we're just getting a feel for your pace.</div>
+            <div class="dB-line">Slow morning, coffee outside if it's sunny<span>&hairsp;|</span></div>
+            <div class="dB-foot">Need a nudge?</div>
+          </div>
+          <div class="dB-nav">
+            <span class="dB-skip">Back</span>
+            <span class="dB-next">Next</span>
+          </div>
+        </div>
+      </div></div>
+      <span class="phone-caption">Interview</span>
+    </div>
+
+    <div class="notes">
+      <h3>Keeps</h3>
+      <ul>
+        <li>Warm ground, green-and-ochre restraint, the unhurried voice.</li>
+      </ul>
+      <h3>Changes</h3>
+      <ul>
+        <li>No cards, no shadows — hierarchy comes entirely from type and rules.</li>
+        <li>Date numerals become the feed's visual anchor; scanning by day is instant.</li>
+        <li>One-line editorial descriptions give each event a human sentence.</li>
+        <li>Inputs are underlines, not boxes — the interview reads like writing in a journal.</li>
+      </ul>
+      <h3>Watch out</h3>
+      <ul>
+        <li>Most distinctive, least conventional — tap targets and state changes (RSVP'd, cancelled) need careful treatment without boxes to lean on.</li>
+        <li>Editorial one-liners want authored copy (the AI spine could write them).</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ════════ DIRECTION C ════════ -->
+<section>
+  <h2><span class="dir-chip">C</span> Lantern</h2>
+  <p class="thesis">The app as a porch light. A deep pine ground with one candlelit amber accent — your confirmed plan literally glows; everything else rests. Meetups get planned in the evening on the couch, and a dark, warm surface is the lowest-stress reading environment there is. Shown here as a full direction; it also works as the <em>evening companion theme</em> to A or B.</p>
+
+  <div class="spec-row">
+    <div class="swatches">
+      <span class="sw" style="background:#171d17"></span>
+      <span class="sw" style="background:#212822"></span>
+      <span class="sw" style="background:#ede4d0"></span>
+      <span class="sw" style="background:#d99a4e"></span>
+      <span class="sw" style="background:#8fa986"></span>
+    </div>
+    <div class="spec-type"><b>Playfair Display</b> in cream, italics in amber · <b>DM Sans</b> body · a single glow, spent only on your plans</div>
+  </div>
+
+  <div class="gallery">
+    <div class="phone-col">
+      <div class="phone"><div class="screen dC">
+        <div class="sb"><span>9:41</span><span>●●●</span></div>
+        <div class="dC-header">
+          <div class="dC-top">
+            <div class="dC-greet">Good evening,<br><em>Maya.</em></div>
+            <div class="dC-avatar">🌾</div>
+          </div>
+          <div class="dC-loc">Bainbridge Island</div>
+        </div>
+        <div class="dC-propose"><span>+</span><span>Propose something</span></div>
+        <div class="scroll"><div class="dC-cards">
+          <div class="dC-label">Your plans</div>
+          <div class="dC-card lit">
+            <div class="dC-when">Saturday · 10:00</div>
+            <div class="dC-ctitle">Saturday coffee walk</div>
+            <div class="dC-place">Eagle Harbor waterfront · 4 going</div>
+            <div class="dC-foot"><span></span><span class="dC-in">You're in ✓</span></div>
+          </div>
+          <div class="dC-label">Suggested for you</div>
+          <div class="dC-card">
+            <div class="dC-when">Sunday · 8:30</div>
+            <div class="dC-ctitle">Low-tide walk at Point White</div>
+            <div class="dC-place">Point White pier</div>
+            <div class="dC-foot"><span class="dC-int">6 interested</span></div>
+          </div>
+          <div class="dC-card">
+            <div class="dC-when">Saturday · 14:00</div>
+            <div class="dC-ctitle">Book swap &amp; picnic</div>
+            <div class="dC-place">Battle Point Park</div>
+            <div class="dC-foot"><span class="dC-int">5 going</span></div>
+          </div>
+        </div></div>
+      </div></div>
+      <span class="phone-caption">Feed</span>
+    </div>
+
+    <div class="phone-col">
+      <div class="phone"><div class="screen dC">
+        <div class="sb"><span>9:41</span><span>●●●</span></div>
+        <div class="dC-ob">
+          <div class="dC-dots">
+            <span class="dC-dot done"></span><span class="dC-dot done"></span><span class="dC-dot now"></span><span class="dC-dot"></span><span class="dC-dot"></span><span class="dC-dot"></span>
+          </div>
+          <div class="dC-ob-mid">
+            <div class="dC-q">What does a good <em>Saturday</em> look like?</div>
+            <div class="dC-sub">There's no wrong answer — we're just getting a feel for your pace.</div>
+            <div class="dC-input">Slow morning, coffee outside if it's sunny. Then something<span> …</span></div>
+          </div>
+          <div class="dC-nav">
+            <span class="dC-back">Back</span>
+            <span class="dC-next">Next</span>
+          </div>
+        </div>
+      </div></div>
+      <span class="phone-caption">Interview</span>
+    </div>
+
+    <div class="notes">
+      <h3>Keeps</h3>
+      <ul>
+        <li>The green-and-amber family — inverted, not abandoned.</li>
+        <li>Playfair's warmth; italics still mark the personal.</li>
+      </ul>
+      <h3>Changes</h3>
+      <ul>
+        <li>Amber is rationed to one job: marking <em>your</em> commitments.</li>
+        <li>Elevation via glow and border, never grey shadow.</li>
+        <li>Everything else drops to two quiet tones of green-grey.</li>
+      </ul>
+      <h3>Watch out</h3>
+      <ul>
+        <li>Dark-only is a bold default for an outdoors-y, daytime brand — likely strongest as the night half of a paired system.</li>
+        <li>Cream-on-dark needs disciplined contrast checks at small sizes.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ════════ DIRECTION D ════════ -->
+<section>
+  <h2><span class="dir-chip">D</span> Pebble</h2>
+  <p class="thesis">The furthest step: leave the cream-and-serif world for a coastal one — fog, sea glass, kelp, a little clay. Fraunces at a soft semibold gives it a friendly, rounded confidence; surfaces are big smooth stones (26px radii, one feather-soft shadow); every action is a pill. This is the "calm modern wellness" register done with restraint — closer to what people expect a polished 2026 app to feel like, at the cost of the current identity.</p>
+
+  <div class="spec-row">
+    <div class="swatches">
+      <span class="sw" style="background:#eceee8"></span>
+      <span class="sw" style="background:#fbfcfa"></span>
+      <span class="sw" style="background:#24413a"></span>
+      <span class="sw" style="background:#7fa99b"></span>
+      <span class="sw" style="background:#c77b58"></span>
+    </div>
+    <div class="spec-type"><b>Fraunces SemiBold</b> for headings · <b>DM Sans</b> body · pill grammar throughout · one soft shadow, large radii</div>
+  </div>
+
+  <div class="gallery">
+    <div class="phone-col">
+      <div class="phone"><div class="screen dD">
+        <div class="sb"><span>9:41</span><span>●●●</span></div>
+        <div class="dD-header">
+          <div class="dD-top">
+            <div class="dD-greet">Morning, Maya</div>
+            <div class="dD-avatar">🌾</div>
+          </div>
+          <span class="dD-loc">📍 Bainbridge Island</span>
+        </div>
+        <div class="dD-propose"><span>+</span><span>Propose something</span></div>
+        <div class="scroll"><div class="dD-cards">
+          <div class="dD-label">Your plans</div>
+          <div class="dD-card">
+            <div class="dD-chips"><span class="dD-chip">Sat · 10:00</span><span class="dD-chip place">Eagle Harbor</span></div>
+            <div class="dD-ctitle">Saturday coffee walk</div>
+            <div class="dD-foot">
+              <div class="dD-ppl">
+                <span class="dD-pp">🧢</span><span class="dD-pp">🌊</span><span class="dD-pp">🪴</span>
+                <span class="dD-pcount">4 going</span>
+              </div>
+              <span class="dD-in">You're in</span>
+            </div>
+          </div>
+          <div class="dD-label">Suggested for you</div>
+          <div class="dD-card">
+            <div class="dD-chips"><span class="dD-chip">Sun · 8:30</span><span class="dD-chip place">Point White pier</span></div>
+            <div class="dD-ctitle">Low-tide walk at Point White</div>
+            <div class="dD-foot">
+              <div class="dD-ppl">
+                <span class="dD-pp">🦀</span><span class="dD-pp">🌿</span>
+                <span class="dD-pcount">6 interested</span>
+              </div>
+              <span class="dD-maybe">I'm curious</span>
+            </div>
+          </div>
+          <div class="dD-card">
+            <div class="dD-chips"><span class="dD-chip">Sat · 14:00</span><span class="dD-chip place">Battle Point Park</span></div>
+            <div class="dD-ctitle">Book swap &amp; picnic</div>
+            <div class="dD-foot">
+              <div class="dD-ppl">
+                <span class="dD-pp">📚</span><span class="dD-pp">🧺</span>
+                <span class="dD-pcount">5 going</span>
+              </div>
+              <span class="dD-maybe">I'm curious</span>
+            </div>
+          </div>
+        </div></div>
+      </div></div>
+      <span class="phone-caption">Feed</span>
+    </div>
+
+    <div class="phone-col">
+      <div class="phone"><div class="screen dD">
+        <div class="sb"><span>9:41</span><span>●●●</span></div>
+        <div class="dD-ob">
+          <div class="dD-bar">
+            <span class="dD-seg done"></span><span class="dD-seg done"></span><span class="dD-seg done"></span><span class="dD-seg"></span><span class="dD-seg"></span><span class="dD-seg"></span>
+          </div>
+          <div class="dD-ob-mid">
+            <div class="dD-q">What does a good Saturday look like?</div>
+            <div class="dD-sub">There's no wrong answer — we're just getting a feel for your pace.</div>
+            <div class="dD-input focus">Slow morning, coffee outside if it's sunny. Then something<span> …</span></div>
+          </div>
+          <div class="dD-nav">
+            <span class="dD-back">Back</span>
+            <span class="dD-next">Next</span>
+          </div>
+        </div>
+      </div></div>
+      <span class="phone-caption">Interview</span>
+    </div>
+
+    <div class="notes">
+      <h3>Keeps</h3>
+      <ul>
+        <li>Green as the anchor hue; softness as the core feeling.</li>
+        <li>DM Sans body — continuity in the reading voice.</li>
+      </ul>
+      <h3>Changes</h3>
+      <ul>
+        <li>Palette cools toward sea glass and fog; cream exits.</li>
+        <li>Fraunces SemiBold replaces Playfair — rounder, more contemporary.</li>
+        <li>Facts become chips; actions become pills; radii grow to 26px.</li>
+        <li>"I'm curious" as the low-commitment action, styled as an open pill.</li>
+      </ul>
+      <h3>Watch out</h3>
+      <ul>
+        <li>A real rebrand — landing page, docs and palette tokens all follow. Cheapest to do now, pre-launch, or not at all.</li>
+        <li>Closest neighbor to generic "calm app" territory; the Fraunces voice and coastal palette are what keep it specific.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ════════ COMPARISON ════════ -->
+<section>
+  <h2>Side by side</h2>
+  <p class="thesis">All four hold the brief — welcoming, low-stress, comforting. They differ in how far they move from today and where the sophistication comes from.</p>
+  <div class="table-wrap">
+    <table>
+      <tr><th>Direction</th><th>Feels like</th><th>Sophistication from</th><th>Distance from today</th><th>Best if</th></tr>
+      <tr>
+        <td>A · Morning Linen</td>
+        <td>A well-kept sunroom</td>
+        <td>Scale, spacing, one elevation system</td>
+        <td><b>Small</b> — a css refactor, same tokens refined</td>
+        <td>You like the identity and want it executed properly</td>
+      </tr>
+      <tr>
+        <td>B · Field Notes</td>
+        <td>A naturalist's journal</td>
+        <td>Print typography; removing chrome entirely</td>
+        <td><b>Medium</b> — same palette family, new layout grammar</td>
+        <td>You want the most distinctive, most "anti-app" statement</td>
+      </tr>
+      <tr>
+        <td>C · Lantern</td>
+        <td>A porch light at dusk</td>
+        <td>Darkness, restraint, one rationed glow</td>
+        <td><b>Medium</b> — inverted palette, same structure</td>
+        <td>Evening use dominates, or as the night theme of A/B</td>
+      </tr>
+      <tr>
+        <td>D · Pebble</td>
+        <td>Beach stones, sea glass</td>
+        <td>Soft-modern precision: pills, big radii, one shadow</td>
+        <td><b>Large</b> — new palette and display face; a rebrand</td>
+        <td>You want a contemporary reset while it's still cheap to do</td>
+      </tr>
+    </table>
+  </div>
+</section>
+
+<!-- ════════ RECOMMENDATION ════════ -->
+<section>
+  <h2>Recommendation</h2>
+  <div class="reco">
+    <p><strong>Build A as the system, steal from B, keep C in the drawer as the dark theme.</strong></p>
+    <p>Morning Linen preserves everything the docs and existing users already encode about the brand while fixing the actual gap — craft. Fold in Field Notes' best idea where the content is list-like: the date-anchored entry treatment is a genuinely better feed grammar than a stack of identical cards, and the two combine naturally (linen surfaces for things you act on, journal rules for things you scan). Lantern then arrives later as the `prefers-color-scheme: dark` companion — its palette is already a clean inversion of A's.</p>
+    <p>Pebble is the honest alternative, not a compromise: if you feel the cream-serif world is too familiar to carry the product long-term, the moment to switch is now, pre-launch. That's a brand decision more than a UI one.</p>
+  </div>
+</section>
+
+<!-- ════════ SHARED MOVES ════════ -->
+<section>
+  <h2>Regardless of direction</h2>
+  <p class="thesis">These moves are already reflected in every mockup above and would go into the spec whichever way you choose:</p>
+  <ul class="shared-list">
+    <li><b>Raise the type floor.</b> Body 14–15px, titles 18–19px, metadata never below 11px. The single biggest "sophistication" lever available.</li>
+    <li><b>One accent per screen.</b> Amber (or ochre, or sea glass) gets one job — marking your commitments or the recommendation — and nothing else competes.</li>
+    <li><b>One elevation recipe.</b> A single border + shadow (or rule, or glow) treatment, everywhere; delete the per-card accent stripes.</li>
+    <li><b>People over counters.</b> Avatar clusters instead of "4 going" pills wherever roster data exists — it's a people app.</li>
+    <li><b>Lighten the header.</b> The greeting is the hero; the dark header block goes (except in Lantern, where dark is the ground).</li>
+    <li><b>Calm motion.</b> 150–200ms ease-out fades and small translates only; full respect for <code>prefers-reduced-motion</code>.</li>
+  </ul>
+  <p class="lede" style="margin-top:26px">Next step: pick a direction (or a blend) and I'll turn it into a full spec — design tokens, component inventory, and a working restyle of <code>styles.css</code> behind the existing class names, so it lands without touching the functionality work.</p>
+</section>
+
+</div>
+
+</body>
+</html>
