@@ -1,11 +1,12 @@
 # Hosted register views
 
-Status: active (all three chunks delivered; chunk-1 gate passed
-2026-08-21 — pages + "How we decide" copy approved, the
+Status: closed → Backlog entry (2026-08-25). All three chunks
+delivered and merged (PR #62; CRLF deploy fix PR #65); chunk-1 gate
+passed 2026-08-21 (pages + "How we decide" copy approved; the
 entry-terseness observation became the backlog's register-readability
-item; pending: chunk-2 live verification at the next workshop deploy
-and the chunk-3 sample-pack review, both riding the deliverable's PR
-review — close out to the Backlog entry on merge)
+item); chunk-2 live-verified by the founder on the workshop stack
+2026-08-25 (links + content confirmed); chunk-3 sample pack reviewed
+in the PR. The Backlog's checked K-009 entry is now the record.
 
 Outcome under development: the decision and risk registers published
 as hosted, current, latest-snapshot views on the site (K-009 — the C3
