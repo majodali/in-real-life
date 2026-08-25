@@ -1,11 +1,11 @@
 # UI restyle
 
-Status: active (chunks 1–2 delivered; chunk-1 gate passed 2026-08-25
-— seam + Morning Linen approved as built. Founder's standing answers:
-floating chip · theme set current / Morning Linen / Lantern-as-dark /
-Pebble, Field Notes' list grammar folds into A later · `?theme=` +
-per-tab persistence, no per-stack default. Chunk-2 gate pending: live
-comparison on the workshop stack)
+Status: active (all three chunks delivered; gates 1–2 passed
+2026-08-25 and the founder made the call from the chunk-2 comparison
+— U9: Morning Linen default, Grove named + retained, Lantern the
+future member dark theme, Pebble a review theme. Final gate pending:
+live verification of the flipped default on workshop + PR merge +
+exploration-branch deletion → close-out)
 
 Outcome under development: the app restyled per a chosen direction
 from the July 2026 UI exploration — reviewed **live in the workshop
@@ -112,14 +112,22 @@ same themed components.
 Gate: founder (and any invited reviewers) deploy the branch to the
 workshop stack and compare live via the chip / `?theme=` links.
 
-### Chunk 3 — the pick, landed
+### Chunk 3 — the pick, landed — DELIVERED (at gate)
 
-U-row records the decision + reasoning; chosen theme becomes the
-default; non-chosen themes retired or kept per the gate; landing
-page / terms / register views follow the chosen direction (scope
-confirmed at gate — may split into its own slice if D); design note
-finalized from `design/ui-directions-2026-07.md`; backlog updated
-(including the waiting "suggest change" modal unblock);
-`claude/site-ui-design-exploration-zb14wl` deleted; plan closes out.
-Gate: founder sign-off on the landed default in workshop → next
-ordinary prod deploy ships it.
+Founder's decision (2026-08-25), recorded as **U9** with the design
+note `docs/ui-themes.md`: **Morning Linen is the default identity,
+all stages** — `app.html` sets `data-theme="morning-linen"`
+statically (prod renders it with no JS, no flash); the original
+identity is named **Grove** (= the un-attributed baseline, retained
+in the switcher); **Lantern** reserved as the future
+member-selectable dark theme (own backlog item — settings surface +
+persistence + `prefers-color-scheme` stance); **Pebble** stays a
+review theme. Workshop keeps the switcher; the registry cycles
+Morning Linen → Grove → Lantern → Pebble. U7 revised in place with
+a dated note. Landing/terms/register views deliberately stay Grove
+for now — their restyle is its own backlog item, flagged
+before-soft-open (the visible seam is the Watch item).
+Gate: founder verifies the flipped default + switcher live on
+workshop, merges the PR, deletes
+`claude/site-ui-design-exploration-zb14wl` (and this branch); the
+close-out then checks the Backlog entry and closes this plan.

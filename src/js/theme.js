@@ -12,13 +12,18 @@
 
 import { WORKSHOP_MODE } from './config.js';
 
-// Themes the switcher offers. `current` is the shipped UI and the
-// default everywhere; directions are appended here as they land.
-// `fontsHref` lazily loads faces the base app doesn't ship (Pebble's
-// Fraunces) the first time the theme is applied.
+// Themes the switcher offers. Morning Linen is the default everywhere
+// (U9; app.html sets data-theme="morning-linen" statically so prod
+// needs no JS for it). Grove is the named original identity — the
+// un-attributed baseline styles — retained for comparison. Lantern is
+// the future member-selectable dark theme (backlog). `fontsHref`
+// lazily loads faces the base app doesn't ship (Pebble's Fraunces)
+// the first time the theme is applied.
+export const DEFAULT_THEME = 'morning-linen';
+
 export const THEMES = [
-  { id: 'current', label: 'Current' },
   { id: 'morning-linen', label: 'Morning Linen' },
+  { id: 'grove', label: 'Grove' },
   { id: 'lantern', label: 'Lantern' },
   {
     id: 'pebble',
@@ -53,16 +58,17 @@ function urlTheme() {
 }
 
 export function applyTheme(id) {
-  const theme = validTheme(id) ?? 'current';
+  const theme = validTheme(id) ?? DEFAULT_THEME;
   ensureFonts(THEMES.find((t) => t.id === theme));
-  if (theme === 'current') {
+  if (theme === 'grove') {
+    // Grove IS the un-attributed baseline stylesheet.
     delete document.documentElement.dataset.theme;
   } else {
     document.documentElement.dataset.theme = theme;
   }
   try { sessionStorage.setItem(STORAGE_KEY, theme); } catch { /* private mode */ }
   const url = new URL(window.location.href);
-  if (theme === 'current') url.searchParams.delete('theme');
+  if (theme === DEFAULT_THEME) url.searchParams.delete('theme');
   else url.searchParams.set('theme', theme);
   history.replaceState(null, '', url);
   const chip = document.getElementById('theme-chip');
@@ -73,7 +79,7 @@ export function applyTheme(id) {
 }
 
 export function initTheme() {
-  if (!WORKSHOP_MODE) return; // prod: default theme, no chip, ?theme= ignored
+  if (!WORKSHOP_MODE) return; // prod: static default theme, no chip, ?theme= ignored
 
   const chip = document.createElement('button');
   chip.id = 'theme-chip';
@@ -82,7 +88,7 @@ export function initTheme() {
   chip.title = 'Switch design (workshop only)';
   document.body.appendChild(chip);
 
-  let active = applyTheme(urlTheme() ?? storedTheme() ?? 'current');
+  let active = applyTheme(urlTheme() ?? storedTheme() ?? DEFAULT_THEME);
   chip.addEventListener('click', () => {
     const idx = THEMES.findIndex((t) => t.id === active);
     active = applyTheme(THEMES[(idx + 1) % THEMES.length].id);
