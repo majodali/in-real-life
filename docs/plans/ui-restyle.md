@@ -1,6 +1,11 @@
 # UI restyle
 
-Status: draft
+Status: active (chunk 1 delivered, at its gate; founder answered the
+open questions 2026-08-25: floating chip · themes trimmed to the
+recommendation set — current / Morning Linen / Lantern-as-dark /
+Pebble, Field Notes dropped as a standalone theme with its list
+grammar folding into A later · `?theme=` + per-tab persistence
+sufficient, no per-stack default)
 
 Outcome under development: the app restyled per a chosen direction
 from the July 2026 UI exploration — reviewed **live in the workshop
@@ -70,16 +75,24 @@ deliberate pre-launch brand decision).
 
 <!-- Chunk boundaries proposed; founder adjusts and gates (W-001). -->
 
-### Chunk 1 — theme infrastructure + switcher
+### Chunk 1 — theme infrastructure + switcher — DELIVERED (at gate)
 
-Recover `design/ui-directions-2026-07.{md,html}` onto this branch
-(preserving the exploration before its branch is deleted); tokenize
-the hardcoded values in `styles.css` that themes must override;
-`data-theme` plumbing + the workshop-only switcher (sessionStorage +
-`?theme=`), with `current` as baseline and **A Morning Linen** as the
-first real theme to prove the seam.
-Gate: founder answers the open questions and flips between `current`
-and A locally or on workshop.
+Shipped: `design/ui-directions-2026-07.{md,html}` recovered onto the
+deliverable branch; `src/js/theme.js` (THEMES registry, `?theme=` →
+sessionStorage → default resolution, `history.replaceState` keeps the
+URL shareable as seen, chip created only under `WORKSHOP_MODE` —
+prod ignores `?theme=` entirely); floating chip bottom-left (cycles
+themes, shows the active label); theme layer appended to
+`styles.css`: `[data-theme="morning-linen"]` token overrides +
+component restyles (light hero header, pill tabs, linen 20px-radius
+cards with the one elevation recipe, accent stripes gone, amber
+count pill / moss commitment chips, hairline section labels, pill
+buttons with soft earth shadow, serif 26px interview questions,
+linen inputs). Existing `.mylevel-*` chips already matched the
+mockup's moss treatment — untouched.
+Gate: founder reviews the side-by-side preview (or deploys the
+branch to workshop and flips the chip live) and calls fidelity
+adjustments before chunk 2 builds Lantern + Pebble on the seam.
 
 ### Chunk 2 — the remaining directions as themes
 

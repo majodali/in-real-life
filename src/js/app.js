@@ -15,6 +15,7 @@ import { renderAdmin } from './screens/admin.js';
 import { renderPropose } from './screens/propose.js';
 import { renderEventDetail } from './screens/event-detail.js';
 import { renderEdit } from './screens/edit.js';
+import { initTheme } from './theme.js';
 
 const PUBLIC_SCREENS = new Set(['location', 'signup', 'confirm', 'signin', 'welcome', 'agreement', 'onboarding', 'locality']);
 
@@ -159,6 +160,7 @@ function route() {
 // ─── Init ───
 
 export function init() {
+  initTheme();
   window.addEventListener('hashchange', route);
   route();
 }
