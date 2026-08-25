@@ -10,10 +10,9 @@ for them.
 - **C-tier**: C2 (serious project, pre-users). Promotion to C3 is
   bound to soft open — real members are what "production with real
   users" means here; the gate rides the launch playbook (§6).
-- **Pinned methodology version**: 1.2.0 (compliance target; migrated
-  from 1.1.0 on 2026-08-24 — the v1.2.0 migration notes impose no
-  mandatory duties; the audit-log register at `docs/audits.md` now
-  receives entries by Audit delivery per the v1.2.0 audit process)
+- **Pinned methodology version**: 1.3.0 (compliance target; migrated
+  from 1.2.0 on 2026-08-25 — all four v1.3.0 amendments ship
+  migration-note: none, so the pin bump is the whole migration)
 - **S-level**: S2 (member PII: profiles, interview content, debriefs —
   see the crypto-shredding design and PII registry)
 - **Type**: web-app
@@ -25,6 +24,14 @@ for them.
   carry an explicit `stage:` marker — e.g. workshop-only surfaces).
   This format is a project-local choice pending the methodology's own
   Workflow-declaration-format calibration (its Backlog, open item 4).
+- **Family**: in-real-life (lead) — members:
+  [in-real-life-ops](https://github.com/majodali/in-real-life-ops) and
+  [in-real-life-org](https://github.com/majodali/in-real-life-org),
+  the D6 split's siblings: one product, three repos. This repo is the
+  family's documentation home; the O1/OPS1 seams stay the boundary
+  rules, each member's Classification stays its own. Composition is
+  mirrored in the methodology
+  [Portfolio register's Families section](https://github.com/majodali/methodology/blob/main/docs/registers/portfolio.md#families).
 
 ## Deviation register
 
