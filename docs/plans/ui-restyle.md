@@ -1,11 +1,11 @@
 # UI restyle
 
-Status: active (chunk 1 delivered, at its gate; founder answered the
-open questions 2026-08-25: floating chip · themes trimmed to the
-recommendation set — current / Morning Linen / Lantern-as-dark /
-Pebble, Field Notes dropped as a standalone theme with its list
-grammar folding into A later · `?theme=` + per-tab persistence
-sufficient, no per-stack default)
+Status: active (chunks 1–2 delivered; chunk-1 gate passed 2026-08-25
+— seam + Morning Linen approved as built. Founder's standing answers:
+floating chip · theme set current / Morning Linen / Lantern-as-dark /
+Pebble, Field Notes' list grammar folds into A later · `?theme=` +
+per-tab persistence, no per-stack default. Chunk-2 gate pending: live
+comparison on the workshop stack)
 
 Outcome under development: the app restyled per a chosen direction
 from the July 2026 UI exploration — reviewed **live in the workshop
@@ -94,14 +94,23 @@ Gate: founder reviews the side-by-side preview (or deploys the
 branch to workshop and flips the chip live) and calls fidelity
 adjustments before chunk 2 builds Lantern + Pebble on the seam.
 
-### Chunk 2 — the remaining directions as themes
+### Chunk 2 — the remaining directions as themes — DELIVERED (at gate)
 
-B Field Notes, C Lantern, D Pebble (or the trimmed set from the
-gate) at mockup fidelity within the CSS-only bound; Fraunces loaded;
-each theme checked across feed / detail / interview / debrief /
-profile, not just the mocked screens.
-Gate: founder (and any invited reviewers) compare live on the
-workshop stack.
+Shipped: **Lantern** (`[data-theme="lantern"]` — radial-glow dark
+ground, border-not-shadow elevation, amber rationed to commitments:
+the committed card is "lit" via `:has(.mylevel-confirmed)`, filled
+amber chips/CTAs, cream serif headings, dark inputs) and **Pebble**
+(`[data-theme="pebble"]` — fog/stone/kelp/sea-glass/clay tokens,
+Fraunces SemiBold headings lazily loaded by theme.js only when the
+theme is applied, 26px feather-shadow cards, facts as chips — sand
+lifecycle chip, sea-glass count pill, location pill — kelp pill
+buttons). Both registered in the switcher. Static 4-up preview
+(real stylesheet + real markup) verified feed, cards, states, tabs,
+buttons, interview, inputs; per-screen sweep of detail / debrief /
+profile rides the live review below, since those screens compose the
+same themed components.
+Gate: founder (and any invited reviewers) deploy the branch to the
+workshop stack and compare live via the chip / `?theme=` links.
 
 ### Chunk 3 — the pick, landed
 

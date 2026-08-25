@@ -14,10 +14,29 @@ import { WORKSHOP_MODE } from './config.js';
 
 // Themes the switcher offers. `current` is the shipped UI and the
 // default everywhere; directions are appended here as they land.
+// `fontsHref` lazily loads faces the base app doesn't ship (Pebble's
+// Fraunces) the first time the theme is applied.
 export const THEMES = [
   { id: 'current', label: 'Current' },
   { id: 'morning-linen', label: 'Morning Linen' },
+  { id: 'lantern', label: 'Lantern' },
+  {
+    id: 'pebble',
+    label: 'Pebble',
+    fontsHref: 'https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;1,400&display=swap',
+  },
 ];
+
+function ensureFonts(theme) {
+  if (!theme.fontsHref) return;
+  const id = `theme-fonts-${theme.id}`;
+  if (document.getElementById(id)) return;
+  const link = document.createElement('link');
+  link.id = id;
+  link.rel = 'stylesheet';
+  link.href = theme.fontsHref;
+  document.head.appendChild(link);
+}
 
 const STORAGE_KEY = 'irl_theme';
 
@@ -35,6 +54,7 @@ function urlTheme() {
 
 export function applyTheme(id) {
   const theme = validTheme(id) ?? 'current';
+  ensureFonts(THEMES.find((t) => t.id === theme));
   if (theme === 'current') {
     delete document.documentElement.dataset.theme;
   } else {
