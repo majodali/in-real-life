@@ -27,3 +27,4 @@ findings pointer (or —)`.
   (`mtool audit form`; transition from the owner-run entry above —
   W-007 confirmed resolved, and the lag warning appeared with the
   v1.2.0 release)
+- 2026-08-30 — form — full tree — audited 4be3789 against methodology 1.3.0 — pass (1 info) — —
