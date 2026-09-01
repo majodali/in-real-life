@@ -24,8 +24,9 @@ import { SQSClient, GetQueueAttributesCommand, ReceiveMessageCommand } from '@aw
 import { CloudWatchLogsClient, FilterLogEventsCommand } from '@aws-sdk/client-cloudwatch-logs';
 import { ScanCommand } from '@aws-sdk/lib-dynamodb';
 import { ddb } from './cleanup.mjs';
+import { awsRegion } from './region.mjs';
 
-const REGION = process.env.AWS_REGION || 'us-east-1';
+const REGION = awsRegion();
 
 export async function projectorDiagnostics(config) {
   const notes = [];
