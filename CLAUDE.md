@@ -138,6 +138,21 @@ infrastructure/
 
 Unit tests are co-located `*.test.mjs` files (`npm test`); functional tests hit a live stack (`npm run test:functional`, serial).
 
+The functional suite reads the deployed stack's outputs, so it needs
+the **region and credentials of the account you deployed to** —
+workloads are in `us-west-2`, and an explicit region on the SDK client
+overrides whatever the profile configures:
+
+```bash
+export AWS_PROFILE=irl-nonprod   # the SSO profile you logged in with
+export AWS_REGION=us-west-2      # or set a region on that profile
+npm run test:functional
+```
+
+Nothing is guessed: a missing region fails loudly rather than silently
+reading the wrong one (`test/helpers/region.mjs`), and a stack read
+that fails names the region and profile it used.
+
 ## Page Flows
 
 - **Dev start page** (`src/index.html`): Pick a pre-built persona, a previously-created user, or create a new user
