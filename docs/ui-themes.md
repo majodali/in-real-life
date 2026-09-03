@@ -32,16 +32,27 @@ card with per-direction tokens and a recommendation).
 - **Themes over forks**: each theme is a CSS layer in `styles.css`
   keyed off `data-theme` on the root element, behind existing class
   names — no markup forks. Grove is the absence of the attribute.
-- **The default is static**: `app.html` sets
+- **The default is static**: every page sets
   `data-theme="morning-linen"` on `<html>`, so production renders the
-  identity with no JS and no flash. `js/theme.js` only acts on
-  workshop stacks.
+  identity with no JS and no flash.
+- **The choice lives in `localStorage`** (key `irl_theme`), not in
+  the URL or per-tab storage: a theme is a personalization, so it
+  follows the person across tabs and reloads, and the same key is what
+  a future member-facing appearance setting writes (backlog:
+  member-selectable dark theme). `?theme=<id>` still works as a
+  one-shot override for a shared review link — applying it stores the
+  choice and drops the parameter from the URL.
 - **Workshop switcher**: a floating chip (bottom-left) cycles the
-  registered themes; selection resolves `?theme=` → per-tab
-  sessionStorage → default, and `history.replaceState` keeps the URL
-  shareable as seen. This is the standing vehicle for design reviews
-  with other people: hand each reviewer a `?theme=` link. Production
-  ignores `?theme=` entirely.
+  registered themes. The chip is workshop-only; the *stored theme
+  applies on every stage*, which is what makes the future member
+  setting a surface change rather than a mechanism change.
+- **Every page, not just the app shell**: `app.html`, `index.html`
+  and `terms.html` all set the default `data-theme` statically and
+  call `initTheme()`. `theme.js` reads `window.__IRL_CONFIG__`
+  directly instead of importing `config.js`, so the public pages —
+  which carry only the workshop flag, substituted by
+  `inject-config.mjs` alongside the app's full config — can switch
+  themes without the API config they don't have.
 - **Fonts**: Pebble's Fraunces loads lazily (theme.js injects the
   Google Fonts link on first application), so the base app never pays
   for faces it doesn't use.
@@ -54,9 +65,11 @@ card with per-direction tokens and a recommendation).
 - **Member-selectable dark theme** (Lantern) — needs a member-facing
   setting surface and cross-device persistence thinking; until then
   themes are a workshop review tool only.
-- **Landing page, terms, and register views** still render the Grove
-  identity — the app shell moved first; those surfaces follow as
-  their own slice.
+- **Landing page and terms** now inherit the theme *tokens* (palette,
+  type) but not a redesign — their `.landing-*` / `.terms-*`
+  components have no theme layer yet, and the landing page needs
+  design work of its own, not a restyle (its own plan). The generated
+  register views carry their own inline CSS and are untouched.
 - **Field Notes' list grammar** folded into Morning Linen's feed —
   a markup change (date column, entry rules), not a theme layer.
 - Shared moves needing markup/data: avatar clusters over counters,
@@ -64,8 +77,9 @@ card with per-direction tokens and a recommendation).
 
 ## Watch
 
-- Two identities coexist until the landing/terms/registers slice
-  lands — acceptable short-term, but the seam is visible (app linen,
-  landing grove); prioritize that slice before soft open.
+- The landing/terms pages now share the app's palette, but their
+  layout is still the plain pre-theme one — the seam is now
+  compositional rather than chromatic; the landing redesign plan
+  closes it.
 - The switcher's theme registry is append-only in spirit: removing a
   theme invalidates shared `?theme=` links reviewers may hold.

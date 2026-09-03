@@ -2156,9 +2156,7 @@ html, body {
 [data-theme="morning-linen"] .event-card,
 [data-theme="morning-linen"] .profile-card,
 [data-theme="morning-linen"] .organize-box,
-[data-theme="morning-linen"] .preview-card,
-[data-theme="morning-linen"] .auth-card .auth-content,
-[data-theme="morning-linen"] .interview-card .interview-content {
+[data-theme="morning-linen"] .preview-card {
   background: var(--ml-surface); border: 1px solid var(--ml-border);
   border-radius: 20px; box-shadow: var(--ml-shadow);
 }
@@ -2289,9 +2287,7 @@ html, body {
 [data-theme="lantern"] .event-card,
 [data-theme="lantern"] .profile-card,
 [data-theme="lantern"] .organize-box,
-[data-theme="lantern"] .preview-card,
-[data-theme="lantern"] .auth-card .auth-content,
-[data-theme="lantern"] .interview-card .interview-content {
+[data-theme="lantern"] .preview-card {
   background: var(--lt-surface); border: 1px solid var(--lt-border);
   border-radius: 18px; box-shadow: none; color: var(--text);
 }
@@ -2426,9 +2422,7 @@ html, body {
 [data-theme="pebble"] .event-card,
 [data-theme="pebble"] .profile-card,
 [data-theme="pebble"] .organize-box,
-[data-theme="pebble"] .preview-card,
-[data-theme="pebble"] .auth-card .auth-content,
-[data-theme="pebble"] .interview-card .interview-content {
+[data-theme="pebble"] .preview-card {
   background: var(--pb-surface); border: none;
   border-radius: 26px; box-shadow: var(--pb-shadow);
 }
