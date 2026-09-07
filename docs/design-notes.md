@@ -63,6 +63,7 @@ Understanding of a person is **seeded** at onboarding and **grown** from what th
 - `scenario-walkthroughs.md` — the matching + success test scenarios run concretely through the design as written; two passes (F1–F12 triaged → D46–D51; second pass re-verifies all twelve and adversarially probes the new machinery, F13–F14 fixed). All scenarios currently `holds`.
 
 **Product surface (cross-cutting)**
+- `repo-map.md` — where the code lives: frontend modules, backend layout, the three test rungs and how each is run, screens and routes, browser storage. Moved out of `CLAUDE.md` at the v1.5.0 migration (K-002).
 - `ui-themes.md` — **(decided: U9)** the visual identity (Morning Linen) and the runtime theme system: themes over forks behind existing class names, the workshop switcher as the standing design-review vehicle, Grove/Lantern/Pebble, what's deliberately not done yet.
 
 **Trust & safety / operations (Group 4)**
