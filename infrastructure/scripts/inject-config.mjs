@@ -99,11 +99,20 @@ const config = {
   __IRL_WORKSHOP_MODE__: String((outputs.Stage ?? 'workshop') !== 'prod'),
 };
 
-const htmlIn = readFileSync(join(srcDir, 'app.html'), 'utf-8');
-let htmlOut = htmlIn;
-for (const [placeholder, value] of Object.entries(config)) {
-  htmlOut = htmlOut.split(placeholder).join(value);
+// Pages carrying __IRL_* placeholders. app.html takes the full runtime
+// config; the public pages carry only the workshop flag (they offer the
+// design switcher on workshop stacks — docs/ui-themes.md).
+const PAGES = ['app.html', 'index.html', 'terms.html'];
+
+function substitute(name) {
+  let html = readFileSync(join(srcDir, name), 'utf-8');
+  for (const [placeholder, value] of Object.entries(config)) {
+    html = html.split(placeholder).join(value);
+  }
+  return html;
 }
+
+const htmlOut = substitute('app.html');
 
 if (dryRun) {
   process.stdout.write(htmlOut);
@@ -114,7 +123,9 @@ if (dryRun) {
 rmSync(distDir, { recursive: true, force: true });
 mkdirSync(distDir, { recursive: true });
 cpSync(srcDir, distDir, { recursive: true });
-writeFileSync(join(distDir, 'app.html'), htmlOut);
+for (const name of PAGES) {
+  writeFileSync(join(distDir, name), name === 'app.html' ? htmlOut : substitute(name));
+}
 
 // Drop the colocated test files; they're not part of the runtime bundle.
 for (const f of walk(distDir)) {
