@@ -12,8 +12,9 @@ import {
   AdminInitiateAuthCommand,
   AdminDeleteUserCommand,
 } from '@aws-sdk/client-cognito-identity-provider';
+import { awsRegion } from './region.mjs';
 
-const REGION = process.env.AWS_REGION || 'us-east-1';
+const REGION = awsRegion();
 const cognito = new CognitoIdentityProviderClient({ region: REGION });
 
 export async function createTestUser({ userPoolId, userPoolClientId, email, password = 'TestPass1!', admin = false }) {

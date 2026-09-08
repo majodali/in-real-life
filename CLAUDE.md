@@ -2,13 +2,35 @@
 
 ## Methodology — binding
 
-This project follows majodali/methodology v1.4.0 as declared in
+This project follows majodali/methodology v1.5.0 as declared in
 docs/classification.md. That file strictly defines this project's
 document lifecycles and workflows. Read it before any work; nothing
 in this file or under .claude/ overrides it.
 
 Classification: C2 / S2 / web-app / serverless-aws
 Deviations: none
+
+## Reporting and writing — cached from W-008; do not edit here
+
+Reports to the human owner carry three parts, in this order:
+
+1. **Asks** — the decisions and actions requested of the reader.
+2. **What is already covered** — the parts of the deliverable that
+   encode decisions the conversation already settled.
+3. **What changed** — the parts that are new, each with a named
+   pointer into the deliverable and what to review there.
+
+State an empty part; never drop it: "No asks", "We already covered
+everything in the document", "The content is all new".
+
+Lead with the outcome or the decision needed, never with the process
+that produced it. Write short, direct sentences, one idea each. Cut
+clauses that add tone but not content: dramatic accumulation,
+aphorism, suspense. Name every identifier you cite.
+
+Authority: majodali/methodology W-008 (reports map their
+deliverables), the P- rules, and its style guide. This block is a
+cache — amend it upstream, never here.
 
 ## What This Project Is
 
@@ -137,6 +159,21 @@ infrastructure/
 ```
 
 Unit tests are co-located `*.test.mjs` files (`npm test`); functional tests hit a live stack (`npm run test:functional`, serial).
+
+The functional suite reads the deployed stack's outputs, so it needs
+the **region and credentials of the account you deployed to** —
+workloads are in `us-west-2`, and an explicit region on the SDK client
+overrides whatever the profile configures:
+
+```bash
+export AWS_PROFILE=irl-nonprod   # the SSO profile you logged in with
+export AWS_REGION=us-west-2      # or set a region on that profile
+npm run test:functional
+```
+
+Nothing is guessed: a missing region fails loudly rather than silently
+reading the wrong one (`test/helpers/region.mjs`), and a stack read
+that fails names the region and profile it used.
 
 ## Page Flows
 

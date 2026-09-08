@@ -11,8 +11,9 @@ import {
 } from '@aws-sdk/lib-dynamodb';
 import { decryptPii } from '../../lambda/api/lib/crypto-shred.mjs';
 import { piiFieldsFor } from '../../lambda/api/lib/pii-registry.mjs';
+import { awsRegion } from './region.mjs';
 
-const REGION = process.env.AWS_REGION || 'us-east-1';
+const REGION = awsRegion();
 const ddb = DynamoDBDocumentClient.from(new DynamoDBClient({ region: REGION }));
 
 // Read an aggregate's crypto-shred key (null if it has none — e.g. an

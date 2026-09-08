@@ -10,9 +10,11 @@ for them.
 - **C-tier**: C2 (serious project, pre-users). Promotion to C3 is
   bound to soft open — real members are what "production with real
   users" means here; the gate rides the launch playbook (§6).
-- **Pinned methodology version**: 1.4.0 (compliance target;
-  migrated from 1.3.0 on 2026-08-30 — v1.4.0 migration notes:
-  none mandatory, so the pin bump is the whole migration)
+- **Pinned methodology version**: 1.5.0 (compliance target;
+  migrated from 1.4.0 on 2026-09-02 — v1.5.0 carries one migration
+  note: a project with an Agent bootstrap copies W-008's prescribed
+  block into it verbatim, done in `CLAUDE.md` in the same commit. The
+  other five amendments ship migration-note `none`.)
 - **S-level**: S2 (member PII: profiles, interview content, debriefs —
   see the crypto-shredding design and PII registry)
 - **Type**: web-app
