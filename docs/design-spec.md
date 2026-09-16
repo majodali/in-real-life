@@ -229,6 +229,16 @@ something that implies wanting to know — confirming attendance,
 proposing an event — with plain text about what we will send. A
 member who declines still gets the in-app surfaces and the digest.
 
+**Digest or push is an open hypothesis, not a pending decision**
+(H8). The founder's read, 2026-09-16: a digest suits a busy,
+non-urgent channel, but how much of that any given member wants is
+unknown. So G7 stays channel-agnostic — the spec requires consented,
+non-cold asking and leaves which channel carries what to H8's
+evidence: a calm digest for the non-urgent, push reserved for
+commitment-bound, time-sensitive messages, with the kill criterion
+that a cancellation reaching someone too late kills digest-first for
+that class.
+
 **What IRL is willing to send** is a D12 question, not a technical
 one, and belongs with the Notifications item: cancellations and
 changes to events the member committed to, and time-sensitive
@@ -323,8 +333,9 @@ No build step, so the budget is about restraint, not tooling.
 ## 10. Open questions and watch
 
 - **Digest vs push** for G7's first real consumer (cancellations) —
-  §3 raised the digest; the Notifications item decides with the
-  founder.
+  now **H8** in the hypothesis register, with kill criteria and the
+  signals that would settle it. Not a decision waiting to be made;
+  a belief waiting for evidence.
 - **What a thin calendar looks like on the landing page.** SPL's
   honest notice suggests saying it; we have not designed how.
 - **Desktop for the app screens** (feed, event detail) is a bigger
