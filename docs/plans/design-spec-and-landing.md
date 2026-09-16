@@ -1,7 +1,10 @@
 # Design spec and landing redesign
 
-Status: active (chunk 1 delivered 2026-09-16 — `docs/design-spec.md`,
-U10, D70 — and at its gate. Founder's answers recorded 2026-09-03:
+Status: active (**chunk-1 gate passed 2026-09-16** — founder reviewed
+`docs/design-spec.md`, no changes asked; U10 and D70 stand as written.
+One question from the review is still open and does not block chunk 2:
+digest vs push as G7's first channel. Founder's answers recorded
+2026-09-03:
 comparative set agreed with Seattle Public Library as the civic
 example · desktop becomes a genuinely wide layout, and the
 native-app-vs-web question joins the spec as its own analysis ·
@@ -210,7 +213,8 @@ became a first-class candidate for G7 rather than a lesser push
 page's job (Seattle Public Library); and G1/G2 got their teeth from
 Nextdoor's sign-up wall.
 
-Gate: founder reviews the spec — goals, the process, and D70.
+Gate: **passed 2026-09-16** — reviewed with no changes asked. D70
+stands; the digest-vs-push question rides with the Notifications item.
 
 #### Original scope
 
