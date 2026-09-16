@@ -1,6 +1,7 @@
 # Design spec and landing redesign
 
-Status: active (chunk-1 questions answered by the founder 2026-09-03:
+Status: active (chunk 1 delivered 2026-09-16 — `docs/design-spec.md`,
+U10, D70 — and at its gate. Founder's answers recorded 2026-09-03:
 comparative set agreed with Seattle Public Library as the civic
 example · desktop becomes a genuinely wide layout, and the
 native-app-vs-web question joins the spec as its own analysis ·
@@ -190,7 +191,28 @@ that keeps existing in every scenario.
 
 <!-- Chunk boundaries proposed; founder adjusts and gates (W-001). -->
 
-### Chunk 1 — the spec, the process, and the platform analysis
+### Chunk 1 — the spec, the process, and the platform analysis — DELIVERED (at gate)
+
+Shipped: `docs/design-spec.md` (goals G1–G10, non-goals, the five-site
+comparative review with borrow/avoid and a stated method, platform
+constraints verified against MDN and Apple's documentation, the
+accessibility bar, a performance budget grounded in today's measured
+weights, and the design process); **U10** — design under the technical
+discipline — with the UX register upgraded (status column, supersession
+rule, and U9's out-of-order row moved back into sequence); **D70** —
+web-first and installable, no native app for launch #1, revisit
+triggers named. Notifications, accessibility and native-app Backlog
+items now point at the spec.
+
+Three things from the review that the gate should weigh: the **digest**
+became a first-class candidate for G7 rather than a lesser push
+(Front Porch Forum); **honest operational notices** joined the landing
+page's job (Seattle Public Library); and G1/G2 got their teeth from
+Nextdoor's sign-up wall.
+
+Gate: founder reviews the spec — goals, the process, and D70.
+
+#### Original scope
 
 Comparative review of the five agreed sites (borrow / avoid per
 site); goals and non-goals settled; **the design process written down

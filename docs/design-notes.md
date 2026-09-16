@@ -5,7 +5,7 @@ when the root project README landed, since this file is the
 design-notes index, not the repo orientation). Design notes for
 **in·real·life** — a local community meetup app: AI-guided onboarding, discover nearby events and people, coordinate real-world meetups. Privacy-focused (first names only, no messaging — just show up).
 
-These notes are **living and provisional** — current best decisions, revisable as real usage teaches us. `decisions.md` is the map: a register of every decision (D1–D69) with a one-line pointer to the note that holds the reasoning, plus watch-items for emergent effects we're tracking.
+These notes are **living and provisional** — current best decisions, revisable as real usage teaches us. `decisions.md` is the map: a register of every decision (D1–D70) with a one-line pointer to the note that holds the reasoning, plus watch-items for emergent effects we're tracking.
 
 ## How the pieces fit
 
@@ -63,6 +63,7 @@ Understanding of a person is **seeded** at onboarding and **grown** from what th
 - `scenario-walkthroughs.md` — the matching + success test scenarios run concretely through the design as written; two passes (F1–F12 triaged → D46–D51; second pass re-verifies all twelve and adversarially probes the new machinery, F13–F14 fixed). All scenarios currently `holds`.
 
 **Product surface (cross-cutting)**
+- `design-spec.md` — **(decided: U10, D70)** what the pages are for and how a design is judged: goals G1–G10 (incl. responsive desktop, installable, consented push), non-goals, the five-site comparative review with borrow/avoid, platform constraints (iOS web push needs home-screen install), the web-first platform decision, the accessibility bar and performance budget, and the design process itself.
 - `repo-map.md` — where the code lives: frontend modules, backend layout, the three test rungs and how each is run, screens and routes, browser storage. Moved out of `CLAUDE.md` at the v1.5.0 migration (K-002).
 - `ui-themes.md` — **(decided: U9)** the visual identity (Morning Linen) and the runtime theme system: themes over forks behind existing class names, the workshop switcher as the standing design-review vehicle, Grove/Lantern/Pebble, what's deliberately not done yet.
 
