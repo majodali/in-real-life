@@ -17,7 +17,10 @@ the `__IRL_*__` placeholders into the three pages that carry them.
 | `terms.html` | User agreement, versioned (`event-sourcing.md` → agreement versioning) |
 | `app.html` | The app shell: one `<div class="screen">` per screen, plus the runtime config block |
 | `taglines.html` | Tagline review page (workshop tool) |
-| `css/styles.css` | All styles, including the `data-theme` layers (`ui-themes.md`) |
+| `css/styles.css` | All styles: base (phone), the `data-theme` layers (`ui-themes.md`), and the responsive layer at the end (`design-spec.md` §4) |
+| `manifest.json` | Web app manifest — installability (`design-spec.md` §5) |
+| `sw.js` | Service worker: app shell only, never API responses (T11) |
+| `icons/` | App icons: 192, 512, 512-maskable, apple-touch (placeholders) |
 
 `src/js/` — app plumbing:
 
@@ -26,6 +29,7 @@ the `__IRL_*__` placeholders into the three pages that carry them.
 | `app.js` | Init, hash routing, screen management |
 | `config.js` | Runtime config from the injected `window.__IRL_CONFIG__` |
 | `theme.js` | Theme registry + switching (`ui-themes.md`) |
+| `pwa.js` | Service-worker registration + `isInstalled()`; never prompts |
 | `api.js`, `auth.js`, `commands.js`, `services.js` | HTTP client, Cognito auth, command wrappers |
 | `store.js` | Browser storage wrapper (dev persona flow + offline fallbacks) |
 | `data.js` | Mock data for the prototype flows |

@@ -234,7 +234,31 @@ U-register header updated, and the Backlog items pointed at the spec.
 Gate: founder reviews the spec — goals, the process, and the platform
 call.
 
-### Chunk 2 — responsive + installable foundations
+### Chunk 2 — responsive + installable foundations — DELIVERED (at gate)
+
+Shipped: the responsive layer (phone-first, breakpoints at 720/1024
+chosen from where the current layouts actually break; landing two- and
+three-up with a 68ch prose measure; app shell on one 1100px container
+with the feed as a card grid), `manifest.json` + placeholder icons
+(192 / 512 / 512-maskable / apple-touch, `i·r·l` in the Morning Linen
+palette), iOS meta, `sw.js` (app shell only — never API responses,
+T11), `js/pwa.js` registration that never prompts, and
+`user-scalable=no` removed from all four pages. Guarded by
+`src/js/pwa.test.mjs` (5 tests); 284 frontend tests pass.
+
+Verified on localhost (the one place a service worker runs without
+HTTPS): worker registers and activates, manifest resolves, no page
+errors. Desktop layout checked at 820 and 1440 against the real
+stylesheet.
+
+Also fixed: the propose button, styled for Grove's dark header, was
+invisible on Morning Linen's light header — a live defect on the
+default theme, found by looking at the feed at desktop width.
+
+Gate: founder deploys to workshop, installs the site to a phone home
+screen, and opens every page on a desktop browser.
+
+#### Original scope
 
 The technical goals that don't depend on the visual direction:
 breakpoints and a desktop layout posture applied across existing

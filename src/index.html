@@ -2,8 +2,13 @@
 <html lang="en" data-theme="morning-linen">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#f8f3e9">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="in·real·life">
 <link rel="stylesheet" href="css/styles.css">
 <title>in·real·life</title>
 
@@ -18,7 +23,9 @@
 </script>
 <script type="module">
   import { initTheme } from './js/theme.js';
+  import { initPwa } from './js/pwa.js';
   initTheme();
+  initPwa();
 </script>
 </head>
 <body>

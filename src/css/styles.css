@@ -2221,6 +2221,15 @@ html, body {
 [data-theme="morning-linen"] .auth-input:focus,
 [data-theme="morning-linen"] .profile-field-input:focus { border-color: var(--moss); }
 
+/* The propose button is styled for Grove's dark header; on a light
+   header it needs real contrast (found at the chunk-2 desktop pass). */
+[data-theme="morning-linen"] .feed-propose-btn {
+  background: transparent;
+  border: 1px solid rgba(42, 58, 47, 0.22);
+  color: var(--earth);
+}
+[data-theme="morning-linen"] .feed-propose-btn:active { background: rgba(42, 58, 47, 0.06); }
+
 /* Small pieces */
 [data-theme="morning-linen"] .toast { border-radius: 999px; }
 [data-theme="morning-linen"] .match-avatar { border: 2px solid var(--ml-surface); }
@@ -2476,6 +2485,99 @@ html, body {
 [data-theme="pebble"] .progress-dot.done { background: var(--sage); }
 [data-theme="pebble"] .progress-dot.active { background: var(--earth); }
 
+[data-theme="pebble"] .feed-propose-btn {
+  background: transparent;
+  border: 1.5px solid rgba(127, 169, 155, 0.5);
+  color: var(--moss);
+}
+
 /* Small pieces */
 [data-theme="pebble"] .toast { border-radius: 999px; box-shadow: var(--pb-btn-shadow); }
 [data-theme="pebble"] .emoji-option.selected { border-color: var(--sage); background: rgba(127,169,155,0.16); }
+
+/* ─── Responsive: phone is the origin, desktop is a real layout ─── */
+/* Design spec G5. Breakpoints follow content, not devices:
+   --bp-wide is where two-column lists stop being cramped,
+   --bp-desktop is where the app container stops growing.
+   Everything above this comment is the phone layout, unchanged. */
+
+:root {
+  --measure: 68ch;        /* readable prose line length */
+  --container: 1100px;    /* app + landing ceiling on desktop */
+}
+
+@media (min-width: 720px) {
+  /* Landing + terms: the column widens and lists go two-up. */
+  .landing { padding: 0 32px 72px; }
+  .landing-content { max-width: 780px; }
+  .landing-section p,
+  .terms-lede,
+  .landing-step-body p,
+  .landing-principle p { max-width: var(--measure); }
+
+  .landing-hero { padding-top: 56px; }
+  .landing-hero .wordmark { font-size: 44px; }
+  .tagline { font-size: 20px; }
+
+  /* The CTA stops being a full-width bar: it is one action, not a wall. */
+  .landing-cta { flex-direction: row; align-items: center; gap: 20px; }
+  .landing-cta .btn-primary { width: auto; padding-inline: 40px; }
+
+  .landing-principles { display: grid; grid-template-columns: 1fr 1fr; gap: 28px 36px; }
+  .landing-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; }
+  .landing-step { flex-direction: column; }
+
+  /* App shell: content aligns to one container; the feed becomes a grid. */
+  .feed-header,
+  .tab-bar,
+  .cards-scroll,
+  .detail-header,
+  .detail-body,
+  .profile-header,
+  .profile-body,
+  .auth-card,
+  .interview-card {
+    max-width: var(--container);
+    margin-inline: auto;
+    width: 100%;
+  }
+
+  .cards-scroll {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    align-content: start;
+    gap: 16px;
+    padding: 20px 24px 48px;
+  }
+  /* Section labels span the grid — they head a row, not a cell. */
+  .feed-section-label,
+  .section-label { grid-column: 1 / -1; }
+  .feed-empty { grid-column: 1 / -1; }
+  /* One action, not a full-width bar across a desktop header (G2). */
+  .feed-propose-btn { width: auto; padding-inline: 28px; }
+
+  .detail-body,
+  .profile-body { padding-inline: 24px; }
+  .detail-body > *,
+  .profile-body > * { max-width: var(--measure); }
+}
+
+@media (min-width: 1024px) {
+  .landing-content { max-width: var(--container); }
+  .landing-hero .wordmark { font-size: 52px; }
+  .landing-principles { grid-template-columns: repeat(3, 1fr); }
+  .landing-section h2 { font-size: 26px; }
+
+  /* Prose keeps its measure even though the container is wide — the
+     page uses the width for structure, never for longer lines. */
+  .landing-section p,
+  .terms-lede,
+  .terms-list { max-width: var(--measure); }
+
+  .feed-title { font-size: 32px; }
+}
+
+/* The workshop theme chip sits clear of a desktop scrollbar. */
+@media (min-width: 720px) {
+  .theme-chip { bottom: 20px; left: 20px; }
+}
