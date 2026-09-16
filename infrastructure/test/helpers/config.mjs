@@ -1,16 +1,30 @@
 // Loads the test stack's CDK outputs once per test run.
 
 import { CloudFormationClient, DescribeStacksCommand } from '@aws-sdk/client-cloudformation';
+import { awsRegion, awsContext } from './region.mjs';
 
 const STACK_NAME = process.env.TEST_STACK_NAME || 'IrlStackTest';
-const REGION = process.env.AWS_REGION || 'us-east-1';
+const REGION = awsRegion();
 
 let cached;
 
 export async function loadTestConfig() {
   if (cached) return cached;
   const cf = new CloudFormationClient({ region: REGION });
-  const out = await cf.send(new DescribeStacksCommand({ StackName: STACK_NAME }));
+  let out;
+  try {
+    out = await cf.send(new DescribeStacksCommand({ StackName: STACK_NAME }));
+  } catch (err) {
+    // "does not exist" is almost always the wrong region or the wrong
+    // credentials, not a missing deploy — say which ones were used.
+    throw new Error(
+      `Could not read stack ${STACK_NAME} (${awsContext()}): ${err.message}\n`
+      + 'If the stack is deployed, check that this region and profile are the '
+      + 'ones you deployed to (workloads are in us-west-2; export AWS_REGION '
+      + 'and AWS_PROFILE, or set a region on the profile).',
+      { cause: err },
+    );
+  }
   const outputs = out.Stacks?.[0]?.Outputs ?? [];
   const get = (k) => outputs.find((o) => o.OutputKey === k)?.OutputValue;
 

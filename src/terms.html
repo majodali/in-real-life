@@ -1,11 +1,25 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="morning-linen">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/styles.css">
 <title>in·real·life — Terms of Use</title>
+
+<!--
+  Public pages carry only the workshop flag (the deploy tooling
+  substitutes it, as it does for app.html). theme.js reads it to decide
+  whether to offer the design switcher; the chosen theme itself comes
+  from localStorage and applies on every page.
+-->
+<script>
+  window.__IRL_CONFIG__ = { workshopMode: '__IRL_WORKSHOP_MODE__' === 'true' };
+</script>
+<script type="module">
+  import { initTheme } from './js/theme.js';
+  initTheme();
+</script>
 </head>
 <body>
 
