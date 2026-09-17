@@ -132,6 +132,15 @@ for (const f of walk(distDir)) {
   if (f.endsWith('.test.mjs')) rmSync(f);
 }
 
+// Review-only surfaces never reach production. Same principle as the
+// workshop-gated routes: absence is a stronger guarantee than a gate
+// (T5). `src/landing/` holds the design-direction previews.
+const isProd = (outputs.Stage ?? 'workshop') === 'prod';
+if (isProd) {
+  rmSync(join(distDir, 'landing'), { recursive: true, force: true });
+  console.log('Production bundle: dropped src/landing/ (review-only)');
+}
+
 // Generate the public register views (K-009, docs/hosted-register-views.md)
 // into the bundle — every site deploy republishes the latest snapshot.
 const registers = renderRegisters(join(distDir, 'registers'));

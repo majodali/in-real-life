@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<!-- Review index for the landing-page directions (design-spec chunk 3).
+     A workshop-only surface: inject-config drops src/landing/ from the
+     production bundle. Deleted in chunk 4 when the pick lands. -->
+<html lang="en" data-theme="morning-linen">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/styles.css">
+<title>Landing directions — review</title>
+<style>
+  html, body { overflow: auto; height: auto; }
+  .rev { max-width: 760px; margin: 0 auto; padding: 40px 20px 80px; }
+  .rev h1 { font-family: 'Playfair Display', serif; font-size: 30px; color: var(--earth); margin-bottom: 8px; }
+  .rev p { margin-bottom: 14px; color: var(--text); }
+  .rev .soft { color: var(--soft); font-size: 14px; }
+  .dir { display: block; background: #fffdf6; border: 1px solid rgba(42,58,47,.07);
+         border-radius: 20px; padding: 18px 20px; margin-bottom: 14px;
+         text-decoration: none; color: inherit;
+         box-shadow: 0 1px 2px rgba(42,58,47,.04), 0 10px 30px rgba(42,58,47,.06); }
+  .dir h2 { font-family: 'Playfair Display', serif; font-size: 20px; color: var(--earth); margin-bottom: 4px; }
+  .dir p { font-size: 14px; color: var(--soft); margin: 0; }
+  .dir:focus-visible { outline: 2px solid var(--moss); outline-offset: 3px; }
+</style>
+</head>
+<body>
+<main class="rev">
+  <h1>Landing directions — review</h1>
+  <p>Three directions drawn against the same brief
+    (<code>design/landing-brief-2026-09.md</code>), to be judged per goal
+    before anyone says which they prefer.</p>
+  <p class="soft">Open each on a phone and on a desktop browser. The
+    scorecard lives in <code>design/landing-directions-2026-09.md</code>.</p>
+
+  <a class="dir" href="a-calendar.html">
+    <h2>A · The calendar is the argument</h2>
+    <p>Leads with what is actually happening near you; the explanation
+      arrives around the events rather than before them.</p>
+  </a>
+
+  <a class="dir" href="b-invitation.html">
+    <h2>B · The invitation</h2>
+    <p>Reads like an invitation from a neighbour rather than a product
+      page: one voice, few elements, longer breaths.</p>
+  </a>
+
+  <a class="dir" href="c-notice-board.html">
+    <h2>C · The notice board</h2>
+    <p>The register of a civic institution you trust: plain structure,
+      stated refusals, an honest line about the stage we're at.</p>
+  </a>
+
+  <p class="soft" style="margin-top:28px">
+    Current live landing page for comparison:
+    <a href="../index.html">index.html</a>
+  </p>
+</main>
+</body>
+</html>
