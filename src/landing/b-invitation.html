@@ -1,0 +1,616 @@
+<!--
+  Direction B — "The invitation."
+
+  The idea: the page is a letter from us to a neighbor, not a product
+  page. One voice, one warm through-line, and the fewest elements that
+  can carry it: a wordmark, an opening, four short passages, a closing,
+  a signature. The principles are not listed as features; they are
+  written into the letter as the manner of the invitation ("we leave
+  this out, and here is what we do instead"). Playfair carries the
+  headings and the marginal notes, DM Sans carries the prose, and the
+  linen is the paper. On a wide screen the letter keeps a letter's
+  proportions: a sticky letterhead in the left margin, the prose held
+  at a 68ch measure, and two marginal notes set beside the passages
+  they annotate. Nothing is centred except the closing line. The two
+  notes are the only surfaces; everything else sits directly on the
+  cream.
+
+  What we deliberately did not do: no hero image, no illustration and
+  no mascot; no numbered steps or principle grid (the structure is
+  paragraphs, which is what a letter is made of); no counts, streaks,
+  scarcity, urgency, testimonials, press quotes or "people waiting"
+  (there are no members yet, and the page says so); no example events
+  presented as a live calendar (the ones named are labelled as
+  examples); no "I", no name and no persona in the sign-off; no
+  claims about how the reader feels; no sticky or floating call to
+  action (the button appears where the letter invites, at the opening
+  and the close, and nowhere else); no colour outside the Morning
+  Linen tokens; and no --soft text at body size, because at 3.7:1 on
+  cream it fails the contrast bar — secondary text uses --moss instead.
+-->
+<!DOCTYPE html>
+<html lang="en" data-theme="morning-linen">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#f8f3e9">
+<meta name="description" content="in·real·life is a small, not-for-profit way to find meetups on Bainbridge Island and say you'll be there. First names only, no messaging, no ads. You confirm, and then you show up.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<title>in·real·life — an invitation</title>
+
+<style>
+  /* ─── Morning Linen tokens (design/landing-brief-2026-09.md) ─── */
+  :root {
+    --earth: #2a3a2f;
+    --moss: #4c6849;
+    --sage: #7a9e6e;
+    --mist: #f0ead9;
+    --cream: #f8f3e9;
+    --warm: #efe7d4;
+    --amber: #c08a45;
+    --text: #26332a;
+    --soft: #77806f;
+    --surface: #fffdf6;
+    --border: rgba(42, 58, 47, 0.07);
+    --line: rgba(42, 58, 47, 0.1);
+    --shadow: 0 1px 2px rgba(42,58,47,0.04), 0 10px 30px rgba(42,58,47,0.06);
+    --btn-shadow: 0 8px 20px rgba(42,58,47,0.18);
+
+    --serif: 'Playfair Display', Georgia, serif;
+    --sans: 'DM Sans', system-ui, sans-serif;
+    --measure: 68ch;
+    --gutter: 24px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { background: var(--cream); -webkit-text-size-adjust: 100%; }
+
+  body {
+    font-family: var(--sans);
+    font-size: 17px;
+    line-height: 1.65;
+    color: var(--text);
+    background: var(--cream);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ─── Focus, targets, motion ─── */
+  :focus-visible {
+    outline: 2px solid var(--moss);
+    outline-offset: 4px;
+    border-radius: 6px;
+  }
+
+  .skip {
+    position: absolute;
+    left: var(--gutter);
+    top: -100px;
+    background: var(--earth);
+    color: var(--mist);
+    padding: 12px 18px;
+    border-radius: 999px;
+    text-decoration: none;
+    font-weight: 500;
+    z-index: 10;
+  }
+  .skip:focus { top: 12px; }
+
+  /* ─── Page frame ─── */
+  .page {
+    width: 100%;
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 0 var(--gutter);
+  }
+
+  /* ─── Letterhead: wordmark + the one nav ─── */
+  .letterhead {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 20px 0 0;
+  }
+
+  .wordmark {
+    font-family: var(--serif);
+    font-size: 26px;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: var(--earth);
+    text-decoration: none;
+    padding: 9px 0;              /* lifts the target to 44px */
+    display: inline-block;
+  }
+  .wordmark span { color: var(--amber); }
+
+  .letterhead-place {
+    display: none;               /* shown as marginalia on desktop */
+  }
+
+  .signin {
+    color: var(--moss);
+    text-decoration: none;
+    font-size: 15px;
+    font-weight: 500;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    padding: 0 6px;
+    border-bottom: 1px solid transparent;
+  }
+  .signin:hover { border-bottom-color: var(--moss); }
+
+  /* ─── The letter ─── */
+  .letter {
+    padding: 56px 0 24px;
+  }
+
+  .kicker {
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--moss);
+    margin: 0 0 22px;
+  }
+
+  h1 {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: 36px;
+    line-height: 1.14;
+    letter-spacing: -0.01em;
+    color: var(--earth);
+    max-width: 18ch;
+    margin: 0 0 26px;
+  }
+  h1 em { font-style: italic; color: var(--moss); }
+
+  .lede {
+    font-size: 19px;
+    line-height: 1.55;
+    max-width: var(--measure);
+    margin: 0 0 34px;
+  }
+
+  h2 {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: 27px;
+    line-height: 1.2;
+    letter-spacing: -0.005em;
+    color: var(--earth);
+    margin: 0 0 20px;
+  }
+  h2::before {
+    /* the single warm note: a short amber rule where a passage begins */
+    content: '';
+    display: block;
+    width: 32px;
+    height: 2px;
+    background: var(--amber);
+    border-radius: 2px;
+    margin-bottom: 22px;
+  }
+
+  .passage { padding: 44px 0 4px; }
+
+  .prose > p {
+    max-width: var(--measure);
+    margin: 0 0 18px;
+  }
+  .prose > p:last-child { margin-bottom: 0; }
+
+  .prose em {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 1.06em;
+    color: var(--moss);
+  }
+  .prose b {
+    font-weight: 500;
+    color: var(--earth);
+  }
+
+  /* ─── Call to action: the button appears where the letter asks ─── */
+  .ask {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+    margin-top: 4px;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 52px;
+    padding: 0 30px;
+    border-radius: 999px;
+    background: var(--earth);
+    color: var(--mist);
+    text-decoration: none;
+    font-family: var(--sans);
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+    box-shadow: var(--btn-shadow);
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: transform 150ms ease-out, box-shadow 150ms ease-out;
+    width: 100%;
+  }
+  .btn:hover { transform: translateY(-1px); }
+  .btn:active { transform: translateY(0); box-shadow: 0 3px 10px rgba(42,58,47,0.18); }
+
+  .ask-aside {
+    color: var(--moss);
+    font-size: 15px;
+  }
+  .ask-aside a {
+    color: var(--moss);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    display: inline-block;
+    padding: 10px 2px;             /* 44px target */
+    margin: -10px -2px;
+  }
+
+  /* ─── Marginal notes: the only two surfaces on the page ─── */
+  .note {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    box-shadow: var(--shadow);
+    padding: 22px 24px;
+    margin: 30px 0 0;
+    max-width: var(--measure);
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 17px;
+    line-height: 1.55;
+    color: var(--moss);
+  }
+  .note p + p { margin-top: 12px; }
+  .note strong {
+    display: block;
+    font-family: var(--sans);
+    font-style: normal;
+    font-weight: 500;
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--moss);
+    margin-bottom: 10px;
+  }
+
+  /* ─── Closing ─── */
+  .closing {
+    padding: 60px 0 40px;
+    border-top: 1px solid var(--line);
+    margin-top: 52px;
+  }
+  .closing h2::before { display: none; }
+  .closing h2 {
+    font-size: 30px;
+    margin-bottom: 16px;
+  }
+  .closing .prose > p { margin-bottom: 26px; }
+
+  .closing .prose > .signature {
+    margin: 40px 0 0;
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 19px;
+    color: var(--earth);
+    line-height: 1.5;
+  }
+  .signature .wordmark {
+    font-style: normal;
+    font-size: 22px;
+    padding: 0;
+    display: inline;
+  }
+
+  /* ─── Footer ─── */
+  .foot {
+    padding: 28px 0 44px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 24px;
+    align-items: center;
+    font-size: 14px;
+    color: var(--moss);
+  }
+  .foot a {
+    color: var(--moss);
+    text-decoration: none;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    border-bottom: 1px solid transparent;
+  }
+  .foot a:hover { border-bottom-color: var(--moss); }
+  .foot .place { margin-left: auto; }
+
+  /* ─── The only motion on the page is the button's 150ms lift; it
+         goes away when the reader has asked for less motion ─── */
+  @media (prefers-reduced-motion: reduce) {
+    .btn { transition: none; }
+    .btn:hover, .btn:active { transform: none; }
+  }
+
+  /* ─── 640px+: the ask stops being a full-width bar ─── */
+  @media (min-width: 640px) {
+    :root { --gutter: 40px; }
+    .ask { flex-direction: row; align-items: center; gap: 22px; }
+    .btn { width: auto; padding: 0 36px; }
+    h1 { font-size: 44px; }
+    body { font-size: 18px; }
+    .lede { font-size: 20px; }
+  }
+
+  /* ─── 1000px+: a letter's proportions — letterhead in the margin,
+         prose at measure, notes set beside the passage they annotate ─── */
+  @media (min-width: 1000px) {
+    :root { --gutter: 56px; }
+
+    .page {
+      display: grid;
+      grid-template-columns: 240px minmax(0, 1fr);
+      column-gap: 72px;
+      align-items: start;
+    }
+
+    .letterhead {
+      position: sticky;
+      top: 0;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: flex-start;
+      gap: 0;
+      padding: 44px 0 40px;
+      min-height: 100vh;
+    }
+    .wordmark { font-size: 30px; }
+    .letterhead-place {
+      display: block;
+      margin-top: 18px;
+      font-family: var(--serif);
+      font-style: italic;
+      font-size: 17px;
+      line-height: 1.5;
+      color: var(--moss);
+      max-width: 16ch;
+    }
+    .letterhead-place small {
+      display: block;
+      font-family: var(--sans);
+      font-style: normal;
+      font-size: 12px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .letterhead .signin { margin-top: auto; padding: 0; }
+
+    .letter { padding-top: 64px; }
+    .foot { grid-column: 2; }
+
+    .passage {
+      display: grid;
+      grid-template-columns: minmax(0, var(--measure)) minmax(200px, 1fr);
+      column-gap: 56px;
+      align-items: start;
+      padding: 52px 0 8px;
+    }
+    .passage.closing { padding-top: 64px; }
+    .note {
+      grid-column: 2;
+      margin: 0;
+      position: sticky;
+      top: 44px;
+    }
+    /* a note that sits beside a heading aligns to the first paragraph,
+       not to the amber rule */
+    .prose + .note { margin-top: 62px; }
+
+    h1 { font-size: 52px; max-width: 24ch; }
+    h2 { font-size: 30px; }
+    .closing h2 { font-size: 34px; }
+  }
+
+  @media (min-width: 1300px) {
+    :root { --gutter: 72px; }
+    .page { grid-template-columns: 260px minmax(0, 1fr); column-gap: 96px; }
+  }
+</style>
+</head>
+<body>
+
+<a class="skip" href="#letter">Skip to the letter</a>
+
+<div class="page">
+
+  <header class="letterhead">
+    <a class="wordmark" href="#letter" aria-label="in real life — top of page">in<span>·</span>real<span>·</span>life</a>
+    <p class="letterhead-place">
+      <small>An invitation</small>
+      Bainbridge Island, Washington
+    </p>
+    <nav aria-label="Account">
+      <a class="signin" href="../app.html#signin">Sign in</a>
+    </nav>
+  </header>
+
+  <main id="letter" class="letter">
+
+    <section class="opening" aria-labelledby="h-open">
+      <p class="kicker">To our neighbors on Bainbridge</p>
+      <h1 id="h-open">You're invited to meet your neighbors, <em>in real life.</em></h1>
+      <p class="lede">
+        in·real·life is a small, not-for-profit way to find meetups on
+        Bainbridge Island and to say you'll be there. A coffee walk, a
+        book swap, a low-tide morning. You confirm, and then you show
+        up. That is the whole thing.
+      </p>
+      <div class="ask">
+        <a class="btn" href="../app.html#location">Accept the invitation</a>
+        <p class="ask-aside">Already have an account? <a href="../app.html#signin">Sign in</a>.</p>
+      </div>
+    </section>
+
+    <section class="passage" aria-labelledby="h-why">
+      <div class="prose">
+        <h2 id="h-why">Why we're writing</h2>
+        <p>
+          Making friends as an adult shouldn't require an algorithm. It
+          used to take a street, a porch, and a reason to be in the same
+          place at the same time. Bainbridge still has the street and
+          the porch. We are trying to supply the reason.
+        </p>
+        <p>
+          So we built the simplest thing we could: a short list of what
+          is happening nearby, and a way to say you'll be there. There is
+          no more to it than that, and we intend to keep it that way.
+        </p>
+      </div>
+    </section>
+
+    <section class="passage" aria-labelledby="h-how">
+      <div class="prose">
+        <h2 id="h-how">How it goes</h2>
+        <p>
+          <em>First, a short conversation.</em> When you sign up we ask a
+          few questions: what you like, when you're free, the kind of
+          company you enjoy. It takes a few minutes, and you can change
+          your answers whenever you like.
+        </p>
+        <p>
+          <em>Then, a look at what's nearby.</em> We show you meetups
+          close to where you live, and the neighbors who might be at
+          them. If nothing suits, you can propose one of your own.
+        </p>
+        <p>
+          <em>Then you go.</em> Tap &ldquo;I'll be there,&rdquo; and be
+          there. Hellos happen face to face, where they always have.
+        </p>
+      </div>
+      <aside class="note" aria-label="The kind of thing you might find">
+        <strong>The kind of thing you might find</strong>
+        <p>
+          A Saturday coffee walk from Winslow down to the ferry. A book
+          swap on the library lawn. A low-tide morning at Fay Bainbridge.
+          A slow loop through the Grand Forest on a Tuesday evening.
+        </p>
+        <p>
+          These are examples, not a calendar. The calendar is the
+          neighborhood's to fill.
+        </p>
+      </aside>
+    </section>
+
+    <section class="passage" aria-labelledby="h-leave">
+      <div class="prose">
+        <h2 id="h-leave">What we leave out, and what we do instead</h2>
+        <p>
+          <b>Only first names.</b> We share what is needed to recognize
+          you when you arrive: a first name and a little about you. Your
+          last name, your address and your phone number stay yours.
+        </p>
+        <p>
+          <b>No messages.</b> There is no inbox and no way to send anyone
+          a note. The way to talk to someone is to be where they'll be.
+          It is slower, and that is the point.
+        </p>
+        <p>
+          <b>No likes, no follows, no feed.</b> We don't rank people or
+          score you, and we won't send you a notification you can't
+          ignore. What you get instead is a short list, in time order,
+          of what is coming up.
+        </p>
+        <p>
+          <b>No ads, and no one to sell you to.</b> in·real·life is not
+          for profit. We collect the minimum a meetup needs and nothing
+          more, and we would rather you close the app and go outside.
+        </p>
+        <p>
+          <b>Adults, and neighbors.</b> You need to be eighteen or over,
+          and when you sign up we check that you live nearby. This is for
+          the island you are actually on, not the internet at large.
+        </p>
+        <p>
+          <b>Saying you'll be there means being there.</b> Confirming a
+          meetup is a small promise. Someone is making the same one to
+          you.
+        </p>
+      </div>
+      <aside class="note" aria-label="Why we check where you live">
+        <strong>Why we check where you live</strong>
+        <p>
+          Knowing that everyone here really lives nearby is most of what
+          makes this a place you can trust. We would rather say that
+          plainly than promise more than we can keep.
+        </p>
+      </aside>
+    </section>
+
+    <section class="passage" aria-labelledby="h-where">
+      <div class="prose">
+        <h2 id="h-where">Where we are</h2>
+        <p>
+          We are starting on Bainbridge Island, Washington, and only here
+          for now. We will add neighborhoods one at a time, so that each
+          stays small enough to feel like one.
+        </p>
+        <p>
+          We have only just begun, so there is not much on the calendar
+          yet. It fills as neighbors propose things &mdash; a walk, a
+          swap, a Tuesday coffee &mdash; and the first few are the ones
+          that make it a place.
+        </p>
+        <p>
+          Not on Bainbridge? Sign up anyway. We will write when we reach
+          you.
+        </p>
+      </div>
+    </section>
+
+    <section class="passage closing" aria-labelledby="h-close">
+      <div class="prose">
+        <h2 id="h-close">We hope to see you there.</h2>
+        <p>
+          There is nothing to build up to and no one to impress. Say
+          you'll come, and then come.
+        </p>
+        <div class="ask">
+          <a class="btn" href="../app.html#location">Accept the invitation</a>
+          <p class="ask-aside">Already have an account? <a href="../app.html#signin">Sign in</a>.</p>
+        </div>
+        <p class="signature">
+          Warmly,<br>
+          <span class="wordmark">in<span>·</span>real<span>·</span>life</span>
+        </p>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="foot">
+    <a href="../terms.html">Terms of Use</a>
+    <a href="../registers/index.html">How we decide</a>
+    <span class="place">Not for profit &middot; Bainbridge Island, Washington</span>
+  </footer>
+
+</div>
+
+</body>
+</html>

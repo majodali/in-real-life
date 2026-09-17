@@ -66,6 +66,13 @@ Understanding of a person is **seeded** at onboarding and **grown** from what th
 - `design-spec.md` — **(decided: U10, D70)** what the pages are for and how a design is judged: goals G1–G10 (incl. responsive desktop, installable, consented push), non-goals, the five-site comparative review with borrow/avoid, platform constraints (iOS web push needs home-screen install), the web-first platform decision, the accessibility bar and performance budget, and the design process itself.
 - `repo-map.md` — where the code lives: frontend modules, backend layout, the three test rungs and how each is run, screens and routes, browser storage. Moved out of `CLAUDE.md` at the v1.5.0 migration (K-002).
 - `ui-themes.md` — **(decided: U9)** the visual identity (Morning Linen) and the runtime theme system: themes over forks behind existing class names, the workshop switcher as the standing design-review vehicle, Grove/Lantern/Pebble, what's deliberately not done yet.
+- `../design/landing-directions-2026-09.md` — the September 2026
+  landing directions (calendar / invitation / notice board) judged
+  holds-partly-fails against the design-spec goals, written before
+  any preference was voiced (U10 step 5), with the measurement
+  method and the recommendation. Brief:
+  `../design/landing-brief-2026-09.md`. **Awaiting the founder's
+  pick — the pick becomes a U-row.**
 
 **Trust & safety / operations (Group 4)**
 - `hosted-register-views.md` — **(decided: D69)** the public register views (K-009, the C3 gate): generated from the markdown registers on every deploy, latest snapshots only, open-risks verbatim; advisor-pack excerpts reuse the build (D66).

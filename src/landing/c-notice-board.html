@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<!--
+  Direction C — "The notice board."
+
+  The idea: the page borrows the register of a civic institution you
+  already trust — a public library's front page, a well-kept community
+  notice board — instead of a consumer product's. It opens with an
+  honest operational notice about the stage we are at (starting on
+  Bainbridge, small on purpose, calendar still filling, verification
+  by hand and therefore slow). Then it states plainly what IRL is, how
+  it works, what it refuses to do and what it does instead, and where
+  it operates. Structure carries the trust: a dated notice, an
+  at-a-glance card, four numbered steps, a two-column ledger of
+  refusals paired with their replacements, a clearly-labelled sample
+  of what a notice looks like, and a footer with a real address and a
+  real mailbox. Desktop uses the width structurally (notice + heading
+  side by side, steps in a row, a real two-column ledger); prose stays
+  near a 68ch measure. Warm in manner, plain in form, dense in a way
+  that respects the reader.
+
+  What we deliberately did NOT do: no hero image, no illustration, no
+  mascot, no tagline rotation, no testimonials, no press strip, no
+  member count, no "N going", no "people near you", no map, no
+  countdown, no "limited places", no "join the waitlist" framing. The
+  sample notices are labelled twice as illustrations and carry no
+  attendance figures, so the honest status line cannot curdle into a
+  momentum line. No colour outside the Morning Linen tokens; amber
+  appears only as a mark, never as text, because it fails 4.5:1 on
+  cream. --soft is likewise kept off body text for the same reason.
+  No JavaScript: the page is content, links, and one stylesheet.
+-->
+<html lang="en" data-theme="morning-linen">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>in·real·life — Bainbridge Island</title>
+<meta name="description" content="A plain way to meet your neighbors in person. Small meetups on Bainbridge Island, Washington. First names only, no messaging, no ads, not for profit.">
+<meta name="theme-color" content="#f8f3e9">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+
+<style>
+/* ── Tokens (Morning Linen, U9 — from design/landing-brief-2026-09.md) ── */
+:root {
+  --earth: #2a3a2f;
+  --moss: #4c6849;
+  --sage: #7a9e6e;
+  --mist: #f0ead9;
+  --cream: #f8f3e9;
+  --warm: #efe7d4;
+  --amber: #c08a45;
+  --text: #26332a;
+  --soft: #77806f;
+  --surface: #fffdf6;
+  --border: rgba(42, 58, 47, 0.07);
+  --line: rgba(42, 58, 47, 0.12);
+  --shadow: 0 1px 2px rgba(42,58,47,0.04), 0 10px 30px rgba(42,58,47,0.06);
+  --btn-shadow: 0 8px 20px rgba(42,58,47,0.18);
+
+  --serif: 'Playfair Display', Georgia, 'Times New Roman', serif;
+  --sans: 'DM Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --measure: 68ch;
+  --gutter: 20px;
+  --radius: 20px;
+}
+
+/* ── Reset, base ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+body {
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--text);
+  background: var(--cream);
+  -webkit-font-smoothing: antialiased;
+}
+a { color: var(--moss); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 0.18em; }
+a:hover { color: var(--earth); }
+a:focus-visible, button:focus-visible {
+  outline: 3px solid var(--moss);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+p, dd, li { max-width: var(--measure); }
+strong { font-weight: 500; }
+
+.wrap { width: 100%; max-width: 1180px; margin: 0 auto; padding-left: var(--gutter); padding-right: var(--gutter); }
+
+/* Skip link */
+.skip {
+  position: absolute; left: var(--gutter); top: -100px;
+  background: var(--earth); color: var(--mist);
+  padding: 12px 18px; border-radius: 999px; z-index: 10;
+  text-decoration: none; font-weight: 500;
+}
+.skip:focus { top: 12px; }
+
+/* ── Type ── */
+h1, h2 { font-family: var(--serif); font-weight: 400; color: var(--earth); letter-spacing: -0.01em; }
+h1 { font-size: 34px; line-height: 1.15; }
+h2 { font-size: 26px; line-height: 1.2; margin-bottom: 16px; }
+h3 { font-family: var(--sans); font-weight: 500; font-size: 17px; line-height: 1.35; color: var(--earth); }
+
+.kicker {
+  display: flex; align-items: center; gap: 12px;
+  font-size: 11.5px; font-weight: 500; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--moss); margin-bottom: 14px;
+}
+.kicker::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+.kicker-h { font-family: var(--sans); font-size: 11.5px; letter-spacing: 0.16em; margin-top: 32px; }
+
+.lede { font-size: 18px; line-height: 1.55; }
+.small { font-size: 14px; line-height: 1.5; color: var(--moss); }
+
+/* ── Notice (the operational status line, above the masthead) ── */
+.notice {
+  background: var(--warm);
+  border-bottom: 1px solid var(--line);
+}
+.notice .wrap { padding-top: 14px; padding-bottom: 14px; }
+.notice-inner { display: grid; gap: 6px 24px; }
+.notice-label {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 11.5px; font-weight: 500; letter-spacing: 0.16em; text-transform: uppercase; color: var(--moss);
+  white-space: nowrap;
+}
+.notice-label::before {
+  content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--amber); flex: none;
+}
+.notice p { font-size: 15px; line-height: 1.5; }
+
+/* ── Masthead ── */
+.masthead .wrap {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  gap: 8px 24px; padding-top: 22px; padding-bottom: 10px;
+}
+.wordmark {
+  font-family: var(--serif); font-size: 28px; letter-spacing: -0.02em; color: var(--earth);
+  text-decoration: none; line-height: 1;
+  display: inline-block; padding: 8px 0;
+}
+.wordmark span { color: var(--amber); }
+.masthead-place { display: block; font-size: 13px; letter-spacing: 0.04em; color: var(--moss); margin-top: 2px; }
+
+.site-nav ul { list-style: none; display: flex; flex-wrap: wrap; gap: 0 4px; margin-left: -12px; }
+.site-nav a {
+  display: inline-flex; align-items: center; min-height: 44px; padding: 0 12px;
+  font-size: 14.5px; font-weight: 500; color: var(--moss); text-decoration: none;
+  border-bottom: 2px solid transparent;
+}
+.site-nav a:hover { color: var(--earth); border-bottom-color: var(--line); }
+.site-nav li.signin a { color: var(--earth); }
+
+/* ── Sections ── */
+main > section { padding: 36px 0; }
+main > section + section { border-top: 1px solid var(--line); }
+
+.hero { padding-top: 28px; }
+.hero-grid { display: grid; gap: 32px; }
+.hero h1 { max-width: 18ch; margin-bottom: 18px; }
+.hero .lede { margin-bottom: 24px; }
+.hero .who { margin-top: 14px; }
+
+.cta { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 22px; }
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-height: 48px; padding: 12px 30px; border-radius: 999px;
+  background: var(--earth); color: var(--mist);
+  font-family: var(--sans); font-size: 15.5px; font-weight: 500; letter-spacing: 0.03em;
+  text-decoration: none; border: none; box-shadow: var(--btn-shadow);
+  transition: background-color 150ms ease-out;
+}
+.btn:hover { background: var(--moss); color: var(--mist); }
+.cta .alt { display: inline-flex; align-items: center; min-height: 44px; font-size: 15px; }
+
+/* Panel: the one surface recipe */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 22px 22px 6px;
+}
+.panel .kicker { margin-bottom: 6px; }
+
+.glance { display: grid; }
+.glance div { padding: 14px 0 16px; border-top: 1px solid var(--line); }
+.glance div:first-of-type { border-top: 0; }
+.glance dt { font-size: 12px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--moss); margin-bottom: 4px; }
+.glance dd { font-size: 15.5px; line-height: 1.5; }
+
+/* Steps */
+.steps { list-style: none; counter-reset: step; display: grid; gap: 22px; }
+.steps li { counter-increment: step; padding-top: 14px; border-top: 1px solid var(--line); position: relative; }
+.steps li::before {
+  content: counter(step);
+  display: block; font-family: var(--serif); font-size: 30px; line-height: 1; color: var(--earth);
+  margin-bottom: 10px;
+}
+.steps li::after {
+  content: ''; position: absolute; top: -1px; left: 0; width: 36px; height: 2px; background: var(--amber);
+}
+.steps h3 { margin-bottom: 6px; }
+.steps p { font-size: 15.5px; line-height: 1.5; }
+
+/* The ledger: we don't / instead */
+.ledger-head { display: none; }
+.ledger { display: grid; }
+.ledger .row { display: grid; gap: 6px 32px; padding: 18px 0; border-top: 1px solid var(--line); }
+.ledger dt { font-weight: 500; font-size: 17px; line-height: 1.35; color: var(--earth); }
+.ledger dd { font-size: 15.5px; line-height: 1.55; }
+.ledger dd::before { content: 'Instead — '; font-weight: 500; color: var(--moss); }
+
+/* Where + who: two columns on desktop */
+.pair { display: grid; gap: 32px; }
+.pair p + p { margin-top: 12px; }
+
+/* Sample notices */
+.samples-note { font-style: italic; margin-bottom: 4px; }
+.samples { list-style: none; }
+.samples li { padding: 16px 0; border-top: 1px solid var(--line); }
+.samples li:first-child { border-top: 0; }
+.samples .when { display: block; font-size: 12px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--moss); margin-bottom: 4px; }
+.samples h3 { font-family: var(--serif); font-weight: 400; font-size: 20px; line-height: 1.25; margin-bottom: 4px; }
+.samples p { font-size: 15px; line-height: 1.5; }
+
+/* Final */
+.final .panel { padding: 26px 22px; }
+.final h2 { margin-bottom: 10px; }
+.final p { margin-bottom: 20px; }
+
+/* Footer */
+footer { border-top: 1px solid var(--line); padding: 28px 0 40px; font-size: 14px; color: var(--moss); }
+footer .wrap { display: grid; gap: 14px; }
+footer ul { list-style: none; display: flex; flex-wrap: wrap; gap: 0 18px; }
+footer li a { display: inline-flex; align-items: center; min-height: 44px; text-decoration: none; font-weight: 500; }
+footer address { font-style: normal; line-height: 1.6; }
+
+/* ── ≥ 720px: two columns where the content is list-like ── */
+@media (min-width: 720px) {
+  :root { --gutter: 32px; }
+  body { font-size: 17px; }
+  h1 { font-size: 42px; }
+  h2 { font-size: 28px; }
+  .lede { font-size: 19px; }
+  main > section { padding: 44px 0; }
+  .notice-inner { grid-template-columns: auto 1fr; align-items: baseline; }
+  .steps { grid-template-columns: 1fr 1fr; gap: 28px 32px; }
+  .ledger-head {
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr); gap: 32px;
+    font-size: 11.5px; font-weight: 500; letter-spacing: 0.16em; text-transform: uppercase; color: var(--moss);
+    padding-bottom: 8px;
+  }
+  .ledger .row { grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr); }
+  .ledger dd::before { content: ''; }
+  .pair { grid-template-columns: 1fr 1fr; gap: 40px; }
+  .panel { padding: 26px 28px 8px; }
+  .final .panel { padding: 30px 28px; display: grid; grid-template-columns: 1fr auto; gap: 8px 40px; align-items: center; }
+  .final .panel p { margin-bottom: 0; }
+  .final .cta { justify-content: flex-end; }
+  footer .wrap { grid-template-columns: 1fr auto; align-items: start; }
+}
+
+/* ── ≥ 1040px: desktop uses the width structurally ── */
+@media (min-width: 1040px) {
+  :root { --gutter: 40px; }
+  h1 { font-size: 48px; }
+  main > section { padding: 52px 0; }
+  .hero { padding-top: 40px; }
+  .hero-grid { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 64px; align-items: start; }
+  .steps { grid-template-columns: repeat(4, 1fr); gap: 32px; }
+  .ledger-head, .ledger .row { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 48px; }
+  .pair { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 64px; }
+}
+
+/* ── Motion ── */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}
+</style>
+</head>
+<body>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<!-- The operational notice leads, as a library's front page does. -->
+<aside class="notice" aria-label="Current status">
+  <div class="wrap notice-inner">
+    <span class="notice-label">Notice · September 2026</span>
+    <p>We are starting on Bainbridge Island, and starting small on purpose. The calendar is still filling. We check every sign-up ourselves, so verification can take a few days. If something here is not working, write to <a href="mailto:hello@in-real.life">hello@in-real.life</a>.</p>
+  </div>
+</aside>
+
+<header class="masthead">
+  <div class="wrap">
+    <div>
+      <a class="wordmark" href="#main">in<span>·</span>real<span>·</span>life</a>
+      <span class="masthead-place">Bainbridge Island, Washington</span>
+    </div>
+    <nav class="site-nav" aria-label="Page">
+      <ul>
+        <li><a href="#how">How it works</a></li>
+        <li><a href="#refuse">What we don't do</a></li>
+        <li><a href="#where">Where</a></li>
+        <li class="signin"><a href="../app.html#signin">Sign in</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+
+  <section class="hero" aria-labelledby="h1">
+    <div class="wrap hero-grid">
+      <div>
+        <h1 id="h1">A plain way to meet your neighbors in person.</h1>
+        <p class="lede">in·real·life is a short list of small meetups near where you live &mdash; a walk, a book swap, a coffee &mdash; and a way to say you'll be there. Then you go. There is nothing else to it, and that is deliberate.</p>
+        <div class="cta">
+          <a class="btn" href="../app.html#location">Sign up</a>
+          <a class="alt" href="../app.html#signin">Already signed up? Sign in</a>
+        </div>
+        <p class="small who">For adults, 18 and over, who live on Bainbridge Island. Sign-up takes a few minutes; we then check you're local.</p>
+      </div>
+
+      <aside class="panel" aria-labelledby="glance-h">
+        <p class="kicker" id="glance-h">At a glance</p>
+        <dl class="glance">
+          <div>
+            <dt>What it is</dt>
+            <dd>A list of small, in-person meetups with people who live nearby, and a way to say you'll come.</dd>
+          </div>
+          <div>
+            <dt>Who it's for</dt>
+            <dd>Adults, 18 and over, living on Bainbridge Island. We confirm that at sign-up.</dd>
+          </div>
+          <div>
+            <dt>Who runs it</dt>
+            <dd>A small not-for-profit. There are no ads, and nothing on these pages is for sale.</dd>
+          </div>
+          <div>
+            <dt>Where</dt>
+            <dd>Bainbridge Island, Washington, to begin with. One place at a time after that.</dd>
+          </div>
+          <div>
+            <dt>Stage</dt>
+            <dd>Just opening. There are few notices yet; the calendar fills as people propose things.</dd>
+          </div>
+        </dl>
+      </aside>
+    </div>
+  </section>
+
+  <section id="how" aria-labelledby="how-h">
+    <div class="wrap">
+      <p class="kicker">How it works</p>
+      <h2 id="how-h">Four steps, in this order.</h2>
+      <ol class="steps">
+        <li>
+          <h3>Sign up, and we check you're local</h3>
+          <p>Tell us where you live and give us a way to reach you. We confirm you're on Bainbridge before anything else happens. That is done by us, not by a machine, so allow a few days.</p>
+        </li>
+        <li>
+          <h3>A short interview, in your own words</h3>
+          <p>What you enjoy, when you're free, the kind of company you like. A few minutes. It's how we know what's worth showing you.</p>
+        </li>
+        <li>
+          <h3>See what's coming up nearby</h3>
+          <p>A short list of meetups close to where you live, and who has said they'll be there by first name. That is the whole screen.</p>
+        </li>
+        <li>
+          <h3>Say you'll be there, then be there</h3>
+          <p>Confirming is a small promise: someone is expecting you. Hellos happen at the meetup, not before it.</p>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="refuse" aria-labelledby="refuse-h">
+    <div class="wrap">
+      <p class="kicker">Rules of the board</p>
+      <h2 id="refuse-h">What we don't do, and what we do instead.</h2>
+      <div class="ledger-head" aria-hidden="true"><span>We don't</span><span>Instead</span></div>
+      <dl class="ledger">
+        <div class="row">
+          <dt>We don't have messaging.</dt>
+          <dd>There is no inbox and no direct messages. To talk to someone, go where they'll be. Every conversation that starts here happens face to face.</dd>
+        </div>
+        <div class="row">
+          <dt>We don't show last names.</dt>
+          <dd>A first name and enough about you to be recognized when you arrive. Your last name, address and phone number stay yours.</dd>
+        </div>
+        <div class="row">
+          <dt>We don't have a feed, likes, follows or scores.</dt>
+          <dd>You see the meetups coming up and the first names of who's coming. Nothing is liked, ranked in public, or designed to keep you scrolling.</dd>
+        </div>
+        <div class="row">
+          <dt>We don't nudge.</dt>
+          <dd>No streaks, no "it's been a while", no notification you can't switch off. If we contact you, it is about a meetup you're part of, and you choose how.</dd>
+        </div>
+        <div class="row">
+          <dt>We don't run ads, and we don't sell what we know about you.</dt>
+          <dd>We are a not-for-profit. We keep the little a meetup needs &mdash; a first name, a locality, when you're free &mdash; and it goes no further.</dd>
+        </div>
+        <div class="row">
+          <dt>We don't let the whole internet in.</dt>
+          <dd>Adults, 18 and over, who live here. We check locality at sign-up so the place stays the size of a neighborhood. If you're somewhere else, we'll say so kindly and tell you when we reach you.</dd>
+        </div>
+      </dl>
+    </div>
+  </section>
+
+  <section id="where" aria-labelledby="where-h">
+    <div class="wrap pair">
+      <div>
+        <p class="kicker">Where we operate</p>
+        <h2 id="where-h">Bainbridge Island, Washington. That is the whole list for now.</h2>
+        <p>We add places one at a time, and only when the last one is standing on its own. Each should stay small enough to feel like a neighborhood rather than a network.</p>
+        <p>Not on Bainbridge? You can still leave your name at sign-up. We'll write when we get to your neighborhood, and not before.</p>
+
+        <h2 class="kicker kicker-h">Who runs it</h2>
+        <p>A small not-for-profit. There is no press page and no office to visit. Questions, complaints, or a copy of your data: <a href="mailto:hello@in-real.life">hello@in-real.life</a>. We are few, so allow a week.</p>
+        <p>Every decision about how this works is written down and public: <a href="../registers/index.html">How we decide</a>.</p>
+      </div>
+
+      <aside class="panel" aria-labelledby="samples-h">
+        <p class="kicker" id="samples-h">What a notice looks like</p>
+        <p class="small samples-note">Three examples, made up to show the shape. Not live listings &mdash; the calendar is still filling.</p>
+        <ul class="samples">
+          <li>
+            <span class="when">Saturday morning · Grand Forest</span>
+            <h3>An hour on the trails, easy pace</h3>
+            <p>Meet at the west trailhead kiosk. Rain is fine; bring what you'd bring anyway.</p>
+          </li>
+          <li>
+            <span class="when">Sunday afternoon · Winslow</span>
+            <h3>Book swap</h3>
+            <p>Bring one you've finished, leave with one you haven't. Paperbacks travel best.</p>
+          </li>
+          <li>
+            <span class="when">A weekday, early · near the ferry</span>
+            <h3>Coffee before the boat</h3>
+            <p>Twenty minutes and a cup before the morning sailing. A hello, then you're on your way.</p>
+          </li>
+        </ul>
+      </aside>
+    </div>
+  </section>
+
+  <section class="final" aria-labelledby="final-h">
+    <div class="wrap">
+      <div class="panel">
+        <div>
+          <h2 id="final-h">Sign up when you're ready.</h2>
+          <p>It takes a few minutes. We then check that you're local, which takes us a few days, and after that you'll see what's coming up.</p>
+        </div>
+        <div class="cta">
+          <a class="btn" href="../app.html#location">Sign up</a>
+          <a class="alt" href="../app.html#signin">Sign in</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <nav aria-label="Site">
+      <ul>
+        <li><a href="../terms.html">Terms of use</a></li>
+        <li><a href="../registers/index.html">How we decide</a></li>
+        <li><a href="mailto:hello@in-real.life">hello@in-real.life</a></li>
+      </ul>
+    </nav>
+    <address>in·real·life · a not-for-profit<br>Bainbridge Island, Washington</address>
+  </div>
+</footer>
+
+</body>
+</html>

@@ -1,6 +1,10 @@
 # Design spec and landing redesign
 
-Status: active (**chunks 1–2 delivered, both gates passed** — chunk 2
+Status: active (**chunks 1–3 delivered; chunks 1–2 gates passed, the
+chunk-3 gate is open** — chunk 3 on 2026-09-17: three directions
+drawn and judged against the goals in writing
+(`design/landing-directions-2026-09.md`); the pick is the founder's,
+and chunk 4 does not start until it is made. chunk 2
 on 2026-09-17: workshop deploy clean, responsive rendering good,
 Android install with icon, all pages loading; iOS install unverified.
 **chunk-1 gate passed 2026-09-16** — founder reviewed
@@ -277,15 +281,40 @@ source of truth), and an install-readiness check. Push stays out.
 Gate: founder installs the workshop site to a phone home screen and
 opens every page on a desktop browser.
 
-### Chunk 3 — landing directions, drawn and judged
+### Chunk 3 — landing directions, drawn and judged — DELIVERED (at gate)
 
-Two or three distinct landing-page directions drawn against the spec
-(Fable subagent if confirmed), shipped behind the workshop switcher
-as page variants, each scored per goal in writing before preference
-is taken. Copy is part of the design — the current text is the
-starting point, not a fixture.
-Gate: founder (and any invited reviewers) compare live; the pick is
-recorded as a U-row.
+Shipped: a written brief (`design/landing-brief-2026-09.md`), three
+directions drawn against it by Fable subagents — **A the calendar**,
+**B the invitation**, **C the notice board**
+(`src/landing/{a-calendar,b-invitation,c-notice-board}.html`) — a
+review index at `src/landing/index.html` reachable on any workshop
+stack, and the judgment: `design/landing-directions-2026-09.md`,
+holds/partly/fails per goal per direction, **written before any
+preference was voiced** (U10 step 5). Copy was in scope and all three
+rewrote it. `inject-config.mjs` drops `src/landing/` from a prod
+bundle, so the previews cannot reach production.
+
+The scoring was measured, not eyeballed: computed-style contrast on
+every text node at both widths, landmark and heading counts, target
+sizes classified against SC 2.5.8, prose measure via a per-element
+`100ch` probe, and a pattern scan for engagement mechanics with every
+hit read in context. Method in §5 of the judgment.
+
+Result: **C is the only direction that holds every goal.** A fails G2
+— its primary CTA sits 3681px down a 390px phone — and the failure is
+positional, so A can be fixed and re-judged if preferred rather than
+overridden. B's desktop layout is the weakest against G5.
+Recommendation: C as the base, with A's example week and B's "Why
+we're writing" paragraph borrowed by name.
+
+Found while measuring: **the shipped pages fail G8 today** — 16 of 39
+text elements on `index.html`, 8 of 65 on `terms.html`, mostly
+`--soft` at 3.72:1 under 14px text. Recorded as open risk #24 and a
+Backlog item; the directions themselves avoid it.
+
+Gate: founder (and any invited reviewers) compare live on workshop —
+`/landing/` — read the judgment, and make the pick. The pick becomes
+a U-row at the top of chunk 4.
 
 ### Chunk 4 — land the landing page
 
