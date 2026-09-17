@@ -1,6 +1,9 @@
 # Design spec and landing redesign
 
-Status: active (**chunk-1 gate passed 2026-09-16** — founder reviewed
+Status: active (**chunks 1–2 delivered, both gates passed** — chunk 2
+on 2026-09-17: workshop deploy clean, responsive rendering good,
+Android install with icon, all pages loading; iOS install unverified.
+**chunk-1 gate passed 2026-09-16** — founder reviewed
 `docs/design-spec.md`, no changes asked; U10 and D70 stand as written.
 One question from the review is still open and does not block chunk 2:
 digest vs push as G7's first channel. Founder's answers recorded
@@ -255,8 +258,13 @@ Also fixed: the propose button, styled for Grove's dark header, was
 invisible on Morning Linen's light header — a live defect on the
 default theme, found by looking at the feed at desktop width.
 
-Gate: founder deploys to workshop, installs the site to a phone home
-screen, and opens every page on a desktop browser.
+Gate: **passed 2026-09-17** — deployed to workshop; mobile and desktop
+rendering good; **Android** home-screen install worked and picked up
+the icon; all pages loaded. **iOS install is still unverified**, and it
+is the path that matters most later: Safari installs only from the
+Share menu (no `beforeinstallprompt`), and iOS web push exists only
+inside an installed web app (§6). Worth one pass on an iPhone before
+push work starts — not a blocker for chunk 3.
 
 #### Original scope
 
