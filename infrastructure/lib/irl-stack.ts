@@ -27,12 +27,25 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// Stages drive feature-flag behaviour:
-//   'prod'      → mode=production in Lambda; workshop-only routes excluded
-//   'workshop'  → mode=workshop; time controls + admin scaffolding enabled
-//   'test'      → backend-only; same workshop scaffolding for functional tests
-// Stage names beyond these three (e.g. 'workshop-bainbridge') are treated as
-// workshop variants.
+// Stage is two things at once, and the second one is easy to miss.
+//
+// 1. The feature flag:
+//      'prod'     → mode=production in Lambda; workshop-only routes excluded
+//      anything else → mode=workshop; time controls + admin scaffolding on
+//    ('workshop' and 'test' are the conventional names; only 'prod' is
+//    ever compared against.)
+//
+// 2. THE RESOURCE NAMESPACE. Every physical name below is built from
+//    it — twelve DynamoDB tables, the Cognito user pool, the HTTP API,
+//    the site and feedback buckets, the Claude API key secret. So two
+//    stacks deployed into the same account and region MUST NOT share a
+//    stage: fifteen of those names are unique-per-account and
+//    CloudFormation rejects the second stack outright.
+//
+// Concurrent workshops therefore each carry their own stage string
+// ('workshop-oak', 'workshop-landing-a', …). The ops repo's registry
+// mints them and refuses a colliding set at import; see its
+// lib/environments.mjs and docs/plans/concurrent-workshop-instances.md.
 export type Stage = string;
 
 export interface IrlStackProps extends cdk.StackProps {
