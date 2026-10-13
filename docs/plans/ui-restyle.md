@@ -11,10 +11,9 @@ default on every workshop deploy since PR #73 as the live check. The
 exploration branch `claude/site-ui-design-exploration-zb14wl` — the
 one standing W-006 exception — has nothing left to lose: its only
 unmerged commit (`4fb3629`) added three `design/` files, all confirmed
-byte-identical on `main` on 2026-10-02. Its deletion is the founder's
-to run (`git push origin --delete
-claude/site-ui-design-exploration-zb14wl`); the exception ends when it
-is. The deliverable branches `claude/ui-restyle` and
+byte-identical on `main` on 2026-10-02. The founder deleted it;
+confirmed absent from the remote 2026-10-13, which ends the
+exception. The deliverable branches `claude/ui-restyle` and
 `claude/theme-fixes` were already gone. The Backlog's checked entry is
 now the record.
 
