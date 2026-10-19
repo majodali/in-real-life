@@ -17,6 +17,7 @@ direction is chosen and folded in.
 - `landing-directions-2026-09.md` — those three directions judged
   holds/partly/fails against the design-spec goals, written before
   any preference was voiced (U10 step 5), with the measurement method
-  and the recommendation. The directions themselves live in
+  and the recommendation; §6 adds Direction D, merged from them after
+  the October 2026 review (FB3–FB9), and judged the same way. The directions themselves live in
   `src/landing/` because they are reviewed live on a workshop stack;
   the deploy drops that directory from a prod bundle.

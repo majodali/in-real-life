@@ -3,8 +3,11 @@
 Status: active (**chunks 1–3 delivered; chunks 1–2 gates passed, the
 chunk-3 gate is open** — chunk 3 on 2026-09-17: three directions
 drawn and judged against the goals in writing
-(`design/landing-directions-2026-09.md`); the pick is the founder's,
-and chunk 4 does not start until it is made. chunk 2
+(`design/landing-directions-2026-09.md`). 2026-10-19: a founder-led
+small-group review (desktop only, FB3–FB9) asked for a merge, drawn
+as **Direction D** and judged in §6 of the same note — D holds every
+goal. The pick is still the founder's, and chunk 4 does not start
+until it is made. chunk 2
 on 2026-09-17: workshop deploy clean, responsive rendering good,
 Android install with icon, all pages loading; iOS install unverified.
 **chunk-1 gate passed 2026-09-16** — founder reviewed
@@ -315,6 +318,30 @@ Backlog item; the directions themselves avoid it.
 Gate: founder (and any invited reviewers) compare live on workshop —
 `/landing/` — read the judgment, and make the pick. The pick becomes
 a U-row at the top of chunk 4.
+
+**Review round, 2026-10-19.** A founder-led small group reviewed A,
+B and C on desktop and reported seven points (feedback-log FB3–FB9):
+A's look, B's opening, C's notice bar, C's at-a-glance card in A
+without "Stage", "community-driven" over "small, not-for-profit", US
+spelling, and — the largest — no cold sign-ups onto a blank calendar.
+The merge is **Direction D** (`src/landing/d-merged.html`), built by
+editing a copy of A so A's visual system carries over exactly, and
+scored in §6 of the judgment: **D holds every goal**, as C does.
+
+What the merge had to fix because the review was desktop-only: A's
+phone layout moved the CTA below the week (y=3681), which D undoes
+(y=553) — and that reordering was also a focus-order defect §2 missed,
+now corrected in place. What building D found: three of A's
+principles were false about the product as built (it does show
+headcounts; it ranks suggestions by fit; it has no one-week window).
+D's copy was checked line by line against the code, and the method in
+§5 gains that step. D's pinned introduction is gated on screen height
+(≥880px) because the glance card makes it 846px tall.
+
+Routed, not done here: whether "a real next-two-weeks" becomes a hard
+gate for community open (founder call); carrying workshop-proposed
+events into production; US spelling in two shipped files (U11); "owned
+by the community" waiting on R11.
 
 ### Chunk 4 — land the landing page
 

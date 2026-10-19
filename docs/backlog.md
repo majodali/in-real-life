@@ -162,6 +162,7 @@ Items that can land alongside any group above once prerequisites exist.
 - [ ] Accessibility audit — ARIA, keyboard nav, screen readers — the bar is now written (`docs/design-spec.md` §8: WCAG 2.2 AA with concrete checks); the audit runs against it, and the one known violation (`user-scalable=no` on every page, blocking pinch-zoom) is fixed in the design plan's chunk 2. The contrast sweep above is the first finding it inherits
 - [ ] About IRL screen — privacy/how-it-works
 - [ ] Review "show up" usage across copy
+- [ ] **US spelling across shipped copy** (U11, FB8) — the landing work swept its own copy; two shipped files still say otherwise. `src/js/data.js`, the scripted interview that runs when the live interviewer is unreachable, shows members "neighbourhood" and "organise". `lambda/api/users/interview-prompt.mjs` writes "organisation" in the AI interviewer's own instructions, which can pull its replies toward British spelling — fix the word and tell the interviewer to write US English. Check the other member-facing prompts (debrief, reflection) the same way
 - [ ] Onboarding for ⋯ menu / alternatives system
 - [ ] AI interviewer persona — consistent name/voice
 - [ ] Referral / invite flow
@@ -169,3 +170,4 @@ Items that can land alongside any group above once prerequisites exist.
 - [ ] Rethink tab categories based on user feedback
 - [ ] Decide if app feedback stays as separate Lambda+S3 or moves into main API
 - [ ] User-copy mechanism between production and workshop environments (when those split)
+- [ ] **Carry workshop-proposed events into production** (FB6) — the launch playbook has workshops generate the first real proposals (Session C, "the empty room", proposes the first real meetup live), and the reviewers call a stocked calendar essential before anyone signs up cold. But workshop stacks are separate environments: nothing moves an event proposed there onto the production calendar, so today that work is lost at soft open. Needs a small export/import (event + proposer, re-created on prod under the real member's account once they register) or a stated manual path in the playbook. Related founder call, open: whether "the calendar shows a real next-two-weeks" becomes a hard gate for community open (playbook §6) rather than one input among several
