@@ -343,9 +343,8 @@ production; US spelling in two shipped files (U11).
 
 **Gate passed 2026-10-21.** The founder picked **D** (U12) and kept
 "Accept the invitation". Two related calls the same day: a stocked
-calendar is a **hard gate before community open** (D71, partly
-superseding D65's never-a-threshold principle), with what "stocked"
-means still to define; and "owned by the community" is not used —
+calendar is judged **first, before community open** (D71, refining
+D65) — named inputs with guideline values, not thresholds; and "owned by the community" is not used —
 "community-driven" stands, the governance intent behind it belongs to
 the private org register (R11).
 

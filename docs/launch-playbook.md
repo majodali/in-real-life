@@ -242,13 +242,28 @@ one-line edit, the hosted views are the real gate.
 this is nothing — sign-up is already gated only by the `served` flag —
 which is exactly why the *decision* needs inputs.
 
-**Gate first (D71, 2026-10-21): the calendar is stocked.** Nobody is
+**First: is the calendar stocked? (D71, 2026-10-21.)** Nobody is
 invited to sign up cold onto an empty calendar — the October landing
 review called a blank site a non-starter for most people (FB6). The
 cohort's own meetups and the proposals workshops generate are what
 stock it, with founder-stewarded external events (D53) thickening it
-honestly. **What "stocked" means is not yet defined**; until it is,
-the gate cannot be applied. Only once it is met is the decision taken.
+honestly. It is judged, like every other advance here — named inputs,
+with guideline values rather than pass marks:
+
+| input | what it asks | guideline |
+|---|---|---|
+| Volume | Are there enough real meetups coming up to look like a living calendar? | ~8 in the next 14 days |
+| Spread in time | Can someone with an ordinary schedule find a slot? | ~3 of weekday daytime, weekday evening, weekend |
+| Spread in kind | Does a newcomer whose interest isn't the majority's still find something? | ~3 kinds |
+| Hosts | Is it a community, not one person's list? | ~4 different members hosting; founder-stewarded external events no more than ~a quarter |
+| Momentum | Is more coming? | ~3 open proposals looking for takers |
+| Staying power | Is it sustained, not a push before opening? | holds ~2 consecutive weeks |
+
+The guidelines are sized to a founding cohort of 8–15 (§2); the low
+end is ambitious — eight meetups a fortnight from eight people is one
+each — which is exactly why external events and workshop proposals
+count. Recalibrate at the launch retro (§8). Only once this reads as
+stocked is the community-open decision taken.
 
 Then the judgment, on the remaining inputs: the verification queue is
 keeping up; the cohort's debriefs read warm, not dutiful; advisors
