@@ -5,10 +5,12 @@ against the design-spec goals. Written under U10 step 5: **every
 direction gets a line per goal — holds / partly / fails — before any
 preference is voiced.** The scorecard in §2 was written before §4.
 
-Live: `src/landing/index.html` on any workshop stack (review-only; the
-deploy drops `src/landing/` from a prod bundle). Files:
-`src/landing/a-calendar.html`, `b-invitation.html`,
-`c-notice-board.html`.
+Files: `design/landing-directions-2026-09/a-calendar.html`,
+`b-invitation.html`, `c-notice-board.html`, and `d-merged.html` (§6).
+*During the review they lived in `src/landing/` so they could be opened
+on a workshop stack; they were archived here on 2026-10-21 when D
+landed as `src/index.html`. They are self-contained and open directly
+in a browser.*
 
 ## 1. The three directions
 
@@ -228,7 +230,7 @@ A founder-led small group reviewed A, B and C **on desktop only** and
 reported a consolidated summary on 2026-10-19 (feedback-log FB3–FB9).
 They asked for a merge: A's look, B's opening, C's notice bar, and C's
 at-a-glance card in place of A's "Where things stand" box. That merge
-is drawn as **Direction D** (`src/landing/d-merged.html`). Under U10 a
+is drawn as **Direction D** (`design/landing-directions-2026-09/d-merged.html`). Under U10 a
 merge is a new direction, so it gets its own line per goal, below,
 measured the same way (§5).
 

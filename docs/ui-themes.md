@@ -65,11 +65,12 @@ card with per-direction tokens and a recommendation).
 - **Member-selectable dark theme** (Lantern) — needs a member-facing
   setting surface and cross-device persistence thinking; until then
   themes are a workshop review tool only.
-- **Landing page and terms** now inherit the theme *tokens* (palette,
-  type) but not a redesign — their `.landing-*` / `.terms-*`
-  components have no theme layer yet, and the landing page needs
-  design work of its own, not a restyle (its own plan). The generated
-  register views carry their own inline CSS and are untouched.
+- **Landing page and terms** — *done 2026-10-21* (U12, design-spec
+  chunk 4): both pages use the public-page components (`html.lp`,
+  `lp-` classes) and take their colors from the theme tokens plus a
+  small `--lp-*` set defined once per theme, so they render in all
+  four themes. The generated register views still carry their own
+  inline CSS (Backlog).
 - **Field Notes' list grammar** folded into Morning Linen's feed —
   a markup change (date column, entry rules), not a theme layer.
 - Shared moves needing markup/data: avatar clusters over counters,
@@ -77,9 +78,7 @@ card with per-direction tokens and a recommendation).
 
 ## Watch
 
-- The landing/terms pages now share the app's palette, but their
-  layout is still the plain pre-theme one — the seam is now
-  compositional rather than chromatic; the landing redesign plan
-  closes it.
+- The landing/terms seam is closed (2026-10-21). The remaining seam
+  is the generated register views, one click away in both footers.
 - The switcher's theme registry is append-only in spirit: removing a
   theme invalidates shared `?theme=` links reviewers may hold.

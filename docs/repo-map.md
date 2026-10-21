@@ -13,8 +13,8 @@ the `__IRL_*__` placeholders into the three pages that carry them.
 
 | Path | What it is |
 |---|---|
-| `index.html` | Public landing page (what IRL is, principles, sign-up/sign-in) |
-| `terms.html` | User agreement, versioned (`event-sourcing.md` → agreement versioning) |
+| `index.html` | Public landing page — Direction D (U12): notice bar, invitation, at-a-glance card, example week of ideas, principles, sign-up/sign-in. Styles: `css/styles.css` → Public pages (`html.lp`, `lp-` classes) |
+| `terms.html` | User agreement, versioned (`event-sourcing.md` → agreement versioning); shares the landing's public-page components |
 | `app.html` | The app shell: one `<div class="screen">` per screen, plus the runtime config block |
 | `taglines.html` | Tagline review page (workshop tool) |
 | `css/styles.css` | All styles: base (phone), the `data-theme` layers (`ui-themes.md`), and the responsive layer at the end (`design-spec.md` §4) |

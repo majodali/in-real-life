@@ -325,7 +325,9 @@ No build step, so the budget is about restraint, not tooling.
   swap`, and no layout shift from the swap. Extra faces for
   non-default themes load lazily (as Pebble's Fraunces already does).
 - **JavaScript on the landing page**: none required for content.
-  Theme init and taglines only.
+  Theme init, PWA registration and the sign-up/sign-in handler only;
+  every link works without it. (The rotating tagline retired with the
+  old page — U12, 2026-10-21.)
 - **Images**: none in the current design. If a direction introduces
   them, each must carry explicit dimensions, lazy loading below the
   fold, and a stated weight inside the page budget.
@@ -336,8 +338,11 @@ No build step, so the budget is about restraint, not tooling.
   now **H8** in the hypothesis register, with kill criteria and the
   signals that would settle it. Not a decision waiting to be made;
   a belief waiting for evidence.
-- **What a thin calendar looks like on the landing page.** SPL's
-  honest notice suggests saying it; we have not designed how.
+- ~~**What a thin calendar looks like on the landing page.**~~
+  *Answered 2026-10-21:* the page never shows one. The early-stage
+  message lives in a notice bar (U12, from C), example events are
+  labeled as ideas, and a community does not open until its calendar
+  is judged stocked (D71).
 - **Desktop for the app screens** (feed, event detail) is a bigger
   question than desktop for the landing page. Chunk 2 sets the
   posture; the surface slices will test it.

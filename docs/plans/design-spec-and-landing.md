@@ -1,13 +1,16 @@
 # Design spec and landing redesign
 
-Status: active (**chunks 1–3 delivered; chunks 1–2 gates passed, the
-chunk-3 gate is open** — chunk 3 on 2026-09-17: three directions
+Status: active (**all four chunks delivered; gates 1–3 passed, the
+chunk-4 gate is open** — chunk 4 on 2026-10-21: Direction D is the live
+`src/index.html`, terms on the same components, both measured clean in
+all four themes; awaiting founder sign-off on workshop, then the next
+ordinary prod deploy, then close-out. Earlier: chunk 3 on 2026-09-17: three directions
 drawn and judged against the goals in writing
 (`design/landing-directions-2026-09.md`). 2026-10-19: a founder-led
 small-group review (desktop only, FB3–FB9) asked for a merge, drawn
 as **Direction D** and judged in §6 of the same note — D holds every
 goal. **Chunk-3 gate passed 2026-10-21: the founder picked D (U12)**,
-CTA "Accept the invitation". Chunk 4 awaits its own go-ahead. chunk 2
+CTA "Accept the invitation". Chunk 4 go-ahead given the same day. chunk 2
 on 2026-09-17: workshop deploy clean, responsive rendering good,
 Android install with icon, all pages loading; iOS install unverified.
 **chunk-1 gate passed 2026-09-16** — founder reviewed
@@ -289,12 +292,12 @@ opens every page on a desktop browser.
 Shipped: a written brief (`design/landing-brief-2026-09.md`), three
 directions drawn against it by Fable subagents — **A the calendar**,
 **B the invitation**, **C the notice board**
-(`src/landing/{a-calendar,b-invitation,c-notice-board}.html`) — a
-review index at `src/landing/index.html` reachable on any workshop
+(`design/landing-directions-2026-09/{a-calendar,b-invitation,c-notice-board}.html`) — a
+review index at `design/landing-directions-2026-09/index.html` reachable on any workshop
 stack, and the judgment: `design/landing-directions-2026-09.md`,
 holds/partly/fails per goal per direction, **written before any
 preference was voiced** (U10 step 5). Copy was in scope and all three
-rewrote it. `inject-config.mjs` drops `src/landing/` from a prod
+rewrote it. `inject-config.mjs` drops `design/landing-directions-2026-09/` from a prod
 bundle, so the previews cannot reach production.
 
 The scoring was measured, not eyeballed: computed-style contrast on
@@ -324,7 +327,7 @@ B and C on desktop and reported seven points (feedback-log FB3–FB9):
 A's look, B's opening, C's notice bar, C's at-a-glance card in A
 without "Stage", "community-driven" over "small, not-for-profit", US
 spelling, and — the largest — no cold sign-ups onto a blank calendar.
-The merge is **Direction D** (`src/landing/d-merged.html`), built by
+The merge is **Direction D** (`design/landing-directions-2026-09/d-merged.html`), built by
 editing a copy of A so A's visual system carries over exactly, and
 scored in §6 of the judgment: **D holds every goal**, as C does.
 
@@ -348,12 +351,68 @@ D65) — named inputs with guideline values, not thresholds; and "owned by the c
 "community-driven" stands, the governance intent behind it belongs to
 the private org register (R11).
 
-### Chunk 4 — land the landing page
+### Chunk 4 — land the landing page — DELIVERED (at gate)
 
-The chosen direction implemented across all registered themes,
-accessibility and performance budgets verified, terms page brought
-along for consistency, backlog updated, plan closed out.
-Gate: founder sign-off on workshop → next ordinary prod deploy.
+Shipped:
+
+- **`src/index.html` is Direction D** (U12), generated from the
+  judged file so nothing drifted: every class prefixed `lp-`, links
+  pointed at the real app paths. It keeps the old page's behavior:
+  workshop flag, theme and PWA init, and every sign-up/sign-in link
+  clears any stored persona first — now as a progressive enhancement,
+  so the links also work without JavaScript.
+- **`src/terms.html`** on the same header, footer and type, the legal
+  text carried over word for word (checked by diff).
+- **Stylesheet**: a Public pages section in `css/styles.css`, scoped to
+  `<html class="lp">` so the app's rules (`.card`, `.wordmark`, the
+  `overflow: hidden` shell) and these cannot reach each other.
+  Colors come from the theme tokens plus a small `--lp-*` set (surface,
+  border, line, shadow, button, wordmark dot, heading face) defined
+  once per theme. These pages scroll the document again, which the pinned
+  introduction needs. The old landing and terms CSS is gone except the
+  four rules the tagline review page still uses. `styles.css` is
+  84.5 KB raw / 15.9 KB gzipped against the ~90 KB ceiling (§9) —
+  close; the next large addition should pay for itself.
+- **Wordmark dots**: a per-theme deepened amber on these two pages,
+  passing 3:1 as large text (Morning Linen `#b07d3c` 3.25:1, Grove
+  `#b47a35` 3.21:1, Pebble `#c16d47` 3.24:1; Lantern's amber already
+  passes at 7.09:1). **Pending the founder's confirmation** — the app's
+  wordmark keeps the old amber until then.
+
+Measured, served over HTTP so the scripts ran, in all four themes at
+390 and 1440:
+
+| | live page before | after |
+|---|---|---|
+| landing contrast failures | 16 of 39 | **0** in every theme |
+| terms contrast failures | 8 of 65 | **0** in every theme |
+| controls under 44px | — | 0 |
+| lines past 68ch | — | 0 |
+| sign-up button | — | y=527 on a phone; 7.1–10.2:1 across themes |
+
+Also verified: the skip link takes the first Tab and reads 7.09–10.21:1
+in every theme (the first pass found it at 1.00:1 in Lantern — fixed);
+the introduction pins at 1440×900 and scrolls normally at 1280×800;
+all six sign-up/sign-in links clear `irl_active_user` before
+navigating. 284 frontend and 853 backend tests pass.
+
+Departures from this chunk's wording, both deliberate:
+
+- **The previews were archived, not deleted** — to
+  `design/landing-directions-2026-09/`, beside the judgment that cites
+  them, as the July exploration was kept. Nothing in `design/`
+  ships, which was the point of deleting them. The deploy-time code
+  that dropped `src/landing/` from prod bundles went with them.
+- **The rotating tagline retired from the landing.** D has none, and
+  the group reviewed D without one. `taglines.js` and the
+  `taglines.html` review page stay as an idea store.
+
+Not done here: the register views still carry their own CSS
+(Backlog); `--soft` still carries small text in the app screens (open
+risk #24).
+
+Gate: founder sign-off on workshop → next ordinary prod deploy →
+close-out.
 
 ### Not in this plan
 
