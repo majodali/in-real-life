@@ -283,12 +283,17 @@ step: **product claims are checked against the code, not the brief.**
 C. Under U10 step 5, the choice between C and D is the one taste is
 allowed to make — and the review has made it.
 
-### Still open in D, flagged rather than decided
+### The pick — 2026-10-21
 
-- **CTA label.** D reads "Accept the invitation", matching B's
-  headline. A read "Sign up and see the real calendar", which says
-  more about what happens next.
-- **The wordmark interpuncts** (2.73:1), with open risk #24.
-- **"Owned by the community"** waits on R11.
-- **The example week** is undated now (it was pinned to 21–27
-  September), so it cannot go stale.
+**The founder chose D (U12).** The two items left open here were
+settled the same day:
+
+- **CTA label: "Accept the invitation"**, matching B's headline.
+- **"Owned by the community" is not used.** It misdescribes how the
+  organization is held; "community-driven" says what is meant, and the
+  governance intent behind it belongs to the private org register
+  (R11).
+
+Still open, carried into chunk 4: **the wordmark interpuncts**
+(2.73:1), with open risk #24. The example week is undated (it was
+pinned to 21–27 September), so it cannot go stale.

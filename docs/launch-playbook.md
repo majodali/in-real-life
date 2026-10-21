@@ -240,10 +240,19 @@ one-line edit, the hosted views are the real gate.
 
 **Community open**: the served locality opens publicly. Mechanically
 this is nothing — sign-up is already gated only by the `served` flag —
-which is exactly why the *decision* needs inputs: the verification
-queue is keeping up; the calendar shows a real next-two-weeks; the
-cohort's debriefs read warm, not dutiful; advisors have seen their
-corrections land. Announcement channel: the homepage plus the notify
+which is exactly why the *decision* needs inputs.
+
+**Gate first (D71, 2026-10-21): the calendar is stocked.** Nobody is
+invited to sign up cold onto an empty calendar — the October landing
+review called a blank site a non-starter for most people (FB6). The
+cohort's own meetups and the proposals workshops generate are what
+stock it, with founder-stewarded external events (D53) thickening it
+honestly. **What "stocked" means is not yet defined**; until it is,
+the gate cannot be applied. Only once it is met is the decision taken.
+
+Then the judgment, on the remaining inputs: the verification queue is
+keeping up; the cohort's debriefs read warm, not dutiful; advisors
+have seen their corrections land. Announcement channel: the homepage plus the notify
 list — contacted **manually** at this scale (export the admin list,
 write a real email as a person; a notify-email build is premature
 until a launch where the list outgrows a hand-written send — named in

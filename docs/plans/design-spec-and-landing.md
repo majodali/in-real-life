@@ -6,8 +6,8 @@ drawn and judged against the goals in writing
 (`design/landing-directions-2026-09.md`). 2026-10-19: a founder-led
 small-group review (desktop only, FB3–FB9) asked for a merge, drawn
 as **Direction D** and judged in §6 of the same note — D holds every
-goal. The pick is still the founder's, and chunk 4 does not start
-until it is made. chunk 2
+goal. **Chunk-3 gate passed 2026-10-21: the founder picked D (U12)**,
+CTA "Accept the invitation". Chunk 4 awaits its own go-ahead. chunk 2
 on 2026-09-17: workshop deploy clean, responsive rendering good,
 Android install with icon, all pages loading; iOS install unverified.
 **chunk-1 gate passed 2026-09-16** — founder reviewed
@@ -338,10 +338,16 @@ D's copy was checked line by line against the code, and the method in
 §5 gains that step. D's pinned introduction is gated on screen height
 (≥880px) because the glance card makes it 846px tall.
 
-Routed, not done here: whether "a real next-two-weeks" becomes a hard
-gate for community open (founder call); carrying workshop-proposed
-events into production; US spelling in two shipped files (U11); "owned
-by the community" waiting on R11.
+Routed, not done here: carrying workshop-proposed events into
+production; US spelling in two shipped files (U11).
+
+**Gate passed 2026-10-21.** The founder picked **D** (U12) and kept
+"Accept the invitation". Two related calls the same day: a stocked
+calendar is a **hard gate before community open** (D71, partly
+superseding D65's never-a-threshold principle), with what "stocked"
+means still to define; and "owned by the community" is not used —
+"community-driven" stands, the governance intent behind it belongs to
+the private org register (R11).
 
 ### Chunk 4 — land the landing page
 
