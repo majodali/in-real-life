@@ -376,8 +376,8 @@ Shipped:
 - **Wordmark dots**: a per-theme deepened amber on these two pages,
   passing 3:1 as large text (Morning Linen `#b07d3c` 3.25:1, Grove
   `#b47a35` 3.21:1, Pebble `#c16d47` 3.24:1; Lantern's amber already
-  passes at 7.09:1). **Pending the founder's confirmation** — the app's
-  wordmark keeps the old amber until then.
+  passes at 7.09:1). *Confirmed 2026-10-22 and extended to the app —
+  see the gate review below.*
 
 Measured, served over HTTP so the scripts ran, in all four themes at
 390 and 1440:
@@ -403,13 +403,45 @@ Departures from this chunk's wording, both deliberate:
   them, as the July exploration was kept. Nothing in `design/`
   ships, which was the point of deleting them. The deploy-time code
   that dropped `src/landing/` from prod bundles went with them.
-- **The rotating tagline retired from the landing.** D has none, and
-  the group reviewed D without one. `taglines.js` and the
-  `taglines.html` review page stay as an idea store.
+- ~~**The rotating tagline retired from the landing.**~~ *Reversed at
+  the gate (2026-10-22):* it replaces B's eyebrow — see below.
 
 Not done here: the register views still carry their own CSS
 (Backlog); `--soft` still carries small text in the app screens (open
 risk #24).
+
+**Gate review, 2026-10-22.** The founder reviewed it live on workshop:
+"looks good", with three changes, all made the same day:
+
+- **Wordmark dots: option (a), extended to the app** — a global
+  `--wordmark-dot` per theme (U9 note). Measured as rendered on the
+  app's sign-in, sign-up and welcome screens: 3.21–7.09:1 at 32px in
+  every theme.
+- **The early-days notice sits at the bottom of the screen on phones**,
+  back at the top from 640px. Written phone-first (the bottom bar is
+  the base layout, `min-width: 640px` restores it), as the chunk-2
+  guard requires. The page reserves the bar's measured height, so
+  the footer is never behind it; focused controls scroll clear of it
+  (SC 2.4.11 — checked by tabbing through all 12); the workshop theme
+  chip sits above it.
+- **The rotating tagline replaces B's eyebrow**, as an italic epigraph
+  at 21–24px against the 12px caps it replaced. All 44 taglines are
+  active, from "Tea's on." to a 95-character quotation, so the layout
+  was checked at both extremes: the CTA stays above the phone's
+  bottom bar in the first screen (y=481 short, 536 longest).
+
+One trade-off, measured rather than guessed: the desktop
+introduction's height now varies with the tagline (834–896px), so
+whether it pins is decided by measuring it in the page (`.lp-pin`)
+instead of a fixed screen-height threshold. On a 900px-tall laptop it
+pins for the 29 one-line taglines and scrolls normally for the other
+15; at 1000px it pins for all 44; at 864px it did not pin before this
+change either. Nothing is ever pinned and cut.
+
+Verified again in all four themes at 390 and 1440: 0 contrast failures
+on either page, 0 controls under 44px, no line past 68ch. 284 frontend
+and 853 backend tests pass. `styles.css` is 86.2 KB raw / 16.5 KB
+gzipped against the ~90 KB ceiling.
 
 Gate: founder sign-off on workshop → next ordinary prod deploy →
 close-out.

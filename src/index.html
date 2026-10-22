@@ -14,7 +14,9 @@
 <title>in·real·life — neighborhood meetups on Bainbridge Island</title>
 
 <!--
-  The landing page: Direction D, chosen 2026-10-21 (U12). Its reasoning
+  The landing page: Direction D, chosen 2026-10-21 (U12); revised at
+  the chunk-4 gate (2026-10-22): the rotating tagline replaces B's
+  eyebrow, and on phones the early-days notice sits at the bottom. Its reasoning
   and the judgment that picked it live in
   design/landing-directions-2026-09.md; the drawn previews it came from
   are archived beside that note.
@@ -63,7 +65,7 @@
   <section class="lp-wrap lp-opening" aria-labelledby="h1">
     <div class="lp-intro">
       <div class="lp-intro-head">
-        <p class="lp-eyebrow">To our neighbors on Bainbridge</p>
+        <p class="lp-tagline" id="tagline"><span id="taglineText">Who are the people in your neighborhood?</span> <span class="lp-tagline-by" id="taglineBy"></span></p>
         <h1 id="h1">You're invited to meet your neighbors, <em>in real life.</em></h1>
         <p class="lp-lede">in·real·life is a community-driven way to find meetups on Bainbridge Island and to say you'll be there. A coffee walk, a book swap, a low-tide morning. You confirm, and then you show up. That is the whole thing.</p>
       </div>
@@ -314,13 +316,36 @@
 </footer>
 
 <script type="module">
-  // Sign-up and sign-in start from a clean slate: any persona left active
-  // in this browser is cleared first. The links work without JavaScript;
-  // they just skip the clearing.
+  // Enhancements only: without JavaScript the page still reads and every
+  // link still works (a fixed tagline, an unpinned introduction).
   import * as store from './js/store.js';
+  import { pickActiveTagline } from './js/taglines.js';
+
+  // Sign-up and sign-in start from a clean slate: any persona left active
+  // in this browser is cleared first.
   for (const link of document.querySelectorAll('[data-auth]')) {
     link.addEventListener('click', () => store.clearActiveUser());
   }
+
+  // A different tagline each visit (taglines.js; review page: taglines.html).
+  const tagline = pickActiveTagline();
+  document.getElementById('taglineText').textContent = tagline.text;
+  document.getElementById('taglineBy').textContent = tagline.attribution ?? '';
+
+  // Layout that depends on measured heights (css/styles.css → Public pages):
+  // the phone's bottom notice reserves exactly its own height, and the
+  // desktop introduction pins beside the week only when all of it fits.
+  const root = document.documentElement;
+  const bar = document.querySelector('.lp-notice-bar');
+  const intro = document.querySelector('.lp-intro');
+  const wide = window.matchMedia('(min-width: 1080px)');
+  const fit = () => {
+    root.style.setProperty('--lp-notice-h', `${bar.offsetHeight}px`);
+    intro.classList.toggle('lp-pin', wide.matches && intro.offsetHeight + 48 <= window.innerHeight);
+  };
+  fit();
+  window.addEventListener('resize', fit);
+  document.fonts?.ready.then(fit);
 </script>
 
 </body>

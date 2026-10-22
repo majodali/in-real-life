@@ -325,9 +325,10 @@ No build step, so the budget is about restraint, not tooling.
   swap`, and no layout shift from the swap. Extra faces for
   non-default themes load lazily (as Pebble's Fraunces already does).
 - **JavaScript on the landing page**: none required for content.
-  Theme init, PWA registration and the sign-up/sign-in handler only;
-  every link works without it. (The rotating tagline retired with the
-  old page — U12, 2026-10-21.)
+  Theme init, PWA registration, the sign-up/sign-in handler, the
+  rotating tagline, and two layout measurements (the phone notice's
+  height; whether the desktop introduction fits to pin). Every link and
+  every word works without it.
 - **Images**: none in the current design. If a direction introduces
   them, each must carry explicit dimensions, lazy loading below the
   fold, and a stated weight inside the page budget.

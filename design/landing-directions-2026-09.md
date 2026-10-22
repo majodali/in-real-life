@@ -297,5 +297,8 @@ settled the same day:
   (R11).
 
 Still open, carried into chunk 4: **the wordmark interpuncts**
-(2.73:1), with open risk #24. The example week is undated (it was
+(2.73:1), with open risk #24. *(Resolved 2026-10-22: a per-theme
+deepened amber on every surface, U9 note. Also revised at the
+chunk-4 gate: the rotating tagline replaces B's eyebrow, and the
+phone's notice moves to the bottom of the screen — U12.)* The example week is undated (it was
 pinned to 21–27 September), so it cannot go stale.
