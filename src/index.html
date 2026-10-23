@@ -15,8 +15,11 @@
 
 <!--
   The landing page: Direction D, chosen 2026-10-21 (U12); revised at
-  the chunk-4 gate (2026-10-22): the rotating tagline replaces B's
-  eyebrow, and on phones the early-days notice sits at the bottom. Its reasoning
+  the chunk-4 gate. 2026-10-22: the rotating tagline replaces B's
+  eyebrow, and on phones the early-days notice sits at the bottom.
+  2026-10-23: the tagline gets its own full-width band, the headline
+  spans the page, and the example week is a narrower calendar of
+  compact agenda rows. Its reasoning
   and the judgment that picked it live in
   design/landing-directions-2026-09.md; the drawn previews it came from
   are archived beside that note.
@@ -62,11 +65,14 @@
 
 <main id="main">
 
+  <div class="lp-wrap">
+    <p class="lp-tagline" id="tagline"><span class="lp-tagline-text" id="taglineText">Who are the people in your neighborhood?</span><span class="lp-tagline-by" id="taglineBy"></span></p>
+  </div>
+
   <section class="lp-wrap lp-opening" aria-labelledby="h1">
+    <h1 id="h1">You're invited to meet your neighbors, <em>in real life.</em></h1>
     <div class="lp-intro">
       <div class="lp-intro-head">
-        <p class="lp-tagline" id="tagline"><span id="taglineText">Who are the people in your neighborhood?</span> <span class="lp-tagline-by" id="taglineBy"></span></p>
-        <h1 id="h1">You're invited to meet your neighbors, <em>in real life.</em></h1>
         <p class="lp-lede">in·real·life is a community-driven way to find meetups on Bainbridge Island and to say you'll be there. A coffee walk, a book swap, a low-tide morning. You confirm, and then you show up. That is the whole thing.</p>
       </div>
 
@@ -111,12 +117,12 @@
         <li class="lp-day">
           <h3 class="lp-day-label"><span class="lp-dow">Monday</span></h3>
           <ol class="lp-events">
-            <li class="lp-card">
+            <li class="lp-event">
               <p class="lp-when"><time datetime="18:30">6:30 pm</time></p>
-              <h4>Evening walk, Grand Forest west loop</h4>
-              <p class="lp-where">Mandus Olson Road trailhead</p>
-              <p class="lp-note">About an hour at an easy pace. Dogs on a leash are welcome.</p>
-              <p class="lp-host">Hosted by <b>Ruth</b>, who will be wearing a red rain jacket.</p>
+              <div class="lp-what">
+                <h4>Evening walk, Grand Forest west loop</h4>
+                <p class="lp-meta">Mandus Olson Road trailhead · Hosted by <b>Ruth</b></p>
+              </div>
             </li>
           </ol>
         </li>
@@ -124,12 +130,12 @@
         <li class="lp-day">
           <h3 class="lp-day-label"><span class="lp-dow">Tuesday</span></h3>
           <ol class="lp-events">
-            <li class="lp-card">
+            <li class="lp-event">
               <p class="lp-when"><time datetime="07:30">7:30 am</time></p>
-              <h4>Coffee before the morning boat</h4>
-              <p class="lp-where">Pegasus Coffee House, Winslow</p>
-              <p class="lp-note">Twenty minutes, then whoever is commuting walks down to the ferry together.</p>
-              <p class="lp-host">Hosted by <b>Daniel</b>, at the long table by the window.</p>
+              <div class="lp-what">
+                <h4>Coffee before the morning boat</h4>
+                <p class="lp-meta">Pegasus Coffee House, Winslow · Hosted by <b>Daniel</b></p>
+              </div>
             </li>
           </ol>
         </li>
@@ -137,19 +143,19 @@
         <li class="lp-day">
           <h3 class="lp-day-label"><span class="lp-dow">Wednesday</span></h3>
           <ol class="lp-events">
-            <li class="lp-card">
+            <li class="lp-event">
               <p class="lp-when"><time datetime="12:15">12:15 pm</time></p>
-              <h4>Lunch on the benches at Waterfront Park</h4>
-              <p class="lp-where">Waterfront Park, near the boat launch</p>
-              <p class="lp-note">Bring your own lunch. Forty-five minutes, then back to whatever you were doing.</p>
-              <p class="lp-host">Hosted by <b>Amara</b>, green thermos.</p>
+              <div class="lp-what">
+                <h4>Lunch on the benches at Waterfront Park</h4>
+                <p class="lp-meta">Waterfront Park, near the boat launch · Hosted by <b>Amara</b></p>
+              </div>
             </li>
-            <li class="lp-card">
+            <li class="lp-event">
               <p class="lp-when"><time datetime="19:00">7:00 pm</time></p>
-              <h4>Board games at the library</h4>
-              <p class="lp-where">Bainbridge Public Library, meeting room</p>
-              <p class="lp-note">Two games on the table, plus whatever you bring. Rules explained without fuss.</p>
-              <p class="lp-host">Hosted by <b>Joe</b>, who will have a stack of boxes.</p>
+              <div class="lp-what">
+                <h4>Board games at the library</h4>
+                <p class="lp-meta">Bainbridge Public Library, meeting room · Hosted by <b>Joe</b></p>
+              </div>
             </li>
           </ol>
         </li>
@@ -157,12 +163,12 @@
         <li class="lp-day">
           <h3 class="lp-day-label"><span class="lp-dow">Thursday</span></h3>
           <ol class="lp-events">
-            <li class="lp-card">
+            <li class="lp-event">
               <p class="lp-when"><time datetime="18:00">6:00 pm</time></p>
-              <h4>Pickleball for people who have never played</h4>
-              <p class="lp-where">Battle Point Park courts</p>
-              <p class="lp-note">An hour of learning the rules and hitting a few balls. Two loaner paddles available.</p>
-              <p class="lp-host">Hosted by <b>Linh</b>, on the court nearest the parking lot.</p>
+              <div class="lp-what">
+                <h4>Pickleball for people who have never played</h4>
+                <p class="lp-meta">Battle Point Park courts · Hosted by <b>Linh</b></p>
+              </div>
             </li>
           </ol>
         </li>
@@ -170,12 +176,12 @@
         <li class="lp-day">
           <h3 class="lp-day-label"><span class="lp-dow">Friday</span></h3>
           <ol class="lp-events">
-            <li class="lp-card">
+            <li class="lp-event">
               <p class="lp-when"><time datetime="17:30">5:30 pm</time></p>
-              <h4>Sketching the harbor</h4>
-              <p class="lp-where">Eagle Harbor waterfront trail, by the marina</p>
-              <p class="lp-note">Any skill, any medium. Pencil on the back of an envelope is fine. We stop when the light goes.</p>
-              <p class="lp-host">Hosted by <b>Ellen</b>, folding stool and a big sketchbook.</p>
+              <div class="lp-what">
+                <h4>Sketching the harbor</h4>
+                <p class="lp-meta">Eagle Harbor waterfront trail, by the marina · Hosted by <b>Ellen</b></p>
+              </div>
             </li>
           </ol>
         </li>
@@ -183,19 +189,19 @@
         <li class="lp-day">
           <h3 class="lp-day-label"><span class="lp-dow">Saturday</span></h3>
           <ol class="lp-events">
-            <li class="lp-card">
+            <li class="lp-event">
               <p class="lp-when"><time datetime="09:00">9:00 am</time></p>
-              <h4>Farmers' market, then a coffee</h4>
-              <p class="lp-where">Town Square, Winslow</p>
-              <p class="lp-note">A slow lap of the stalls, then a table somewhere. No shopping list required.</p>
-              <p class="lp-host">Hosted by <b>Priya</b>, meeting at the flower stall.</p>
+              <div class="lp-what">
+                <h4>Farmers' market, then a coffee</h4>
+                <p class="lp-meta">Town Square, Winslow · Hosted by <b>Priya</b></p>
+              </div>
             </li>
-            <li class="lp-card">
+            <li class="lp-event">
               <p class="lp-when"><time datetime="14:00">2:00 pm</time></p>
-              <h4>Low tide walk at Fay Bainbridge</h4>
-              <p class="lp-where">Fay Bainbridge Park, the beach below the campground</p>
-              <p class="lp-note">The tide is out mid-afternoon. Boots or shoes you do not mind getting wet.</p>
-              <p class="lp-host">Hosted by <b>Tom</b>, by the driftwood at the north end.</p>
+              <div class="lp-what">
+                <h4>Low tide walk at Fay Bainbridge</h4>
+                <p class="lp-meta">Fay Bainbridge Park, the beach below the campground · Hosted by <b>Tom</b></p>
+              </div>
             </li>
           </ol>
         </li>
@@ -203,19 +209,19 @@
         <li class="lp-day">
           <h3 class="lp-day-label"><span class="lp-dow">Sunday</span></h3>
           <ol class="lp-events">
-            <li class="lp-card">
+            <li class="lp-event">
               <p class="lp-when"><time datetime="10:00">10:00 am</time></p>
-              <h4>Sunday run, Gazzam Lake loop</h4>
-              <p class="lp-where">Gazzam Lake Nature Preserve, Marshall Road entrance</p>
-              <p class="lp-note">About three miles at a pace you can talk at. Walkers welcome; we regroup at the lake.</p>
-              <p class="lp-host">Hosted by <b>Marcus</b>, orange cap.</p>
+              <div class="lp-what">
+                <h4>Sunday run, Gazzam Lake loop</h4>
+                <p class="lp-meta">Gazzam Lake Nature Preserve, Marshall Road entrance · Hosted by <b>Marcus</b></p>
+              </div>
             </li>
-            <li class="lp-card">
+            <li class="lp-event">
               <p class="lp-when"><time datetime="16:00">4:00 pm</time></p>
-              <h4>Book swap, one in and one out</h4>
-              <p class="lp-where">Lynwood Center, the benches outside the theater</p>
-              <p class="lp-note">Bring a book you loved and leave with one somebody else did. Half an hour, weather allowing.</p>
-              <p class="lp-host">Hosted by <b>Sofia</b>, with a tote bag full of paperbacks.</p>
+              <div class="lp-what">
+                <h4>Book swap, one in and one out</h4>
+                <p class="lp-meta">Lynwood Center, the benches outside the theater · Hosted by <b>Sofia</b></p>
+              </div>
             </li>
           </ol>
         </li>

@@ -198,10 +198,12 @@ html.lp {
   --lp-serif: 'Playfair Display', Georgia, serif;
   --lp-sans: 'DM Sans', system-ui, sans-serif;
   --lp-head-weight: 400;
+  --lp-band-bg: rgba(74, 103, 65, 0.09);
   --lp-gutter: 20px;
   --lp-measure: 68ch;
 }
 html.lp[data-theme="morning-linen"] {
+  --lp-band-bg: rgba(76, 104, 73, 0.09);
   --lp-surface: var(--ml-surface);
   --lp-border: var(--ml-border);
   --lp-line: rgba(42, 58, 47, 0.12);
@@ -209,6 +211,7 @@ html.lp[data-theme="morning-linen"] {
   --lp-btn-shadow: var(--ml-btn-shadow);
 }
 html.lp[data-theme="lantern"] {
+  --lp-band-bg: rgba(143, 169, 134, 0.10);
   --lp-surface: var(--lt-surface);
   --lp-border: var(--lt-border);
   --lp-line: var(--lt-line);
@@ -219,6 +222,7 @@ html.lp[data-theme="lantern"] {
   --lp-btn-shadow: none;
 }
 html.lp[data-theme="pebble"] {
+  --lp-band-bg: rgba(72, 104, 94, 0.09);
   --lp-surface: var(--pb-surface);
   --lp-border: rgba(36, 65, 58, 0.08);
   --lp-line: rgba(36, 65, 58, 0.13);
@@ -274,9 +278,10 @@ html.lp .lp-nav .lp-signin { border: 1px solid var(--lp-line); }
 
 /* ── Opening: introduction + the week ── */
 html.lp .lp-opening {
-  display: grid; grid-template-columns: 1fr; gap: 28px;
-  padding-top: 28px; padding-bottom: 8px;
+  display: grid; grid-template-columns: 1fr; gap: 24px;
+  padding-top: 36px; padding-bottom: 8px;
 }
+html.lp .lp-opening > h1 { margin-bottom: 0; }
 /* Direction D: no visual reordering. A placed the week between the
    introduction and the call to action on phones (CSS order), which
    put the CTA 3681px down a 390px screen and made focus order
@@ -284,19 +289,26 @@ html.lp .lp-opening {
 html.lp .lp-intro { display: block; }
 html.lp .lp-intro-head { margin-bottom: 22px; }
 
-/* The rotating tagline (taglines.js), where B's eyebrow was — founder,
-   2026-10-22. An epigraph: italic serif, clearly above the 12px caps it
-   replaced and clearly below the headline. Lengths run from "Tea's on."
-   to a 95-character quotation, so nothing here assumes one line. */
+/* The rotating tagline (taglines.js) — founder, 2026-10-22/23. Its own
+   band directly under the masthead, across the whole page: a pale tint
+   of the theme's moss, so it reads apart from the notice bar (--warm)
+   and the cards (--lp-surface), with the quotation centered and its
+   attribution beneath. Close to the wordmark, clear of the headline.
+   Lengths run from "Tea's on." to a 95-character quotation. */
 html.lp .lp-tagline {
-  font-family: var(--lp-serif); font-style: italic; font-size: 21px; line-height: 1.3;
-  color: var(--moss); max-width: 32ch; margin-bottom: 16px;
+  background: var(--lp-band-bg); border-radius: 20px;
+  padding: 22px 22px 24px; margin-top: 2px; text-align: center;
+  font-family: var(--lp-serif); font-style: italic; font-size: 23px; line-height: 1.3;
+  color: var(--earth);
 }
+html.lp .lp-tagline-text { display: block; max-width: 34ch; margin: 0 auto; text-wrap: balance; }
 html.lp .lp-tagline-by {
+  display: block; margin-top: 8px;
   font-family: var(--lp-sans); font-style: normal; font-size: 14px;
-  letter-spacing: 0.02em; white-space: nowrap;
+  letter-spacing: 0.04em; color: var(--moss);
 }
-html.lp .lp-tagline-by:not(:empty)::before { content: '\2014\00a0'; }
+html.lp .lp-tagline-by:empty { display: none; }
+html.lp .lp-tagline-by::before { content: '\2014\00a0'; }
 html.lp h1 { font-size: 34px; line-height: 1.15; max-width: 18ch; margin-bottom: 18px; }
 html.lp h1 em { font-style: italic; color: var(--moss); white-space: nowrap; }
 html.lp .lp-lede { font-size: 17px; line-height: 1.55; max-width: var(--lp-measure); color: var(--text); }
@@ -313,7 +325,7 @@ html.lp .lp-flag {
 html.lp .lp-flag::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--amber); }
 html.lp .lp-week-note { font-size: 14px; line-height: 1.5; color: var(--moss); max-width: var(--lp-measure); margin-bottom: 18px; }
 
-html.lp .lp-day { margin-top: 18px; }
+html.lp .lp-day { margin-top: 14px; }
 html.lp .lp-day-label {
   display: flex; align-items: center; gap: 12px;
   font-size: 12.5px; letter-spacing: 0.14em; text-transform: uppercase; font-weight: 500;
@@ -321,23 +333,26 @@ html.lp .lp-day-label {
 }
 html.lp .lp-day-label::after { content: ''; flex: 1; height: 1px; background: var(--lp-line); }
 html.lp .lp-day-label .lp-dow { color: var(--earth); }
-html.lp .lp-events { display: grid; grid-template-columns: 1fr; gap: 12px; }
-
-html.lp .lp-card {
-  background: var(--lp-surface); border: 1px solid var(--lp-border); border-radius: 20px;
-  box-shadow: var(--lp-shadow); padding: 18px 20px 16px;
-  display: flex; flex-direction: column; gap: 6px;
+/* Calendar-like (founder, 2026-10-23): a day is one card of compact
+   agenda rows — time | title, then place · host — not a card per
+   meetup with a paragraph each. */
+html.lp .lp-events {
+  background: var(--lp-surface); border: 1px solid var(--lp-border); border-radius: 18px;
+  box-shadow: var(--lp-shadow); padding: 0 18px;
 }
+html.lp .lp-event {
+  display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 12px;
+  padding: 12px 0; border-top: 1px solid var(--lp-border);
+}
+html.lp .lp-event:first-child { border-top: 0; }
 html.lp .lp-when {
-  display: inline-flex; align-items: center; gap: 8px;
-  font-size: 13.5px; font-weight: 500; letter-spacing: 0.04em; color: var(--earth);
+  display: inline-flex; align-items: center; gap: 8px; align-self: start; padding-top: 2px;
+  font-size: 13.5px; font-weight: 500; letter-spacing: 0.02em; color: var(--earth); white-space: nowrap;
 }
-html.lp .lp-when::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--amber); flex: 0 0 auto; }
-html.lp .lp-card h4 { font-family: var(--lp-serif); font-weight: var(--lp-head-weight); font-size: 20px; line-height: 1.25; color: var(--earth); }
-html.lp .lp-where { font-size: 14px; color: var(--moss); line-height: 1.45; }
-html.lp .lp-note { font-size: 15px; line-height: 1.5; color: var(--text); margin-top: 2px; }
-html.lp .lp-host { font-size: 14px; color: var(--moss); margin-top: 4px; padding-top: 10px; border-top: 1px solid var(--lp-border); }
-html.lp .lp-host b { font-weight: 500; color: var(--earth); }
+html.lp .lp-when::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--amber); flex: 0 0 auto; }
+html.lp .lp-event h4 { font-family: var(--lp-serif); font-weight: var(--lp-head-weight); font-size: 17px; line-height: 1.3; color: var(--earth); }
+html.lp .lp-meta { font-size: 13.5px; line-height: 1.45; color: var(--moss); margin-top: 2px; }
+html.lp .lp-meta b { font-weight: 500; color: var(--earth); }
 
 html.lp .lp-week-end { font-size: 14px; color: var(--moss); margin-top: 18px; max-width: var(--lp-measure); }
 
@@ -448,11 +463,11 @@ html.lp .lp-foot-links a + a { padding-left: 10px; border-left: 1px solid var(--
 @media (min-width: 640px) {
   html.lp { --lp-gutter: 32px; }
   html.lp .lp-nav .lp-anchor { display: inline-flex; }
-  html.lp .lp-events { grid-template-columns: repeat(2, 1fr); }
   html.lp .lp-cta { flex-direction: row; align-items: center; gap: 16px; }
   html.lp .lp-absent { grid-template-columns: repeat(2, 1fr); }
   html.lp h1 { font-size: 40px; }
-  html.lp .lp-tagline { font-size: 23px; }
+  html.lp .lp-tagline { font-size: 26px; padding: 28px 36px 30px; }
+  html.lp .lp-event { grid-template-columns: 84px minmax(0, 1fr); }
   html.lp .lp-notice-bar {
     position: static; border-top: 0; border-bottom: 1px solid var(--lp-line);
     box-shadow: none; padding-bottom: 0;
@@ -476,23 +491,32 @@ html.lp .lp-foot-links a + a { padding-left: 10px; border-left: 1px solid var(--
 /* ── The introduction sits beside the week ── */
 @media (min-width: 1080px) {
   html.lp { --lp-gutter: 48px; }
-  html.lp .lp-opening { grid-template-columns: minmax(340px, 460px) minmax(0, 1fr); column-gap: 64px; row-gap: 0; padding-top: 48px; }
+  /* The headline spans both columns; the calendar keeps to 540px and
+     the spare width goes between the columns (founder, 2026-10-23). */
+  html.lp .lp-opening {
+    grid-template-columns: minmax(340px, 440px) minmax(0, 540px); justify-content: space-between;
+    column-gap: 96px; row-gap: 32px; padding-top: 52px;
+  }
+  html.lp .lp-opening > h1 { grid-column: 1 / -1; max-width: none; font-size: 48px; }
+  html.lp .lp-intro { grid-column: 1; grid-row: 2; }
   html.lp .lp-intro { display: block; align-self: start; }
   html.lp .lp-intro-head { margin-bottom: 24px; }
   html.lp .lp-cta { flex-direction: row; align-items: center; gap: 12px; }
-  html.lp .lp-week { grid-column: 2; grid-row: 1; }
+  html.lp .lp-week { grid-column: 2; grid-row: 2; }
   html.lp h1 { font-size: 44px; }
-  html.lp .lp-tagline { font-size: 24px; }
+  html.lp .lp-tagline { font-size: 30px; padding: 34px 48px 36px; }
+  html.lp .lp-tagline-text { max-width: 44ch; }
   html.lp .lp-week-head h2 { font-size: 26px; }
-  html.lp .lp-events { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
   html.lp .lp-closing .lp-cta { flex-direction: row; align-items: center; max-width: none; }
 }
 
 /* A's signature: the introduction stays beside the week while the week
    scrolls — but only when all of it fits on screen, because an element
-   pinned to the top but taller than the screen hides its own end. Its
-   height now varies with the tagline (one line to four), so index.html
-   measures it and sets .lp-pin; without JavaScript it simply scrolls. */
+   pinned to the top but taller than the screen hides its own end. It is
+   ~617px today (the tagline and headline sit above it since 2026-10-23),
+   but its copy and fonts can change, so index.html measures it and sets
+   .lp-pin rather than this file guessing a screen height. Without
+   JavaScript it simply scrolls. */
 @media (min-width: 1080px) {
   html.lp .lp-intro.lp-pin { position: sticky; top: 24px; }
 }

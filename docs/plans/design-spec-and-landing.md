@@ -443,6 +443,43 @@ on either page, 0 controls under 44px, no line past 68ch. 284 frontend
 and 853 backend tests pass. `styles.css` is 86.2 KB raw / 16.5 KB
 gzipped against the ~90 KB ceiling.
 
+**Second gate review, 2026-10-23.** Live on workshop again: "all looks
+good", with refinements, all made the same day.
+
+- **Tagline**: crowded on desktop and underplayed on phones. It now has
+  its own band directly under the masthead, across the whole page —
+  a pale tint of the theme's moss (`--lp-band-bg` per theme), distinct
+  from the beige notice bar and the white cards — with the quotation
+  centered at 23 / 26 / 30px and the attribution on its own line.
+  Close to the wordmark, clear of the headline.
+- **Headline** spans both columns on desktop, on one line at 48px,
+  instead of wrapping to three in the left column.
+- **Calendar**: capped at 540px, with the spare width between the
+  columns (about 200px at 1440), and calendar-like: each day is one
+  card of agenda rows — time, then title and "place · Hosted by first
+  name". The per-meetup description and "how to spot the host" lines
+  are gone. The phone page drops from 7,186px to 5,628px.
+- **Event images** "at some point": recorded on the existing Backlog
+  item, with the performance-budget conditions they carry.
+
+The trade-off from the first gate review is gone: with the tagline and
+headline out of it, the desktop introduction is 617px and pins for all
+44 taglines at 900px, 864px and 1000px tall.
+
+Verified, with the longest tagline forced, in all four themes at 390
+and 1440: 0 contrast failures on either page, 0 controls under 44px,
+no rendered line past 68ch; the phone CTA stays above the bottom bar
+in the first screen (y=616 with the longest tagline); while pinned,
+the introduction is fully visible at every scroll position through
+the week. 284 frontend and 853 backend tests pass. `styles.css` is
+87.6 KB raw / 16.9 KB gzipped — about 2.4 KB under the ~90 KB ceiling.
+
+The measuring harness was itself corrected this round: it had blended
+translucent backgrounds over an assumed cream and measured element
+boxes rather than rendered lines, which reported false failures on
+the new band. Earlier rounds' results are unaffected — no text sat on
+a translucent background before.
+
 Gate: founder sign-off on workshop → next ordinary prod deploy →
 close-out.
 
