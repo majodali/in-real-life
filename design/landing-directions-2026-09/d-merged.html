@@ -1,0 +1,582 @@
+<!--
+  Direction D — the merge, after the October 2026 small-group review.
+
+  Drawn from the reviewers' consolidated feedback (docs/feedback-log.md
+  FB3–FB9; judgment in design/landing-directions-2026-09.md §6), not a
+  fresh idea. Built by editing a copy of Direction A, so A's visual
+  system, which the group found most appealing, carries over exactly:
+  tokens, type, cards, the day-anchored example week, the two-pane
+  desktop layout with a sticky introduction.
+
+  Taken from the others:
+  - B's headline and first paragraph, with "small, not-for-profit"
+    replaced by "community-driven" (FB4, FB7).
+  - C's notice bar for the early-stage message, above the page rather
+    than inside it, cut to two sentences so it doesn't eat a phone's
+    first screen (FB5).
+  - C's at-a-glance card in place of A's "Where things stand" box,
+    without the Stage line, redrawn as an A card (FB9).
+
+  Fixed from A, because the reviewers saw desktop only:
+  - On phones A moved the week between the introduction and the CTA
+    with CSS `order`, putting the CTA 3681px down and making focus
+    order disagree with reading order. D keeps DOM order: introduction,
+    CTA, glance card, then the week.
+  - The one paragraph that ran to 133ch now keeps the 68ch measure.
+
+  Copy made true to the product as built (checked against the code,
+  2026-10-19): the app does show confirmed/interested counts, so "No
+  headcounts" is gone; the feed suggests by fit, so "date order" and
+  "nothing is scored" are gone; the real calendar has no one-week
+  window, so "ends on Sunday" is gone. Nothing says the calendar is
+  empty, because the reviewers' condition (FB6) is that it won't be
+  when strangers arrive. US spelling throughout (FB8).
+
+  Chosen 2026-10-21 (U12), with "Accept the invitation" as the call
+  to action. Still open, for chunk 4: the wordmark's amber interpuncts
+  are 2.73:1 (shared by all directions and the live site, open risk
+  #24). Sign-up and sign-in are plain links to app.html; the
+  store.clearActiveUser() step the current index.html performs is left
+  to integration.
+-->
+<!DOCTYPE html>
+<html lang="en" data-theme="morning-linen">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#f8f3e9">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<title>in·real·life — neighborhood meetups on Bainbridge Island</title>
+<meta name="description" content="A small calendar of neighbourhood meetups on Bainbridge Island, Washington. First names only, no messaging, no ads, not for profit. Say you'll come, then show up.">
+<style>
+  /* ── Morning Linen tokens (design/landing-brief-2026-09.md) ── */
+  :root {
+    --earth: #2a3a2f;
+    --moss: #4c6849;
+    --sage: #7a9e6e;
+    --mist: #f0ead9;
+    --cream: #f8f3e9;
+    --warm: #efe7d4;
+    --amber: #c08a45;
+    --text: #26332a;
+    --soft: #77806f;
+    --surface: #fffdf6;
+    --border: rgba(42, 58, 47, 0.07);
+    --line: rgba(42, 58, 47, 0.12);
+    --shadow: 0 1px 2px rgba(42,58,47,0.04), 0 10px 30px rgba(42,58,47,0.06);
+    --btn-shadow: 0 8px 20px rgba(42,58,47,0.18);
+    --serif: 'Playfair Display', Georgia, serif;
+    --sans: 'DM Sans', system-ui, sans-serif;
+    --gutter: 20px;
+    --measure: 68ch;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-text-size-adjust: 100%; scroll-behavior: auto; }
+  body {
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--text);
+    background: var(--cream);
+  }
+  h1, h2, h3 { font-family: var(--serif); font-weight: 400; color: var(--earth); letter-spacing: -0.005em; }
+  a { color: var(--moss); }
+  ol, ul { list-style: none; }
+
+  :focus-visible { outline: 3px solid var(--moss); outline-offset: 3px; border-radius: 6px; }
+
+  .skip {
+    position: absolute; left: var(--gutter); top: -100px;
+    background: var(--earth); color: var(--mist);
+    padding: 12px 18px; border-radius: 999px; text-decoration: none; z-index: 10;
+  }
+  .skip:focus { top: 12px; }
+
+  .wrap { width: 100%; max-width: 1280px; margin: 0 auto; padding-left: var(--gutter); padding-right: var(--gutter); }
+
+  /* ── Header and nav ── */
+  .top {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 16px; padding-top: 12px; padding-bottom: 12px;
+  }
+  .wordmark {
+    font-family: var(--serif); font-size: 24px; color: var(--earth);
+    letter-spacing: -0.02em; text-decoration: none;
+    display: inline-flex; align-items: center; min-height: 44px;
+  }
+  .wordmark span { color: var(--amber); }
+  .nav { display: flex; align-items: center; gap: 4px; }
+  .nav a {
+    display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px;
+    color: var(--earth); text-decoration: none; font-size: 15px; border-radius: 999px;
+  }
+  .nav a:hover { background: var(--warm); }
+  .nav .anchor { display: none; }
+  .nav .signin { border: 1px solid var(--line); }
+
+  /* ── Opening: introduction + the week ── */
+  .opening {
+    display: grid; grid-template-columns: 1fr; gap: 28px;
+    padding-top: 28px; padding-bottom: 8px;
+  }
+  /* Direction D: no visual reordering. A placed the week between the
+     introduction and the call to action on phones (CSS order), which
+     put the CTA 3681px down a 390px screen and made focus order
+     disagree with reading order. The DOM order is the reading order. */
+  .intro { display: block; }
+  .intro-head { margin-bottom: 22px; }
+
+  .eyebrow {
+    font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase;
+    font-weight: 500; color: var(--moss); margin-bottom: 14px;
+  }
+  h1 { font-size: 34px; line-height: 1.15; max-width: 18ch; margin-bottom: 18px; }
+  h1 em { font-style: italic; color: var(--moss); white-space: nowrap; }
+  .lede { font-size: 17px; line-height: 1.55; max-width: var(--measure); color: var(--text); }
+  .lede + .lede { margin-top: 12px; }
+
+  /* Day-anchored list grammar (the Field Notes refinement named in ui-themes.md) */
+  .week-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
+  .week-head h2 { font-size: 24px; }
+  .flag {
+    display: inline-flex; align-items: center; gap: 8px; flex: 0 0 auto;
+    font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 500;
+    color: var(--earth); border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px;
+  }
+  .flag::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--amber); }
+  .week-note { font-size: 14px; line-height: 1.5; color: var(--moss); max-width: var(--measure); margin-bottom: 18px; }
+
+  .day { margin-top: 18px; }
+  .day-label {
+    display: flex; align-items: center; gap: 12px;
+    font-size: 12.5px; letter-spacing: 0.14em; text-transform: uppercase; font-weight: 500;
+    color: var(--moss); margin-bottom: 10px;
+  }
+  .day-label::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+  .day-label .dow { color: var(--earth); }
+  .events { display: grid; grid-template-columns: 1fr; gap: 12px; }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 20px;
+    box-shadow: var(--shadow); padding: 18px 20px 16px;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .when {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 13.5px; font-weight: 500; letter-spacing: 0.04em; color: var(--earth);
+  }
+  .when::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--amber); flex: 0 0 auto; }
+  .card h4 { font-family: var(--serif); font-weight: 400; font-size: 20px; line-height: 1.25; color: var(--earth); }
+  .where { font-size: 14px; color: var(--moss); line-height: 1.45; }
+  .note { font-size: 15px; line-height: 1.5; color: var(--text); margin-top: 2px; }
+  .host { font-size: 14px; color: var(--moss); margin-top: 4px; padding-top: 10px; border-top: 1px solid var(--border); }
+  .host b { font-weight: 500; color: var(--earth); }
+
+  .week-end { font-size: 14px; color: var(--moss); margin-top: 18px; max-width: var(--measure); }
+
+  /* ── The ask ── */
+  .cta { display: flex; flex-direction: column; gap: 10px; align-items: stretch; }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; min-height: 52px;
+    padding: 14px 26px; border-radius: 999px; text-decoration: none;
+    background: var(--earth); color: var(--mist); box-shadow: var(--btn-shadow);
+    font-size: 15.5px; font-weight: 500; letter-spacing: 0.02em; text-align: center;
+  }
+  .btn:hover { background: var(--moss); }
+  .quiet { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 8px 12px; font-size: 15px; text-decoration: none; }
+  .quiet:hover { text-decoration: underline; }
+
+  /* C's at-a-glance card, redrawn in A's card language (FB9). */
+  .glance-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 20px;
+    box-shadow: var(--shadow); padding: 16px 20px 4px; margin-top: 18px; max-width: var(--measure);
+  }
+  .glance-title { font-family: var(--sans); font-size: 12px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: var(--moss); }
+  .glance > div { padding: 10px 0 12px; border-top: 1px solid var(--border); }
+  .glance > div:first-child { border-top: 0; }
+  .glance dt { font-size: 12px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--moss); margin-bottom: 3px; }
+  .glance dd { font-size: 15px; line-height: 1.45; color: var(--text); }
+
+  /* C's notice bar (FB5): the early-stage message sits above the page,
+     not inside it. Kept to two short sentences — C's version took the
+     top fifth of a phone's first screen. */
+  .notice-bar { background: var(--warm); border-bottom: 1px solid var(--line); }
+  .notice-bar .wrap { display: grid; gap: 4px 20px; padding-top: 11px; padding-bottom: 11px; }
+  .notice-label {
+    display: inline-flex; align-items: center; gap: 8px; white-space: nowrap;
+    font-size: 11.5px; font-weight: 500; letter-spacing: 0.16em; text-transform: uppercase; color: var(--moss);
+  }
+  .notice-label::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--amber); flex: 0 0 auto; }
+  .notice-bar p { font-size: 14.5px; line-height: 1.45; color: var(--text); max-width: var(--measure); }
+
+  /* ── Sections after the week ── */
+  .section { padding-top: 48px; padding-bottom: 8px; }
+  .section > .wrap > h2, .section h2.title { font-size: 28px; line-height: 1.2; max-width: 24ch; margin-bottom: 10px; }
+  .section .lead { max-width: var(--measure); font-size: 16px; color: var(--text); margin-bottom: 24px; }
+  .rule { border: 0; border-top: 1px solid var(--line); margin: 40px 0 0; }
+
+  .absent { display: grid; grid-template-columns: 1fr; gap: 12px; }
+  .absent li {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 20px;
+    box-shadow: var(--shadow); padding: 18px 20px;
+  }
+  .absent h3 { font-family: var(--sans); font-weight: 500; font-size: 16px; color: var(--earth); margin-bottom: 4px; }
+  .absent p { font-size: 15px; line-height: 1.5; }
+  .absent p b { font-weight: 500; color: var(--moss); }
+
+  .steps { display: grid; grid-template-columns: 1fr; gap: 20px; counter-reset: step; }
+  .steps li { display: flex; gap: 16px; align-items: flex-start; max-width: var(--measure); }
+  .steps li::before {
+    counter-increment: step; content: counter(step);
+    font-family: var(--serif); font-size: 30px; line-height: 1; color: var(--earth);
+    flex: 0 0 auto; min-width: 28px; padding-top: 2px;
+    border-bottom: 2px solid var(--amber);
+  }
+  .steps h3 { font-family: var(--sans); font-weight: 500; font-size: 17px; color: var(--earth); margin-bottom: 4px; }
+  .steps p { font-size: 15px; line-height: 1.55; }
+  .steps p + p { margin-top: 6px; }
+
+  .prose p { max-width: var(--measure); margin-bottom: 12px; }
+  .prose p:last-child { margin-bottom: 0; }
+
+  .closing { padding-top: 48px; padding-bottom: 24px; }
+  .closing h2 { font-size: 30px; margin-bottom: 8px; }
+  .closing p { max-width: var(--measure); margin-bottom: 20px; }
+  .closing .cta { max-width: 420px; }
+
+  footer { padding-top: 24px; padding-bottom: 40px; border-top: 1px solid var(--line); margin-top: 24px; }
+  .foot { display: flex; flex-direction: column; gap: 8px; font-size: 14px; color: var(--moss); }
+  .foot p { max-width: var(--measure); }
+  .foot-links { display: flex; flex-wrap: wrap; gap: 4px 6px; }
+  .foot-links a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 10px 0 0; color: var(--moss); text-decoration: none; }
+  .foot-links a:hover { text-decoration: underline; color: var(--earth); }
+  .foot-links a + a { padding-left: 10px; border-left: 1px solid var(--line); }
+
+  /* ── Motion: only when allowed, only decorative ── */
+  @media (prefers-reduced-motion: no-preference) {
+    .btn, .nav a, .quiet, .foot-links a { transition: background-color 160ms ease-out, color 160ms ease-out; }
+    html { scroll-behavior: smooth; }
+  }
+
+  /* ── Wider phones and tablets ── */
+  @media (min-width: 640px) {
+    :root { --gutter: 32px; }
+    .nav .anchor { display: inline-flex; }
+    .events { grid-template-columns: repeat(2, 1fr); }
+    .cta { flex-direction: row; align-items: center; gap: 16px; }
+    .absent { grid-template-columns: repeat(2, 1fr); }
+    h1 { font-size: 40px; }
+  }
+
+  /* ── Sections use the width ── */
+  @media (min-width: 900px) {
+    .notice-bar .wrap { grid-template-columns: auto 1fr; align-items: baseline; }
+    .absent { grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .steps { grid-template-columns: repeat(3, 1fr); gap: 32px; }
+    .steps li { flex-direction: column; gap: 12px; }
+    .section { padding-top: 64px; }
+  }
+
+  /* ── The introduction sits beside the week ── */
+  @media (min-width: 1080px) {
+    :root { --gutter: 48px; }
+    .opening { grid-template-columns: minmax(340px, 460px) minmax(0, 1fr); column-gap: 64px; row-gap: 0; padding-top: 48px; }
+    .intro { display: block; align-self: start; }
+    .intro-head { margin-bottom: 24px; }
+    .cta { flex-direction: row; align-items: center; gap: 12px; }
+    .week { grid-column: 2; grid-row: 1; }
+    h1 { font-size: 44px; }
+    .week-head h2 { font-size: 26px; }
+    .events { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+    .closing .cta { flex-direction: row; align-items: center; max-width: none; }
+  }
+
+  /* A's signature: the introduction stays beside the week while the week
+     scrolls. Only on screens tall enough to hold all of it — with the
+     glance card it measures ~846px, and an element pinned to the top
+     but taller than the screen hides its own end. Shorter screens get an
+     ordinary scrolling column. If the introduction grows, raise this. */
+  @media (min-width: 1080px) and (min-height: 880px) {
+    .intro { position: sticky; top: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<aside class="notice-bar" aria-label="Where things stand">
+  <div class="wrap">
+    <span class="notice-label">Early days</span>
+    <p>We're opening on Bainbridge Island first, and starting small on purpose. We check every sign-up ourselves, so allow a few days.</p>
+  </div>
+</aside>
+
+<header class="wrap top">
+  <a class="wordmark" href="#" aria-label="in real life, home">in<span>·</span>real<span>·</span>life</a>
+  <nav class="nav" aria-label="Page">
+    <a class="anchor" href="#week">Example week</a>
+    <a class="anchor" href="#how">How it works</a>
+    <a class="anchor" href="#absent">Principles</a>
+    <a class="signin" href="../app.html#signin">Sign in</a>
+  </nav>
+</header>
+
+<main id="main">
+
+  <section class="wrap opening" aria-labelledby="h1">
+    <div class="intro">
+      <div class="intro-head">
+        <p class="eyebrow">To our neighbors on Bainbridge</p>
+        <h1 id="h1">You're invited to meet your neighbors, <em>in real life.</em></h1>
+        <p class="lede">in·real·life is a community-driven way to find meetups on Bainbridge Island and to say you'll be there. A coffee walk, a book swap, a low-tide morning. You confirm, and then you show up. That is the whole thing.</p>
+      </div>
+
+      <div class="intro-cta">
+        <div class="cta">
+          <a class="btn" href="../app.html#location">Accept the invitation</a>
+          <a class="quiet" href="../app.html#signin">Already signed up? Sign in</a>
+        </div>
+        <section class="glance-card" aria-labelledby="glance-h">
+          <h2 class="glance-title" id="glance-h">At a glance</h2>
+          <dl class="glance">
+            <div>
+              <dt>What it is</dt>
+              <dd>A short list of small, in-person meetups near where you live, and a way to say you'll come.</dd>
+            </div>
+            <div>
+              <dt>Who it's for</dt>
+              <dd>Adults, 18 and over, living on Bainbridge Island. Sign-up takes a few minutes; then we check you're local.</dd>
+            </div>
+            <div>
+              <dt>Who runs it</dt>
+              <dd>It's community-driven: neighbors propose the meetups, and every decision about how it works is public. Not for profit, no ads, nothing for sale.</dd>
+            </div>
+            <div>
+              <dt>Where</dt>
+              <dd>Bainbridge Island, Washington, to begin with. One place at a time after that.</dd>
+            </div>
+          </dl>
+        </section>
+      </div>
+    </div>
+
+    <div class="week" id="week">
+      <div class="week-head">
+        <h2>A week of ideas</h2>
+        <span class="flag">Example week</span>
+      </div>
+      <p class="week-note">Examples, to show the kind of thing neighbors propose. They are invented and not live: the places are real, the people are not. The real calendar is in the app.</p>
+
+      <ol aria-label="Example meetups, by day">
+
+        <li class="day">
+          <h3 class="day-label"><span class="dow">Monday</span></h3>
+          <ol class="events">
+            <li class="card">
+              <p class="when"><time datetime="18:30">6:30 pm</time></p>
+              <h4>Evening walk, Grand Forest west loop</h4>
+              <p class="where">Mandus Olson Road trailhead</p>
+              <p class="note">About an hour at an easy pace. Dogs on a leash are welcome.</p>
+              <p class="host">Hosted by <b>Ruth</b>, who will be wearing a red rain jacket.</p>
+            </li>
+          </ol>
+        </li>
+
+        <li class="day">
+          <h3 class="day-label"><span class="dow">Tuesday</span></h3>
+          <ol class="events">
+            <li class="card">
+              <p class="when"><time datetime="07:30">7:30 am</time></p>
+              <h4>Coffee before the morning boat</h4>
+              <p class="where">Pegasus Coffee House, Winslow</p>
+              <p class="note">Twenty minutes, then whoever is commuting walks down to the ferry together.</p>
+              <p class="host">Hosted by <b>Daniel</b>, at the long table by the window.</p>
+            </li>
+          </ol>
+        </li>
+
+        <li class="day">
+          <h3 class="day-label"><span class="dow">Wednesday</span></h3>
+          <ol class="events">
+            <li class="card">
+              <p class="when"><time datetime="12:15">12:15 pm</time></p>
+              <h4>Lunch on the benches at Waterfront Park</h4>
+              <p class="where">Waterfront Park, near the boat launch</p>
+              <p class="note">Bring your own lunch. Forty-five minutes, then back to whatever you were doing.</p>
+              <p class="host">Hosted by <b>Amara</b>, green thermos.</p>
+            </li>
+            <li class="card">
+              <p class="when"><time datetime="19:00">7:00 pm</time></p>
+              <h4>Board games at the library</h4>
+              <p class="where">Bainbridge Public Library, meeting room</p>
+              <p class="note">Two games on the table, plus whatever you bring. Rules explained without fuss.</p>
+              <p class="host">Hosted by <b>Joe</b>, who will have a stack of boxes.</p>
+            </li>
+          </ol>
+        </li>
+
+        <li class="day">
+          <h3 class="day-label"><span class="dow">Thursday</span></h3>
+          <ol class="events">
+            <li class="card">
+              <p class="when"><time datetime="18:00">6:00 pm</time></p>
+              <h4>Pickleball for people who have never played</h4>
+              <p class="where">Battle Point Park courts</p>
+              <p class="note">An hour of learning the rules and hitting a few balls. Two loaner paddles available.</p>
+              <p class="host">Hosted by <b>Linh</b>, on the court nearest the parking lot.</p>
+            </li>
+          </ol>
+        </li>
+
+        <li class="day">
+          <h3 class="day-label"><span class="dow">Friday</span></h3>
+          <ol class="events">
+            <li class="card">
+              <p class="when"><time datetime="17:30">5:30 pm</time></p>
+              <h4>Sketching the harbor</h4>
+              <p class="where">Eagle Harbor waterfront trail, by the marina</p>
+              <p class="note">Any skill, any medium. Pencil on the back of an envelope is fine. We stop when the light goes.</p>
+              <p class="host">Hosted by <b>Ellen</b>, folding stool and a big sketchbook.</p>
+            </li>
+          </ol>
+        </li>
+
+        <li class="day">
+          <h3 class="day-label"><span class="dow">Saturday</span></h3>
+          <ol class="events">
+            <li class="card">
+              <p class="when"><time datetime="09:00">9:00 am</time></p>
+              <h4>Farmers' market, then a coffee</h4>
+              <p class="where">Town Square, Winslow</p>
+              <p class="note">A slow lap of the stalls, then a table somewhere. No shopping list required.</p>
+              <p class="host">Hosted by <b>Priya</b>, meeting at the flower stall.</p>
+            </li>
+            <li class="card">
+              <p class="when"><time datetime="14:00">2:00 pm</time></p>
+              <h4>Low tide walk at Fay Bainbridge</h4>
+              <p class="where">Fay Bainbridge Park, the beach below the campground</p>
+              <p class="note">The tide is out mid-afternoon. Boots or shoes you do not mind getting wet.</p>
+              <p class="host">Hosted by <b>Tom</b>, by the driftwood at the north end.</p>
+            </li>
+          </ol>
+        </li>
+
+        <li class="day">
+          <h3 class="day-label"><span class="dow">Sunday</span></h3>
+          <ol class="events">
+            <li class="card">
+              <p class="when"><time datetime="10:00">10:00 am</time></p>
+              <h4>Sunday run, Gazzam Lake loop</h4>
+              <p class="where">Gazzam Lake Nature Preserve, Marshall Road entrance</p>
+              <p class="note">About three miles at a pace you can talk at. Walkers welcome; we regroup at the lake.</p>
+              <p class="host">Hosted by <b>Marcus</b>, orange cap.</p>
+            </li>
+            <li class="card">
+              <p class="when"><time datetime="16:00">4:00 pm</time></p>
+              <h4>Book swap, one in and one out</h4>
+              <p class="where">Lynwood Center, the benches outside the theater</p>
+              <p class="note">Bring a book you loved and leave with one somebody else did. Half an hour, weather allowing.</p>
+              <p class="host">Hosted by <b>Sofia</b>, with a tote bag full of paperbacks.</p>
+            </li>
+          </ol>
+        </li>
+
+      </ol>
+
+      <p class="week-end">That is one week of ideas. The real calendar shows what neighbors have actually proposed.</p>
+    </div>
+  </section>
+
+  <div class="wrap"><hr class="rule"></div>
+
+  <section class="section" id="absent" aria-labelledby="h-absent">
+    <div class="wrap">
+      <h2 id="h-absent" class="title">What the cards leave out, on purpose</h2>
+      <p class="lead">You have just read ten meetups without seeing what anyone looks like or which one is "popular". That is the design. Each thing we leave out is paired with what we do instead.</p>
+      <ul class="absent">
+        <li>
+          <h3>No faces, no surnames</h3>
+          <p>There are no profile photos to size people up by. <b>Instead:</b> a first name, and a line from the host on how to find the group. Your surname, address and phone number stay yours.</p>
+        </li>
+        <li>
+          <h3>No inbox</h3>
+          <p>There is no messaging and no direct messages, so there is nothing to check and nobody can write to you. <b>Instead:</b> the way to talk to someone is to go where they said they would be, and ask in person.</p>
+        </li>
+        <li>
+          <h3>No popularity contest</h3>
+          <p>Nothing is trending or promoted, and we never rank people. <b>Instead:</b> meetups are suggested by fit — what you enjoy, when you're free, the size of group you like — and never by how many are going.</p>
+        </li>
+        <li>
+          <h3>Nothing to keep up with</h3>
+          <p>No streaks, no badges, no feed that never ends. Miss a month and nothing happens to you. <b>Instead:</b> a short list of what's coming up nearby, there when you want it.</p>
+        </li>
+        <li>
+          <h3>No ads, nothing for sale</h3>
+          <p>in·real·life is not for profit. We do not sell advertising, and we do not sell what we know about you. <b>Instead:</b> we collect the minimum a meetup needs, and we publish how we decide things.</p>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="section" id="how" aria-labelledby="h-how">
+    <div class="wrap">
+      <h2 id="h-how" class="title">How it works</h2>
+      <p class="lead">Three steps. The first one is the part that makes the room trustworthy.</p>
+      <ol class="steps">
+        <li>
+          <div>
+            <h3>Sign up, and show us you're local</h3>
+            <p>Sign-up is for adults, 18 and over, and we verify that you live on the island before you see anyone. That is what makes this a neighborhood and not the whole internet.</p>
+            <p>Then a short interview: what you enjoy, when you are free, the kind of company you like.</p>
+          </div>
+        </li>
+        <li>
+          <div>
+            <h3>Pick something coming up</h3>
+            <p>Read the real calendar the way you read the ideas above. When something looks right, say you'll be there. That is a promise to the host, not a like.</p>
+          </div>
+        </li>
+        <li>
+          <div>
+            <h3>Show up</h3>
+            <p>Look for the first name on the card and say hello. That is where the app stops and the meetup starts.</p>
+            <p>Afterwards we ask how it went, starting with whether it was worth another go.</p>
+          </div>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="section prose" aria-labelledby="h-where">
+    <div class="wrap">
+      <h2 id="h-where" class="title">Where it works</h2>
+      <p>We are starting on Bainbridge Island, Washington, and only there. We add neighborhoods one at a time, so each one stays small enough to recognize itself.</p>
+      <p>Not on the island? Leave your email at sign-up. We will let you know when we reach your neighborhood, and we will not write to you in between.</p>
+    </div>
+  </section>
+
+  <section class="wrap closing" aria-labelledby="h-close">
+    <h2 id="h-close">We hope to see you there.</h2>
+    <p>Sign up, see what neighbors have proposed, and say you'll come. Or propose something yourself; a walk is enough.</p>
+    <div class="cta">
+      <a class="btn" href="../app.html#location">Accept the invitation</a>
+      <a class="quiet" href="../app.html#signin">Already signed up? Sign in</a>
+    </div>
+  </section>
+
+</main>
+
+<footer class="wrap">
+  <div class="foot">
+    <nav class="foot-links" aria-label="About in real life">
+      <a href="../terms.html">Terms of use</a>
+      <a href="../registers/index.html">How we decide</a>
+    </nav>
+    <p>in·real·life is community-driven and run not for profit, from Bainbridge Island, Washington. First names only, no messaging, no ads.</p>
+  </div>
+</footer>
+
+</body>
+</html>

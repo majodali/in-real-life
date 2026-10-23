@@ -55,6 +55,8 @@ up. Not-for-profit; not an engagement machine (D12).
 - `docs/repo-map.md` — where the code lives: modules, screens and
   routes, test rungs, browser storage
 - `docs/ui-themes.md` — the visual identity and the theme mechanics
+- `docs/design-spec.md` — what the pages are for, how a design is
+  judged, the platform and accessibility bar, the design process
 
 Most conceptual decisions (user model, onboarding, debrief, matching,
 policy, trust) are already made and recorded. Read the relevant note
