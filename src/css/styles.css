@@ -281,13 +281,11 @@ html.lp .lp-opening {
   display: grid; grid-template-columns: 1fr; gap: 24px;
   padding-top: 36px; padding-bottom: 8px;
 }
-html.lp .lp-opening > h1 { margin-bottom: 0; }
 /* Direction D: no visual reordering. A placed the week between the
    introduction and the call to action on phones (CSS order), which
    put the CTA 3681px down a 390px screen and made focus order
    disagree with reading order. The DOM order is the reading order. */
 html.lp .lp-intro { display: block; }
-html.lp .lp-intro-head { margin-bottom: 22px; }
 
 /* The rotating tagline (taglines.js) — founder, 2026-10-22/23. Its own
    band directly under the masthead, across the whole page: a pale tint
@@ -497,10 +495,15 @@ html.lp .lp-foot-links a + a { padding-left: 10px; border-left: 1px solid var(--
     grid-template-columns: minmax(340px, 440px) minmax(0, 540px); justify-content: space-between;
     column-gap: 96px; row-gap: 32px; padding-top: 52px;
   }
-  html.lp .lp-opening > h1 { grid-column: 1 / -1; max-width: none; font-size: 48px; }
+  /* The headline and the paragraph under it span both columns (founder,
+     2026-10-23/24; structure settled 2026-10-24, copy still open). The
+     paragraph's lines still stop near 68ch (G5): it leads the page at a
+     larger size rather than running edge to edge. */
+  html.lp .lp-hero { grid-column: 1 / -1; }
+  html.lp .lp-hero h1 { max-width: none; font-size: 48px; margin-bottom: 20px; }
+  html.lp .lp-hero .lp-lede { font-size: 20px; line-height: 1.55; }
   html.lp .lp-intro { grid-column: 1; grid-row: 2; }
   html.lp .lp-intro { display: block; align-self: start; }
-  html.lp .lp-intro-head { margin-bottom: 24px; }
   html.lp .lp-cta { flex-direction: row; align-items: center; gap: 12px; }
   html.lp .lp-week { grid-column: 2; grid-row: 2; }
   html.lp h1 { font-size: 44px; }

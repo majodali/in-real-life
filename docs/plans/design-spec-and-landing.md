@@ -480,6 +480,22 @@ boxes rather than rendered lines, which reported false failures on
 the new band. Earlier rounds' results are unaffected — no text sat on
 a translucent background before.
 
+**Third gate review, 2026-10-24.** One more structural change: the
+opening paragraph spans both columns on desktop, with the headline.
+It sits at 20px and its lines stop near 68ch, so it leads the page
+without breaking G5's measure (edge to edge it would run about 110ch).
+The left column is now just the call to action and the at-a-glance
+card — 487px, pinned on every laptop height measured. Verified as
+before: 0 contrast failures in all four themes on either page, no
+control under 44px, no line past 68ch; on a phone the CTA stays above
+the bottom bar in the first screen (y=526–612 across the tagline
+extremes).
+
+**The founder called the structure settled; the copy stays open**
+pending further review. Copy review is what the page-copy-in-bundles
+Backlog item exists for, so reviewers can try wording without touching
+markup.
+
 Gate: founder sign-off on workshop → next ordinary prod deploy →
 close-out.
 
