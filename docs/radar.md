@@ -269,6 +269,13 @@ either). Options span full per-language design, staged support
 localization — undecided until the workstream activates, which should
 be **before** the first interest read that would need it.
 
+**First concrete piece, arriving early for another reason** (founder,
+2026-09-18): page copy moves into separate JS resource bundles, asked
+for so reviewers can make and deploy trial copy edits. That is a
+Backlog item now, and it decides the shape a translation later has to
+fit into — so it is designed as R10's opening move, not as a
+refactor.
+
 ## R11 — Organization, entity & governance
 
 Worked in the **private org register** (`in-real-life-org`), per the

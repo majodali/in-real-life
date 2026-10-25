@@ -20,6 +20,8 @@ const env = {
 // authoritative context for prod and named-workshop stacks.
 //
 // Defaults below match the current dev deploys (IrlStack + IrlStackTest).
+// The ops repo is the authority for real environments; this path is for
+// standalone dev synth. Concurrent workshops live there, not here.
 type StackConfig = {
   id: string;        // CloudFormation stack name
   stage: Stage;
@@ -35,7 +37,29 @@ const defaults: StackConfig[] = [
   { id: 'IrlStackTest', stage: 'test' },
 ];
 
-const stacks: StackConfig[] = app.node.tryGetContext('stacks') ?? defaults;
+// `--context stacks=<json>` arrives as a STRING (cdk.json context
+// arrives parsed). Without this, iterating the string yields single
+// characters and CDK builds one nameless stack with an undefined
+// stage — a confusing failure a long way from its cause.
+const rawStacks = app.node.tryGetContext('stacks');
+const stacks: StackConfig[] = rawStacks === undefined
+  ? defaults
+  : (typeof rawStacks === 'string' ? JSON.parse(rawStacks) : rawStacks);
+if (!Array.isArray(stacks)) {
+  throw new Error('Context "stacks" must be an array of stack configs.');
+}
+
+// Stage is the resource namespace, not just the mode flag (see the
+// Stage type). Two stacks sharing one collide on every physical name.
+const stages = stacks.map((cfg) => cfg.stage);
+const duplicate = stages.find((stage, i) => stages.indexOf(stage) !== i);
+if (duplicate) {
+  throw new Error(
+    `Two stacks share stage "${duplicate}". Every physical resource name is `
+    + 'keyed on stage, so the second deploy would fail. Give each its own '
+    + "(e.g. 'workshop-oak').",
+  );
+}
 
 for (const cfg of stacks) {
   new IrlStack(app, cfg.id, {

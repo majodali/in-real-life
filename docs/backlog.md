@@ -144,6 +144,24 @@ Trust & safety surface, internal admin/support tooling.
 
 Items that can land alongside any group above once prerequisites exist.
 
+- [ ] **Page copy in resource bundles** (founder, 2026-09-18) — all
+  page copy out of the markup and into separate JS resource bundles.
+  **Near-term value**: a reviewer can make and deploy a trial copy
+  edit without touching a page, which is what makes copy and
+  view-variant reviews worth running — and what the concurrent
+  workshop instances in the ops repo's
+  `plans/concurrent-workshop-instances.md` are being built to host
+  (one variant per instance, one reviewer per room). **Later value**:
+  it is the prerequisite for internationalization/localization, so it
+  is the first concrete piece of **R10** (languages & localization,
+  the founder's #2 concern) and should be designed as such rather
+  than as a refactor — the bundle shape decides what a translation
+  later has to fit into. Scope to settle when it starts: which
+  surfaces (landing/terms/registers are static HTML; the app screens
+  render from JS), how a bundle is selected per environment, and
+  whether the interview and debrief copy — which R10 flags as
+  load-bearing, not decorative — is in or out of the first pass. Not
+  blocked by anything; nothing is blocked by it
 - [ ] Recurring events (weekly coffee walk, monthly book swap)
 - [ ] Weather/seasonality awareness for outdoor events
 - [ ] Multiple locations beyond Bainbridge Island — per the launch playbook (radar R5)
