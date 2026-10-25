@@ -7,8 +7,13 @@
 //
 //   <p class="lp-lede" data-copy="landing.hero.lede"></p>
 //
-// Rendering fills it through the same engine the app uses
-// (src/js/copy.js) and removes the attribute, so the shipped page is
+// An attribute's words are named the same way, by prefixing the
+// attribute's name — the meta description, an aria-label:
+//
+//   <meta name="description" data-copy-content="landing.meta.description">
+//
+// Rendering fills both through the same engine the app uses
+// (src/js/copy.js) and removes the markers, so the shipped page is
 // plain HTML with no trace of the mechanism.
 //
 // Used by inject-config.mjs on every deploy, and on its own for a local
@@ -20,11 +25,30 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
 
-import { createCopy } from '../../src/js/copy.js';
+import { createCopy, escapeText } from '../../src/js/copy.js';
 import base from '../../src/copy/en-US/index.js';
+import { AGREEMENT_VERSION, AGREEMENT_LAST_UPDATED } from '../../src/js/agreement.js';
 
 // An element carrying data-copy, with nothing between its tags.
 const ELEMENT = /<([a-z][a-z0-9]*)\b([^>]*?)\sdata-copy="([^"]+)"([^>]*)><\/\1>/g;
+// An attribute whose value is a copy key: data-copy-<attribute>="key".
+const ATTRIBUTE = /\sdata-copy-([a-z][a-z-]*)="([^"]+)"/g;
+
+// What every static page's copy may draw on besides its own words:
+// values the code owns, and the wrappers for marked spans that are not
+// the engine's defaults.
+export const PAGE_PARAMS = {
+  // The terms page shows the version a member accepts (agreement.js), so
+  // the two cannot disagree.
+  termsVersion: AGREEMENT_VERSION,
+  termsUpdated: AGREEMENT_LAST_UPDATED,
+  mail: (address) => `<a href="mailto:${address.replace(/"/g, '&quot;')}">${address}</a>`,
+};
+
+// The renderer writes the quotes itself, always double, so an attribute
+// value needs only its double quotes escaped beyond ordinary text — an
+// apostrophe stays an apostrophe, as it was in the hand-written markup.
+const quoted = (value) => escapeText(value).replace(/"/g, '&quot;');
 
 /** The base bundle's engine — strict: a missing key stops the deploy. */
 export function baseCopy() {
@@ -33,19 +57,25 @@ export function baseCopy() {
 
 /**
  * @param {string} html
- * @param {{ t: (key: string) => string }} copy
+ * @param {{ t: Function, text: Function }} copy
+ * @param {Record<string, unknown>} params  values and wrappers every key may use
  * @returns {{ html: string, keys: string[] }}
  */
-export function renderCopy(html, copy = baseCopy()) {
+export function renderCopy(html, copy = baseCopy(), params = PAGE_PARAMS) {
   const keys = [];
-  const out = html.replace(ELEMENT, (match, tag, before, key, after) => {
-    keys.push(key);
-    return `<${tag}${before}${after}>${copy.t(key)}</${tag}>`;
-  });
+  const out = html
+    .replace(ATTRIBUTE, (match, name, key) => {
+      keys.push(key);
+      return ` ${name}="${quoted(copy.text(key, params))}"`;
+    })
+    .replace(ELEMENT, (match, tag, before, key, after) => {
+      keys.push(key);
+      return `<${tag}${before}${after}>${copy.t(key, params)}</${tag}>`;
+    });
   // Anything left is an element the renderer could not fill cleanly —
   // text left in the source (two copies of the words, one of which would
   // drift) or markup it does not understand. Refuse rather than ship it.
-  const left = out.match(/<[^>]*\sdata-copy="([^"]+)"[^>]*>/);
+  const left = out.match(/<[^>]*\sdata-copy(?:-[a-z-]+)?="([^"]+)"[^>]*>/);
   if (left) {
     throw new Error(
       `data-copy="${left[1]}" was not filled: the element must be empty in the source `

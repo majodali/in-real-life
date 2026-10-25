@@ -61,9 +61,9 @@ test('the wrapped text is escaped before the wrapper sees it', () => {
   assert.equal(t('g.x', { link: (inner) => `[${inner}]` }), '[a &lt;b&gt; &amp; c]');
 });
 
-test('em and strong have default wrappers', () => {
-  const { t } = make([{ 'g.x': 'meet, {em:in real life.} {strong:now}' }]);
-  assert.equal(t('g.x'), 'meet, <em>in real life.</em> <strong>now</strong>');
+test('b, em and strong have default wrappers', () => {
+  const { t } = make([{ 'g.x': 'meet, {em:in real life.} {strong:now} {b:Instead:}' }]);
+  assert.equal(t('g.x'), 'meet, <em>in real life.</em> <strong>now</strong> <b>Instead:</b>');
 });
 
 test('a marked span without a wrapper is an error, not silent text', () => {

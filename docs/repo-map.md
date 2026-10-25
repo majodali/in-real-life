@@ -17,7 +17,7 @@ the `__IRL_*__` placeholders into the three pages that carry them.
 | `terms.html` | User agreement, versioned (`event-sourcing.md` → agreement versioning); shares the landing's public-page components |
 | `app.html` | The app shell: one `<div class="screen">` per screen, plus the runtime config block |
 | `taglines.html` | Tagline review page (workshop tool) |
-| `copy/<locale>/` | Member-facing copy bundles (`page-copy.md`, T12): `index.js` declares the locale and date formats; one file per surface (`landing.js`, `auth.js`, …), keys prefixed with the surface |
+| `copy/<locale>/` | Member-facing copy bundles (`page-copy.md`, T12): `index.js` declares the locale and date formats; one file per surface (`site.js` — the public pages' shared header and footer — `landing.js`, `terms.js`, `auth.js`, …), keys prefixed with the surface |
 | `css/styles.css` | All styles: base (phone), the `data-theme` layers (`ui-themes.md`), and the responsive layer at the end (`design-spec.md` §4) |
 | `manifest.json` | Web app manifest — installability (`design-spec.md` §5) |
 | `sw.js` | Service worker: app shell only, never API responses (T11) |

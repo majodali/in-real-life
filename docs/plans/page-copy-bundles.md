@@ -1,9 +1,9 @@
 # Page copy in resource bundles
 
-Status: active (**chunk 1 delivered, at its gate** — 2026-10-25: the
-design note, T12 and U13, the engine and its tests, and the proof on
-the sign-in screen and the landing page's opening block. Plan approved
-by the founder the same day.)
+Status: active (**chunk 2 delivered, at its gate** — 2026-10-25: every
+word of the landing and terms pages comes from the bundle, filled at
+deploy. Chunk 1's gate passed the same day, when the founder approved
+the note, T12, U13 and the proof. Plan approved 2026-10-25.)
 
 Outcome under development: every member-facing string on the site and
 in the app lives in a JavaScript resource bundle, not in markup or
@@ -114,7 +114,7 @@ decision first (R10, R11). Bundled for structure, locked for review.
 
 ## Chunks
 
-### Chunk 1 — the design and a proof — DELIVERED (at gate)
+### Chunk 1 — the design and a proof — DELIVERED (gate passed 2026-10-25)
 
 Shipped:
 
@@ -166,12 +166,55 @@ and 859 backend tests (853 + 6 renderer) pass.
 
 Gate: founder reviews the note, T12, U13 and the proof.
 
-### Chunk 2 — the static pages
+### Chunk 2 — the static pages — DELIVERED (at gate)
 
-All landing and terms copy into bundles, the deploy-time renderer in
-`inject-config.mjs`, a local preview command, and a test that every
-key the markup names exists. Proven by rendering both pages before and
-after and comparing them byte for byte, in all four themes.
+As planned: all landing and terms copy into bundles. The renderer, the
+preview command and the key-exists test, which this chunk listed,
+already shipped in chunk 1.
+
+Shipped:
+
+- **`src/copy/en-US/site.js`** (8 keys) — the skip link, header and
+  footer both public pages share, so each is written once.
+- **`landing.js`** grows to 92 keys and **`terms.js`** holds 58, in
+  page order. Every word of both pages is in the bundle, including the
+  `<title>`, the meta description, the `aria-label`s and the no-script
+  tagline. The only words left in the markup are the wordmark's
+  (a mark, U13).
+- **The renderer fills attributes** (`data-copy-content`,
+  `data-copy-aria-label`) and takes **page params**: the terms
+  version and date come from `agreement.js` at deploy, so the page's
+  script that filled them is gone; `{mail:…}` makes the contact link.
+  The engine gains a default `{b:…}` wrapper (the "Instead:" lines and
+  hosts' names).
+- **`terms.js` carries the lock in its header**: change a word, bump
+  `agreement.js`. The test that enforces it is chunk 4's.
+- **Tests:** 6 more renderer tests (attributes, apostrophes, params,
+  the real terms page, and a test that fails on any word or label left
+  in either page's markup). 309 frontend and 865 backend tests pass.
+
+Proven, not assumed — main's pages against the branch's rendered ones,
+served over HTTP in Chromium, in all four themes at 390px and 1440px
+(16 pairs):
+
+- **The landing page renders byte-identical** to `main`'s, apart from
+  the four comment lines added to say where its words live. The DOM,
+  the visible text, the title, the meta description, every
+  `aria-label` and every pixel match in all 8 views.
+- **The terms page is not byte-identical, and should not be.** Its
+  hand-wrapped paragraphs become single lines, `&mdash;` becomes the
+  character, and the version line is plain text instead of two
+  `<span>`s filled by script. Visible text, title and labels match in
+  all 8 views. The DOM matches once `main`'s two spans are unwrapped.
+  Pixels match everywhere except the version line itself, where
+  shaping the text as one run instead of three moves it by 0.016px
+  (250.375 → 250.359px wide; indistinguishable at 3× zoom).
+- No page errors on either side.
+
+Not done here, and why: `<html lang="en">` stays until a second locale
+(R10); the terms date `14 May 2026` is day-first and moves to a
+bundle-formatted date with the app's dates in chunk 3 (U11).
+
 Gate: founder deploys to workshop; nothing visible changes.
 
 ### Chunk 3 — the app screens

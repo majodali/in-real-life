@@ -19,7 +19,9 @@ so a bundle is a module exporting keyed strings:
 
 ```
 src/copy/en-US/index.js     the locale, its date formats, the surfaces
+src/copy/en-US/site.js      'site.footer.line': 'in·real·life is community-driven…'
 src/copy/en-US/landing.js   'landing.hero.headline': "You're invited…"
+src/copy/en-US/terms.js     'terms.who.p1': 'in·real·life is for adults…'
 src/copy/en-US/auth.js      'auth.signin.title': 'Welcome back'
 ```
 
@@ -27,6 +29,13 @@ src/copy/en-US/auth.js      'auth.signin.title': 'Welcome back'
   `auth.*`): a key says where it is used, files never collide, and a
   variant or a lock (§5) can name a whole surface by prefix. Tests
   enforce the prefix and that no key is defined twice.
+- **Shared words have one key.** The public pages' skip link, header
+  and footer are the `site` surface, so the footer line is written
+  once. Within a page, the same words in two places share a key when
+  they are the same thing (the two calls to action); words that merely
+  match in English do not ("Example week" is both a menu link and the
+  calendar's label — two keys, because a translation may need two
+  words).
 - **The bundle owns the locale.** `index.js` declares `locale` and
   named date formats. The visitor's browser does not decide how a US
   community's dates read — today it does (`toLocaleString(undefined,
@@ -62,7 +71,7 @@ span (below), whose wrapper is code, never copy.
 | | | |
 |---|---|---|
 | `{name}` | a value | escaped; numbers formatted for the locale (`1,200` / `1.200`) |
-| `{name:inner}` | a marked span — a link, emphasis | the caller supplies a function that wraps the (escaped) inner text; `em` and `strong` have defaults |
+| `{name:inner}` | a marked span — a link, emphasis | the caller supplies a function that wraps the (escaped) inner text; `b`, `em` and `strong` have defaults |
 | `{{` `}}` | literal braces | |
 | `{ '=0': …, one: …, other: … }` | a plural | the form is chosen by `Intl.PluralRules` for the bundle's locale from `params.count`; exact `=n` forms win |
 
@@ -107,12 +116,30 @@ its key and is empty:
 <h1 id="h1" data-copy="landing.hero.headline"></h1>
 ```
 
-`infrastructure/scripts/render-copy.mjs` fills it through the same
-engine and removes the attribute. `inject-config.mjs` runs it on every
+An attribute's words are named by prefixing the attribute —
+`<meta name="description" data-copy-content="landing.meta.description">`,
+`<nav data-copy-aria-label="landing.nav.label">`. The page title is an
+element like any other (`<title data-copy="landing.meta.title">`).
+
+`infrastructure/scripts/render-copy.mjs` fills both through the same
+engine and removes the markers. `inject-config.mjs` runs it on every
 deploy, so the shipped page is plain HTML with no trace of the
 mechanism. The renderer refuses an element that still has words in
 the source — two copies of the same words, one of which would drift —
-and stops the deploy on an unknown key.
+and stops the deploy on an unknown key. A test reads both pages and
+fails on any word or label left in the markup outside the wordmark.
+
+**Values the code owns are page params.** The terms page shows the
+version a member accepts; the renderer takes it from `agreement.js`
+(`{termsVersion}`, `{termsUpdated}`), so the page and the version sent
+at sign-up cannot disagree, and the page no longer fills it with
+script. The params also carry the wrappers static copy needs beyond
+the defaults: `{mail:hello@in-real.life}` becomes a `mailto:` link.
+
+**Attribute values keep their apostrophes.** The renderer writes the
+quotes itself, always double, so it escapes `"` but not `'`; the
+engine's `attr()` escapes both, because a screen's template might quote
+either way.
 
 **`cdk deploy` no longer uploads these pages.** CDK's site upload
 (`irl-stack.ts` → `DeploySite`) already excluded `app.html` because
@@ -121,7 +148,13 @@ it. Otherwise a deploy that stopped after `cdk deploy` — as one did on
 2026-10-25 — would leave a landing page with an empty headline live.
 
 **Local preview** renders a gitignored copy:
-`node infrastructure/scripts/render-copy.mjs src/index.html --out src/index.local.html`.
+`node infrastructure/scripts/render-copy.mjs src/index.html --out src/index.local.html`
+(or `src/terms.html`).
+
+**Not yet:** `<html lang="en">` stays as written. It should follow the
+bundle's locale once a second one exists (R10). The terms page's date,
+`14 May 2026`, is day-first — a string in `agreement.js`, also shown in
+the app; chunk 3 moves it to a date formatted by the bundle (U11).
 
 ## 4. App screens: at runtime
 
@@ -154,7 +187,9 @@ component; taglines, the scripted interview fallback (`data.js`) and
 cancellation notices; toasts and errors.
 
 Out, each for a reason: the operator console (operator-only, English;
-revisit when staff exist); AI prompts and model-written text (R10's
+revisit when staff exist); the workshop review tools — the design
+switcher's labels (`theme.js`) and the tagline review page
+(`taglines.html`) — which no member sees; AI prompts and model-written text (R10's
 load-bearing language design, not page copy); the generated register
 views (their source is the registers); Cognito's verification emails
 (they need a custom-message trigger — recorded for R10).

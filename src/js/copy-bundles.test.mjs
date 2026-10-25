@@ -24,7 +24,7 @@ function walk(dir, out = []) {
 }
 
 // Keys named in code: t('k'), attr('k'), text('k') with a literal key.
-// Keys named in markup: data-copy="k".
+// Keys named in markup: data-copy="k", data-copy-<attribute>="k".
 function keysUsed() {
   const used = new Map();
   const add = (key, where) => used.set(key, [...(used.get(key) ?? []), where]);
@@ -33,7 +33,7 @@ function keysUsed() {
     for (const m of readFileSync(f, 'utf-8').matchAll(/\b(?:t|attr|text)\(\s*'([a-z][\w.-]*)'/g)) add(m[1], f);
   }
   for (const f of readdirSync(SRC).filter((n) => n.endsWith('.html'))) {
-    for (const m of readFileSync(join(SRC, f), 'utf-8').matchAll(/data-copy="([^"]+)"/g)) add(m[1], f);
+    for (const m of readFileSync(join(SRC, f), 'utf-8').matchAll(/data-copy(?:-[a-z-]+)?="([^"]+)"/g)) add(m[1], f);
   }
   return used;
 }

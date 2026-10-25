@@ -1,13 +1,15 @@
 // en-US — the base bundle (U11: US spelling and usage).
 //
 // One file per surface, every key prefixed with its surface name
-// (landing.*, auth.*), so a key says where it is used and the files
+// (site.*, landing.*, terms.*, auth.*), so a key says where it is used and the files
 // never collide. Syntax: src/js/copy.js. Reasoning: docs/page-copy.md.
 
+import site from './site.js';
 import landing from './landing.js';
+import terms from './terms.js';
 import auth from './auth.js';
 
-export const SURFACES = { landing, auth };
+export const SURFACES = { site, landing, terms, auth };
 
 export default {
   locale: 'en-US',

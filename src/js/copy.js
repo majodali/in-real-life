@@ -12,7 +12,7 @@
 //   {name:inner}    marked text — a link, emphasis — kept INSIDE the
 //                   sentence so a translator can move it. The caller
 //                   supplies a function for `name` that wraps the
-//                   (escaped) inner text; em and strong have defaults.
+//                   (escaped) inner text; b, em and strong have defaults.
 //   {{ and }}       literal braces.
 //   { one, other }  a plural: the form is chosen by Intl.PluralRules for
 //                   the bundle's locale from params.count; '=0', '=1'…
@@ -37,6 +37,7 @@ export function escapeAttr(value) {
 }
 
 const DEFAULT_WRAPPERS = {
+  b: (inner) => `<b>${inner}</b>`,
   em: (inner) => `<em>${inner}</em>`,
   strong: (inner) => `<strong>${inner}</strong>`,
 };
