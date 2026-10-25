@@ -1,0 +1,520 @@
+<!--
+  Direction A — "The calendar is the argument."
+
+  The idea. The most persuasive thing IRL can say to a neighbour is
+  "here is what could be happening near you next week", so the page
+  leads with a week of concrete, plausible Bainbridge meetups — day by
+  day, each with a time, a place, a first name and a line about what to
+  bring — and lets the explanation of what IRL is grow out of the
+  events rather than precede them. The week is marked as an example
+  everywhere it appears, because IRL has no calendar yet; the first
+  section after it explains what the cards deliberately leave out, and
+  each absence is paired with what we do instead. Sign-up is framed as
+  "see the real calendar", which is the honest promise this page can
+  make. Desktop puts the introduction beside the week and stays there
+  while the week scrolls; phone reads introduction, week, then the ask.
+
+  What we deliberately did not do. No attendee counts, face pills,
+  avatars, initials, "N going", "spots left", "trending" or "popular"
+  marks; no per-event buttons (a control on an example event would be
+  a fake control); no card links; no testimonials, press, member
+  numbers or launch countdown; no category tiles; no persona or first
+  person singular; no infinite or "load more" surface — the week is
+  seven days and it ends. Amber never carries text (it fails 4.5:1 on
+  linen) and --soft never carries small text (about 3.7:1): both are
+  kept to marks, rules and large display. Sign-up and sign-in are
+  plain links to app.html; the store.clearActiveUser() step the
+  current index.html performs is left to integration.
+-->
+<!DOCTYPE html>
+<html lang="en" data-theme="morning-linen">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#f8f3e9">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<title>in·real·life — neighbourhood meetups on Bainbridge Island</title>
+<meta name="description" content="A small calendar of neighbourhood meetups on Bainbridge Island, Washington. First names only, no messaging, no ads, not for profit. Say you'll come, then show up.">
+<style>
+  /* ── Morning Linen tokens (design/landing-brief-2026-09.md) ── */
+  :root {
+    --earth: #2a3a2f;
+    --moss: #4c6849;
+    --sage: #7a9e6e;
+    --mist: #f0ead9;
+    --cream: #f8f3e9;
+    --warm: #efe7d4;
+    --amber: #c08a45;
+    --text: #26332a;
+    --soft: #77806f;
+    --surface: #fffdf6;
+    --border: rgba(42, 58, 47, 0.07);
+    --line: rgba(42, 58, 47, 0.12);
+    --shadow: 0 1px 2px rgba(42,58,47,0.04), 0 10px 30px rgba(42,58,47,0.06);
+    --btn-shadow: 0 8px 20px rgba(42,58,47,0.18);
+    --serif: 'Playfair Display', Georgia, serif;
+    --sans: 'DM Sans', system-ui, sans-serif;
+    --gutter: 20px;
+    --measure: 68ch;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-text-size-adjust: 100%; scroll-behavior: auto; }
+  body {
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--text);
+    background: var(--cream);
+  }
+  h1, h2, h3 { font-family: var(--serif); font-weight: 400; color: var(--earth); letter-spacing: -0.005em; }
+  a { color: var(--moss); }
+  ol, ul { list-style: none; }
+
+  :focus-visible { outline: 3px solid var(--moss); outline-offset: 3px; border-radius: 6px; }
+
+  .skip {
+    position: absolute; left: var(--gutter); top: -100px;
+    background: var(--earth); color: var(--mist);
+    padding: 12px 18px; border-radius: 999px; text-decoration: none; z-index: 10;
+  }
+  .skip:focus { top: 12px; }
+
+  .wrap { width: 100%; max-width: 1280px; margin: 0 auto; padding-left: var(--gutter); padding-right: var(--gutter); }
+
+  /* ── Header and nav ── */
+  .top {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 16px; padding-top: 12px; padding-bottom: 12px;
+  }
+  .wordmark {
+    font-family: var(--serif); font-size: 24px; color: var(--earth);
+    letter-spacing: -0.02em; text-decoration: none;
+    display: inline-flex; align-items: center; min-height: 44px;
+  }
+  .wordmark span { color: var(--amber); }
+  .nav { display: flex; align-items: center; gap: 4px; }
+  .nav a {
+    display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px;
+    color: var(--earth); text-decoration: none; font-size: 15px; border-radius: 999px;
+  }
+  .nav a:hover { background: var(--warm); }
+  .nav .anchor { display: none; }
+  .nav .signin { border: 1px solid var(--line); }
+
+  /* ── Opening: introduction + the week ── */
+  .opening {
+    display: grid; grid-template-columns: 1fr; gap: 28px;
+    padding-top: 28px; padding-bottom: 8px;
+  }
+  .intro { display: contents; }
+  .intro-head { order: 1; }
+  .week { order: 2; }
+  .intro-cta { order: 3; }
+
+  .eyebrow {
+    font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase;
+    font-weight: 500; color: var(--moss); margin-bottom: 14px;
+  }
+  h1 { font-size: 34px; line-height: 1.15; max-width: 18ch; margin-bottom: 18px; }
+  .lede { font-size: 17px; line-height: 1.55; max-width: var(--measure); color: var(--text); }
+  .lede + .lede { margin-top: 12px; }
+
+  /* Day-anchored list grammar (the Field Notes refinement named in ui-themes.md) */
+  .week-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
+  .week-head h2 { font-size: 24px; }
+  .flag {
+    display: inline-flex; align-items: center; gap: 8px; flex: 0 0 auto;
+    font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 500;
+    color: var(--earth); border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px;
+  }
+  .flag::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--amber); }
+  .week-note { font-size: 14px; line-height: 1.5; color: var(--moss); max-width: var(--measure); margin-bottom: 18px; }
+
+  .day { margin-top: 18px; }
+  .day-label {
+    display: flex; align-items: center; gap: 12px;
+    font-size: 12.5px; letter-spacing: 0.14em; text-transform: uppercase; font-weight: 500;
+    color: var(--moss); margin-bottom: 10px;
+  }
+  .day-label::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+  .day-label .dow { color: var(--earth); }
+  .events { display: grid; grid-template-columns: 1fr; gap: 12px; }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 20px;
+    box-shadow: var(--shadow); padding: 18px 20px 16px;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .when {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 13.5px; font-weight: 500; letter-spacing: 0.04em; color: var(--earth);
+  }
+  .when::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--amber); flex: 0 0 auto; }
+  .card h4 { font-family: var(--serif); font-weight: 400; font-size: 20px; line-height: 1.25; color: var(--earth); }
+  .where { font-size: 14px; color: var(--moss); line-height: 1.45; }
+  .note { font-size: 15px; line-height: 1.5; color: var(--text); margin-top: 2px; }
+  .host { font-size: 14px; color: var(--moss); margin-top: 4px; padding-top: 10px; border-top: 1px solid var(--border); }
+  .host b { font-weight: 500; color: var(--earth); }
+
+  .week-end { font-size: 14px; color: var(--moss); margin-top: 18px; max-width: var(--measure); }
+
+  /* ── The ask ── */
+  .cta { display: flex; flex-direction: column; gap: 10px; align-items: stretch; }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; min-height: 52px;
+    padding: 14px 26px; border-radius: 999px; text-decoration: none;
+    background: var(--earth); color: var(--mist); box-shadow: var(--btn-shadow);
+    font-size: 15.5px; font-weight: 500; letter-spacing: 0.02em; text-align: center;
+  }
+  .btn:hover { background: var(--moss); }
+  .quiet { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 8px 12px; font-size: 15px; text-decoration: none; }
+  .quiet:hover { text-decoration: underline; }
+
+  .notice {
+    border: 1px solid var(--line); border-radius: 20px; padding: 16px 18px;
+    background: var(--warm); font-size: 14.5px; line-height: 1.5; max-width: var(--measure);
+  }
+  .notice strong { display: block; font-weight: 500; color: var(--earth); margin-bottom: 4px; }
+  .intro-cta .notice { margin-top: 18px; }
+
+  /* ── Sections after the week ── */
+  .section { padding-top: 48px; padding-bottom: 8px; }
+  .section > .wrap > h2, .section h2.title { font-size: 28px; line-height: 1.2; max-width: 24ch; margin-bottom: 10px; }
+  .section .lead { max-width: var(--measure); font-size: 16px; color: var(--text); margin-bottom: 24px; }
+  .rule { border: 0; border-top: 1px solid var(--line); margin: 40px 0 0; }
+
+  .absent { display: grid; grid-template-columns: 1fr; gap: 12px; }
+  .absent li {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 20px;
+    box-shadow: var(--shadow); padding: 18px 20px;
+  }
+  .absent h3 { font-family: var(--sans); font-weight: 500; font-size: 16px; color: var(--earth); margin-bottom: 4px; }
+  .absent p { font-size: 15px; line-height: 1.5; }
+  .absent p b { font-weight: 500; color: var(--moss); }
+
+  .steps { display: grid; grid-template-columns: 1fr; gap: 20px; counter-reset: step; }
+  .steps li { display: flex; gap: 16px; align-items: flex-start; max-width: var(--measure); }
+  .steps li::before {
+    counter-increment: step; content: counter(step);
+    font-family: var(--serif); font-size: 30px; line-height: 1; color: var(--earth);
+    flex: 0 0 auto; min-width: 28px; padding-top: 2px;
+    border-bottom: 2px solid var(--amber);
+  }
+  .steps h3 { font-family: var(--sans); font-weight: 500; font-size: 17px; color: var(--earth); margin-bottom: 4px; }
+  .steps p { font-size: 15px; line-height: 1.55; }
+  .steps p + p { margin-top: 6px; }
+
+  .prose p { max-width: var(--measure); margin-bottom: 12px; }
+  .prose p:last-child { margin-bottom: 0; }
+
+  .closing { padding-top: 48px; padding-bottom: 24px; }
+  .closing h2 { font-size: 30px; margin-bottom: 8px; }
+  .closing p { max-width: var(--measure); margin-bottom: 20px; }
+  .closing .cta { max-width: 420px; }
+
+  footer { padding-top: 24px; padding-bottom: 40px; border-top: 1px solid var(--line); margin-top: 24px; }
+  .foot { display: flex; flex-direction: column; gap: 8px; font-size: 14px; color: var(--moss); }
+  .foot-links { display: flex; flex-wrap: wrap; gap: 4px 6px; }
+  .foot-links a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 10px 0 0; color: var(--moss); text-decoration: none; }
+  .foot-links a:hover { text-decoration: underline; color: var(--earth); }
+  .foot-links a + a { padding-left: 10px; border-left: 1px solid var(--line); }
+
+  /* ── Motion: only when allowed, only decorative ── */
+  @media (prefers-reduced-motion: no-preference) {
+    .btn, .nav a, .quiet, .foot-links a { transition: background-color 160ms ease-out, color 160ms ease-out; }
+    html { scroll-behavior: smooth; }
+  }
+
+  /* ── Wider phones and tablets ── */
+  @media (min-width: 640px) {
+    :root { --gutter: 32px; }
+    .nav .anchor { display: inline-flex; }
+    .events { grid-template-columns: repeat(2, 1fr); }
+    .cta { flex-direction: row; align-items: center; gap: 16px; }
+    .absent { grid-template-columns: repeat(2, 1fr); }
+    h1 { font-size: 40px; }
+  }
+
+  /* ── Sections use the width ── */
+  @media (min-width: 900px) {
+    .absent { grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .steps { grid-template-columns: repeat(3, 1fr); gap: 32px; }
+    .steps li { flex-direction: column; gap: 12px; }
+    .section { padding-top: 64px; }
+  }
+
+  /* ── The introduction sits beside the week ── */
+  @media (min-width: 1080px) {
+    :root { --gutter: 48px; }
+    .opening { grid-template-columns: minmax(340px, 420px) minmax(0, 1fr); column-gap: 72px; row-gap: 0; padding-top: 48px; }
+    .intro { display: block; position: sticky; top: 24px; align-self: start; }
+    .intro-head { margin-bottom: 28px; }
+    .cta { flex-direction: column; align-items: stretch; gap: 10px; }
+    .week { grid-column: 2; grid-row: 1; }
+    h1 { font-size: 46px; }
+    .week-head h2 { font-size: 26px; }
+    .events { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+    .closing .cta { flex-direction: row; align-items: center; max-width: none; }
+  }
+</style>
+</head>
+<body>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="wrap top">
+  <a class="wordmark" href="#" aria-label="in real life, home">in<span>·</span>real<span>·</span>life</a>
+  <nav class="nav" aria-label="Page">
+    <a class="anchor" href="#week">Next week</a>
+    <a class="anchor" href="#how">How it works</a>
+    <a class="anchor" href="#absent">Principles</a>
+    <a class="signin" href="../app.html#signin">Sign in</a>
+  </nav>
+</header>
+
+<main id="main">
+
+  <section class="wrap opening" aria-labelledby="h1">
+    <div class="intro">
+      <div class="intro-head">
+        <p class="eyebrow">Bainbridge Island, Washington</p>
+        <h1 id="h1">A week near you, the way we picture it.</h1>
+        <p class="lede">in·real·life is a small calendar of neighbourhood meetups. Neighbours propose them. You say you'll come. Then you go, and look for a first name when you arrive.</p>
+        <p class="lede">Below is what a week on the island could look like. Read it the way you'd read a neighbour's noticeboard.</p>
+      </div>
+
+      <div class="intro-cta">
+        <div class="cta">
+          <a class="btn" href="../app.html#location">Sign up and see the real calendar</a>
+          <a class="quiet" href="../app.html#signin">Already signed up? Sign in</a>
+        </div>
+        <div class="notice" role="note">
+          <strong>Where things stand, September 2026</strong>
+          We are new. The real calendar has nothing on it yet; the first meetups will be proposed by the first neighbours who sign up. If you sign up and see an empty week, that is why, and proposing something is how it stops being empty.
+        </div>
+      </div>
+    </div>
+
+    <div class="week" id="week">
+      <div class="week-head">
+        <h2>Monday 21 to Sunday 27 September</h2>
+        <span class="flag">Example week</span>
+      </div>
+      <p class="week-note">These meetups are invented to show the shape of the thing. They are not live, and nobody is hosting them. Places are real; the people are not.</p>
+
+      <ol aria-label="Example meetups, by day">
+
+        <li class="day">
+          <h3 class="day-label"><span class="dow">Monday</span> 21 Sep</h3>
+          <ol class="events">
+            <li class="card">
+              <p class="when"><time datetime="2026-09-21T18:30">6:30 pm</time></p>
+              <h4>Evening walk, Grand Forest west loop</h4>
+              <p class="where">Mandus Olson Road trailhead</p>
+              <p class="note">About an hour at an easy pace. Dogs on a leash are welcome.</p>
+              <p class="host">Hosted by <b>Ruth</b>, who will be wearing a red rain jacket.</p>
+            </li>
+          </ol>
+        </li>
+
+        <li class="day">
+          <h3 class="day-label"><span class="dow">Tuesday</span> 22 Sep</h3>
+          <ol class="events">
+            <li class="card">
+              <p class="when"><time datetime="2026-09-22T07:30">7:30 am</time></p>
+              <h4>Coffee before the morning boat</h4>
+              <p class="where">Pegasus Coffee House, Winslow</p>
+              <p class="note">Twenty minutes, then whoever is commuting walks down to the ferry together.</p>
+              <p class="host">Hosted by <b>Daniel</b>, at the long table by the window.</p>
+            </li>
+          </ol>
+        </li>
+
+        <li class="day">
+          <h3 class="day-label"><span class="dow">Wednesday</span> 23 Sep</h3>
+          <ol class="events">
+            <li class="card">
+              <p class="when"><time datetime="2026-09-23T12:15">12:15 pm</time></p>
+              <h4>Lunch on the benches at Waterfront Park</h4>
+              <p class="where">Waterfront Park, near the boat launch</p>
+              <p class="note">Bring your own lunch. Forty-five minutes, then back to whatever you were doing.</p>
+              <p class="host">Hosted by <b>Amara</b>, green thermos.</p>
+            </li>
+            <li class="card">
+              <p class="when"><time datetime="2026-09-23T19:00">7:00 pm</time></p>
+              <h4>Board games at the library</h4>
+              <p class="where">Bainbridge Public Library, meeting room</p>
+              <p class="note">Two games on the table, plus whatever you bring. Rules explained without fuss.</p>
+              <p class="host">Hosted by <b>Joe</b>, who will have a stack of boxes.</p>
+            </li>
+          </ol>
+        </li>
+
+        <li class="day">
+          <h3 class="day-label"><span class="dow">Thursday</span> 24 Sep</h3>
+          <ol class="events">
+            <li class="card">
+              <p class="when"><time datetime="2026-09-24T18:00">6:00 pm</time></p>
+              <h4>Pickleball for people who have never played</h4>
+              <p class="where">Battle Point Park courts</p>
+              <p class="note">An hour of learning the rules and hitting a few balls. Two loaner paddles available.</p>
+              <p class="host">Hosted by <b>Linh</b>, on the court nearest the car park.</p>
+            </li>
+          </ol>
+        </li>
+
+        <li class="day">
+          <h3 class="day-label"><span class="dow">Friday</span> 25 Sep</h3>
+          <ol class="events">
+            <li class="card">
+              <p class="when"><time datetime="2026-09-25T17:30">5:30 pm</time></p>
+              <h4>Sketching the harbour</h4>
+              <p class="where">Eagle Harbor waterfront trail, by the marina</p>
+              <p class="note">Any skill, any medium. Pencil on the back of an envelope is fine. We stop when the light goes.</p>
+              <p class="host">Hosted by <b>Ellen</b>, folding stool and a big sketchbook.</p>
+            </li>
+          </ol>
+        </li>
+
+        <li class="day">
+          <h3 class="day-label"><span class="dow">Saturday</span> 26 Sep</h3>
+          <ol class="events">
+            <li class="card">
+              <p class="when"><time datetime="2026-09-26T09:00">9:00 am</time></p>
+              <h4>Farmers' market, then a coffee</h4>
+              <p class="where">Town Square, Winslow</p>
+              <p class="note">A slow lap of the stalls, then a table somewhere. No shopping list required.</p>
+              <p class="host">Hosted by <b>Priya</b>, meeting at the flower stall.</p>
+            </li>
+            <li class="card">
+              <p class="when"><time datetime="2026-09-26T14:00">2:00 pm</time></p>
+              <h4>Low tide walk at Fay Bainbridge</h4>
+              <p class="where">Fay Bainbridge Park, the beach below the campground</p>
+              <p class="note">The tide is out mid-afternoon. Boots or shoes you do not mind getting wet.</p>
+              <p class="host">Hosted by <b>Tom</b>, by the driftwood at the north end.</p>
+            </li>
+          </ol>
+        </li>
+
+        <li class="day">
+          <h3 class="day-label"><span class="dow">Sunday</span> 27 Sep</h3>
+          <ol class="events">
+            <li class="card">
+              <p class="when"><time datetime="2026-09-27T10:00">10:00 am</time></p>
+              <h4>Sunday run, Gazzam Lake loop</h4>
+              <p class="where">Gazzam Lake Nature Preserve, Marshall Road entrance</p>
+              <p class="note">About five kilometres at a pace you can talk at. Walkers welcome; we regroup at the lake.</p>
+              <p class="host">Hosted by <b>Marcus</b>, orange cap.</p>
+            </li>
+            <li class="card">
+              <p class="when"><time datetime="2026-09-27T16:00">4:00 pm</time></p>
+              <h4>Book swap, one in and one out</h4>
+              <p class="where">Lynwood Center, the benches outside the theatre</p>
+              <p class="note">Bring a book you loved and leave with one somebody else did. Half an hour, weather allowing.</p>
+              <p class="host">Hosted by <b>Sofia</b>, with a tote bag full of paperbacks.</p>
+            </li>
+          </ol>
+        </li>
+
+      </ol>
+
+      <p class="week-end">That is the whole week. There is no next page; the real calendar ends on Sunday too.</p>
+    </div>
+  </section>
+
+  <div class="wrap"><hr class="rule"></div>
+
+  <section class="section" id="absent" aria-labelledby="h-absent">
+    <div class="wrap">
+      <h2 id="h-absent" class="title">What the cards leave out, on purpose</h2>
+      <p class="lead">You have just read ten meetups without seeing how many people are going, what anyone looks like, or which one is "popular". That is the design. Each thing we leave out is paired with what we do instead.</p>
+      <ul class="absent">
+        <li>
+          <h3>No headcounts</h3>
+          <p>We never show how many people said yes, and no meetup is "filling up". <b>Instead:</b> who is hosting, where to stand and what to bring, which is what you need to decide.</p>
+        </li>
+        <li>
+          <h3>No faces, no surnames</h3>
+          <p>There are no profile photos to size people up by. <b>Instead:</b> a first name and one line about how to spot the host. Your surname, address and phone number stay yours.</p>
+        </li>
+        <li>
+          <h3>No inbox</h3>
+          <p>There is no messaging and no direct messages, so there is nothing to check and nobody can write to you. <b>Instead:</b> the way to talk to someone is to go where they said they would be, and ask in person.</p>
+        </li>
+        <li>
+          <h3>No ranking</h3>
+          <p>Nothing is trending, promoted or scored, and we do not rank people. <b>Instead:</b> the list runs in date order, and a quiet meetup sits at the same height as a busy one.</p>
+        </li>
+        <li>
+          <h3>Nothing to keep up with</h3>
+          <p>No streaks, no badges, no feed that never ends. Miss a month and nothing happens to you. <b>Instead:</b> a week of meetups, then the week ends.</p>
+        </li>
+        <li>
+          <h3>No ads, nothing for sale</h3>
+          <p>in·real·life is not for profit. We do not sell advertising, and we do not sell what we know about you. <b>Instead:</b> we collect the minimum a meetup needs, and we publish how we decide things.</p>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="section" id="how" aria-labelledby="h-how">
+    <div class="wrap">
+      <h2 id="h-how" class="title">How it works</h2>
+      <p class="lead">Three steps. The first one is the part that makes the room trustworthy.</p>
+      <ol class="steps">
+        <li>
+          <div>
+            <h3>Sign up, and show us you're local</h3>
+            <p>Sign-up is for adults, 18 and over, and we verify that you live on the island before you see anyone. That is what makes this a neighbourhood and not the whole internet.</p>
+            <p>Then a short interview: what you enjoy, when you are free, the kind of company you like.</p>
+          </div>
+        </li>
+        <li>
+          <div>
+            <h3>Pick something from the week</h3>
+            <p>Read the calendar the way you read the one above. When something looks right, say you'll be there. That is a promise to the host, not a like.</p>
+          </div>
+        </li>
+        <li>
+          <div>
+            <h3>Show up</h3>
+            <p>Look for the first name on the card and say hello. That is where the app stops and the meetup starts.</p>
+            <p>Afterwards we ask one thing: was it worth another go?</p>
+          </div>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="section prose" aria-labelledby="h-where">
+    <div class="wrap">
+      <h2 id="h-where" class="title">Where it works</h2>
+      <p>We are starting on Bainbridge Island, Washington, and only there. We add neighbourhoods one at a time, so each one stays small enough to recognise itself.</p>
+      <p>Not on the island? You can still sign up. We will let you know when we reach your neighbourhood, and we will not write to you in between.</p>
+    </div>
+  </section>
+
+  <section class="wrap closing" aria-labelledby="h-close">
+    <h2 id="h-close">The real calendar has no first week yet.</h2>
+    <p>Sign up, look at what is there, and if it is empty, propose the first thing. A walk is enough.</p>
+    <div class="cta">
+      <a class="btn" href="../app.html#location">Sign up and see the real calendar</a>
+      <a class="quiet" href="../app.html#signin">Already signed up? Sign in</a>
+    </div>
+  </section>
+
+</main>
+
+<footer class="wrap">
+  <div class="foot">
+    <nav class="foot-links" aria-label="About in real life">
+      <a href="../terms.html">Terms of use</a>
+      <a href="../registers/index.html">How we decide</a>
+    </nav>
+    <p>in·real·life is run on Bainbridge Island, Washington, not for profit. First names only, no messaging, no ads.</p>
+  </div>
+</footer>
+
+</body>
+</html>
