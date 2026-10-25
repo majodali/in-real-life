@@ -1,11 +1,21 @@
 # UI restyle
 
-Status: active (all three chunks delivered; gates 1–2 passed
-2026-08-25 and the founder made the call from the chunk-2 comparison
-— U9: Morning Linen default, Grove named + retained, Lantern the
-future member dark theme, Pebble a review theme. Final gate pending:
-live verification of the flipped default on workshop + PR merge +
-exploration-branch deletion → close-out)
+Status: closed → Backlog entry (2026-10-02). All three chunks
+delivered and merged (PR #68, 2026-08-25; the switcher-on-public-pages
+and localStorage follow-ups in PR #73, 2026-09-08); gates 1–2 passed
+2026-08-25 with the founder's call recorded as U9 (Morning Linen
+default, Grove named + retained, Lantern the future member dark theme,
+Pebble a review theme). Final gate: the founder authorized the
+close-out 2026-10-02, taking Morning Linen's run as the rendered
+default on every workshop deploy since PR #73 as the live check. The
+exploration branch `claude/site-ui-design-exploration-zb14wl` — the
+one standing W-006 exception — has nothing left to lose: its only
+unmerged commit (`4fb3629`) added three `design/` files, all confirmed
+byte-identical on `main` on 2026-10-02. The founder deleted it;
+confirmed absent from the remote 2026-10-13, which ends the
+exception. The deliverable branches `claude/ui-restyle` and
+`claude/theme-fixes` were already gone. The Backlog's checked entry is
+now the record.
 
 Outcome under development: the app restyled per a chosen direction
 from the July 2026 UI exploration — reviewed **live in the workshop

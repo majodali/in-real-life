@@ -13,6 +13,11 @@
   --rust: #a85c38;
   --text: #1e2a1f;
   --soft: #6b7c6c;
+  /* The wordmark's interpuncts: the theme's amber, deepened just enough
+     to pass 3:1 as large text (every wordmark is 24px or more). Grove's
+     #c4853a is 2.74:1 on its cream; this is 3.21:1. Founder, 2026-10-22
+     (U9 note). */
+  --wordmark-dot: #b47a35;
 }
 
 html, body {
@@ -42,7 +47,7 @@ html, body {
   letter-spacing: -0.02em;
 }
 
-.wordmark span { color: var(--amber); }
+.wordmark span { color: var(--wordmark-dot); }
 
 .btn-primary {
   width: 100%;
@@ -135,7 +140,9 @@ html, body {
 /* Used by profile + debrief screens for the "→" affordance. */
 .persona-arrow { color: var(--soft); font-size: 14px; }
 
-/* ─── Landing page (index.html) ─── */
+/* ─── Tagline review page shell (taglines.html) ─── */
+/* The landing page moved to the public-page components below; the
+   tagline review tool keeps the old column shell. */
 
 .landing {
   /* body has overflow: hidden for the app shell, so the landing has to do
@@ -164,225 +171,378 @@ html, body {
   margin-bottom: 56px;
 }
 
-.tagline {
-  font-family: 'Playfair Display', serif;
-  font-size: 26px;
-  line-height: 1.3;
-  color: var(--earth);
-  margin: 0 0 6px;
-  letter-spacing: -0.005em;
+/* ─── Public pages: landing + terms (U12) ─── */
+/* Direction D, chosen 2026-10-21 (design/landing-directions-2026-09.md).
+   Everything here is scoped to <html class="lp"> and every class is
+   prefixed lp-, so the app's global rules (.card, .wordmark, the
+   overflow: hidden app shell) cannot reach these pages and these rules
+   cannot reach the app.
+
+   Colors come from the theme tokens every theme defines (--earth,
+   --moss, --cream, --warm, --mist, --amber, --text, --wordmark-dot).
+   Surfaces, lines, shadows and the primary button go through the
+   --lp-* tokens, set once per theme just below, so the pages render in
+   all four themes without per-component overrides. Never --soft for
+   text: it fails 4.5:1 on light grounds (open risk #24). */
+
+html.lp {
+  /* Grove (the baseline) */
+  --lp-surface: #ffffff;
+  --lp-border: rgba(45, 58, 46, 0.08);
+  --lp-line: rgba(45, 58, 46, 0.13);
+  --lp-shadow: 0 1px 2px rgba(45, 58, 46, 0.05), 0 10px 30px rgba(45, 58, 46, 0.07);
+  --lp-btn-bg: var(--earth);
+  --lp-btn-fg: var(--mist);
+  --lp-btn-hover: var(--moss);
+  --lp-btn-shadow: 0 8px 20px rgba(45, 58, 46, 0.18);
+  --lp-serif: 'Playfair Display', Georgia, serif;
+  --lp-sans: 'DM Sans', system-ui, sans-serif;
+  --lp-head-weight: 400;
+  --lp-band-bg: rgba(74, 103, 65, 0.09);
+  --lp-gutter: 20px;
+  --lp-measure: 68ch;
+}
+html.lp[data-theme="morning-linen"] {
+  --lp-band-bg: rgba(76, 104, 73, 0.09);
+  --lp-surface: var(--ml-surface);
+  --lp-border: var(--ml-border);
+  --lp-line: rgba(42, 58, 47, 0.12);
+  --lp-shadow: var(--ml-shadow);
+  --lp-btn-shadow: var(--ml-btn-shadow);
+}
+html.lp[data-theme="lantern"] {
+  --lp-band-bg: rgba(143, 169, 134, 0.10);
+  --lp-surface: var(--lt-surface);
+  --lp-border: var(--lt-border);
+  --lp-line: var(--lt-line);
+  --lp-shadow: var(--lt-glow);
+  --lp-btn-bg: var(--amber);       /* Lantern's primary action, as in the app */
+  --lp-btn-fg: var(--lt-ground);
+  --lp-btn-hover: #e4a85f;
+  --lp-btn-shadow: none;
+}
+html.lp[data-theme="pebble"] {
+  --lp-band-bg: rgba(72, 104, 94, 0.09);
+  --lp-surface: var(--pb-surface);
+  --lp-border: rgba(36, 65, 58, 0.08);
+  --lp-line: rgba(36, 65, 58, 0.13);
+  --lp-shadow: var(--pb-shadow);
+  --lp-btn-shadow: var(--pb-btn-shadow);
+  --lp-serif: 'Fraunces', 'Playfair Display', serif;   /* loaded by theme.js */
+  --lp-head-weight: 600;
 }
 
-.tagline-attribution {
-  font-size: 12px;
-  color: var(--soft);
-  letter-spacing: 0.04em;
-  margin: 0 0 32px;
-  font-style: italic;
-}
-
-.tagline-attribution:empty { display: none; }
-.tagline-attribution:empty + .landing-cta { margin-top: 32px; }
-
-.landing-cta {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 12px;
-}
-
-.landing-link {
-  text-align: center;
-  color: var(--moss);
-  text-decoration: none;
-  font-size: 14px;
-  padding: 8px;
-}
-
-.landing-link:active { color: var(--earth); }
-
-.landing-section {
-  padding: 32px 0;
-  border-top: 1px solid rgba(74, 103, 65, 0.14);
-}
-
-.landing-section h2 {
-  font-family: 'Playfair Display', serif;
-  font-size: 22px;
-  font-weight: 400;
-  color: var(--earth);
-  margin: 0 0 14px;
-  letter-spacing: -0.005em;
-}
-
-.landing-section p {
-  font-size: 15px;
+html.lp * { box-sizing: border-box; margin: 0; padding: 0; }
+html.lp { -webkit-text-size-adjust: 100%; scroll-behavior: auto;  height: auto; overflow: visible;}
+html.lp body {
+  font-family: var(--lp-sans);
+  font-size: 16px;
   line-height: 1.6;
   color: var(--text);
-  margin: 0 0 12px;
+
+  height: auto; overflow: visible;}
+html.lp h1, html.lp h2, html.lp h3 { font-family: var(--lp-serif); font-weight: var(--lp-head-weight); color: var(--earth); letter-spacing: -0.005em; }
+html.lp a { color: var(--moss); }
+html.lp ol, html.lp ul { list-style: none; }
+
+html.lp :focus-visible { outline: 3px solid var(--moss); outline-offset: 3px; border-radius: 6px; }
+
+html.lp .lp-skip {
+  position: absolute; left: var(--lp-gutter); top: -100px;
+  background: var(--lp-btn-bg); color: var(--lp-btn-fg);
+  padding: 12px 18px; border-radius: 999px; text-decoration: none; z-index: 10;
 }
+html.lp .lp-skip:focus { top: 12px; }
 
-.landing-section p:last-child { margin-bottom: 0; }
+html.lp .lp-wrap { width: 100%; max-width: 1280px; margin: 0 auto; padding-left: var(--lp-gutter); padding-right: var(--lp-gutter); }
 
-.landing-steps {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 22px;
-  margin: 4px 0 0;
-  padding: 0;
+/* ── Header and nav ── */
+html.lp .lp-top {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; padding-top: 12px; padding-bottom: 12px;
 }
-
-.landing-step {
-  display: flex;
-  gap: 18px;
-  align-items: flex-start;
+html.lp .lp-wordmark {
+  font-family: var(--lp-serif); font-size: 24px; color: var(--earth);
+  letter-spacing: -0.02em; text-decoration: none;
+  display: inline-flex; align-items: center; min-height: 44px;
 }
-
-.landing-step-num {
-  flex: 0 0 auto;
-  font-family: 'Playfair Display', serif;
-  font-size: 28px;
-  color: var(--amber);
-  line-height: 1;
-  min-width: 22px;
+html.lp .lp-wordmark span { color: var(--wordmark-dot); }
+html.lp .lp-nav { display: flex; align-items: center; gap: 4px; }
+html.lp .lp-nav a {
+  display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px;
+  color: var(--earth); text-decoration: none; font-size: 15px; border-radius: 999px;
 }
+html.lp .lp-nav a:hover { background: var(--warm); }
+html.lp .lp-nav .lp-anchor { display: none; }
+html.lp .lp-nav .lp-signin { border: 1px solid var(--lp-line); }
 
-.landing-step-body { flex: 1; }
+/* ── Opening: introduction + the week ── */
+html.lp .lp-opening {
+  display: grid; grid-template-columns: 1fr; gap: 24px;
+  padding-top: 36px; padding-bottom: 8px;
+}
+/* Direction D: no visual reordering. A placed the week between the
+   introduction and the call to action on phones (CSS order), which
+   put the CTA 3681px down a 390px screen and made focus order
+   disagree with reading order. The DOM order is the reading order. */
+html.lp .lp-intro { display: block; }
 
-.landing-step-body h3 {
-  font-size: 15px;
-  font-weight: 500;
+/* The rotating tagline (taglines.js) — founder, 2026-10-22/23. Its own
+   band directly under the masthead, across the whole page: a pale tint
+   of the theme's moss, so it reads apart from the notice bar (--warm)
+   and the cards (--lp-surface), with the quotation centered and its
+   attribution beneath. Close to the wordmark, clear of the headline.
+   Lengths run from "Tea's on." to a 95-character quotation. */
+html.lp .lp-tagline {
+  background: var(--lp-band-bg); border-radius: 20px;
+  padding: 22px 22px 24px; margin-top: 2px; text-align: center;
+  font-family: var(--lp-serif); font-style: italic; font-size: 23px; line-height: 1.3;
   color: var(--earth);
-  margin: 0 0 4px;
-  letter-spacing: 0.01em;
+}
+html.lp .lp-tagline-text { display: block; max-width: 34ch; margin: 0 auto; text-wrap: balance; }
+html.lp .lp-tagline-by {
+  display: block; margin-top: 8px;
+  font-family: var(--lp-sans); font-style: normal; font-size: 14px;
+  letter-spacing: 0.04em; color: var(--moss);
+}
+html.lp .lp-tagline-by:empty { display: none; }
+html.lp .lp-tagline-by::before { content: '\2014\00a0'; }
+html.lp h1 { font-size: 34px; line-height: 1.15; max-width: 18ch; margin-bottom: 18px; }
+html.lp h1 em { font-style: italic; color: var(--moss); white-space: nowrap; }
+html.lp .lp-lede { font-size: 17px; line-height: 1.55; max-width: var(--lp-measure); color: var(--text); }
+html.lp .lp-lede + .lp-lede { margin-top: 12px; }
+
+/* Day-anchored list grammar (the Field Notes refinement named in ui-themes.md) */
+html.lp .lp-week-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
+html.lp .lp-week-head h2 { font-size: 24px; }
+html.lp .lp-flag {
+  display: inline-flex; align-items: center; gap: 8px; flex: 0 0 auto;
+  font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 500;
+  color: var(--earth); border: 1px solid var(--lp-line); border-radius: 999px; padding: 6px 12px;
+}
+html.lp .lp-flag::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--amber); }
+html.lp .lp-week-note { font-size: 14px; line-height: 1.5; color: var(--moss); max-width: var(--lp-measure); margin-bottom: 18px; }
+
+html.lp .lp-day { margin-top: 14px; }
+html.lp .lp-day-label {
+  display: flex; align-items: center; gap: 12px;
+  font-size: 12.5px; letter-spacing: 0.14em; text-transform: uppercase; font-weight: 500;
+  color: var(--moss); margin-bottom: 10px;
+}
+html.lp .lp-day-label::after { content: ''; flex: 1; height: 1px; background: var(--lp-line); }
+html.lp .lp-day-label .lp-dow { color: var(--earth); }
+/* Calendar-like (founder, 2026-10-23): a day is one card of compact
+   agenda rows — time | title, then place · host — not a card per
+   meetup with a paragraph each. */
+html.lp .lp-events {
+  background: var(--lp-surface); border: 1px solid var(--lp-border); border-radius: 18px;
+  box-shadow: var(--lp-shadow); padding: 0 18px;
+}
+html.lp .lp-event {
+  display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 12px;
+  padding: 12px 0; border-top: 1px solid var(--lp-border);
+}
+html.lp .lp-event:first-child { border-top: 0; }
+html.lp .lp-when {
+  display: inline-flex; align-items: center; gap: 8px; align-self: start; padding-top: 2px;
+  font-size: 13.5px; font-weight: 500; letter-spacing: 0.02em; color: var(--earth); white-space: nowrap;
+}
+html.lp .lp-when::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--amber); flex: 0 0 auto; }
+html.lp .lp-event h4 { font-family: var(--lp-serif); font-weight: var(--lp-head-weight); font-size: 17px; line-height: 1.3; color: var(--earth); }
+html.lp .lp-meta { font-size: 13.5px; line-height: 1.45; color: var(--moss); margin-top: 2px; }
+html.lp .lp-meta b { font-weight: 500; color: var(--earth); }
+
+html.lp .lp-week-end { font-size: 14px; color: var(--moss); margin-top: 18px; max-width: var(--lp-measure); }
+
+/* ── The ask ── */
+html.lp .lp-cta { display: flex; flex-direction: column; gap: 10px; align-items: stretch; }
+html.lp .lp-btn {
+  display: inline-flex; align-items: center; justify-content: center; min-height: 52px;
+  padding: 14px 26px; border-radius: 999px; text-decoration: none;
+  background: var(--lp-btn-bg); color: var(--lp-btn-fg); box-shadow: var(--lp-btn-shadow);
+  font-size: 15.5px; font-weight: 500; letter-spacing: 0.02em; text-align: center;
+}
+html.lp .lp-btn:hover { background: var(--lp-btn-hover); }
+html.lp .lp-quiet { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 8px 12px; font-size: 15px; text-decoration: none; }
+html.lp .lp-quiet:hover { text-decoration: underline; }
+
+/* C's at-a-glance card, redrawn in A's card language (FB9). */
+html.lp .lp-glance-card {
+  background: var(--lp-surface); border: 1px solid var(--lp-border); border-radius: 20px;
+  box-shadow: var(--lp-shadow); padding: 16px 20px 4px; margin-top: 18px; max-width: var(--lp-measure);
+}
+html.lp .lp-glance-title { font-family: var(--lp-sans); font-size: 12px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: var(--moss); }
+html.lp .lp-glance > div { padding: 10px 0 12px; border-top: 1px solid var(--lp-border); }
+html.lp .lp-glance > div:first-child { border-top: 0; }
+html.lp .lp-glance dt { font-size: 12px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--moss); margin-bottom: 3px; }
+html.lp .lp-glance dd { font-size: 15px; line-height: 1.45; color: var(--text); }
+
+/* C's notice bar (FB5): the early-stage message sits above the page,
+   not inside it. Kept to two short sentences — C's version took the
+   top fifth of a phone's first screen. */
+html.lp .lp-notice-bar { background: var(--warm); border-bottom: 1px solid var(--lp-line); }
+html.lp .lp-notice-bar .lp-wrap { display: grid; gap: 4px 20px; padding-top: 11px; padding-bottom: 11px; }
+html.lp .lp-notice-label {
+  display: inline-flex; align-items: center; gap: 8px; white-space: nowrap;
+  font-size: 11.5px; font-weight: 500; letter-spacing: 0.16em; text-transform: uppercase; color: var(--moss);
+}
+html.lp .lp-notice-label::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--amber); flex: 0 0 auto; }
+html.lp .lp-notice-bar p { font-size: 14.5px; line-height: 1.45; color: var(--text); max-width: var(--lp-measure); }
+
+/* Phones: the early-days notice sits at the bottom of the screen
+   instead of above the masthead (founder, 2026-10-22); from 640px it
+   returns to the top. The page keeps room for it, so the footer is
+   never hidden behind it, and focused elements scroll clear of it
+   (WCAG 2.2 SC 2.4.11). index.html sets --lp-notice-h to the bar's
+   measured height; 112px is the fallback. */
+html.lp .lp-notice-bar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
+  border-bottom: 0; border-top: 1px solid var(--lp-line);
+  box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.07);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+html.lp .lp-notice-bar .lp-wrap { padding-top: 9px; padding-bottom: 9px; }
+html.lp .lp-notice-bar p { font-size: 13.5px; }
+html.lp { scroll-padding-bottom: calc(var(--lp-notice-h, 112px) + 12px); }
+html.lp body { padding-bottom: var(--lp-notice-h, 112px); }
+/* The workshop design switcher is fixed bottom-left too. */
+html.lp .theme-chip { bottom: calc(var(--lp-notice-h, 112px) + 12px); }
+
+/* ── Sections after the week ── */
+html.lp .lp-section { padding-top: 48px; padding-bottom: 8px; }
+html.lp .lp-section > .lp-wrap > h2, html.lp .lp-section h2.lp-title { font-size: 28px; line-height: 1.2; max-width: 24ch; margin-bottom: 10px; }
+html.lp .lp-section .lp-lead { max-width: var(--lp-measure); font-size: 16px; color: var(--text); margin-bottom: 24px; }
+html.lp .lp-rule { border: 0; border-top: 1px solid var(--lp-line); margin: 40px 0 0; }
+
+html.lp .lp-absent { display: grid; grid-template-columns: 1fr; gap: 12px; }
+html.lp .lp-absent li {
+  background: var(--lp-surface); border: 1px solid var(--lp-border); border-radius: 20px;
+  box-shadow: var(--lp-shadow); padding: 18px 20px;
+}
+html.lp .lp-absent h3 { font-family: var(--lp-sans); font-weight: 500; font-size: 16px; color: var(--earth); margin-bottom: 4px; }
+html.lp .lp-absent p { font-size: 15px; line-height: 1.5; }
+html.lp .lp-absent p b { font-weight: 500; color: var(--moss); }
+
+html.lp .lp-steps { display: grid; grid-template-columns: 1fr; gap: 20px; counter-reset: step; }
+html.lp .lp-steps li { display: flex; gap: 16px; align-items: flex-start; max-width: var(--lp-measure); }
+html.lp .lp-steps li::before {
+  counter-increment: step; content: counter(step);
+  font-family: var(--lp-serif); font-size: 30px; line-height: 1; color: var(--earth);
+  flex: 0 0 auto; min-width: 28px; padding-top: 2px;
+  border-bottom: 2px solid var(--amber);
+}
+html.lp .lp-steps h3 { font-family: var(--lp-sans); font-weight: 500; font-size: 17px; color: var(--earth); margin-bottom: 4px; }
+html.lp .lp-steps p { font-size: 15px; line-height: 1.55; }
+html.lp .lp-steps p + p { margin-top: 6px; }
+
+html.lp .lp-prose p { max-width: var(--lp-measure); margin-bottom: 12px; }
+html.lp .lp-prose p:last-child { margin-bottom: 0; }
+
+html.lp .lp-closing { padding-top: 48px; padding-bottom: 24px; }
+html.lp .lp-closing h2 { font-size: 30px; margin-bottom: 8px; }
+html.lp .lp-closing p { max-width: var(--lp-measure); margin-bottom: 20px; }
+html.lp .lp-closing .lp-cta { max-width: 420px; }
+
+html.lp footer { padding-top: 24px; padding-bottom: 40px; border-top: 1px solid var(--lp-line); margin-top: 24px; }
+html.lp .lp-foot { display: flex; flex-direction: column; gap: 8px; font-size: 14px; color: var(--moss); }
+html.lp .lp-foot p { max-width: var(--lp-measure); }
+html.lp .lp-foot-links { display: flex; flex-wrap: wrap; gap: 4px 6px; }
+html.lp .lp-foot-links a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 10px 0 0; color: var(--moss); text-decoration: none; }
+html.lp .lp-foot-links a:hover { text-decoration: underline; color: var(--earth); }
+html.lp .lp-foot-links a + a { padding-left: 10px; border-left: 1px solid var(--lp-line); }
+
+/* ── Motion: only when allowed, only decorative ── */
+@media (prefers-reduced-motion: no-preference) {
+  html.lp .lp-btn, html.lp .lp-nav a, html.lp .lp-quiet, html.lp .lp-foot-links a { transition: background-color 160ms ease-out, color 160ms ease-out; }
+  html.lp { scroll-behavior: smooth; }
 }
 
-.landing-step-body p {
-  font-size: 14px;
-  margin: 0;
-  color: var(--soft);
-  line-height: 1.5;
+/* ── Wider phones and tablets ── */
+@media (min-width: 640px) {
+  html.lp { --lp-gutter: 32px; }
+  html.lp .lp-nav .lp-anchor { display: inline-flex; }
+  html.lp .lp-cta { flex-direction: row; align-items: center; gap: 16px; }
+  html.lp .lp-absent { grid-template-columns: repeat(2, 1fr); }
+  html.lp h1 { font-size: 40px; }
+  html.lp .lp-tagline { font-size: 26px; padding: 28px 36px 30px; }
+  html.lp .lp-event { grid-template-columns: 84px minmax(0, 1fr); }
+  html.lp .lp-notice-bar {
+    position: static; border-top: 0; border-bottom: 1px solid var(--lp-line);
+    box-shadow: none; padding-bottom: 0;
+  }
+  html.lp .lp-notice-bar .lp-wrap { padding-top: 11px; padding-bottom: 11px; }
+  html.lp .lp-notice-bar p { font-size: 14.5px; }
+  html.lp { scroll-padding-bottom: 0; }
+  html.lp body { padding-bottom: 0; }
+  html.lp .theme-chip { bottom: 14px; }
 }
 
-.landing-principles {
-  display: flex;
-  flex-direction: column;
-  gap: 22px;
+/* ── Sections use the width ── */
+@media (min-width: 900px) {
+  html.lp .lp-notice-bar .lp-wrap { grid-template-columns: auto 1fr; align-items: baseline; }
+  html.lp .lp-absent { grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  html.lp .lp-steps { grid-template-columns: repeat(3, 1fr); gap: 32px; }
+  html.lp .lp-steps li { flex-direction: column; gap: 12px; }
+  html.lp .lp-section { padding-top: 64px; }
 }
 
-.landing-principle h3 {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--earth);
-  margin: 0 0 4px;
-  letter-spacing: 0.01em;
+/* ── The introduction sits beside the week ── */
+@media (min-width: 1080px) {
+  html.lp { --lp-gutter: 48px; }
+  /* The headline spans both columns; the calendar keeps to 540px and
+     the spare width goes between the columns (founder, 2026-10-23). */
+  html.lp .lp-opening {
+    grid-template-columns: minmax(340px, 440px) minmax(0, 540px); justify-content: space-between;
+    column-gap: 96px; row-gap: 32px; padding-top: 52px;
+  }
+  /* The headline and the paragraph under it span both columns (founder,
+     2026-10-23/24; structure settled 2026-10-24, copy still open). The
+     paragraph's lines still stop near 68ch (G5): it leads the page at a
+     larger size rather than running edge to edge. */
+  html.lp .lp-hero { grid-column: 1 / -1; }
+  html.lp .lp-hero h1 { max-width: none; font-size: 48px; margin-bottom: 20px; }
+  html.lp .lp-hero .lp-lede { font-size: 20px; line-height: 1.55; }
+  html.lp .lp-intro { grid-column: 1; grid-row: 2; }
+  html.lp .lp-intro { display: block; align-self: start; }
+  html.lp .lp-cta { flex-direction: row; align-items: center; gap: 12px; }
+  html.lp .lp-week { grid-column: 2; grid-row: 2; }
+  html.lp h1 { font-size: 44px; }
+  html.lp .lp-tagline { font-size: 30px; padding: 34px 48px 36px; }
+  html.lp .lp-tagline-text { max-width: 44ch; }
+  html.lp .lp-week-head h2 { font-size: 26px; }
+  html.lp .lp-closing .lp-cta { flex-direction: row; align-items: center; max-width: none; }
 }
 
-.landing-principle p {
-  font-size: 14px;
-  color: var(--soft);
-  line-height: 1.55;
-  margin: 0;
+/* A's signature: the introduction stays beside the week while the week
+   scrolls — but only when all of it fits on screen, because an element
+   pinned to the top but taller than the screen hides its own end. It is
+   ~617px today (the tagline and headline sit above it since 2026-10-23),
+   but its copy and fonts can change, so index.html measures it and sets
+   .lp-pin rather than this file guessing a screen height. Without
+   JavaScript it simply scrolls. */
+@media (min-width: 1080px) {
+  html.lp .lp-intro.lp-pin { position: sticky; top: 24px; }
 }
 
-.landing-final {
-  padding: 40px 0 0;
+
+/* Terms of Use: the same header, footer and type, one readable column. */
+html.lp .lp-doc { padding-top: 28px; padding-bottom: 24px; }
+html.lp .lp-doc > * { max-width: var(--lp-measure); }
+html.lp .lp-doc h1 { margin-bottom: 8px; }
+html.lp .lp-doc-meta { font-size: 14px; color: var(--moss); margin-bottom: 20px; }
+html.lp .lp-doc-section { margin-top: 40px; }
+html.lp .lp-doc-section h2 { font-size: 26px; line-height: 1.2; margin-bottom: 10px; }
+html.lp .lp-doc-section h3 {
+  font-family: var(--lp-sans); font-weight: 500; font-size: 16px; color: var(--earth);
+  margin: 18px 0 6px;
 }
-
-.landing-final h2 {
-  font-family: 'Playfair Display', serif;
-  font-size: 22px;
-  font-weight: 400;
-  color: var(--earth);
-  margin: 0 0 18px;
+html.lp .lp-doc-section p { margin-bottom: 12px; }
+html.lp .lp-doc-list { display: grid; gap: 6px; margin: 4px 0 14px; }
+html.lp .lp-doc-list li { position: relative; padding-left: 20px; }
+html.lp .lp-doc-list li::before {
+  content: ''; position: absolute; left: 2px; top: 0.7em;
+  width: 7px; height: 7px; border-radius: 50%; background: var(--amber);
 }
-
-/* ─── Terms of Use (terms.html) ─── */
-
-.wordmark-link {
-  display: inline-block;
-  text-decoration: none;
-  color: inherit;
-}
-
-.terms-title {
-  font-family: 'Playfair Display', serif;
-  font-size: 28px;
-  font-weight: 400;
-  color: var(--earth);
-  letter-spacing: -0.005em;
-  margin: 8px 0 4px;
-}
-
-.terms-version {
-  font-size: 12px;
-  color: var(--soft);
-  letter-spacing: 0.04em;
-  margin: 0 0 28px;
-  font-style: italic;
-}
-
-.terms-lede {
-  font-size: 15px;
-  line-height: 1.6;
-  color: var(--text);
-  margin: 0 0 12px;
-}
-
-.terms-lede:last-of-type { margin-bottom: 0; }
-
-.terms-subhead {
-  font-size: 13px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--soft);
-  font-weight: 500;
-  margin: 18px 0 8px;
-}
-
-.terms-list {
-  list-style: none;
-  padding: 0;
-  margin: 4px 0 14px;
-}
-
-.terms-list li {
-  font-size: 15px;
-  line-height: 1.55;
-  color: var(--text);
-  padding: 4px 0 4px 18px;
-  position: relative;
-}
-
-.terms-list li::before {
-  content: '·';
-  color: var(--amber);
-  position: absolute;
-  left: 4px;
-  top: 0;
-  font-size: 22px;
-  line-height: 1.4;
-}
-
-/* ─── Landing footer ─── */
-
-.landing-footer {
-  padding: 32px 0 16px;
-  text-align: center;
-  border-top: 1px solid rgba(74, 103, 65, 0.14);
-  margin-top: 16px;
-}
-
-.landing-footer a {
-  font-size: 13px;
-  color: var(--soft);
-  text-decoration: none;
-  letter-spacing: 0.02em;
-  margin: 0 10px;
-}
-
-.landing-footer a:hover { color: var(--moss); }
 
 /* ─── Tagline review (taglines.html) ─── */
 
@@ -2114,6 +2274,7 @@ html, body {
   --ml-line: rgba(42, 58, 47, 0.1);
   --ml-shadow: 0 1px 2px rgba(42,58,47,0.04), 0 10px 30px rgba(42,58,47,0.06);
   --ml-btn-shadow: 0 8px 20px rgba(42,58,47,0.18);
+  --wordmark-dot: #b07d3c;   /* amber #c08a45 is 2.73:1; this is 3.25:1 */
 }
 
 /* Headers go light; the title is the hero */
@@ -2221,6 +2382,15 @@ html, body {
 [data-theme="morning-linen"] .auth-input:focus,
 [data-theme="morning-linen"] .profile-field-input:focus { border-color: var(--moss); }
 
+/* The propose button is styled for Grove's dark header; on a light
+   header it needs real contrast (found at the chunk-2 desktop pass). */
+[data-theme="morning-linen"] .feed-propose-btn {
+  background: transparent;
+  border: 1px solid rgba(42, 58, 47, 0.22);
+  color: var(--earth);
+}
+[data-theme="morning-linen"] .feed-propose-btn:active { background: rgba(42, 58, 47, 0.06); }
+
 /* Small pieces */
 [data-theme="morning-linen"] .toast { border-radius: 999px; }
 [data-theme="morning-linen"] .match-avatar { border: 2px solid var(--ml-surface); }
@@ -2247,6 +2417,7 @@ html, body {
   --lt-line: rgba(237, 228, 208, 0.12);
   --lt-border: rgba(237, 228, 208, 0.07);
   --lt-glow: 0 0 0 1px rgba(217,154,78,0.08), 0 0 30px rgba(217,154,78,0.07);
+  --wordmark-dot: var(--amber);   /* 7.09:1 on the dark ground */
 }
 [data-theme="lantern"] body {
   background: radial-gradient(120% 60% at 30% -5%, rgba(217,154,78,0.10), transparent 60%), var(--lt-ground);
@@ -2373,6 +2544,7 @@ html, body {
   --pb-surface: #fbfcfa;
   --pb-shadow: 0 6px 22px rgba(36, 65, 58, 0.07);
   --pb-btn-shadow: 0 10px 24px rgba(36, 65, 58, 0.22);
+  --wordmark-dot: #c16d47;   /* clay #c77b58 is 2.81:1; this is 3.24:1 */
 }
 
 /* Fraunces headings */
@@ -2476,6 +2648,79 @@ html, body {
 [data-theme="pebble"] .progress-dot.done { background: var(--sage); }
 [data-theme="pebble"] .progress-dot.active { background: var(--earth); }
 
+[data-theme="pebble"] .feed-propose-btn {
+  background: transparent;
+  border: 1.5px solid rgba(127, 169, 155, 0.5);
+  color: var(--moss);
+}
+
 /* Small pieces */
 [data-theme="pebble"] .toast { border-radius: 999px; box-shadow: var(--pb-btn-shadow); }
 [data-theme="pebble"] .emoji-option.selected { border-color: var(--sage); background: rgba(127,169,155,0.16); }
+
+/* ─── Responsive: phone is the origin, desktop is a real layout ─── */
+/* Design spec G5. Breakpoints follow content, not devices:
+   --bp-wide is where two-column lists stop being cramped,
+   --bp-desktop is where the app container stops growing.
+   Everything above this comment is the phone layout, unchanged. */
+
+:root {
+  --measure: 68ch;        /* readable prose line length */
+  --container: 1100px;    /* app ceiling on desktop (public pages: see .lp) */
+}
+
+@media (min-width: 720px) {
+  /* Tagline review shell: the column widens. (The landing and terms
+     pages carry their own breakpoints in the Public pages section.) */
+  .landing { padding: 0 32px 72px; }
+  .landing-content { max-width: 780px; }
+  .landing-hero { padding-top: 56px; }
+  .landing-hero .wordmark { font-size: 44px; }
+
+  /* App shell: content aligns to one container; the feed becomes a grid. */
+  .feed-header,
+  .tab-bar,
+  .cards-scroll,
+  .detail-header,
+  .detail-body,
+  .profile-header,
+  .profile-body,
+  .auth-card,
+  .interview-card {
+    max-width: var(--container);
+    margin-inline: auto;
+    width: 100%;
+  }
+
+  .cards-scroll {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    align-content: start;
+    gap: 16px;
+    padding: 20px 24px 48px;
+  }
+  /* Section labels span the grid — they head a row, not a cell. */
+  .feed-section-label,
+  .section-label { grid-column: 1 / -1; }
+  .feed-empty { grid-column: 1 / -1; }
+  /* One action, not a full-width bar across a desktop header (G2). */
+  .feed-propose-btn { width: auto; padding-inline: 28px; }
+
+  .detail-body,
+  .profile-body { padding-inline: 24px; }
+  .detail-body > *,
+  .profile-body > * { max-width: var(--measure); }
+}
+
+@media (min-width: 1024px) {
+  .landing-content { max-width: var(--container); }
+  .landing-hero .wordmark { font-size: 52px; }
+
+  .feed-title { font-size: 32px; }
+}
+
+/* The workshop theme chip sits clear of a desktop scrollbar. */
+@media (min-width: 720px) {
+  .theme-chip { bottom: 20px; left: 20px; }
+  html.lp .theme-chip { bottom: 20px; }
+}

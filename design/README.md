@@ -10,3 +10,17 @@ direction is chosen and folded in.
   comparison and recommendation. Open directly in a browser (fonts load
   from Google Fonts). Summary and per-direction tokens in
   `ui-directions-2026-07.md`.
+
+- `landing-brief-2026-09.md` — the brief the three September 2026
+  landing directions were drawn against (job of the page, goals
+  judged, voice rules, fixed Morning Linen tokens, constraints).
+- `landing-directions-2026-09.md` — those three directions judged
+  holds/partly/fails against the design-spec goals, written before
+  any preference was voiced (U10 step 5), with the measurement method
+  and the recommendation; §6 adds Direction D, merged from them after
+  the October 2026 review (FB3–FB9), and judged the same way.
+- `landing-directions-2026-09/` — the four drawn directions (A, B, C,
+  D) and their review index, archived here when D landed as
+  `src/index.html` (2026-10-21). During the review they lived in
+  `src/landing/` so they could be opened on a workshop stack; they are
+  self-contained pages, so they still open directly in a browser.
