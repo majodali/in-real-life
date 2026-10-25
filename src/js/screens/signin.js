@@ -3,6 +3,9 @@
 import { auth } from '../services.js';
 import { navigate, showToast } from '../app.js';
 import { handleSigninSubmit } from './auth-handlers.js';
+import { t, text, escapeAttr } from '../copy.js';
+
+const signupLink = (inner) => `<a href="#signup" class="auth-link">${inner}</a>`;
 
 export function renderSignin(emailParam = '') {
   const initialEmail = emailParam ? decodeURIComponent(emailParam) : '';
@@ -11,26 +14,23 @@ export function renderSignin(emailParam = '') {
     <div class="auth-card">
       <div class="auth-content">
         <h1 class="wordmark">in<span>·</span>real<span>·</span>life</h1>
-        <h2 class="auth-title">Welcome back</h2>
-        <p class="auth-subtext">Sign in to see what's happening nearby.</p>
+        <h2 class="auth-title">${t('auth.signin.title')}</h2>
+        <p class="auth-subtext">${t('auth.signin.subtext')}</p>
 
         <form class="auth-form" id="signinForm">
-          <label class="auth-label" for="signinEmail">Email</label>
+          <label class="auth-label" for="signinEmail">${t('auth.signin.email')}</label>
           <input class="auth-input" id="signinEmail" type="email"
                  autocomplete="email" inputmode="email"
                  value="${escapeAttr(initialEmail)}" required>
 
-          <label class="auth-label" for="signinPassword">Password</label>
+          <label class="auth-label" for="signinPassword">${t('auth.signin.password')}</label>
           <input class="auth-input" id="signinPassword" type="password"
                  autocomplete="current-password" required>
 
-          <button class="btn-primary" id="signinSubmit" type="submit">Sign in</button>
+          <button class="btn-primary" id="signinSubmit" type="submit">${t('auth.signin.submit')}</button>
         </form>
 
-        <p class="auth-alt">
-          New to in·real·life?
-          <a href="#signup" class="auth-link">Create an account</a>
-        </p>
+        <p class="auth-alt">${t('auth.signin.newHere', { link: signupLink })}</p>
       </div>
     </div>
   `;
@@ -44,18 +44,12 @@ export function renderSignin(emailParam = '') {
     const password = document.getElementById('signinPassword').value;
 
     submit.disabled = true;
-    submit.textContent = 'Signing in…';
+    submit.textContent = text('auth.signin.submitting');
     try {
       await handleSigninSubmit({ email, password, auth, navigate, showToast });
     } finally {
       submit.disabled = false;
-      submit.textContent = 'Sign in';
+      submit.textContent = text('auth.signin.submit');
     }
   });
-}
-
-function escapeAttr(str) {
-  return String(str).replace(/[&<>"']/g, (c) => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
-  }[c]));
 }

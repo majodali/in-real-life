@@ -64,6 +64,7 @@ Understanding of a person is **seeded** at onboarding and **grown** from what th
 
 **Product surface (cross-cutting)**
 - `design-spec.md` — **(decided: U10, D70)** what the pages are for and how a design is judged: goals G1–G10 (incl. responsive desktop, installable, consented push), non-goals, the five-site comparative review with borrow/avoid, platform constraints (iOS web push needs home-screen install), the web-first platform decision, the accessibility bar and performance budget, and the design process itself.
+- `page-copy.md` — **(decided: T12, U13)** where member-facing words live and how they reach a page: bundles per locale and surface, one escaping-by-default engine (`t` / `attr` / `text` / `date`), whole sentences with marked spans, plurals and dates by the bundle's locale, static pages filled at deploy, review variants as overlays with the Terms locked. R10's opening move.
 - `repo-map.md` — where the code lives: frontend modules, backend layout, the three test rungs and how each is run, screens and routes, browser storage. Moved out of `CLAUDE.md` at the v1.5.0 migration (K-002).
 - `ui-themes.md` — **(decided: U9)** the visual identity (Morning Linen) and the runtime theme system: themes over forks behind existing class names, the workshop switcher as the standing design-review vehicle, Grove/Lantern/Pebble, what's deliberately not done yet.
 - `../design/landing-directions-2026-09.md` — the September 2026

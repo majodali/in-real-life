@@ -7,5 +7,6 @@ infrastructure/cdk.out/
 # Deploy-time substituted output of inject-config.mjs
 dist/
 
-# Local-only copy of app.html with real config values
-src/app.local.html
+# Local-only previews: app.html with real config values, and the public
+# pages with their copy rendered (render-copy.mjs)
+src/*.local.html

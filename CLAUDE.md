@@ -102,6 +102,8 @@ name through its repository tools.
 # Frontend preview: copy app.html -> app.local.html (gitignored), fill
 # the __IRL_*__ placeholders from your stack, then:
 cd src && python3 -m http.server 8000    # open app.local.html
+# The landing page's copy is filled from src/copy/ at deploy; preview it with
+node infrastructure/scripts/render-copy.mjs src/index.html --out src/index.local.html
 
 # Backend unit tests (lambda/api, scripts/, test/helpers/)
 cd infrastructure && npm install && npm test

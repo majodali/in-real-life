@@ -28,6 +28,7 @@ import {
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { renderRegisters } from './render-registers.mjs';
+import { renderCopy, baseCopy } from './render-copy.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const repoRoot = join(__dirname, '..', '..');
@@ -99,13 +100,17 @@ const config = {
   __IRL_WORKSHOP_MODE__: String((outputs.Stage ?? 'workshop') !== 'prod'),
 };
 
-// Pages carrying __IRL_* placeholders. app.html takes the full runtime
-// config; the public pages carry only the workshop flag (they offer the
-// design switcher on workshop stacks — docs/ui-themes.md).
+// Pages this script owns. app.html takes the full runtime config; the
+// public pages carry only the workshop flag (they offer the design
+// switcher on workshop stacks — docs/ui-themes.md) and name their copy
+// by key, filled here from the bundle (docs/page-copy.md). CDK's own
+// site upload excludes all three (irl-stack.ts → DeploySite), so a
+// half-finished deploy can never publish one unfilled.
 const PAGES = ['app.html', 'index.html', 'terms.html'];
+const copy = baseCopy();
 
 function substitute(name) {
-  let html = readFileSync(join(srcDir, name), 'utf-8');
+  let html = renderCopy(readFileSync(join(srcDir, name), 'utf-8'), copy).html;
   for (const [placeholder, value] of Object.entries(config)) {
     html = html.split(placeholder).join(value);
   }

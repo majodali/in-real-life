@@ -1,6 +1,9 @@
 # Page copy in resource bundles
 
-Status: draft
+Status: active (**chunk 1 delivered, at its gate** — 2026-10-25: the
+design note, T12 and U13, the engine and its tests, and the proof on
+the sign-in screen and the landing page's opening block. Plan approved
+by the founder the same day.)
 
 Outcome under development: every member-facing string on the site and
 in the app lives in a JavaScript resource bundle, not in markup or
@@ -52,7 +55,7 @@ reasons, one now and one later:
   `interaction-handlers.test.mjs` and `debrief-handlers.test.mjs` —
   little churn.
 
-## The shape proposed (decided at the chunk-1 gate, not before)
+## The shape proposed (written into `docs/page-copy.md`, T12, U13 in chunk 1; confirmed at its gate)
 
 **One bundle per locale and surface, as ES modules.** No build step,
 so bundles are plain modules: `src/copy/en-US/landing.js`,
@@ -111,17 +114,57 @@ decision first (R10, R11). Bundled for structure, locked for review.
 
 ## Chunks
 
-### Chunk 1 — the design and a proof
+### Chunk 1 — the design and a proof — DELIVERED (at gate)
 
-A design note (`docs/page-copy.md`) settling the shape above with
-its reasoning; the decisions recorded (a T-row for the mechanism; a
-U-row for copy governance: variants, locked keys, whole sentences);
-`copy.js` with its tests (lookup chain, missing-key behavior,
-escaping, plurals, dates, marked links); and one proof end to end —
-the sign-in screen and the landing page's opening block moved into
-bundles, rendered through both paths (app at runtime, landing at
-deploy), with **byte-identical output** to today proven by snapshot.
-Gate: founder reviews the note, the decisions and the proof.
+Shipped:
+
+- **`docs/page-copy.md`** — the design note; **T12** (the mechanism)
+  and **U13** (how copy is governed: whole sentences, every word keyed,
+  no dead copy, variants as overlays, Terms locked).
+- **`src/js/copy.js`** — the engine: `t()` for HTML, `attr()` for
+  attribute values, `text()` for plain text (the third was added while
+  building: toasts and `textContent` need plain text, and decoding
+  escaped HTML back out is the wrong way round), and `date()`.
+  Escaping by default; `{name:inner}` marked spans; plurals and numbers
+  by `Intl` in the bundle's locale. 19 tests, including Polish plurals
+  and `en-US` vs `en-GB` dates.
+- **`src/copy/en-US/`** — the base bundle: `index.js` (locale, the
+  `eventStart` date format), `landing.js`, `auth.js`.
+- **Bundle integrity tests** (6): surface prefixes, no duplicate keys,
+  every message parses, every key the code or markup names exists, no
+  unused key.
+- **`infrastructure/scripts/render-copy.mjs`** — fills the static
+  pages at deploy and serves as the local preview; refuses an element
+  that still holds words and stops on an unknown key. 6 tests.
+  `inject-config.mjs` runs it on every page it owns.
+- **CDK's site upload now excludes `index.html` and `terms.html`**, as
+  it already excluded `app.html`. Found while building: once the
+  landing page's words are filled at deploy, a deploy that stopped
+  after `cdk deploy` — as one did on 2026-10-25 — would otherwise have
+  left a landing page with an empty headline live.
+- The proof: the sign-in screen's eight strings (one a sentence with
+  its link inside it) and the landing page's headline and opening
+  paragraph now come from the bundle.
+
+Proven, not assumed:
+
+- **The landing page renders byte-identical** to `main`'s
+  `index.html` — same SHA-256, 16,237 bytes — through the deploy-time
+  renderer.
+- **The sign-in screen's DOM is identical** to `main`'s, rendered in
+  Chromium from both. *Correction to this plan's wording:* "byte for
+  byte" holds for files; for a screen it is the whitespace-normalized
+  DOM, because a template's indentation is whitespace inside a
+  JavaScript string, not content (raw 969 vs 939 characters, normalized
+  identical). The "Signing in…" state during submit matches too, and
+  neither page threw an error.
+- **The synthesized site upload** contains no `index.html`,
+  `terms.html` or `app.html`, and does contain `copy/en-US/`.
+
+309 frontend tests (284 existing + 19 engine + 6 bundle integrity)
+and 859 backend tests (853 + 6 renderer) pass.
+
+Gate: founder reviews the note, T12, U13 and the proof.
 
 ### Chunk 2 — the static pages
 
