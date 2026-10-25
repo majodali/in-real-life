@@ -1,29 +1,32 @@
 // ─── Content alternatives system ───
 //
-// Defines switchable content/visual variants for each screen.
+// Defines switchable content/visual variants for each screen. Labels are
+// copy keys (src/copy/<locale>/menu.js), read by getAlternativesForScreen.
 // Users toggle alternatives via the ellipsis menu.
 // Selections persist in localStorage.
+
+import { text } from './copy.js';
 
 const STORE_KEY = 'irl_alt_selections';
 const VOTES_KEY = 'irl_alt_votes';
 
 export const ALTERNATIVES = {
   'feed-card-style': {
-    label: 'Card accent style',
+    label: 'menu.alt.cardStyle',
     screen: 'feed',
     options: [
-      { id: 'a', label: 'Color bar on top', value: 'accent-top' },
-      { id: 'b', label: 'Color bar on left', value: 'accent-left' },
-      { id: 'c', label: 'No color bar', value: 'no-accent' },
+      { id: 'a', label: 'menu.alt.cardStyle.top', value: 'accent-top' },
+      { id: 'b', label: 'menu.alt.cardStyle.left', value: 'accent-left' },
+      { id: 'c', label: 'menu.alt.cardStyle.none', value: 'no-accent' },
     ],
     default: 'a',
   },
   'feed-header-style': {
-    label: 'Header style',
+    label: 'menu.alt.headerStyle',
     screen: 'feed',
     options: [
-      { id: 'a', label: 'Dark header', value: 'dark' },
-      { id: 'b', label: 'Light header', value: 'light' },
+      { id: 'a', label: 'menu.alt.headerStyle.dark', value: 'dark' },
+      { id: 'b', label: 'menu.alt.headerStyle.light', value: 'light' },
     ],
     default: 'a',
   },
@@ -85,5 +88,10 @@ export function getAltSnapshot() {
 export function getAlternativesForScreen(screen) {
   return Object.entries(ALTERNATIVES)
     .filter(([_, alt]) => alt.screen === screen)
-    .map(([id, alt]) => ({ id, ...alt }));
+    .map(([id, alt]) => ({
+      id,
+      ...alt,
+      label: text(alt.label),
+      options: alt.options.map((o) => ({ ...o, label: text(o.label) })),
+    }));
 }

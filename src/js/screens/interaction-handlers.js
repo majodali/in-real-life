@@ -6,6 +6,9 @@
 // onSuccess (e.g. re-fetch the feed). See interaction-handlers.test.mjs
 // for the spec.
 
+import { text } from '../copy.js';
+import { errorText } from '../errors.js';
+
 export async function handleInteraction({
   desired,
   currentLevel,
@@ -39,18 +42,13 @@ export async function handleInteraction({
       showToast(conflictMessage(result.conflicts));
     }
   } catch (err) {
-    if (err?.status === 401) {
-      showToast('Your session expired. Sign in again.');
-    } else if (err?.status === 404) {
-      showToast('This event is no longer available.');
-    } else {
-      showToast(err?.message || 'Couldn’t save that. Try again.');
-    }
+    showToast(errorText(err, 'event.action.failed', { 401: 'errors.sessionExpired', 404: 'errors.eventGone' }));
   }
 }
 
 function conflictMessage(conflicts) {
-  const first = conflicts[0]?.title || 'another event';
-  const more = conflicts.length > 1 ? ` (and ${conflicts.length - 1} more)` : '';
-  return `Heads up — this overlaps with “${first}”${more}, which you're also in for. If you can't make both, free up the spot.`;
+  const title = conflicts[0]?.title || text('event.anotherEvent');
+  return conflicts.length > 1
+    ? text('event.action.overlapMore', { title, count: conflicts.length - 1 })
+    : text('event.action.overlap', { title });
 }

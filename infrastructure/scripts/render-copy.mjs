@@ -25,7 +25,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
 
-import { createCopy, escapeText } from '../../src/js/copy.js';
+import { createCopy, escapeText } from '../../src/js/copy-engine.js';
 import base from '../../src/copy/en-US/index.js';
 import { AGREEMENT_VERSION, AGREEMENT_LAST_UPDATED } from '../../src/js/agreement.js';
 
@@ -34,6 +34,11 @@ const ELEMENT = /<([a-z][a-z0-9]*)\b([^>]*?)\sdata-copy="([^"]+)"([^>]*)><\/\1>/
 // An attribute whose value is a copy key: data-copy-<attribute>="key".
 const ATTRIBUTE = /\sdata-copy-([a-z][a-z-]*)="([^"]+)"/g;
 
+/** The base bundle's engine — strict: a missing key stops the deploy. */
+export function baseCopy() {
+  return createCopy({ locale: base.locale, layers: [base.strings], formats: base.formats });
+}
+
 // What every static page's copy may draw on besides its own words:
 // values the code owns, and the wrappers for marked spans that are not
 // the engine's defaults.
@@ -41,7 +46,7 @@ export const PAGE_PARAMS = {
   // The terms page shows the version a member accepts (agreement.js), so
   // the two cannot disagree.
   termsVersion: AGREEMENT_VERSION,
-  termsUpdated: AGREEMENT_LAST_UPDATED,
+  termsUpdated: baseCopy().date(AGREEMENT_LAST_UPDATED, 'agreementDate'),
   mail: (address) => `<a href="mailto:${address.replace(/"/g, '&quot;')}">${address}</a>`,
 };
 
@@ -49,11 +54,6 @@ export const PAGE_PARAMS = {
 // value needs only its double quotes escaped beyond ordinary text — an
 // apostrophe stays an apostrophe, as it was in the hand-written markup.
 const quoted = (value) => escapeText(value).replace(/"/g, '&quot;');
-
-/** The base bundle's engine — strict: a missing key stops the deploy. */
-export function baseCopy() {
-  return createCopy({ locale: base.locale, layers: [base.strings], formats: base.formats });
-}
 
 /**
  * @param {string} html

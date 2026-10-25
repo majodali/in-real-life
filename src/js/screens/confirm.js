@@ -3,6 +3,7 @@
 import { auth } from '../services.js';
 import { navigate, showToast } from '../app.js';
 import { handleConfirmSubmit } from './auth-handlers.js';
+import { t, text } from '../copy.js';
 
 export function renderConfirm(emailParam = '') {
   const email = emailParam ? decodeURIComponent(emailParam) : '';
@@ -11,25 +12,19 @@ export function renderConfirm(emailParam = '') {
     <div class="auth-card">
       <div class="auth-content">
         <h1 class="wordmark">in<span>·</span>real<span>·</span>life</h1>
-        <h2 class="auth-title">Confirm your email</h2>
-        <p class="auth-subtext">
-          We sent a 6-digit code to <strong>${escapeHtml(email || 'your email')}</strong>.
-          Enter it below to finish creating your account.
-        </p>
+        <h2 class="auth-title">${t('auth.confirm.title')}</h2>
+        <p class="auth-subtext">${t('auth.confirm.subtext', { email: () => `<strong>${escapeHtml(email || text('auth.confirm.yourEmail'))}</strong>` })}</p>
 
         <form class="auth-form" id="confirmForm">
-          <label class="auth-label" for="confirmCode">Confirmation code</label>
+          <label class="auth-label" for="confirmCode">${t('auth.confirm.code')}</label>
           <input class="auth-input" id="confirmCode" type="text"
                  inputmode="numeric" pattern="\\d{6}" maxlength="6"
                  autocomplete="one-time-code" required>
 
-          <button class="btn-primary" id="confirmSubmit" type="submit">Confirm</button>
+          <button class="btn-primary" id="confirmSubmit" type="submit">${t('auth.confirm.submit')}</button>
         </form>
 
-        <p class="auth-alt">
-          Wrong email?
-          <a href="#signup" class="auth-link">Start over</a>
-        </p>
+        <p class="auth-alt">${t('auth.confirm.wrongEmail', { link: (inner) => `<a href="#signup" class="auth-link">${inner}</a>` })}</p>
       </div>
     </div>
   `;
@@ -42,17 +37,17 @@ export function renderConfirm(emailParam = '') {
     const code = document.getElementById('confirmCode').value.trim();
 
     if (!email) {
-      showToast('Missing email — please start over from sign-up.');
+      showToast(text('auth.confirm.noEmail'));
       return;
     }
 
     submit.disabled = true;
-    submit.textContent = 'Confirming…';
+    submit.textContent = text('auth.confirm.submitting');
     try {
       await handleConfirmSubmit({ email, code, auth, navigate, showToast });
     } finally {
       submit.disabled = false;
-      submit.textContent = 'Confirm';
+      submit.textContent = text('auth.confirm.submit');
     }
   });
 }

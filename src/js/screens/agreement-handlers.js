@@ -6,6 +6,8 @@
 // agreement_reacceptance_required — so the only ways off this screen are
 // accepting or signing out.
 
+import { errorText } from '../errors.js';
+
 // Load the screen's facts. Navigates away (and returns null) when the
 // member doesn't actually need to be here.
 export async function handleAgreementMount({ api, navigate, showToast }) {
@@ -17,7 +19,7 @@ export async function handleAgreementMount({ api, navigate, showToast }) {
       navigate('signin');
       return null;
     }
-    showToast(err.message || 'Could not load your account.');
+    showToast(errorText(err, 'auth.loadAccountFailed'));
     return null;
   }
 
@@ -40,7 +42,7 @@ export async function handleAgreementAccept({
     await commands.reacceptAgreement({ agreementVersion });
   } catch (err) {
     if (err.status !== 409) {
-      showToast(err.message || 'Could not record your acceptance.');
+      showToast(errorText(err, 'auth.agreement.failed'));
       return false;
     }
   }

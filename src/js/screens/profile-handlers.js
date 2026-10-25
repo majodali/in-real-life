@@ -4,6 +4,9 @@
 // Both call commands.updateProfile and, on success, invoke saveUser with
 // the merged shape so the local cache stays in step with the API.
 
+import { text } from '../copy.js';
+import { errorText } from '../errors.js';
+
 export async function handleProfileSave({
   name,
   vibeMessage,
@@ -24,10 +27,10 @@ export async function handleProfileSave({
   try {
     const result = await commands.updateProfile(fields);
     saveUser(result);
-    showToast('Profile updated ✓');
+    showToast(text('profile.saved'));
     onSuccess();
   } catch (err) {
-    showToast(err.message || 'Could not save your profile.');
+    showToast(errorText(err, 'profile.saveFailed'));
   }
 }
 
@@ -35,9 +38,9 @@ export async function handleAvatarChange({ avatar, commands, saveUser, showToast
   try {
     const result = await commands.updateProfile({ avatar });
     saveUser(result);
-    showToast('Avatar updated!');
+    showToast(text('profile.avatarSaved'));
   } catch (err) {
-    showToast(err.message || 'Could not update avatar.');
+    showToast(errorText(err, 'profile.avatarFailed'));
   }
 }
 
@@ -45,9 +48,9 @@ export async function handleDataExport({ commands, triggerDownload, showToast })
   try {
     const data = await commands.exportData();
     triggerDownload(data);
-    showToast('Your data is downloading.');
+    showToast(text('profile.export.started'));
   } catch (err) {
-    showToast(err.message || 'Could not export your data.');
+    showToast(errorText(err, 'profile.export.failed'));
   }
 }
 
@@ -68,6 +71,6 @@ export async function handleAccountDelete({
     signOut();
     onDeleted();
   } catch (err) {
-    showToast(err.message || 'Could not delete your account.');
+    showToast(errorText(err, 'profile.delete.failed'));
   }
 }

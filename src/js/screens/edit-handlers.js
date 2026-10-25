@@ -7,6 +7,9 @@
 //
 // See edit-handlers.test.mjs for the spec.
 
+import { text } from '../copy.js';
+import { errorText } from '../errors.js';
+
 export async function handleEditSubmit({
   current,
   title,
@@ -34,7 +37,7 @@ export async function handleEditSubmit({
 
   if (!trimmedTitle) {
     onValidationError?.('title');
-    showToast('Title can\'t be blank.');
+    showToast(text('edit.rule.title'));
     return;
   }
   // Time and place follow the idea rules (an idea may have neither):
@@ -42,7 +45,7 @@ export async function handleEditSubmit({
   // and a start entering for the first time needs its end alongside.
   if (!trimmedLocation && current.location) {
     onValidationError?.('location');
-    showToast('Where? can\'t be cleared once set — change it instead.');
+    showToast(text('edit.rule.whereCleared'));
     return;
   }
   let startIso;
@@ -50,12 +53,12 @@ export async function handleEditSubmit({
     startIso = toIso(startTime);
     if (!startIso) {
       onValidationError?.('startTime');
-      showToast('Start time doesn\'t look right.');
+      showToast(text('edit.rule.badStart'));
       return;
     }
   } else if (current.startTime) {
     onValidationError?.('startTime');
-    showToast('Start time can\'t be cleared once set — change it instead.');
+    showToast(text('edit.rule.startCleared'));
     return;
   }
   let endIso;
@@ -63,24 +66,24 @@ export async function handleEditSubmit({
     endIso = toIso(endTime);
     if (!endIso) {
       onValidationError?.('endTime');
-      showToast('End time doesn\'t look right.');
+      showToast(text('edit.rule.badEnd'));
       return;
     }
     const effectiveStart = startIso ?? current.startTime;
     if (!effectiveStart) {
       onValidationError?.('startTime');
-      showToast('Set a start time along with the end.');
+      showToast(text('edit.rule.needsStart'));
       return;
     }
     if (new Date(endIso) <= new Date(effectiveStart)) {
       onValidationError?.('endTime');
-      showToast('End time has to be after the start.');
+      showToast(text('edit.rule.endBeforeStart'));
       return;
     }
   }
   if (startIso && !endIso && !current.endTime) {
     onValidationError?.('endTime');
-    showToast('Add an end time along with the start.');
+    showToast(text('edit.rule.needsEnd'));
     return;
   }
 
@@ -95,12 +98,12 @@ export async function handleEditSubmit({
     const amount = Number(costAmount);
     if (amountBlank || !Number.isFinite(amount) || amount <= 0) {
       onValidationError?.('costAmount');
-      showToast('Cost needs a positive amount — or clear both cost fields.');
+      showToast(text('edit.rule.costAmount'));
       return;
     }
     if (coversBlank) {
       onValidationError?.('costCovers');
-      showToast('Say what the cost covers.');
+      showToast(text('edit.rule.costCovers'));
       return;
     }
     nextCost = { amount, covers: costCovers.trim() };
@@ -112,7 +115,7 @@ export async function handleEditSubmit({
     const floor = current.minimumAttendance ?? 3;
     if (!Number.isInteger(n) || n < floor) {
       onValidationError?.('maxAttendance');
-      showToast(`Spots must be a whole number of at least ${floor}.`);
+      showToast(text('edit.rule.max', { floor }));
       return;
     }
     nextMax = n;
@@ -132,7 +135,7 @@ export async function handleEditSubmit({
     nextShape = current.shape ? null : undefined;
   } else if (!structure) {
     onValidationError?.('shapeStructure');
-    showToast('Pick how structured it is — or clear the tags and doors too.');
+    showToast(text('edit.rule.structure'));
     return;
   } else {
     nextShape = { activityTags: tags, structure, doors };
@@ -181,7 +184,7 @@ export async function handleEditSubmit({
     const result = await commands.editEvent({ eventId: current.eventId, ...fields });
     onSuccess?.(result);
   } catch (err) {
-    showToast(err?.message || 'Couldn\'t save those changes.');
+    showToast(errorText(err, 'edit.failed'));
   }
 }
 

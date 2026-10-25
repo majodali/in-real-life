@@ -11,6 +11,7 @@
 
 import { getAlternativesForScreen, getAltSelectedId, setAltSelection, voteAlt, getAltVote } from '../alternatives.js';
 import { openFeedbackForm } from './feedback-form.js';
+import { t } from '../copy.js';
 
 export function renderEllipsisButton() {
   return '<button class="ellipsis-btn" data-ellipsis>\u22EF</button>';
@@ -34,11 +35,11 @@ export function openEllipsisMenu(screen, onRerender) {
 
       return `
         <div class="alt-group">
-          <div class="alt-group-label">${alt.label}</div>
+          <div class="alt-group-label">${escapeHtml(alt.label)}</div>
           ${alt.options.map(opt => `
             <label class="alt-option ${opt.id === selectedId ? 'selected' : ''}">
               <span class="alt-radio">${opt.id === selectedId ? '\u25CF' : '\u25CB'}</span>
-              <span class="alt-option-label">${opt.label}</span>
+              <span class="alt-option-label">${escapeHtml(opt.label)}</span>
               ${opt.id === selectedId ? `
                 <button class="alt-vote-btn ${opt.id === votedId ? 'voted' : ''}" data-vote-alt="${alt.id}" data-vote-opt="${opt.id}">
                   ${opt.id === votedId ? '\u2764\uFE0F' : '\u{1F44D}'}
@@ -57,9 +58,7 @@ export function openEllipsisMenu(screen, onRerender) {
       <div class="modal-handle"></div>
       ${altHtml}
       <div class="alt-feedback-section">
-        <button class="alt-feedback-btn" id="menuFeedbackBtn">
-          \u{1F4AC} Give feedback
-        </button>
+        <button class="alt-feedback-btn" id="menuFeedbackBtn">${t('menu.feedback')}</button>
       </div>
     </div>
   `;
@@ -99,6 +98,12 @@ export function openEllipsisMenu(screen, onRerender) {
     closeMenu();
     openFeedbackForm(screen);
   });
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
 }
 
 function closeMenu() {

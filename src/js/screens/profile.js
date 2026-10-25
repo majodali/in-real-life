@@ -18,6 +18,7 @@ import {
   handleCorrection,
 } from './model-handlers.js';
 import { renderEllipsisButton, bindEllipsis } from '../components/ellipsis-menu.js';
+import { t, attr, text } from '../copy.js';
 
 export function renderProfile() {
   const user = store.getActiveUser();
@@ -35,38 +36,38 @@ export function renderProfile() {
     <div class="status-bar"><span>9:41</span><span>\u25CF\u25CF\u25CF</span></div>
     <div class="profile-header">
       <div class="profile-header-top">
-        <button class="detail-back" id="profileBack">\u2190 Back</button>
+        <button class="detail-back" id="profileBack">${t('common.back')}</button>
         ${renderEllipsisButton()}
       </div>
-      <div class="profile-header-title">Your profile</div>
+      <div class="profile-header-title">${t('profile.title')}</div>
     </div>
     <div class="profile-body">
 
       <div class="profile-card">
         <button class="profile-avatar-btn" id="avatarBtn">
           <span class="profile-avatar-large">${user.avatar || '\u{1F331}'}</span>
-          <span class="profile-avatar-edit">tap to change</span>
+          <span class="profile-avatar-edit">${t('profile.avatarEdit')}</span>
         </button>
 
         <div class="profile-field">
-          <label class="profile-field-label">Name</label>
+          <label class="profile-field-label">${t('profile.name')}</label>
           <input class="profile-field-input" id="nameInput" type="text" value="${escapeHtml(user.name)}" maxlength="30">
         </div>
 
         <div class="profile-field">
-          <label class="profile-field-label">Current vibe</label>
-          <input class="profile-field-input" id="vibeInput" type="text" value="${escapeHtml(user.vibeMessage || '')}" placeholder="What are you about right now?" maxlength="60">
+          <label class="profile-field-label">${t('profile.vibe')}</label>
+          <input class="profile-field-input" id="vibeInput" type="text" value="${escapeHtml(user.vibeMessage || '')}" placeholder="${attr('profile.vibePlaceholder')}" maxlength="60">
         </div>
 
-        <button class="btn-primary" id="saveBtn">Save changes</button>
+        <button class="btn-primary" id="saveBtn">${t('common.saveChanges')}</button>
       </div>
 
       <div class="profile-section">
         <button class="profile-tellmore-btn" id="tellMoreBtn">
           <span class="tellmore-icon">\u{1F4AC}</span>
           <span class="tellmore-text">
-            <strong>Tell us more</strong>
-            <small>Help us understand you better</small>
+            <strong>${t('profile.tellMore.title')}</strong>
+            <small>${t('profile.tellMore.sub')}</small>
           </span>
           <span class="persona-arrow">\u2192</span>
         </button>
@@ -76,8 +77,8 @@ export function renderProfile() {
         <button class="profile-tellmore-btn" id="modelBtn">
           <span class="tellmore-icon">\u{1FAB4}</span>
           <span class="tellmore-text">
-            <strong>How we understand you</strong>
-            <small>See and correct what we've picked up</small>
+            <strong>${t('profile.model.title')}</strong>
+            <small>${t('profile.model.sub')}</small>
           </span>
           <span class="persona-arrow" id="modelArrow">↓</span>
         </button>
@@ -88,8 +89,8 @@ export function renderProfile() {
         <button class="profile-tellmore-btn" id="exportBtn">
           <span class="tellmore-icon">\u{1F4E6}</span>
           <span class="tellmore-text">
-            <strong>Download my data</strong>
-            <small>Everything we have about you, as a file</small>
+            <strong>${t('profile.export.title')}</strong>
+            <small>${t('profile.export.sub')}</small>
           </span>
           <span class="persona-arrow">\u2193</span>
         </button>
@@ -100,8 +101,8 @@ export function renderProfile() {
         <button class="profile-tellmore-btn" id="adminLinkBtn">
           <span class="tellmore-icon">\u{1F6E0}</span>
           <span class="tellmore-text">
-            <strong>Admin · workshop</strong>
-            <small>Time controls and notify list</small>
+            <strong>${t('profile.admin.title')}</strong>
+            <small>${t('profile.admin.sub')}</small>
           </span>
           <span class="persona-arrow">→</span>
         </button>
@@ -109,11 +110,11 @@ export function renderProfile() {
       ` : ''}
 
       <div class="profile-section">
-        <button class="profile-signout-btn" id="signoutBtn">Sign out</button>
+        <button class="profile-signout-btn" id="signoutBtn">${t('common.signOut')}</button>
       </div>
 
       <div class="profile-section" id="deleteSection">
-        <button class="profile-danger-btn" id="deleteBtn">Delete my account</button>
+        <button class="profile-danger-btn" id="deleteBtn">${t('profile.delete.button')}</button>
       </div>
 
     </div>
@@ -122,7 +123,7 @@ export function renderProfile() {
     <div class="emoji-overlay" id="emojiOverlay">
       <div class="emoji-overlay-sheet">
         <div class="modal-handle"></div>
-        <div class="modal-title">Pick your avatar</div>
+        <div class="modal-title">${t('profile.avatarPicker')}</div>
         <div class="emoji-picker" id="emojiGrid">
           ${AVATAR_EMOJIS.map(e => `
             <button class="emoji-option ${e === user.avatar ? 'selected' : ''}" data-emoji="${e}">${e}</button>
@@ -144,7 +145,7 @@ export function renderProfile() {
   const saveBtn = document.getElementById('saveBtn');
   saveBtn.addEventListener('click', async () => {
     saveBtn.disabled = true;
-    saveBtn.textContent = 'Saving\u2026';
+    saveBtn.textContent = text('common.saving');
     try {
       await handleProfileSave({
         name: document.getElementById('nameInput').value,
@@ -163,7 +164,7 @@ export function renderProfile() {
       });
     } finally {
       saveBtn.disabled = false;
-      saveBtn.textContent = 'Save changes';
+      saveBtn.textContent = text('common.saveChanges');
     }
   });
 
@@ -207,7 +208,7 @@ export function renderProfile() {
       showProgress: true,
       onComplete: (responses) => {
         store.addInterviewResponses(user.id, responses);
-        showToast('Thanks for sharing more! \u{1F33F}');
+        showToast(text('profile.tellMore.thanks'));
         renderProfile();
       },
       onCancel: () => {
@@ -247,13 +248,10 @@ export function renderProfile() {
   const deleteSection = document.getElementById('deleteSection');
   document.getElementById('deleteBtn').addEventListener('click', () => {
     deleteSection.innerHTML = `
-      <p class="profile-danger-warning">
-        This will permanently delete your account, your profile, and the
-        personal information in your event history. There's no undo.
-      </p>
+      <p class="profile-danger-warning">${t('profile.delete.warning')}</p>
       <div class="profile-danger-actions">
-        <button class="profile-danger-btn" id="deleteConfirmBtn">Yes, delete</button>
-        <button class="btn-small" id="deleteCancelBtn">Cancel</button>
+        <button class="profile-danger-btn" id="deleteConfirmBtn">${t('profile.delete.confirm')}</button>
+        <button class="btn-small" id="deleteCancelBtn">${t('profile.delete.cancel')}</button>
       </div>
     `;
 
@@ -263,7 +261,7 @@ export function renderProfile() {
 
     document.getElementById('deleteConfirmBtn').addEventListener('click', async (e) => {
       e.currentTarget.disabled = true;
-      e.currentTarget.textContent = 'Deleting…';
+      e.currentTarget.textContent = text('profile.delete.deleting');
       await handleAccountDelete({
         confirmed: true,
         commands,
@@ -278,7 +276,7 @@ export function renderProfile() {
       const stillHere = document.getElementById('deleteConfirmBtn');
       if (stillHere) {
         stillHere.disabled = false;
-        stillHere.textContent = 'Yes, delete';
+        stillHere.textContent = text('profile.delete.confirm');
       }
     });
   });
@@ -287,14 +285,14 @@ export function renderProfile() {
 // ─── "How we understand you" panel (D59) ───
 
 async function loadModelPanel(panel) {
-  panel.innerHTML = '<p class="model-note">One moment…</p>';
+  panel.innerHTML = `<p class="model-note">${t('common.oneMoment')}</p>`;
   const model = await handleModelLoad({ commands, showToast });
   if (model === undefined) {
-    panel.innerHTML = '<p class="model-note">Couldn’t load this right now.</p>';
+    panel.innerHTML = `<p class="model-note">${t('profile.model.loadFailed')}</p>`;
     return;
   }
   if (model === null) {
-    panel.innerHTML = '<p class="model-note">Nothing here yet — this fills in after your welcome conversation.</p>';
+    panel.innerHTML = `<p class="model-note">${t('profile.model.empty')}</p>`;
     return;
   }
   renderModelPanel(panel, model);
@@ -304,53 +302,49 @@ function renderModelPanel(panel, model) {
   const rows = envelopeRows(model.envelope ?? {});
   const chips = chipLists(model);
 
-  const chipSection = (title, items, emptyHint) => `
+  const chipSection = (id, titleKey, items, emptyKey) => `
     <div class="model-group">
-      <div class="model-group-title">${title}</div>
+      <div class="model-group-title">${t(titleKey)}</div>
       <div class="model-chips">
         ${items.map((c, i) => `
           <span class="model-chip">
-            ${escapeHtml(c.label)}${c.easing ? ' <em>(easing)</em>' : ''}
-            ${c.removable ? `<button class="model-chip-x" data-chip="${title}" data-index="${i}" aria-label="Remove ${escapeHtml(c.label)}">×</button>` : ''}
+            ${escapeHtml(c.label)}${c.easing ? ` <em>${t('profile.model.easing')}</em>` : ''}
+            ${c.removable ? `<button class="model-chip-x" data-chip="${id}" data-index="${i}" aria-label="${attr('profile.model.remove', { label: c.label })}">×</button>` : ''}
           </span>
         `).join('')}
-        ${items.length === 0 ? `<span class="model-note">${emptyHint}</span>` : ''}
+        ${items.length === 0 ? `<span class="model-note">${t(emptyKey)}</span>` : ''}
       </div>
     </div>
   `;
 
   panel.innerHTML = `
-    <p class="model-note">
-      This is what we’ve picked up so far — it only shapes the order of
-      your suggestions, never what you can see or join. Tap anything that’s
-      off; your word wins.
-    </p>
+    <p class="model-note">${t('profile.model.intro')}</p>
     ${rows.map((row) => `
       <div class="model-dim" data-dimension="${row.dimension}">
         <div class="model-dim-head">
-          <span class="model-dim-title">${row.title}</span>
+          <span class="model-dim-title">${escapeHtml(row.title)}</span>
           ${row.source ? `<span class="model-source">${escapeHtml(row.source)}</span>` : ''}
         </div>
         <div class="model-positions">
           ${row.positionChoices.map((choice) => `
             <button class="model-pos-btn ${choice.value === row.position ? 'selected' : ''}"
               data-dimension="${row.dimension}" data-position="${choice.value}">
-              ${choice.label}
+              ${escapeHtml(choice.label)}
             </button>
           `).join('')}
         </div>
-        ${row.edgeLabel ? `<div class="model-note">Stretching toward: ${row.edgeLabel}</div>` : ''}
-        ${row.story ? `<div class="model-story">“${escapeHtml(row.story)}”</div>` : ''}
+        ${row.edgeLabel ? `<div class="model-note">${t('profile.model.stretching', { position: row.edgeLabel })}</div>` : ''}
+        ${row.story ? `<div class="model-story">${t('profile.model.story', { story: row.story })}</div>` : ''}
       </div>
     `).join('')}
-    ${chipSection('Interests', chips.interests, 'None yet')}
-    ${chipSection('What opens the door', chips.doors, 'None yet')}
-    ${chipSection('What you bring', chips.strengths, 'None yet')}
-    ${chipSection('What gets in the way', chips.barriers, 'Nothing — great')}
+    ${chipSection('interests', 'profile.model.interests', chips.interests, 'profile.model.noneYet')}
+    ${chipSection('doors', 'profile.model.doors', chips.doors, 'profile.model.noneYet')}
+    ${chipSection('strengths', 'profile.model.strengths', chips.strengths, 'profile.model.noneYet')}
+    ${chipSection('barriers', 'profile.model.barriers', chips.barriers, 'profile.model.noBarriers')}
     <div class="model-add">
       <input class="profile-field-input" id="modelAddInterest" type="text"
-        placeholder="Add an interest…" maxlength="60">
-      <button class="btn-small" id="modelAddBtn">Add</button>
+        placeholder="${attr('profile.model.addPlaceholder')}" maxlength="60">
+      <button class="btn-small" id="modelAddBtn">${t('profile.model.add')}</button>
     </div>
   `;
 
@@ -369,7 +363,7 @@ function renderModelPanel(panel, model) {
     }));
   });
 
-  const chipItems = { Interests: chips.interests, 'What gets in the way': chips.barriers };
+  const chipItems = { interests: chips.interests, barriers: chips.barriers };
   panel.querySelectorAll('.model-chip-x').forEach((btn) => {
     btn.addEventListener('click', () => {
       const item = chipItems[btn.dataset.chip]?.[Number(btn.dataset.index)];

@@ -9,6 +9,7 @@ import { commands } from '../services.js';
 import { navigate, showToast } from '../app.js';
 import { handleProposeSubmit } from './propose-handlers.js';
 import { loadLocalities } from '../localities.js';
+import { t, attr, text } from '../copy.js';
 
 export function renderPropose() {
   const user = store.getActiveUser();
@@ -21,123 +22,100 @@ export function renderPropose() {
   container.innerHTML = `
     <div class="profile-header">
       <div class="profile-header-top">
-        <button class="detail-back" id="proposeBack">← Back</button>
+        <button class="detail-back" id="proposeBack">${t('common.back')}</button>
       </div>
-      <div class="profile-header-title">Propose something</div>
+      <div class="profile-header-title">${t('propose.title')}</div>
     </div>
     <div class="profile-body">
-      <p class="propose-intro">
-        Float an idea for the community. It starts as <em>proposed</em>
-        — people can show interest, suggest tweaks, and (if you'd like)
-        you can confirm it once enough people are in.
-      </p>
+      <p class="propose-intro">${t('propose.intro')}</p>
 
       <form class="propose-form" id="proposeForm" novalidate>
         <div class="profile-field">
-          <label class="profile-field-label" for="proposeTitle">Title</label>
+          <label class="profile-field-label" for="proposeTitle">${t('propose.field.title')}</label>
           <input class="profile-field-input" id="proposeTitle" type="text" maxlength="80"
-                 placeholder="e.g. Morning coffee &amp; walk">
+                 placeholder="${attr('propose.field.titlePlaceholder')}">
         </div>
 
         <div class="profile-field">
-          <label class="profile-field-label" for="proposeDescription">Description <span class="auth-optional">(optional)</span></label>
+          <label class="profile-field-label" for="proposeDescription">${t('propose.field.description', { optional: (inner) => `<span class="auth-optional">${inner}</span>` })}</label>
           <textarea class="profile-field-input propose-textarea" id="proposeDescription" rows="3" maxlength="400"
-                    placeholder="A few words on what this is and who it's for"></textarea>
+                    placeholder="${attr('propose.field.descriptionPlaceholder')}"></textarea>
         </div>
 
         <div class="profile-field">
-          <label class="profile-field-label" for="proposeStart">Start time (optional)</label>
+          <label class="profile-field-label" for="proposeStart">${t('propose.field.start')}</label>
           <input class="profile-field-input" id="proposeStart" type="datetime-local">
         </div>
 
         <div class="profile-field">
-          <label class="profile-field-label" for="proposeEnd">End time (optional)</label>
+          <label class="profile-field-label" for="proposeEnd">${t('propose.field.end')}</label>
           <input class="profile-field-input" id="proposeEnd" type="datetime-local">
         </div>
 
         <label class="organizer-toggle">
           <input type="checkbox" id="proposeApproxTimes">
-          <span>These times are approximate</span>
+          <span>${t('propose.field.approx')}</span>
         </label>
-        <small class="profile-field-hint" style="display:block; margin-bottom:14px;">
-          Tick this if the start/end aren't firm yet — they're shown as a
-          guide and can be refined later.
-        </small>
+        <small class="profile-field-hint" style="display:block; margin-bottom:14px;">${t('propose.field.approxHint')}</small>
 
         <div class="profile-field">
-          <label class="profile-field-label" for="proposeLocation">Where (optional)</label>
+          <label class="profile-field-label" for="proposeLocation">${t('propose.field.where')}</label>
           <input class="profile-field-input" id="proposeLocation" type="text" maxlength="120"
-                 placeholder="e.g. Blackbird Bakery">
-          <small class="profile-field-hint">
-            No time or place yet? Leave them blank — your proposal floats as
-            an idea people can get behind, and firms up from there.
-          </small>
+                 placeholder="${attr('propose.field.wherePlaceholder')}">
+          <small class="profile-field-hint">${t('propose.field.whereHint')}</small>
         </div>
 
         <div class="profile-field">
-          <label class="profile-field-label" for="proposeLocality">Which town?</label>
+          <label class="profile-field-label" for="proposeLocality">${t('propose.field.town')}</label>
           <select class="profile-field-input" id="proposeLocality"></select>
-          <small class="profile-field-hint">
-            Helps people judge the trip — suggestions gently favor what's
-            within each member's reach, but nothing is ever hidden.
-          </small>
+          <small class="profile-field-hint">${t('propose.field.townHint')}</small>
         </div>
 
         <div class="profile-field">
-          <label class="profile-field-label" for="proposeMeetingSpot">How to find the group (optional)</label>
+          <label class="profile-field-label" for="proposeMeetingSpot">${t('propose.field.findGroup')}</label>
           <input class="profile-field-input" id="proposeMeetingSpot" type="text" maxlength="200"
-                 placeholder="e.g. back tables — look for the blue scarf">
+                 placeholder="${attr('propose.field.findGroupPlaceholder')}">
         </div>
 
         <label class="organizer-toggle">
           <input type="checkbox" id="proposeExternal">
-          <span>This is an existing local event (not organized on IRL)</span>
+          <span>${t('propose.field.external')}</span>
         </label>
-        <small class="profile-field-hint" style="display:block; margin-bottom:14px;">
-          You'll be its steward — shown as "listed by" you. It goes up as
-          already happening (real time and place required), and confirming
-          means members commit to meeting each other there.
-        </small>
+        <small class="profile-field-hint" style="display:block; margin-bottom:14px;">${t('propose.field.externalHint')}</small>
 
         <div class="profile-field">
-          <label class="profile-field-label" for="proposeCostAmount">Cost per person (optional)</label>
+          <label class="profile-field-label" for="proposeCostAmount">${t('propose.field.cost')}</label>
           <input class="profile-field-input" id="proposeCostAmount" type="number"
-                 inputmode="decimal" min="0" step="0.5" placeholder="e.g. 12">
+                 inputmode="decimal" min="0" step="0.5" placeholder="${attr('propose.field.costPlaceholder')}">
         </div>
 
         <div class="profile-field">
-          <label class="profile-field-label" for="proposeCostCovers">What does it cover?</label>
+          <label class="profile-field-label" for="proposeCostCovers">${t('propose.field.covers')}</label>
           <input class="profile-field-input" id="proposeCostCovers" type="text" maxlength="120"
-                 placeholder="e.g. materials and the room">
-          <small class="profile-field-hint">
-            Required if there's a cost — people should know what they're
-            chipping in for. Leave both blank for free events.
-          </small>
+                 placeholder="${attr('propose.field.coversPlaceholder')}">
+          <small class="profile-field-hint">${t('propose.field.coversHint')}</small>
         </div>
 
         <div class="profile-field">
-          <label class="profile-field-label" for="proposeMax">Spots (optional, including you)</label>
+          <label class="profile-field-label" for="proposeMax">${t('propose.field.max')}</label>
           <input class="profile-field-input" id="proposeMax" type="number"
-                 inputmode="numeric" min="3" step="1" placeholder="e.g. 8">
+                 inputmode="numeric" min="3" step="1" placeholder="${attr('propose.field.maxPlaceholder')}">
         </div>
 
         <div class="profile-field">
-          <label class="profile-field-label" for="proposeMin">Min. attendance</label>
+          <label class="profile-field-label" for="proposeMin">${t('propose.field.min')}</label>
           <input class="profile-field-input" id="proposeMin" type="number" inputmode="numeric" min="3" step="1"
                  placeholder="3">
-          <small class="profile-field-hint">Defaults to 3, including you. Raise it if this only makes sense with more people.</small>
+          <small class="profile-field-hint">${t('propose.field.minHint')}</small>
         </div>
 
         <label class="organizer-toggle">
           <input type="checkbox" id="proposeAutoPlan">
-          <span>Auto-confirm once the minimum is reached</span>
+          <span>${t('propose.field.autoPlan')}</span>
         </label>
-        <small class="profile-field-hint" style="display:block; margin-bottom:14px;">
-          Safety net: if you forget to check in, the event still becomes
-          planned once enough people commit.
-        </small>
+        <small class="profile-field-hint" style="display:block; margin-bottom:14px;">${t('propose.field.autoPlanHint')}</small>
 
-        <button class="btn-primary" id="proposeSubmit" type="submit">Propose it</button>
+        <button class="btn-primary" id="proposeSubmit" type="submit">${t('propose.submit')}</button>
       </form>
     </div>
   `;
@@ -162,7 +140,7 @@ export function renderPropose() {
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     submit.disabled = true;
-    submit.textContent = 'Proposing…';
+    submit.textContent = text('propose.submitting');
     try {
       await handleProposeSubmit({
         title: document.getElementById('proposeTitle').value,
@@ -183,7 +161,7 @@ export function renderPropose() {
         commands,
         showToast,
         onSuccess: ({ eventId }) => {
-          showToast('Out there! 🌿');
+          showToast(text('propose.done'));
           navigate('event', eventId);
         },
         onValidationError: (field) => {
@@ -207,7 +185,7 @@ export function renderPropose() {
       });
     } finally {
       submit.disabled = false;
-      submit.textContent = 'Propose it';
+      submit.textContent = text('propose.submit');
     }
   });
 }

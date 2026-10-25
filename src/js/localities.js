@@ -6,6 +6,8 @@
 // client computes bands from the served entries (edges arrive already
 // symmetric). Only the member-facing band language lives here.
 
+import { text } from './copy.js';
+
 let cache = null;
 
 export async function loadLocalities({ commands }) {
@@ -33,16 +35,17 @@ export function bandBetween(register, fromId, toId) {
   return 'far';
 }
 
-// Member-facing band language — effort words, never distances.
-const BAND_LABELS = {
-  here: 'right here',
-  nearby: 'an easy hop away',
-  'a-trip': 'a real trip away',
-  far: 'a long way away',
+// Member-facing band language — effort words, never distances
+// (src/copy/<locale>/event.js).
+const BAND_KEYS = {
+  here: 'event.locality.band.here',
+  nearby: 'event.locality.band.nearby',
+  'a-trip': 'event.locality.band.aTrip',
+  far: 'event.locality.band.far',
 };
 
 export function bandLabel(band) {
-  return BAND_LABELS[band];
+  return BAND_KEYS[band] ? text(BAND_KEYS[band]) : undefined;
 }
 
 // The full locality line for an event detail: name + effort read from
@@ -53,5 +56,5 @@ export function localityLine(register, homeId, localityId) {
   if (!locality) return null;
   const band = bandBetween(register, homeId, localityId);
   if (band === null || band === 'here') return locality.name;
-  return `${locality.name} — ${bandLabel(band)}`;
+  return text('event.locality.line', { town: locality.name, band: bandLabel(band) });
 }

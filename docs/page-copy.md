@@ -18,11 +18,17 @@ change later are changed now or not at all.
 so a bundle is a module exporting keyed strings:
 
 ```
-src/copy/en-US/index.js     the locale, its date formats, the surfaces
+src/copy/en-US/index.js     the surfaces, merged into one base bundle
+src/copy/en-US/locale.js    the locale and its named date formats
 src/copy/en-US/site.js      'site.footer.line': 'in·real·life is community-driven…'
 src/copy/en-US/landing.js   'landing.hero.headline': "You're invited…"
 src/copy/en-US/terms.js     'terms.who.p1': 'in·real·life is for adults…'
+src/copy/en-US/taglines.js  'taglines.onlyConnect': 'Only connect.'
+src/copy/en-US/common.js    'common.back': '← Back' — words several screens share
+src/copy/en-US/errors.js    'errors.network': "Can't reach in·real·life right now…"
 src/copy/en-US/auth.js      'auth.signin.title': 'Welcome back'
+…                           interview, onboarding, feed, event, propose,
+                            edit, profile, menu — one per screen family
 ```
 
 - **Keys are flat and prefixed with their surface** (`landing.*`,
@@ -36,19 +42,29 @@ src/copy/en-US/auth.js      'auth.signin.title': 'Welcome back'
   match in English do not ("Example week" is both a menu link and the
   calendar's label — two keys, because a translation may need two
   words).
-- **The bundle owns the locale.** `index.js` declares `locale` and
-  named date formats. The visitor's browser does not decide how a US
-  community's dates read — today it does (`toLocaleString(undefined,
-  …)`), which chunk 3 corrects.
+- **The bundle owns the locale.** `locale.js` declares `locale` and
+  named date formats (`eventStart`, `eventTime`, `editedAt`,
+  `agreementDate`). The visitor's browser does not decide how a US
+  community's dates read: before chunk 3 it did (`toLocaleString(undefined,
+  …)`), so a UK browser showed "Mon, 26 Oct, 9:00"; it now shows "Mon,
+  Oct 26, 9:00 AM" like everyone else.
 - **No dead copy.** A test fails if any bundle key is unused, so a
   reviewer is never editing words no page shows.
+- **Keys are written out, never assembled.** Code names a key as a
+  whole literal — `t('event.fact.when')`, or a map such as `{ idea:
+  'common.state.idea' }` — never as `` `common.state.${id}` ``. That is
+  what lets the tests find every key in use and every key that is
+  missing, and lets a reviewer search for a key and find where it shows.
+  Where code holds an id (a lifecycle state, a debrief chip), a small
+  map from id to key sits beside it.
 
 The **wordmark** (`in·real·life` with its interpuncts) is a mark, not
 copy: it stays in markup and is not translated.
 
-## 2. One engine: `src/js/copy.js`
+## 2. One engine: `src/js/copy-engine.js`
 
-Screens never write text inline; they call one of three functions:
+Screens never write text inline; they call one of three functions
+from `src/js/copy.js`, the app's instance of the engine:
 
 | | returns | for |
 |---|---|---|
@@ -72,6 +88,7 @@ span (below), whose wrapper is code, never copy.
 |---|---|---|
 | `{name}` | a value | escaped; numbers formatted for the locale (`1,200` / `1.200`) |
 | `{name:inner}` | a marked span — a link, emphasis | the caller supplies a function that wraps the (escaped) inner text; `b`, `em` and `strong` have defaults |
+| `{name}` given a function | a value with markup around it | for a value shown in bold or similar (`We sent a 6-digit code to {email}`); the function is code and escapes the value itself |
 | `{{` `}}` | literal braces | |
 | `{ '=0': …, one: …, other: … }` | a plural | the form is chosen by `Intl.PluralRules` for the bundle's locale from `params.count`; exact `=n` forms win |
 
@@ -159,13 +176,37 @@ the app; chunk 3 moves it to a date formatted by the bundle (U11).
 ## 4. App screens: at runtime
 
 The app is JavaScript already, so screens import `t`, `attr`, `text`
-and `date` from `src/js/copy.js`, whose default instance reads the
-base bundle. The bundles ship with the site (CDK uploads `src/copy/`).
+and `date` from `src/js/copy.js`, whose instance reads the whole base
+bundle. The engine itself is `src/js/copy-engine.js`, with no bundle
+attached, so a page that needs one surface loads only that: the
+landing page picks its tagline from `taglines.js` alone (+12 KB raw on
+that page, not the whole app's copy — design-spec §9). The bundles
+ship with the site (CDK uploads `src/copy/`).
 
-**Server text is not page copy until it has a key.** Fifteen screens
-pass `err.message` straight to a toast — Cognito's English ("Incorrect
-username or password.") and the API's. Those move to keys by error
-code in chunk 3, with the raw text kept only as a last resort.
+**Server text is never shown.** Before chunk 3, 33 places
+passed `err.message` to a toast or a status line: Cognito's English,
+the browser's ("Failed to fetch"), and the API's, which is written for
+developers ("internal server error", "event is over; can no longer
+change interest"). None of it can be translated or reviewed.
+`src/js/errors.js` now decides what a member reads:
+
+1. no response at all → `errors.network`;
+2. a Cognito error code it knows → that code's key;
+3. an API error a member can actually meet — a stale screen, a full
+   event, a closed poll — matched on status and wording → its key;
+4. anything else → the screen's own line ("Could not cancel.").
+
+The plan said the raw text would stay "as a last resort"; it does not.
+The screen's own line is the last resort, because it says what failed
+in words we can review. Matching on wording is brittle, so a test
+reads the backend's source and fails if a pattern stops matching a
+message the backend sends with that status. Where Cognito's own words
+were fine ("Incorrect username or password."), the bundle keeps them.
+
+**Plurals and counts.** Every count a member reads goes through a
+plural form — poll votes, "and 2 more", the event's interested and
+confirmed counts — so a translation can supply its own forms. The one
+hand-rolled plural left is in the operator console (out of scope).
 
 ## 5. Review variants and locked keys (built in chunk 4)
 
@@ -189,10 +230,14 @@ cancellation notices; toasts and errors.
 Out, each for a reason: the operator console (operator-only, English;
 revisit when staff exist); the workshop review tools — the design
 switcher's labels (`theme.js`) and the tagline review page
-(`taglines.html`) — which no member sees; AI prompts and model-written text (R10's
-load-bearing language design, not page copy); the generated register
-views (their source is the registers); Cognito's verification emails
-(they need a custom-message trigger — recorded for R10).
+(`taglines.html`) — which no member sees; AI prompts and model-written
+text (R10's load-bearing language design, not page copy); the
+generated register views (their source is the registers); Cognito's
+verification emails (they need a custom-message trigger — recorded
+for R10); and community data — the place names the server sends, the
+event-type names, and the locality screen's starting values
+("Bainbridge Island", "US"), which belong to the community, not the
+locale (R5).
 
 ## 7. What this does not decide
 
@@ -200,3 +245,13 @@ A second locale, how a locale is chosen (browser, member, community),
 and how translations are sourced and reviewed are all R10's. This note
 only makes sure that when R10 decides, the copy is already in a shape
 a translation can fill.
+
+Two things it leaves visibly open:
+
+- **Time zone.** Dates read the bundle's way but in the reader's own
+  time zone. A member on the island never notices; a visitor
+  elsewhere sees a 9 am walk at their local hour. The community's time
+  zone is community data (R5), so it is not set here.
+- **Which bundle a page loads.** `copy.js` and `taglines.js` import
+  `en-US` by path. Choosing a bundle per environment is chunk 4's
+  variant work; a second locale is R10's.

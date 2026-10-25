@@ -167,7 +167,7 @@ test('other profile error aborts with a toast', async () => {
   assert.equal(ok, false);
   assert.equal(commands.completeOnboarding.calls.length, 0);
   assert.equal(navigate.calls.length, 0);
-  assert.equal(showToast.calls[0][0], 'boom');
+  assert.equal(showToast.calls[0][0], 'Could not save your profile.');
 });
 
 test('onboarding 409 converges silently', async () => {

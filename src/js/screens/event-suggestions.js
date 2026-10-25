@@ -7,8 +7,18 @@
 import { commands } from '../services.js';
 import { showToast } from '../app.js';
 import * as store from '../store.js';
+import { t, attr, text } from '../copy.js';
+import { errorText } from '../errors.js';
 
 const TEXT_MAX = 200;
+
+const STATUS_KEYS = {
+  adopted: 'event.suggest.status.adopted',
+  rejected: 'event.suggest.status.rejected',
+  withdrawn: 'event.suggest.status.withdrawn',
+};
+const TAG_KEYS = { time: 'event.suggest.tag.time', place: 'event.suggest.tag.place' };
+const label = (keys, value) => (keys[value] ? text(keys[value]) : value);
 
 export async function renderSuggestionsSection(container, event, { onChange } = {}) {
   // Anchor: a child div #suggestionsSection inside the event card.
@@ -25,41 +35,37 @@ export async function renderSuggestionsSection(container, event, { onChange } = 
     const out = await commands.listSuggestions({ eventId: event.eventId });
     suggestions = out.suggestions ?? [];
   } catch (err) {
-    listError = err?.message || 'Could not load suggestions.';
+    listError = errorText(err, 'event.suggest.loadFailed');
   }
 
   const isPlanned = event.lifecycleState === 'planned';
   anchor.innerHTML = `
     <div class="suggestions-header">
-      <div class="organizer-controls-label">${isPlanned ? 'Suggest a change' : 'Suggestions'}</div>
+      <div class="organizer-controls-label">${t(isPlanned ? 'event.suggest.titlePlanned' : 'event.suggest.title')}</div>
       <span class="suggestions-count">${suggestions.length}</span>
     </div>
-    <p class="suggestions-hint">
-      ${isPlanned
-        ? 'It\'s planned, but if something would make it better — or you can\'t make it as-is — say so. Tag time or place if it applies.'
-        : 'Free-form. Tag time or place to help the organizer scan. Be brief.'}
-    </p>
+    <p class="suggestions-hint">${t(isPlanned ? 'event.suggest.hintPlanned' : 'event.suggest.hint')}</p>
 
     <form id="suggestForm" class="suggest-form">
       <textarea class="profile-field-input suggest-textarea" id="suggestText"
                 maxlength="${TEXT_MAX}" rows="2"
-                placeholder="What would you suggest?"></textarea>
+                placeholder="${attr('event.suggest.placeholder')}"></textarea>
       <div class="suggest-tag-row">
         <label class="suggest-tag-chip">
-          <input type="checkbox" data-tag="time"> <span>time</span>
+          <input type="checkbox" data-tag="time"> <span>${t('event.suggest.tag.time')}</span>
         </label>
         <label class="suggest-tag-chip">
-          <input type="checkbox" data-tag="place"> <span>place</span>
+          <input type="checkbox" data-tag="place"> <span>${t('event.suggest.tag.place')}</span>
         </label>
         <div class="suggest-char-count" id="suggestChars">${TEXT_MAX}</div>
-        <button class="btn-small" type="submit" id="suggestSubmit">Add</button>
+        <button class="btn-small" type="submit" id="suggestSubmit">${t('event.suggest.add')}</button>
       </div>
     </form>
 
     <div class="suggestions-list" id="suggestionsList">
       ${listError ? `<p class="suggestions-empty">${escapeHtml(listError)}</p>` : ''}
       ${!listError && suggestions.length === 0 ? `
-        <p class="suggestions-empty">No suggestions yet. Be the first to nudge something.</p>
+        <p class="suggestions-empty">${t('event.suggest.empty')}</p>
       ` : ''}
       ${suggestions.map((s) => renderSuggestion(s, { iAmOrganizer, myId })).join('')}
     </div>
@@ -70,8 +76,8 @@ export async function renderSuggestionsSection(container, event, { onChange } = 
 }
 
 function renderSuggestion(s, { iAmOrganizer, myId }) {
-  const tags = (s.tags || []).map((t) => `<span class="suggest-tag suggest-tag-${escapeAttr(t)}">${escapeHtml(t)}</span>`).join('');
-  const statusBadge = s.status === 'open' ? '' : `<span class="suggest-status suggest-status-${escapeAttr(s.status)}">${escapeHtml(s.status)}</span>`;
+  const tags = (s.tags || []).map((tag) => `<span class="suggest-tag suggest-tag-${escapeAttr(tag)}">${escapeHtml(label(TAG_KEYS, tag))}</span>`).join('');
+  const statusBadge = s.status === 'open' ? '' : `<span class="suggest-status suggest-status-${escapeAttr(s.status)}">${escapeHtml(label(STATUS_KEYS, s.status))}</span>`;
   const isAuthor = myId === s.byUserId;
   const isOpen = s.status === 'open';
 
@@ -80,14 +86,14 @@ function renderSuggestion(s, { iAmOrganizer, myId }) {
 
   const orgResponse = s.organizerResponse
     ? `<div class="suggest-response">
-         <span class="suggest-response-label">Organizer</span>
+         <span class="suggest-response-label">${t('event.suggest.organizer')}</span>
          <span class="suggest-response-text">${escapeHtml(s.organizerResponse)}</span>
        </div>`
     : '';
 
   const rejectionReason = s.status === 'rejected' && s.rejectionReason
     ? `<div class="suggest-response">
-         <span class="suggest-response-label">Reason</span>
+         <span class="suggest-response-label">${t('event.suggest.reason')}</span>
          <span class="suggest-response-text">${escapeHtml(s.rejectionReason)}</span>
        </div>`
     : '';
@@ -102,13 +108,13 @@ function renderSuggestion(s, { iAmOrganizer, myId }) {
         ✗ ${s.objectCount ?? 0}
       </button>
       ${s.myVote ? `
-        <button class="suggest-link" data-suggest-action="retract" data-id="${escapeAttr(s.suggestionId)}">retract my vote</button>
+        <button class="suggest-link" data-suggest-action="retract" data-id="${escapeAttr(s.suggestionId)}">${t('event.suggest.retract')}</button>
       ` : ''}
-      ${isAuthor ? `<button class="suggest-link" data-suggest-action="withdraw" data-id="${escapeAttr(s.suggestionId)}">withdraw</button>` : ''}
+      ${isAuthor ? `<button class="suggest-link" data-suggest-action="withdraw" data-id="${escapeAttr(s.suggestionId)}">${t('event.suggest.withdraw')}</button>` : ''}
       ${iAmOrganizer ? `
-        <button class="suggest-link" data-suggest-action="respond" data-id="${escapeAttr(s.suggestionId)}">${s.organizerResponse ? 'edit response' : 'respond'}</button>
-        <button class="suggest-link" data-suggest-action="adopt" data-id="${escapeAttr(s.suggestionId)}">adopt</button>
-        <button class="suggest-link suggest-link-warn" data-suggest-action="reject" data-id="${escapeAttr(s.suggestionId)}">reject</button>
+        <button class="suggest-link" data-suggest-action="respond" data-id="${escapeAttr(s.suggestionId)}">${t(s.organizerResponse ? 'event.suggest.editResponse' : 'event.suggest.respond')}</button>
+        <button class="suggest-link" data-suggest-action="adopt" data-id="${escapeAttr(s.suggestionId)}">${t('event.suggest.adopt')}</button>
+        <button class="suggest-link suggest-link-warn" data-suggest-action="reject" data-id="${escapeAttr(s.suggestionId)}">${t('event.suggest.reject')}</button>
       ` : ''}
     </div>
   ` : '';
@@ -116,7 +122,7 @@ function renderSuggestion(s, { iAmOrganizer, myId }) {
   return `
     <div class="suggest-row" data-suggest-row="${escapeAttr(s.suggestionId)}">
       <div class="suggest-meta">
-        <span class="suggest-author">${escapeHtml(s.byUserName || 'someone')}</span>
+        <span class="suggest-author">${escapeHtml(s.byUserName || text('event.suggest.someone'))}</span>
         ${tags}
         ${statusBadge}
       </div>
@@ -138,24 +144,24 @@ function bindSuggestionForm(anchor, event, onChange) {
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const text = textarea.value.trim();
-    if (!text) return showToast('Add some words first.');
+    const body = textarea.value.trim();
+    if (!body) return showToast(text('event.suggest.needWords'));
     const tags = Array.from(form.querySelectorAll('[data-tag]'))
       .filter((c) => c.checked)
       .map((c) => c.dataset.tag);
 
     const submit = form.querySelector('#suggestSubmit');
     submit.disabled = true;
-    submit.textContent = 'Adding…';
+    submit.textContent = text('event.suggest.adding');
     try {
-      await commands.makeSuggestion({ eventId: event.eventId, text, tags });
-      showToast('Added.');
+      await commands.makeSuggestion({ eventId: event.eventId, text: body, tags });
+      showToast(text('event.suggest.added'));
       onChange?.();
     } catch (err) {
-      showToast(err?.message || 'Could not add that. Try again.');
+      showToast(errorText(err, 'event.suggest.addFailed'));
     } finally {
       submit.disabled = false;
-      submit.textContent = 'Add';
+      submit.textContent = text('event.suggest.add');
     }
   });
 }
@@ -180,19 +186,19 @@ function bindSuggestionRows(anchor, event, suggestions, { onChange, iAmOrganizer
           await commands.setSuggestionStatus({ eventId: event.eventId, suggestionId, status: 'withdrawn' });
         } else if (action === 'adopt') {
           await commands.setSuggestionStatus({ eventId: event.eventId, suggestionId, status: 'adopted' });
-          showToast('Adopted.');
+          showToast(text('event.suggest.adopted'));
         } else if (action === 'reject') {
-          const reason = prompt('Optional reason (≤200 chars):') ?? '';
+          const reason = prompt(text('event.suggest.rejectPrompt')) ?? '';
           await commands.setSuggestionStatus({ eventId: event.eventId, suggestionId, status: 'rejected', reason });
-          showToast('Rejected.');
+          showToast(text('event.suggest.rejected'));
         } else if (action === 'respond') {
-          const response = prompt('Your response (≤200 chars):', s.organizerResponse ?? '');
+          const response = prompt(text('event.suggest.respondPrompt'), s.organizerResponse ?? '');
           if (response == null) return;
           await commands.setSuggestionResponse({ eventId: event.eventId, suggestionId, response });
         }
         onChange?.();
       } catch (err) {
-        showToast(err?.message || 'Could not save that.');
+        showToast(errorText(err, 'event.saveFailed'));
       }
     });
   });

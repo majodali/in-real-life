@@ -10,6 +10,7 @@ import * as store from '../store.js';
 import { auth, api, commands } from '../services.js';
 import { navigate, showToast } from '../app.js';
 import { handleWelcomeMount } from './welcome-handlers.js';
+import { t, text } from '../copy.js';
 
 export function renderWelcome() {
   const container = document.getElementById('screen-welcome');
@@ -17,11 +18,11 @@ export function renderWelcome() {
     <div class="auth-card">
       <div class="auth-content">
         <h1 class="wordmark">in<span>·</span>real<span>·</span>life</h1>
-        <h2 class="auth-title">Welcome</h2>
-        <p class="auth-subtext" id="welcomeStatus">Loading your account…</p>
+        <h2 class="auth-title">${t('auth.welcome.title')}</h2>
+        <p class="auth-subtext" id="welcomeStatus">${t('auth.welcome.loading')}</p>
 
-        <button class="btn-primary" id="welcomeRetry" type="button" style="display:none">Try again</button>
-        <button class="btn-primary" id="welcomeSignOut" type="button" style="display:none; margin-top: 12px;">Sign out</button>
+        <button class="btn-primary" id="welcomeRetry" type="button" style="display:none">${t('auth.welcome.retry')}</button>
+        <button class="btn-primary" id="welcomeSignOut" type="button" style="display:none; margin-top: 12px;">${t('common.signOut')}</button>
       </div>
     </div>
   `;
@@ -39,7 +40,7 @@ export function renderWelcome() {
   attemptMount();
 
   async function attemptMount() {
-    status.textContent = 'Loading your account…';
+    status.textContent = text('auth.welcome.loading');
     retry.style.display = 'none';
     signOut.style.display = 'none';
 

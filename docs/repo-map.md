@@ -17,7 +17,7 @@ the `__IRL_*__` placeholders into the three pages that carry them.
 | `terms.html` | User agreement, versioned (`event-sourcing.md` → agreement versioning); shares the landing's public-page components |
 | `app.html` | The app shell: one `<div class="screen">` per screen, plus the runtime config block |
 | `taglines.html` | Tagline review page (workshop tool) |
-| `copy/<locale>/` | Member-facing copy bundles (`page-copy.md`, T12): `index.js` declares the locale and date formats; one file per surface (`site.js` — the public pages' shared header and footer — `landing.js`, `terms.js`, `auth.js`, …), keys prefixed with the surface |
+| `copy/<locale>/` | Member-facing copy bundles (`page-copy.md`, T12): `locale.js` declares the locale and date formats; `index.js` merges one file per surface into the base bundle — `site.js` (the public pages' shared header and footer), `landing.js`, `terms.js`, `taglines.js`, `common.js` (words several screens share), `errors.js`, then one per screen family (`auth.js`, `interview.js`, `onboarding.js`, `feed.js`, `event.js`, `propose.js`, `edit.js`, `profile.js`, `menu.js`); keys prefixed with the surface |
 | `css/styles.css` | All styles: base (phone), the `data-theme` layers (`ui-themes.md`), and the responsive layer at the end (`design-spec.md` §4) |
 | `manifest.json` | Web app manifest — installability (`design-spec.md` §5) |
 | `sw.js` | Service worker: app shell only, never API responses (T11) |
@@ -29,12 +29,15 @@ the `__IRL_*__` placeholders into the three pages that carry them.
 |---|---|
 | `app.js` | Init, hash routing, screen management |
 | `config.js` | Runtime config from the injected `window.__IRL_CONFIG__` |
-| `copy.js` | The copy engine: `t()` / `attr()` / `text()` / `date()` over the bundles (`page-copy.md`) |
+| `copy-engine.js` | The copy engine, no bundle attached: message syntax, escaping, plurals, dates (`page-copy.md`) |
+| `copy.js` | The app's instance of the engine over the whole base bundle: `t()` / `attr()` / `text()` / `date()` |
+| `errors.js` | What a member reads when something fails: Cognito codes and known API errors to keys, else the screen's own line (`page-copy.md` §4) |
+| `lifecycle-labels.js` | An event's lifecycle state in members' words, shared by the feed and the event screen |
 | `theme.js` | Theme registry + switching (`ui-themes.md`) |
 | `pwa.js` | Service-worker registration + `isInstalled()`; never prompts |
 | `api.js`, `auth.js`, `commands.js`, `services.js` | HTTP client, Cognito auth, command wrappers |
 | `store.js` | Browser storage wrapper (dev persona flow + offline fallbacks) |
-| `data.js` | Mock data for the prototype flows |
+| `data.js` | The scripted interview questions (the welcome fallback and "Tell us more") and the avatar palette; the question text is in the bundle |
 | `alternatives.js` | Content-alternative registry behind the ⋯ menus |
 | `localities.js`, `taglines.js`, `cancellation-notices.js` | Served-register mirror, tagline picker, cancellation surfacing |
 | `components/` | `ellipsis-menu.js`, `feedback-form.js` |

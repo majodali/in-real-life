@@ -4,56 +4,61 @@
 // real events from the backend. What remains is the onboarding /
 // profile-followup question library and the avatar emoji palette.
 
+import { text } from './copy.js';
+
+// Question text lives in the bundle (src/copy/<locale>/interview.js);
+// this file keeps the structure.
+
 export const INTERVIEW_FLOW = [
   {
     id: 'name',
-    text: "First things first — what should we call you?",
-    subtext: "Just your first name or whatever you go by.",
+    text: text('interview.q.name.text'),
+    subtext: text('interview.q.name.subtext'),
     type: 'name',
   },
   {
     id: 'describe_yourself',
-    text: "How would you describe yourself to new acquaintances?",
-    subtext: "There’s no wrong answer — just share what feels natural.",
+    text: text('interview.q.describe_yourself.text'),
+    subtext: text('interview.q.describe_yourself.subtext'),
     type: 'text',
     helpers: [
-      "What do people usually learn about you first?",
-      "What are you passionate about?",
-      "How would a close friend introduce you?",
+      text('interview.q.describe_yourself.helper1'),
+      text('interview.q.describe_yourself.helper2'),
+      text('interview.q.describe_yourself.helper3'),
     ],
   },
   {
     id: 'enjoy_doing',
-    text: "What kinds of things do you enjoy doing — especially things you’d love to share with others?",
-    subtext: "Hobbies, activities, regular routines, guilty pleasures — all fair game.",
+    text: text('interview.q.enjoy_doing.text'),
+    subtext: text('interview.q.enjoy_doing.subtext'),
     type: 'text',
     helpers: [
-      "What does a perfect weekend look like for you?",
-      "Is there something you’ve been meaning to try?",
-      "What could you talk about for hours?",
+      text('interview.q.enjoy_doing.helper1'),
+      text('interview.q.enjoy_doing.helper2'),
+      text('interview.q.enjoy_doing.helper3'),
     ],
   },
   {
     id: 'social_goals',
-    text: "What are you hoping to get out of connecting with people nearby?",
-    subtext: "Maybe you’re new to the area, or just looking for something different.",
+    text: text('interview.q.social_goals.text'),
+    subtext: text('interview.q.social_goals.subtext'),
     type: 'text',
     helpers: [
-      "Are you looking for regular companions or casual hangouts?",
-      "Is there a specific kind of group you’d love to find?",
-      "What’s been missing from your social life?",
+      text('interview.q.social_goals.helper1'),
+      text('interview.q.social_goals.helper2'),
+      text('interview.q.social_goals.helper3'),
     ],
   },
   {
     id: 'challenges',
-    text: "Is there anything that makes it hard to meet people or try new things?",
-    subtext: "No pressure — skip this one if you’d rather.",
+    text: text('interview.q.challenges.text'),
+    subtext: text('interview.q.challenges.subtext'),
     type: 'text',
     skippable: true,
     helpers: [
-      "Do you feel like you have enough free time?",
-      "Is anything holding you back from showing up?",
-      "Are there situations that feel uncomfortable?",
+      text('interview.q.challenges.helper1'),
+      text('interview.q.challenges.helper2'),
+      text('interview.q.challenges.helper3'),
     ],
   },
 ];
@@ -61,32 +66,32 @@ export const INTERVIEW_FLOW = [
 export const FOLLOWUP_QUESTIONS = [
   {
     id: 'new_things',
-    text: "Anything new you’ve been wanting to try?",
-    subtext: "Something you’ve been curious about, or heard others doing.",
+    text: text('interview.q.new_things.text'),
+    subtext: text('interview.q.new_things.subtext'),
     type: 'text',
     helpers: [
-      "Seen anything on the island that caught your eye?",
-      "Is there a skill you’ve always wanted to pick up?",
+      text('interview.q.new_things.helper1'),
+      text('interview.q.new_things.helper2'),
     ],
   },
   {
     id: 'social_update',
-    text: "How have things been going socially since you joined?",
-    subtext: "We’d love to hear what’s working and what isn’t.",
+    text: text('interview.q.social_update.text'),
+    subtext: text('interview.q.social_update.subtext'),
     type: 'text',
     helpers: [
-      "Have you met anyone interesting?",
-      "Is there something we could do better?",
+      text('interview.q.social_update.helper1'),
+      text('interview.q.social_update.helper2'),
     ],
   },
   {
     id: 'wish_list',
-    text: "Any events or activities you’d love to see happen here?",
-    subtext: "Dream big — if enough people want it, it might just happen.",
+    text: text('interview.q.wish_list.text'),
+    subtext: text('interview.q.wish_list.subtext'),
     type: 'text',
     helpers: [
-      "What’s something your old neighbourhood had that this one doesn’t?",
-      "If you could organise one thing, what would it be?",
+      text('interview.q.wish_list.helper1'),
+      text('interview.q.wish_list.helper2'),
     ],
   },
 ];

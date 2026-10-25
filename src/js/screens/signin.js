@@ -18,12 +18,12 @@ export function renderSignin(emailParam = '') {
         <p class="auth-subtext">${t('auth.signin.subtext')}</p>
 
         <form class="auth-form" id="signinForm">
-          <label class="auth-label" for="signinEmail">${t('auth.signin.email')}</label>
+          <label class="auth-label" for="signinEmail">${t('auth.field.email')}</label>
           <input class="auth-input" id="signinEmail" type="email"
                  autocomplete="email" inputmode="email"
                  value="${escapeAttr(initialEmail)}" required>
 
-          <label class="auth-label" for="signinPassword">${t('auth.signin.password')}</label>
+          <label class="auth-label" for="signinPassword">${t('auth.field.password')}</label>
           <input class="auth-input" id="signinPassword" type="password"
                  autocomplete="current-password" required>
 

@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 
 import { renderCopy, baseCopy, PAGE_PARAMS } from './render-copy.mjs';
 import { createCopy } from '../../src/js/copy.js';
-import { AGREEMENT_VERSION, AGREEMENT_LAST_UPDATED } from '../../src/js/agreement.js';
+import { AGREEMENT_VERSION } from '../../src/js/agreement.js';
 
 const repo = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const fake = createCopy({
@@ -85,7 +85,8 @@ test('the real terms page renders completely, its version from agreement.js', ()
   const source = readFileSync(join(repo, 'src', 'terms.html'), 'utf-8');
   const { html } = renderCopy(source, baseCopy());
   assert.doesNotMatch(html, /data-copy/);
-  assert.match(html, new RegExp(`Version ${AGREEMENT_VERSION} — last updated ${AGREEMENT_LAST_UPDATED}`));
+  // The date is ISO in agreement.js and reads the bundle's way (en-US).
+  assert.match(html, new RegExp(`Version ${AGREEMENT_VERSION} — last updated May 14, 2026`));
   assert.match(html, /Email us at <a href="mailto:hello@in-real\.life">hello@in-real\.life<\/a>\./);
 });
 

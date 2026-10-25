@@ -8,6 +8,9 @@
 // handleNotifySubmit — captures email + postal code for the notify list
 // when the area isn't supported.
 
+import { text } from '../copy.js';
+import { errorText } from '../errors.js';
+
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function handleLocationCheck({
@@ -20,7 +23,7 @@ export async function handleLocationCheck({
 }) {
   const trimmed = (postalCode ?? '').trim();
   if (!trimmed) {
-    showToast('Please enter your postal code.');
+    showToast(text('auth.needPostal'));
     return;
   }
 
@@ -28,7 +31,7 @@ export async function handleLocationCheck({
   try {
     result = await commands.checkLocality({ postalCode: trimmed });
   } catch (err) {
-    showToast(err.message || 'Could not check your location. Please try again.');
+    showToast(errorText(err, 'auth.location.checkFailed'));
     return;
   }
 
@@ -49,7 +52,7 @@ export async function handleNotifySubmit({
 }) {
   const trimmed = (email ?? '').trim();
   if (!EMAIL_RE.test(trimmed)) {
-    showToast('Please enter a valid email address.');
+    showToast(text('auth.badEmail'));
     return;
   }
 
@@ -57,6 +60,6 @@ export async function handleNotifySubmit({
     await commands.requestNotify({ email: trimmed, postalCode });
     onNotifySuccess();
   } catch (err) {
-    showToast(err.message || 'Could not add you to the list. Please try again.');
+    showToast(errorText(err, 'auth.notify.failed'));
   }
 }

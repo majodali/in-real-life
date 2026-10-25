@@ -6,6 +6,7 @@
 import { auth } from '../services.js';
 import { navigate, showToast } from '../app.js';
 import { handleSignupSubmit } from './auth-handlers.js';
+import { t, text } from '../copy.js';
 
 export function renderSignup(initialEmail = '') {
   const container = document.getElementById('screen-signup');
@@ -13,31 +14,28 @@ export function renderSignup(initialEmail = '') {
     <div class="auth-card">
       <div class="auth-content">
         <h1 class="wordmark">in<span>·</span>real<span>·</span>life</h1>
-        <h2 class="auth-title">Create your account</h2>
-        <p class="auth-subtext">Real meetups for real people on Bainbridge Island.</p>
+        <h2 class="auth-title">${t('auth.signup.title')}</h2>
+        <p class="auth-subtext">${t('auth.signup.subtext')}</p>
 
         <form class="auth-form" id="signupForm">
-          <label class="auth-label" for="signupEmail">Email</label>
+          <label class="auth-label" for="signupEmail">${t('auth.field.email')}</label>
           <input class="auth-input" id="signupEmail" type="email" autocomplete="email"
                  inputmode="email" value="${escapeAttr(initialEmail)}" required>
 
-          <label class="auth-label" for="signupPassword">Password</label>
+          <label class="auth-label" for="signupPassword">${t('auth.field.password')}</label>
           <input class="auth-input" id="signupPassword" type="password"
                  autocomplete="new-password" minlength="8" required>
-          <p class="auth-hint">At least 8 characters.</p>
+          <p class="auth-hint">${t('auth.signup.passwordHint')}</p>
 
           <label class="auth-check">
             <input type="checkbox" id="signupAgree">
-            <span>I agree to the <a href="terms.html" target="_blank" rel="noopener" class="auth-link">Terms of Use</a> and confirm I'm 18 or older.</span>
+            <span>${t('auth.signup.agree', { terms: (inner) => `<a href="terms.html" target="_blank" rel="noopener" class="auth-link">${inner}</a>` })}</span>
           </label>
 
-          <button class="btn-primary" id="signupSubmit" type="submit">Create account</button>
+          <button class="btn-primary" id="signupSubmit" type="submit">${t('auth.signup.submit')}</button>
         </form>
 
-        <p class="auth-alt">
-          Already have an account?
-          <a href="#signin" class="auth-link">Sign in</a>
-        </p>
+        <p class="auth-alt">${t('auth.haveAccount', { link: (inner) => `<a href="#signin" class="auth-link">${inner}</a>` })}</p>
       </div>
     </div>
   `;
@@ -52,12 +50,12 @@ export function renderSignup(initialEmail = '') {
     const agreed = document.getElementById('signupAgree').checked;
 
     submit.disabled = true;
-    submit.textContent = 'Creating account…';
+    submit.textContent = text('auth.signup.submitting');
     try {
       await handleSignupSubmit({ email, password, agreed, auth, navigate, showToast });
     } finally {
       submit.disabled = false;
-      submit.textContent = 'Create account';
+      submit.textContent = text('auth.signup.submit');
     }
   });
 }

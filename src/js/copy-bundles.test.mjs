@@ -23,14 +23,22 @@ function walk(dir, out = []) {
   return out;
 }
 
-// Keys named in code: t('k'), attr('k'), text('k') with a literal key.
+// Keys named in code: any string literal shaped like a key of a known
+// surface (t('feed.title'), errorText(err, 'event.loadFailed'), a map of
+// keys such as { idea: 'common.state.idea' }). Keys are never built at
+// runtime from pieces, so a literal is the only way code names one.
 // Keys named in markup: data-copy="k", data-copy-<attribute>="k".
+const SHAPED = new RegExp(`(['"\`])((?:${Object.keys(SURFACES).join('|')})\\.[A-Za-z0-9_.-]+)\\1`, 'g');
+const FILE = /\.(html|js|mjs|css|json|png|svg)$/; // 'terms.html' is a page, not a key
+
 function keysUsed() {
   const used = new Map();
   const add = (key, where) => used.set(key, [...(used.get(key) ?? []), where]);
   for (const f of walk(join(SRC, 'js'))) {
     if (!f.endsWith('.js') || f.endsWith(join('js', 'copy.js'))) continue; // the engine documents the syntax
-    for (const m of readFileSync(f, 'utf-8').matchAll(/\b(?:t|attr|text)\(\s*'([a-z][\w.-]*)'/g)) add(m[1], f);
+    for (const m of readFileSync(f, 'utf-8').matchAll(SHAPED)) {
+      if (!FILE.test(m[2])) add(m[2], f);
+    }
   }
   for (const f of readdirSync(SRC).filter((n) => n.endsWith('.html'))) {
     for (const m of readFileSync(join(SRC, f), 'utf-8').matchAll(/data-copy(?:-[a-z-]+)?="([^"]+)"/g)) add(m[1], f);

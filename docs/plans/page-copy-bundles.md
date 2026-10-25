@@ -1,9 +1,11 @@
 # Page copy in resource bundles
 
-Status: active (**chunk 2 delivered, at its gate** — 2026-10-25: every
-word of the landing and terms pages comes from the bundle, filled at
-deploy. Chunk 1's gate passed the same day, when the founder approved
-the note, T12, U13 and the proof. Plan approved 2026-10-25.)
+Status: active (**chunk 3 delivered, at its gate** — 2026-10-25: every
+member-facing app screen reads its words from the bundle; server text
+is no longer shown; dates read the bundle's way. Chunk 2's gate passed
+the same day: the founder deployed to workshop and found the landing
+and terms pages identical to before. Chunk 1's gate passed the same
+day. Plan approved 2026-10-25.)
 
 Outcome under development: every member-facing string on the site and
 in the app lives in a JavaScript resource bundle, not in markup or
@@ -166,7 +168,7 @@ and 859 backend tests (853 + 6 renderer) pass.
 
 Gate: founder reviews the note, T12, U13 and the proof.
 
-### Chunk 2 — the static pages — DELIVERED (at gate)
+### Chunk 2 — the static pages — DELIVERED (gate passed 2026-10-25)
 
 As planned: all landing and terms copy into bundles. The renderer, the
 preview command and the key-exists test, which this chunk listed,
@@ -217,15 +219,72 @@ bundle-formatted date with the app's dates in chunk 3 (U11).
 
 Gate: founder deploys to workshop; nothing visible changes.
 
-### Chunk 3 — the app screens
+### Chunk 3 — the app screens — DELIVERED (at gate)
 
-Screen by screen into bundles via `t()`, with dates moved to the
-bundle's locale, the two hand-rolled plurals replaced, taglines,
-`data.js` and cancellation notices brought in, and the 15 raw
-`err.message` toasts mapped to keys by error code. Proven by
-snapshotting every screen's rendered HTML before and after; any
-difference is either a bug or a deliberate fix named in the commit
-(the date locale is one).
+As planned, with two corrections to this plan's wording: there were
+33 raw `err.message` sites, not 15; and the second hand-rolled plural
+is in the operator console, which is out of scope.
+
+Shipped:
+
+- **Every member-facing screen and component** reads its words from
+  the bundle: sign-up and sign-in, the postal-code gate, locality,
+  welcome, terms re-acceptance, onboarding and the interview, the
+  feed, the event screen with its suggestions, polls, debrief and
+  reflection, propose, edit, the profile with "How we understand you",
+  and the ⋯ menu with its feedback form. The bundle now has 15
+  surfaces and 795 keys.
+- **Module copy** moved too: the taglines (44, each attribution its
+  own key), the scripted interview questions (`data.js`), the
+  cancellation notices, the locality distance words, and the design
+  alternatives' labels. Code names keys as whole literals; where it
+  holds an id (a state, a chip, a door) a small map gives the key.
+- **Server text is never shown** (`src/js/errors.js`, note §4). This
+  departs from the plan's "raw text as a last resort": the last resort
+  is the screen's own line. A test holds the API patterns to the
+  backend's source.
+- **Dates** use the bundle's locale and named formats. The terms date
+  is ISO in `agreement.js` and reads "May 14, 2026" in-app and on the
+  terms page (it read "14 May 2026", day-first, against U11).
+- **Plurals**: poll votes, "and N more" in two notices, and the event
+  counts go through plural forms.
+- **US spelling** in `data.js`: "neighborhood", "organize" (U11).
+- **The landing page** loads only the taglines surface through the
+  bundle-free engine (`copy-engine.js`): 127 KB raw before fonts
+  against 115 KB on `main`, not the 184 KB that loading the whole app
+  bundle cost on the first attempt.
+- **Service worker cache bumped** to `irl-shell-v2` (`src/sw.js`). It
+  serves JavaScript from cache first, so after this deploy a cached old
+  bundle could meet new screen code and show missing-key text. The new
+  worker deletes the old cache. That shortens the window to one load
+  but does not close it; the general gap is a new backlog item.
+- **Tests**: `errors.test.mjs` (7), the key scan now finds every
+  key-shaped literal, five handler tests updated from "shows the
+  server's text" to "shows the screen's line". 316 frontend and 865
+  backend tests pass.
+
+Proven, not assumed — a snapshot harness (129 screen states, 199
+captures: every route, every load/empty/error state, every toast and
+dialog, the debrief and reflection flows step by step) driven against
+fixtures, on `main`-equivalent code and on this branch, en-US, Pacific
+time, fixed clock:
+
+- **163 captures are identical**: rendered text, structure and
+  attributes.
+- **36 differ, every one deliberate**: 29 error states now read a
+  keyed line instead of the server's or the browser's text ("internal
+  server error" → "Could not cancel.", "Failed to fetch" → "Can't reach
+  in·real·life right now…"); 2 show the agreement date as "May 14,
+  2026"; 4 carry `data-chip="interests"` instead of the English title
+  in an attribute (invisible — the remove buttons no longer find their
+  list by its label); 1 shows the US spelling in "Tell us more".
+- **With an en-GB browser**, an event's time read "Mon, 26 Oct, 9:00 —
+  11:00" before and reads "Mon, Oct 26, 9:00 AM — 11:00 AM" now.
+
+Open, for the founder: the bundle spells "cancelled" (and the
+lifecycle state is `cancelled` in code). US usage accepts both; AP and
+Merriam-Webster prefer "canceled". Not changed without a decision.
+
 Gate: founder clicks through the app on workshop.
 
 ### Chunk 4 — variants for review

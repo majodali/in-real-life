@@ -76,11 +76,13 @@ test('signup: on success calls auth.signUp and navigates to confirm with the ema
 });
 
 test('signup: on auth error shows the message via toast and does not navigate', async () => {
-  auth.signUp = spy(async () => { throw new Error('UsernameExistsException'); });
+  auth.signUp = spy(async () => {
+    throw Object.assign(new Error('An account with the given email already exists.'), { code: 'UsernameExistsException' });
+  });
   await handleSignupSubmit({ email: 'a@b.co', password: 'pw12345678', agreed: true, auth, navigate, showToast });
   assert.equal(navigate.calls.length, 0);
   assert.equal(showToast.calls.length, 1);
-  assert.match(showToast.calls[0][0], /Username|exists/);
+  assert.equal(showToast.calls[0][0], 'An account with the given email already exists.');
 });
 
 // ─── handleConfirmSubmit ───
@@ -127,8 +129,10 @@ test('signin: on success calls auth.signIn and navigates to welcome', async () =
 });
 
 test('signin: on auth error shows toast and does not navigate', async () => {
-  auth.signIn = spy(async () => { throw new Error('NotAuthorizedException'); });
+  auth.signIn = spy(async () => {
+    throw Object.assign(new Error('Incorrect username or password.'), { code: 'NotAuthorizedException' });
+  });
   await handleSigninSubmit({ email: 'a@b.co', password: 'wrong', auth, navigate, showToast });
   assert.equal(navigate.calls.length, 0);
-  assert.match(showToast.calls[0][0], /NotAuthorized|incorrect|password/i);
+  assert.equal(showToast.calls[0][0], 'Incorrect username or password.');
 });

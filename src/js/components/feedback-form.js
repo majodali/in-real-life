@@ -6,13 +6,14 @@
 import { FEEDBACK_URL } from '../config.js';
 import { getAltSnapshot } from '../alternatives.js';
 import { getActiveUserId } from '../store.js';
+import { t, attr, text } from '../copy.js';
 
 const RATINGS = [
-  { emoji: '\u{1F61F}', label: 'Poor', value: 1 },
-  { emoji: '\u{1F610}', label: 'Okay', value: 2 },
-  { emoji: '\u{1F642}', label: 'Good', value: 3 },
-  { emoji: '\u{1F60A}', label: 'Great', value: 4 },
-  { emoji: '\u{1F929}', label: 'Love it', value: 5 },
+  { emoji: '\u{1F61F}', label: 'menu.form.rating.1', value: 1 },
+  { emoji: '\u{1F610}', label: 'menu.form.rating.2', value: 2 },
+  { emoji: '\u{1F642}', label: 'menu.form.rating.3', value: 3 },
+  { emoji: '\u{1F60A}', label: 'menu.form.rating.4', value: 4 },
+  { emoji: '\u{1F929}', label: 'menu.form.rating.5', value: 5 },
 ];
 
 export function openFeedbackForm(screen) {
@@ -25,27 +26,27 @@ export function openFeedbackForm(screen) {
   overlay.innerHTML = `
     <div class="feedback-sheet">
       <div class="modal-handle"></div>
-      <div class="feedback-title">\u{1F4AC} Share your thoughts</div>
+      <div class="feedback-title">${t('menu.form.title')}</div>
 
       <textarea
         class="feedback-textarea"
         id="feedbackText"
-        placeholder="What\u2019s on your mind? Anything about this screen, the app, or ideas for improvement..."
+        placeholder="${attr('menu.form.placeholder')}"
         rows="4"
       ></textarea>
 
       <div class="feedback-rating-section">
-        <div class="feedback-rating-label">How\u2019s the experience?</div>
+        <div class="feedback-rating-label">${t('menu.form.ratingLabel')}</div>
         <div class="feedback-rating-row" id="feedbackRating">
           ${RATINGS.map(r => `
-            <button class="feedback-rating-btn" data-rating="${r.value}" title="${r.label}">
+            <button class="feedback-rating-btn" data-rating="${r.value}" title="${attr(r.label)}">
               ${r.emoji}
             </button>
           `).join('')}
         </div>
       </div>
 
-      <button class="btn-primary feedback-submit" id="feedbackSubmit">Send feedback</button>
+      <button class="btn-primary feedback-submit" id="feedbackSubmit">${t('menu.form.send')}</button>
       <div class="feedback-status" id="feedbackStatus"></div>
     </div>
   `;
@@ -70,12 +71,12 @@ export function openFeedbackForm(screen) {
 
   // Submit
   document.getElementById('feedbackSubmit').addEventListener('click', async () => {
-    const text = document.getElementById('feedbackText').value.trim();
+    const message = document.getElementById('feedbackText').value.trim();
     const status = document.getElementById('feedbackStatus');
     const submitBtn = document.getElementById('feedbackSubmit');
 
-    if (!text && !selectedRating) {
-      status.textContent = 'Please share some feedback or select a rating.';
+    if (!message && !selectedRating) {
+      status.textContent = text('menu.form.empty');
       status.className = 'feedback-status error';
       return;
     }
@@ -87,20 +88,20 @@ export function openFeedbackForm(screen) {
       screen,
       userId: getActiveUserId() || 'anonymous',
       rating: selectedRating || null,
-      text: text || '',
+      text: message || '',
       alternatives: altSnapshot.selections,
       votes: altSnapshot.votes,
       userAgent: navigator.userAgent,
     };
 
     submitBtn.disabled = true;
-    submitBtn.textContent = 'Sending...';
+    submitBtn.textContent = text('menu.form.sending');
 
     try {
       if (!FEEDBACK_URL) {
         // Stub mode — just log it
         console.log('[Feedback stub]', payload);
-        status.textContent = 'Thanks! (Feedback logged locally \u2014 backend not connected yet)';
+        status.textContent = text('menu.form.thanksLocal');
         status.className = 'feedback-status success';
       } else {
         const res = await fetch(FEEDBACK_URL, {
@@ -110,7 +111,7 @@ export function openFeedbackForm(screen) {
         });
 
         if (res.ok) {
-          status.textContent = 'Thanks for your feedback! \u{1F33F}';
+          status.textContent = text('menu.form.thanks');
           status.className = 'feedback-status success';
         } else {
           throw new Error(`HTTP ${res.status}`);
@@ -120,10 +121,10 @@ export function openFeedbackForm(screen) {
       setTimeout(() => closeFeedbackForm(), 1500);
     } catch (err) {
       console.error('Feedback submit error:', err);
-      status.textContent = 'Could not send \u2014 please try again.';
+      status.textContent = text('menu.form.failed');
       status.className = 'feedback-status error';
       submitBtn.disabled = false;
-      submitBtn.textContent = 'Send feedback';
+      submitBtn.textContent = text('menu.form.send');
     }
   });
 

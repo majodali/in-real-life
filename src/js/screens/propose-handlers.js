@@ -7,6 +7,9 @@
 //
 // See propose-handlers.test.mjs for the spec.
 
+import { text } from '../copy.js';
+import { errorText } from '../errors.js';
+
 export async function handleProposeSubmit({
   title,
   description,
@@ -34,14 +37,14 @@ export async function handleProposeSubmit({
 
   if (!trimmedTitle) {
     onValidationError?.('title');
-    showToast('A short title helps people find this.');
+    showToast(text('propose.rule.title'));
     return;
   }
 
   // External events (D53) are already real: full time/place required.
   if (isExternal && (!startTime || !endTime || !trimmedLocation)) {
     onValidationError?.(!startTime ? 'startTime' : !endTime ? 'endTime' : 'location');
-    showToast('An existing event needs its real time and place — if it\u2019s not pinned down yet, float it as an idea instead.');
+    showToast(text('propose.rule.externalNeedsTime'));
     return;
   }
 
@@ -49,12 +52,12 @@ export async function handleProposeSubmit({
   // as an idea (interest-only until it firms up). Times come as a pair.
   if (startTime && !endTime) {
     onValidationError?.('endTime');
-    showToast('Add an end time too — or clear the start to float this as an idea.');
+    showToast(text('propose.rule.needsEnd'));
     return;
   }
   if (endTime && !startTime) {
     onValidationError?.('startTime');
-    showToast('Add a start time too — or clear the end to float this as an idea.');
+    showToast(text('propose.rule.needsStart'));
     return;
   }
 
@@ -64,18 +67,18 @@ export async function handleProposeSubmit({
     startIso = toIso(startTime);
     if (!startIso) {
       onValidationError?.('startTime');
-      showToast('That start time doesn’t look right.');
+      showToast(text('propose.rule.badStart'));
       return;
     }
     endIso = toIso(endTime);
     if (!endIso) {
       onValidationError?.('endTime');
-      showToast('That end time doesn’t look right.');
+      showToast(text('propose.rule.badEnd'));
       return;
     }
     if (new Date(endIso) <= new Date(startIso)) {
       onValidationError?.('endTime');
-      showToast('End time needs to be after the start.');
+      showToast(text('propose.rule.endBeforeStart'));
       return;
     }
   }
@@ -88,12 +91,12 @@ export async function handleProposeSubmit({
     const amount = Number(costAmount);
     if (amountBlank || !Number.isFinite(amount) || amount <= 0) {
       onValidationError?.('costAmount');
-      showToast('Cost needs a positive amount — or clear both cost fields for a free event.');
+      showToast(text('propose.rule.costAmount'));
       return;
     }
     if (coversBlank) {
       onValidationError?.('costCovers');
-      showToast('Say what the cost covers — that\u2019s the one required bit for paid events.');
+      showToast(text('propose.rule.costCovers'));
       return;
     }
     cost = { amount, covers: costCovers.trim() };
@@ -102,7 +105,7 @@ export async function handleProposeSubmit({
   const minAttendance = normaliseMinimum(minimumAttendance);
   if (minimumAttendance !== undefined && minimumAttendance !== '' && minAttendance == null) {
     onValidationError?.('minimumAttendance');
-    showToast('Minimum attendance must be a whole number of 3 or more.');
+    showToast(text('propose.rule.min'));
     return;
   }
 
@@ -112,7 +115,7 @@ export async function handleProposeSubmit({
     const floor = minAttendance ?? 3;
     if (!Number.isInteger(n) || n < floor) {
       onValidationError?.('maxAttendance');
-      showToast(`Spots must be a whole number of at least ${floor} (you count too).`);
+      showToast(text('propose.rule.max', { floor }));
       return;
     }
     maxSpots = n;
@@ -139,7 +142,7 @@ export async function handleProposeSubmit({
     });
     onSuccess?.(result);
   } catch (err) {
-    showToast(err?.message || 'Couldn’t propose that event. Try again.');
+    showToast(errorText(err, 'propose.failed'));
   }
 }
 
