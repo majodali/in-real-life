@@ -72,8 +72,8 @@ Understanding of a person is **seeded** at onboarding and **grown** from what th
   any preference was voiced (U10 step 5), with the measurement
   method and the recommendation; §6 adds **Direction D**, merged after
   the October review (FB3–FB9). Brief:
-  `../design/landing-brief-2026-09.md`. **Awaiting the founder's
-  pick — the pick becomes a U-row.**
+  `../design/landing-brief-2026-09.md`. **Picked: D (U12), live in
+  production since 2026-10-25.**
 
 **Trust & safety / operations (Group 4)**
 - `hosted-register-views.md` — **(decided: D69)** the public register views (K-009, the C3 gate): generated from the markdown registers on every deploy, latest snapshots only, open-risks verbatim; advisor-pack excerpts reuse the build (D66).

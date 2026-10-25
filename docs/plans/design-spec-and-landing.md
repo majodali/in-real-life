@@ -1,6 +1,16 @@
 # Design spec and landing redesign
 
-Status: active (**all four chunks delivered; gates 1–3 passed, the
+Status: closed → Backlog entry (2026-10-25). All four chunks delivered
+and every gate passed. The chunk-4 gate closed when the founder merged
+PR #76 and deployed to production on 2026-10-25; the live site was
+verified the same day — new markup, styles, manifest and service
+worker served from in-real.life, the workshop flag substituted as
+false, and 0 contrast failures in all four themes at 390 and 1440 (the
+same audit as workshop). The Backlog's checked "Design spec + landing
+redesign" entry is now the record; the history of each chunk and
+gate review is kept below.
+
+*Earlier status, kept for the record:* active (**all four chunks delivered; gates 1–3 passed, the
 chunk-4 gate is open** — chunk 4 on 2026-10-21: Direction D is the live
 `src/index.html`, terms on the same components, both measured clean in
 all four themes; awaiting founder sign-off on workshop, then the next
