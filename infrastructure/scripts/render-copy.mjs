@@ -17,9 +17,9 @@
 // plain HTML with no trace of the mechanism.
 //
 // Used by inject-config.mjs on every deploy, and on its own for a local
-// preview:
+// preview, optionally with a review variant over the base (§5):
 //
-//   node infrastructure/scripts/render-copy.mjs src/index.html --out src/index.local.html
+//   node infrastructure/scripts/render-copy.mjs src/index.html --out src/index.local.html [--variant <name>]
 
 import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -28,15 +28,17 @@ import { resolve } from 'node:path';
 import { createCopy, escapeText } from '../../src/js/copy-engine.js';
 import base from '../../src/copy/en-US/index.js';
 import { AGREEMENT_VERSION, AGREEMENT_LAST_UPDATED } from '../../src/js/agreement.js';
+import { findVariant } from './copy-variants.mjs';
 
 // An element carrying data-copy, with nothing between its tags.
 const ELEMENT = /<([a-z][a-z0-9]*)\b([^>]*?)\sdata-copy="([^"]+)"([^>]*)><\/\1>/g;
 // An attribute whose value is a copy key: data-copy-<attribute>="key".
 const ATTRIBUTE = /\sdata-copy-([a-z][a-z-]*)="([^"]+)"/g;
 
-/** The base bundle's engine — strict: a missing key stops the deploy. */
-export function baseCopy() {
-  return createCopy({ locale: base.locale, layers: [base.strings], formats: base.formats });
+/** The base bundle's engine, with a variant's keys over it when given —
+ *  strict: a missing key stops the deploy. */
+export function baseCopy(variant = {}) {
+  return createCopy({ locale: base.locale, layers: [variant, base.strings], formats: base.formats });
 }
 
 // What every static page's copy may draw on besides its own words:
@@ -87,12 +89,16 @@ export function renderCopy(html, copy = baseCopy(), params = PAGE_PARAMS) {
 
 // CLI: render one page for a local preview.
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  const [file, flag, outPath] = process.argv.slice(2);
-  if (!file || (flag && flag !== '--out')) {
-    console.error('Usage: node infrastructure/scripts/render-copy.mjs <page.html> [--out <file>]');
+  const [file, ...rest] = process.argv.slice(2);
+  const option = (flag) => (rest.includes(flag) ? rest[rest.indexOf(flag) + 1] : undefined);
+  const outPath = option('--out');
+  const variantName = option('--variant');
+  if (!file || rest.some((a, i) => a.startsWith('--') ? !['--out', '--variant'].includes(a) : !rest[i - 1]?.startsWith('--'))) {
+    console.error('Usage: node infrastructure/scripts/render-copy.mjs <page.html> [--out <file>] [--variant <name>]');
     process.exit(1);
   }
-  const { html, keys } = renderCopy(readFileSync(file, 'utf-8'));
+  const copy = baseCopy(variantName ? findVariant(variantName).default : {});
+  const { html, keys } = renderCopy(readFileSync(file, 'utf-8'), copy);
   if (outPath) {
     writeFileSync(outPath, html);
     console.error(`Rendered ${keys.length} copy keys into ${outPath}`);

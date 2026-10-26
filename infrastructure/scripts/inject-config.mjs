@@ -6,11 +6,15 @@
 // src/app.html with the right values for that stack.
 //
 // Usage:
-//   node infrastructure/scripts/inject-config.mjs <stack> [--dry-run]
+//   node infrastructure/scripts/inject-config.mjs <stack> [--copy-variant <name>] [--dry-run]
 //
-//   stack      The CloudFormation stack name to read outputs from.
-//              e.g. IrlStack, IrlStackTest, IrlStackProd.
-//   --dry-run  Print the substituted app.html to stdout; don't deploy.
+//   stack           The CloudFormation stack name to read outputs from.
+//                   e.g. IrlStack, IrlStackTest, IrlStackProd.
+//   --copy-variant  Layer a review variant of the page copy over the
+//                   base bundle (src/copy/variants/<name>.js; workshop
+//                   stacks only — docs/page-copy.md §5). Without it the
+//                   stack serves the base copy.
+//   --dry-run       Print the substituted app.html to stdout; don't deploy.
 //
 // Optional env:
 //   IRL_BUCKET            Override site bucket name (default: from outputs)
@@ -29,6 +33,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { renderRegisters } from './render-registers.mjs';
 import { renderCopy, baseCopy } from './render-copy.mjs';
+import { checkVariant, findVariant, activeModule } from './copy-variants.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const repoRoot = join(__dirname, '..', '..');
@@ -37,6 +42,12 @@ const distDir = join(repoRoot, 'dist');
 
 const stack = process.argv[2];
 const dryRun = process.argv.includes('--dry-run');
+const variantFlag = process.argv.indexOf('--copy-variant');
+const variantName = variantFlag > 0 ? process.argv[variantFlag + 1] : undefined;
+if (variantFlag > 0 && (!variantName || variantName.startsWith('--'))) {
+  console.error('--copy-variant needs a name (src/copy/variants/index.js lists them).');
+  process.exit(1);
+}
 
 // Region resolution: explicit env wins, then the active profile's
 // configured default (respects AWS_PROFILE). NO hardcoded fallback —
@@ -55,7 +66,7 @@ if (!region) {
 }
 
 if (!stack) {
-  console.error('Usage: node infrastructure/scripts/inject-config.mjs <stack> [--dry-run]');
+  console.error('Usage: node infrastructure/scripts/inject-config.mjs <stack> [--copy-variant <name>] [--dry-run]');
   process.exit(1);
 }
 
@@ -100,14 +111,36 @@ const config = {
   __IRL_WORKSHOP_MODE__: String((outputs.Stage ?? 'workshop') !== 'prod'),
 };
 
+const workshop = config.__IRL_WORKSHOP_MODE__ === 'true';
+
+// A review variant of the page copy (docs/page-copy.md §5): workshop
+// stacks only, and checked again here — a variant that rewords the
+// Terms or names a key the base lacks never ships.
+let variant = {};
+if (variantName) {
+  if (!workshop) {
+    console.error(`Stack ${stack} is not a workshop stack: copy variants are for review rounds, never production.`);
+    process.exit(1);
+  }
+  variant = findVariant(variantName).default;
+  const problems = checkVariant(variant);
+  if (problems.length) {
+    console.error(`Copy variant "${variantName}" cannot ship:\n  ${problems.join('\n  ')}`);
+    process.exit(1);
+  }
+  console.log(`Copy variant: ${variantName} (${Object.keys(variant).length} keys over the base)`);
+}
+
 // Pages this script owns. app.html takes the full runtime config; the
 // public pages carry only the workshop flag (they offer the design
 // switcher on workshop stacks — docs/ui-themes.md) and name their copy
-// by key, filled here from the bundle (docs/page-copy.md). CDK's own
-// site upload excludes all three (irl-stack.ts → DeploySite), so a
-// half-finished deploy can never publish one unfilled.
-const PAGES = ['app.html', 'index.html', 'terms.html'];
-const copy = baseCopy();
+// by key, filled here from the bundle (docs/page-copy.md), with the
+// variant's keys over it. The copy review page is a workshop tool. CDK's
+// own site upload excludes all of them, and copy/active.js
+// (irl-stack.ts → DeploySite), so a half-finished deploy can never
+// publish one unfilled or mismatched.
+const PAGES = ['app.html', 'index.html', 'terms.html', 'copy-review.html'];
+const copy = baseCopy(variant);
 
 function substitute(name) {
   let html = renderCopy(readFileSync(join(srcDir, name), 'utf-8'), copy).html;
@@ -131,6 +164,10 @@ cpSync(srcDir, distDir, { recursive: true });
 for (const name of PAGES) {
   writeFileSync(join(distDir, name), name === 'app.html' ? htmlOut : substitute(name));
 }
+// Which variant the app's screens layer over the base (src/copy/active.js
+// ships as "none"); production never carries the review page.
+if (variantName) writeFileSync(join(distDir, 'copy', 'active.js'), activeModule(variantName));
+if (!workshop) rmSync(join(distDir, 'copy-review.html'));
 
 // Drop the colocated test files; they're not part of the runtime bundle.
 for (const f of walk(distDir)) {

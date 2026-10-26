@@ -12,8 +12,9 @@
 import { createCopy } from './copy-engine.js';
 import { locale, formats } from '../copy/en-US/locale.js';
 import strings from '../copy/en-US/taglines.js';
+import variant from '../copy/active.js';
 
-const { text } = createCopy({ locale, formats, layers: [strings] });
+const { text } = createCopy({ locale, formats, layers: [variant, strings] });
 
 export const TAGLINES = [
   // ─── Mr. Rogers / Sesame Street register ───

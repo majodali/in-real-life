@@ -17,6 +17,6 @@ export default {
   'common.state.planned': 'Planned',
   'common.state.inProgress': 'Happening now',
   'common.state.over': 'Over',
-  'common.state.cancelled': 'Cancelled',
+  'common.state.cancelled': 'Canceled',
   'common.state.upcoming': 'Upcoming',
 };

@@ -208,18 +208,59 @@ plural form — poll votes, "and 2 more", the event's interested and
 confirmed counts — so a translation can supply its own forms. The one
 hand-rolled plural left is in the operator console (out of scope).
 
-## 5. Review variants and locked keys (built in chunk 4)
+## 5. Review variants and locked keys
 
-- **A variant is an overlay**: `src/copy/variants/<name>.js` holds only
-  the keys it changes, layered over a base locale — the engine's
-  lookup chain is already `variant → base`. Each environment names its
-  variant at deploy; a workshop instance per variant is the
-  concurrent-instances use case (OPS11).
-- **Some keys are locked.** The Terms of Use are versioned
-  (`agreement.js`): a variant that rewords them without a version bump
-  would change what members agreed to. Terms keys cannot be overridden
-  by a variant — enforced by test — and translating them needs a
-  governing-language decision first (R10, R11).
+**A variant is an overlay**: `src/copy/variants/<name>.js` holds only
+the keys it rewords, plus an `about` (title, who, date, what it tries).
+It is registered in `src/copy/variants/index.js`. The engine's lookup
+chain is `variant → base`, so every key the variant leaves alone reads
+as the base.
+
+```js
+export const about = { title: 'A plainer invitation', by: 'Ana', date: '2026-11-02', note: 'Tries…' };
+export default {
+  'landing.hero.headline': 'Meet the people who live near you, {em:in real life.}',
+  'landing.cta.accept': 'Join in',
+};
+```
+
+**A workshop deploy names its variant**:
+`node infrastructure/scripts/inject-config.mjs <stack> --copy-variant <name>`.
+The static pages are filled with the variant over the base, and the
+deploy ships its own `copy/active.js` re-exporting the variant, which
+the app's screens and the landing page's taglines layer over the base.
+Without the flag the stack serves the base. A production stack refuses
+the flag: variants are for review rounds. A workshop instance per
+variant, side by side, is the concurrent-instances use case (OPS11);
+one workshop stack works by redeploying with another name.
+
+**The review page**, `copy-review.html` on a workshop stack, lists the
+registered variants and, for the one chosen (the deployed one first),
+every key it rewords: the base wording, the variant's, and the words
+that changed. Production never carries it.
+
+**A variant that would break a page never ships.** The same checks run
+in the tests and again at deploy
+(`infrastructure/scripts/copy-variants.mjs`):
+
+- every key it rewords exists in the base — no typos, no words a page
+  never shows;
+- it keeps each message's form (plain or plural, with an "other"
+  form), and uses only the values and marked spans its base uses: the
+  screen supplies those, so a new one would have nothing to fill it.
+  Dropping one is allowed — "Join in" needs no `{name}`;
+- every message parses;
+- **no key is locked.** The Terms of Use are versioned
+  (`agreement.js`): a variant that rewords them would change what
+  members agreed to without a new version. `terms.*` is locked, and
+  translating it needs a governing-language decision first (R10, R11).
+
+Check a variant before deploying it:
+`node infrastructure/scripts/copy-variants.mjs <name>`.
+
+After switching variants on a stack, reload once: the service worker
+serves JavaScript from its cache first (backlog: "Old and new
+JavaScript can mix on the first load after a deploy").
 
 ## 6. Scope of the first pass
 
@@ -252,6 +293,6 @@ Two things it leaves visibly open:
   time zone. A member on the island never notices; a visitor
   elsewhere sees a 9 am walk at their local hour. The community's time
   zone is community data (R5), so it is not set here.
-- **Which bundle a page loads.** `copy.js` and `taglines.js` import
-  `en-US` by path. Choosing a bundle per environment is chunk 4's
-  variant work; a second locale is R10's.
+- **Which locale a page loads.** `copy.js` and `taglines.js` import
+  `en-US` by path; a deploy chooses only the variant layered over it.
+  Choosing among locales is R10's.

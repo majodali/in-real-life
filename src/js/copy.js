@@ -9,10 +9,13 @@
 
 import { createCopy, escapeText, strictMissing } from './copy-engine.js';
 import base from '../copy/en-US/index.js';
+import variant from '../copy/active.js';
 
 export { createCopy, escapeText, escapeAttr } from './copy-engine.js';
 
-// The app's own instance: the bundle the page shipped with. Strict in
+// The app's own instance: the review variant this deploy names (none
+// unless a workshop deploy chose one; src/copy/active.js) over the base
+// bundle the page shipped with. Strict in
 // tests and on workshop stacks (a missing key is a bug to see at once);
 // on production a missing key shows the key itself and is logged,
 // because a blank or a crashed screen is worse for a member than an odd
@@ -29,7 +32,7 @@ function appMissing(key) {
 
 export const copy = createCopy({
   locale: base.locale,
-  layers: [base.strings],
+  layers: [variant, base.strings],
   formats: base.formats,
   onMissing: appMissing,
 });

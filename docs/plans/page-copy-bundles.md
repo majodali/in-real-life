@@ -1,11 +1,11 @@
 # Page copy in resource bundles
 
-Status: active (**chunk 3 delivered, at its gate** — 2026-10-25: every
-member-facing app screen reads its words from the bundle; server text
-is no longer shown; dates read the bundle's way. Chunk 2's gate passed
-the same day: the founder deployed to workshop and found the landing
-and terms pages identical to before. Chunk 1's gate passed the same
-day. Plan approved 2026-10-25.)
+Status: active (**chunk 4 delivered, at its gate** — 2026-10-26: review
+variants as overlays, chosen per workshop deploy, checked in the tests
+and at deploy, the Terms locked, and a copy review page. Chunk 3's gate
+passed 2026-10-26: the founder deployed to workshop and clicked through
+the app, and chose "canceled". Chunks 1 and 2 passed 2026-10-25. Plan
+approved 2026-10-25.)
 
 Outcome under development: every member-facing string on the site and
 in the app lives in a JavaScript resource bundle, not in markup or
@@ -219,7 +219,7 @@ bundle-formatted date with the app's dates in chunk 3 (U11).
 
 Gate: founder deploys to workshop; nothing visible changes.
 
-### Chunk 3 — the app screens — DELIVERED (at gate)
+### Chunk 3 — the app screens — DELIVERED (gate passed 2026-10-26)
 
 As planned, with two corrections to this plan's wording: there were
 33 raw `err.message` sites, not 15; and the second hand-rolled plural
@@ -281,20 +281,65 @@ time, fixed clock:
 - **With an en-GB browser**, an event's time read "Mon, 26 Oct, 9:00 —
   11:00" before and reads "Mon, Oct 26, 9:00 AM — 11:00 AM" now.
 
-Open, for the founder: the bundle spells "cancelled" (and the
-lifecycle state is `cancelled` in code). US usage accepts both; AP and
-Merriam-Webster prefer "canceled". Not changed without a decision.
+Decided at the gate (2026-10-26): **"canceled"**, one l, as AP and
+Merriam-Webster prefer; "cancellation" keeps two. Applied to the 13
+member-facing strings in chunk 4's commit and recorded in U11; the
+lifecycle state stays `cancelled` in code, which members never read.
 
 Gate: founder clicks through the app on workshop.
 
-### Chunk 4 — variants for review
+### Chunk 4 — variants for review — DELIVERED (at gate)
 
-Variant overlays, per-environment selection at deploy, locked keys
-enforced by a test, and a workshop-only copy review page (like
-`taglines.html`) showing base and variant side by side per key. The
-first real review round runs on it. Per-variant instances depend on
-the ops plan's concurrent instances (its chunk 1 is at its gate); a
-single workshop stack works until then.
+As planned; the design is note §5.
+
+Shipped:
+
+- **Variants** under `src/copy/variants/`, each an overlay of only the
+  keys it rewords with an `about`, registered in `index.js`. One
+  `sample` variant (three keys: the landing headline and call to
+  action, the empty feed) exists to try the flow; reword or delete it
+  once a real trial exists.
+- **Per-deploy selection**: `inject-config.mjs --copy-variant <name>`
+  fills the static pages with the variant over the base and ships a
+  `copy/active.js` that the app and the landing taglines layer over the
+  base (`src/copy/active.js` is committed as none). Production refuses
+  the flag. CDK's own upload excludes `copy/active.js` and the review
+  page, as it does the pages the deploy script owns.
+- **Checks** (`infrastructure/scripts/copy-variants.mjs`), run by the
+  tests and again at deploy: keys exist, forms match, no new values or
+  spans, messages parse, and **`terms.*` is locked**. Also a CLI:
+  `node infrastructure/scripts/copy-variants.mjs [name]`.
+- **The copy review page** (`src/copy-review.html`, workshop only): the
+  variants, what each tries, and per key the base wording, the
+  variant's, and the changed words marked. Its own labels are not page
+  copy: no member sees it.
+- **"canceled"** in the 13 member-facing strings (the chunk-3 gate's
+  decision), and U11 records it.
+- **Tests**: `copy-variants.test.mjs` (11), including every registered
+  variant passing and every variant file being registered. 316 frontend
+  and 876 backend tests pass.
+
+Proven, not assumed — the deploy output built locally both ways (the
+same rendering and `active.js` the deploy script writes, without AWS)
+and snapshotted with the chunk-3 harness:
+
+- **Base deploy** against chunk 3's capture: all 199 captures equal
+  once "cancelled" reads "canceled" — the spelling is the only change.
+- **`sample` deploy** against the base deploy: 198 identical; the one
+  difference is the empty feed's line, the variant's only app key. The
+  landing page differs in exactly the variant's three places (headline,
+  both calls to action); the terms page is byte-identical.
+- **The review page** lists 3 reworded keys, with no errors and no
+  sideways scroll at 390px or 1280px.
+- **The synthesized CDK upload** carries `copy/en-US` and
+  `copy/variants`, and no `copy/active.js`, `copy-review.html`,
+  `index.html`, `terms.html` or `app.html`.
+
+Not done here: the ops registry carrying each instance's variant, so a
+deploy picks it up without the flag — that belongs with the ops plan's
+concurrent instances (its chunk 1 is at its gate). Until then the flag
+is how an instance gets its variant.
+
 Gate: founder runs a review with a variant deployed.
 
 ## Not in this plan

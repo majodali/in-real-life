@@ -49,7 +49,7 @@ test('handles empty inputs', () => {
 
 test('single cancellation names the event and includes the reason', () => {
   const msg = noticeMessage([cancelled('a', { title: 'Coffee walk', cancellationReason: 'rain' })]);
-  assert.match(msg, /“Coffee walk” was cancelled — rain/);
+  assert.match(msg, /“Coffee walk” was canceled — rain/);
   assert.match(msg, /You'd said you'd be there/);
 });
 
@@ -58,7 +58,7 @@ test('multiple cancellations are summarised without individual reasons', () => {
     cancelled('a', { title: 'Coffee walk', cancellationReason: 'rain' }),
     cancelled('b'),
   ]);
-  assert.match(msg, /“Coffee walk” was cancelled \(and 1 more — check your feed\)/);
+  assert.match(msg, /“Coffee walk” was canceled \(and 1 more — check your feed\)/);
   assert.doesNotMatch(msg, /rain/);
 });
 

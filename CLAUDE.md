@@ -138,6 +138,8 @@ operator-driven deploys until the deploy Lambda lands:
 ```bash
 cd infrastructure && npx cdk deploy <stack>   # e.g. IrlStack, IrlStackTest
 node infrastructure/scripts/inject-config.mjs <stack>   # --dry-run to preview
+# A workshop stack can serve a review variant of the copy (docs/page-copy.md §5):
+#   node infrastructure/scripts/inject-config.mjs <stack> --copy-variant <name>
 ```
 
 `inject-config.mjs` substitutes the runtime config into the pages

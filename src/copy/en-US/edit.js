@@ -5,7 +5,7 @@ export default {
   'edit.title': 'Edit event',
   'edit.intro': 'Changes save immediately. Anyone interested or confirmed will see the new details next time they look.',
   'edit.onlyOrganizer': 'Only the organizer can edit this event.',
-  'edit.cancelled': 'This event has been cancelled.',
+  'edit.cancelled': 'This event has been canceled.',
   'edit.field.title': 'Title',
   'edit.field.description': 'Description {optional:(optional)}',
   'edit.field.start': 'Start time',

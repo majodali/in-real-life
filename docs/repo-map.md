@@ -17,6 +17,9 @@ the `__IRL_*__` placeholders into the three pages that carry them.
 | `terms.html` | User agreement, versioned (`event-sourcing.md` → agreement versioning); shares the landing's public-page components |
 | `app.html` | The app shell: one `<div class="screen">` per screen, plus the runtime config block |
 | `taglines.html` | Tagline review page (workshop tool) |
+| `copy-review.html` | Copy review page: each variant's reworded keys beside the base (workshop stacks only; `page-copy.md` §5) |
+| `copy/variants/` | Review variants: overlays of only the keys they reword, registered in `index.js` (`page-copy.md` §5) |
+| `copy/active.js` | The variant this deploy layers over the base; committed as none, written by `inject-config.mjs --copy-variant` |
 | `copy/<locale>/` | Member-facing copy bundles (`page-copy.md`, T12): `locale.js` declares the locale and date formats; `index.js` merges one file per surface into the base bundle — `site.js` (the public pages' shared header and footer), `landing.js`, `terms.js`, `taglines.js`, `common.js` (words several screens share), `errors.js`, then one per screen family (`auth.js`, `interview.js`, `onboarding.js`, `feed.js`, `event.js`, `propose.js`, `edit.js`, `profile.js`, `menu.js`); keys prefixed with the surface |
 | `css/styles.css` | All styles: base (phone), the `data-theme` layers (`ui-themes.md`), and the responsive layer at the end (`design-spec.md` §4) |
 | `manifest.json` | Web app manifest — installability (`design-spec.md` §5) |
@@ -62,7 +65,7 @@ operator (`admin`, `seed-handlers`).
 | `lambda/api/{users,events,matching,notify,admin,workshop}/` | Domain handlers and their projections |
 | `lambda/api/stream-projector.mjs` + `projector/` | Async user-model projector. **The entry file must not be named `projector.mjs`** — the sibling directory shadows it in the runtime's extensionless resolution (T9) |
 | `lambda/feedback/index.mjs` | Feedback Lambda (S3 writer) |
-| `scripts/` | `inject-config.mjs` (copy + substitution → dist → S3 sync → register views), `render-copy.mjs` (fills the static pages' copy; also the local preview), `render-registers.mjs` (K-009 views + advisor packs), `seed-events.mjs`, `purge-pii-aggregates.mjs` |
+| `scripts/` | `inject-config.mjs` (copy + substitution → dist → S3 sync → register views), `render-copy.mjs` (fills the static pages' copy; also the local preview), `copy-variants.mjs` (checks review variants; `--copy-variant` deploys one), `render-registers.mjs` (K-009 views + advisor packs), `seed-events.mjs`, `purge-pii-aggregates.mjs` |
 | `test/functional/` | End-to-end tests against the deployed `IrlStackTest`, incl. the replay proof |
 | `test/helpers/` | CDK-output config, Cognito auth, cleanup, workshop time, region resolution (T10) |
 

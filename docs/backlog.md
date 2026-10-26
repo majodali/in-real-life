@@ -145,16 +145,19 @@ Trust & safety surface, internal admin/support tooling.
 Items that can land alongside any group above once prerequisites exist.
 
 - [ ] **Page copy in resource bundles** (founder, 2026-09-18) — `stage: built`
-  (chunks 1–3; chunks 1–2 also live on workshop). **In flight**: plan
+  (chunks 1–4; chunks 1–3 also live on workshop). **In flight**: plan
   `docs/plans/page-copy-bundles.md` (active), design `docs/page-copy.md`,
   T12, U13. Built so far: the engine (`src/js/copy-engine.js`; escaping
   by default, whole sentences with marked spans, plurals and dates by
   the bundle's locale), the `en-US` bundle under `src/copy/` (15
   surfaces), every word of the landing and terms pages, filled at
   deploy by `render-copy.mjs`, and every member-facing app screen,
-  with server text replaced by keyed messages (`src/js/errors.js`).
-  Chunk 3 is at its gate (click through the app on workshop); chunk 4
-  (review variants, Terms locked) follows. The original
+  with server text replaced by keyed messages (`src/js/errors.js`), and
+  review variants: overlays under `src/copy/variants/`, chosen per
+  workshop deploy (`inject-config.mjs --copy-variant <name>`), checked
+  in the tests and at deploy with the Terms locked, and compared on
+  `copy-review.html`. Chunk 4 is at its gate (run a review with a
+  variant deployed); the plan closes after it. The original
   ask: all page copy out of the markup and into separate JS resource bundles.
   **Near-term value**: a reviewer can make and deploy a trial copy
   edit without touching a page, which is what makes copy and

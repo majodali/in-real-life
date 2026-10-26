@@ -27,14 +27,14 @@ export default {
   'feed.card.interested': "★ You're interested",
   'feed.card.conflict': '⚠ Overlaps another plan',
   'feed.card.full': 'Full — interest only',
-  'feed.card.cancelledOnMe': '✕ Cancelled — you were in',
+  'feed.card.cancelledOnMe': '✕ Canceled — you were in',
 
   // Shown once, as a toast, when events a member was in are cancelled.
-  'feed.notice.one': "“{title}” was cancelled. You'd said you'd be there.",
-  'feed.notice.oneWithReason': "“{title}” was cancelled — {reason}. You'd said you'd be there.",
+  'feed.notice.one': "“{title}” was canceled. You'd said you'd be there.",
+  'feed.notice.oneWithReason': "“{title}” was canceled — {reason}. You'd said you'd be there.",
   // {count} is how many more besides the first.
   'feed.notice.many': {
-    one: "“{title}” was cancelled (and {count} more — check your feed). You'd said you'd be there.",
-    other: "“{title}” was cancelled (and {count} more — check your feed). You'd said you'd be there.",
+    one: "“{title}” was canceled (and {count} more — check your feed). You'd said you'd be there.",
+    other: "“{title}” was canceled (and {count} more — check your feed). You'd said you'd be there.",
   },
 };
