@@ -1,11 +1,12 @@
 # Page copy in resource bundles
 
-Status: active (**chunk 4 delivered, at its gate** — 2026-10-26: review
-variants as overlays, chosen per workshop deploy, checked in the tests
-and at deploy, the Terms locked, and a copy review page. Chunk 3's gate
-passed 2026-10-26: the founder deployed to workshop and clicked through
-the app, and chose "canceled". Chunks 1 and 2 passed 2026-10-25. Plan
-approved 2026-10-25.)
+Status: closed → Backlog entry (2026-10-26). All four chunks delivered
+and their gates passed: chunks 1 and 2 on 2026-10-25, chunks 3 and 4 on
+2026-10-26 — the last when the founder deployed the `sample` variant to
+workshop and ran a review on it. The backlog's checked "Page copy in
+resource bundles" entry supersedes this plan; it reaches production
+with the next ordinary prod deploy. Follow-on: the ops repo's
+`irl-ops deploy` takes `--copy-variant` (its own PR).
 
 Outcome under development: every member-facing string on the site and
 in the app lives in a JavaScript resource bundle, not in markup or
@@ -288,7 +289,7 @@ lifecycle state stays `cancelled` in code, which members never read.
 
 Gate: founder clicks through the app on workshop.
 
-### Chunk 4 — variants for review — DELIVERED (at gate)
+### Chunk 4 — variants for review — DELIVERED (gate passed 2026-10-26)
 
 As planned; the design is note §5.
 

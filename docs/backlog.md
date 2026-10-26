@@ -144,37 +144,7 @@ Trust & safety surface, internal admin/support tooling.
 
 Items that can land alongside any group above once prerequisites exist.
 
-- [ ] **Page copy in resource bundles** (founder, 2026-09-18) — `stage: built`
-  (chunks 1–4; chunks 1–3 also live on workshop). **In flight**: plan
-  `docs/plans/page-copy-bundles.md` (active), design `docs/page-copy.md`,
-  T12, U13. Built so far: the engine (`src/js/copy-engine.js`; escaping
-  by default, whole sentences with marked spans, plurals and dates by
-  the bundle's locale), the `en-US` bundle under `src/copy/` (15
-  surfaces), every word of the landing and terms pages, filled at
-  deploy by `render-copy.mjs`, and every member-facing app screen,
-  with server text replaced by keyed messages (`src/js/errors.js`), and
-  review variants: overlays under `src/copy/variants/`, chosen per
-  workshop deploy (`inject-config.mjs --copy-variant <name>`), checked
-  in the tests and at deploy with the Terms locked, and compared on
-  `copy-review.html`. Chunk 4 is at its gate (run a review with a
-  variant deployed); the plan closes after it. The original
-  ask: all page copy out of the markup and into separate JS resource bundles.
-  **Near-term value**: a reviewer can make and deploy a trial copy
-  edit without touching a page, which is what makes copy and
-  view-variant reviews worth running — and what the concurrent
-  workshop instances in the ops repo's
-  `plans/concurrent-workshop-instances.md` are being built to host
-  (one variant per instance, one reviewer per room). **Later value**:
-  it is the prerequisite for internationalization/localization, so it
-  is the first concrete piece of **R10** (languages & localization,
-  the founder's #2 concern) and should be designed as such rather
-  than as a refactor — the bundle shape decides what a translation
-  later has to fit into. Scope, settled in the plan: the public pages
-  and every member-facing screen are in; the operator console, the
-  workshop review tools, AI prompts and model-written text (R10's
-  load-bearing language design), the register views and Cognito's
-  emails are out, each for a stated reason. Not blocked by anything;
-  nothing is blocked by it
+- [x] **Page copy in resource bundles** (founder, 2026-09-18) — `stage: workshop` (live on workshop since 2026-10-26; reaches production with the next ordinary prod deploy). Plan closed: `docs/plans/page-copy-bundles.md`; design `docs/page-copy.md`, T12, U13. Every member-facing word lives in `src/copy/en-US/` — 15 surface files, keys prefixed with their surface, written as whole literals in code so tests find every key used and every key missing, and no key unused. One engine (`src/js/copy-engine.js`): escaping by default, whole sentences with marked spans, plurals and dates in the bundle's locale (`locale.js`); the app's instance is `src/js/copy.js`, and the landing page loads only its taglines. The landing and terms pages are filled at deploy by `render-copy.mjs` and need no JavaScript; CDK's own upload excludes the pages the deploy script owns. Server and Cognito text never reaches a member (`src/js/errors.js`; a test holds its patterns to the backend source). **Review variants**: overlays under `src/copy/variants/` with an `about`, served by a workshop deploy with `inject-config.mjs --copy-variant <name>` (refused on production), checked in the tests and at deploy (`copy-variants.mjs`: keys exist, forms match, no new values, Terms of Use locked), and compared on `copy-review.html`. US spelling throughout, "canceled" with one l (U11). Out of the first pass, each for a stated reason (note §6): the operator console, AI prompts, the register views and Cognito's emails. This is R10's opening move. Found and recorded along the way: cached JavaScript can mix versions on the first load after a deploy (its own item)
 - [ ] Recurring events (weekly coffee walk, monthly book swap)
 - [ ] Weather/seasonality awareness for outdoor events
 - [ ] Multiple locations beyond Bainbridge Island — per the launch playbook (radar R5)
