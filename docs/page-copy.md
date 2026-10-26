@@ -224,9 +224,18 @@ export default {
 };
 ```
 
-**A workshop deploy names its variant**:
-`node infrastructure/scripts/inject-config.mjs <stack> --copy-variant <name>`.
-The static pages are filled with the variant over the base, and the
+**A workshop deploy names its variant**, in one command from the ops
+repo:
+
+```bash
+./bin/irl-ops deploy workshop --copy-variant <name>
+```
+
+which runs `cdk deploy` and then this repo's
+`node infrastructure/scripts/inject-config.mjs <stack> --copy-variant <name>`
+(also usable on its own after a plain deploy). `irl-ops` refuses a
+variant on production, on an env without a site, and for a name that
+is not a variant file, before anything deploys. The static pages are filled with the variant over the base, and the
 deploy ships its own `copy/active.js` re-exporting the variant, which
 the app's screens and the landing page's taglines layer over the base.
 Without the flag the stack serves the base. A production stack refuses
