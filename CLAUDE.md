@@ -102,6 +102,8 @@ name through its repository tools.
 # Frontend preview: copy app.html -> app.local.html (gitignored), fill
 # the __IRL_*__ placeholders from your stack, then:
 cd src && python3 -m http.server 8000    # open app.local.html
+# The public pages' copy is filled from src/copy/ at deploy; preview one with
+node infrastructure/scripts/render-copy.mjs src/index.html --out src/index.local.html  # or terms
 
 # Backend unit tests (lambda/api, scripts/, test/helpers/)
 cd infrastructure && npm install && npm test
@@ -136,6 +138,8 @@ operator-driven deploys until the deploy Lambda lands:
 ```bash
 cd infrastructure && npx cdk deploy <stack>   # e.g. IrlStack, IrlStackTest
 node infrastructure/scripts/inject-config.mjs <stack>   # --dry-run to preview
+# A workshop stack can serve a review variant of the copy (docs/page-copy.md §5):
+#   node infrastructure/scripts/inject-config.mjs <stack> --copy-variant <name>
 ```
 
 `inject-config.mjs` substitutes the runtime config into the pages

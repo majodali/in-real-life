@@ -7,45 +7,48 @@
 // scales, member-facing wording added. Never renders a weight or score;
 // the API never sends one.
 
+import { text } from '../copy.js';
+
+// Values are copy keys (src/copy/<locale>/profile.js); envelopeRows reads them.
 export const ENVELOPE_VIEW = {
   groupSize: {
-    title: 'Group size',
+    title: 'profile.envelope.groupSize',
     positions: {
-      intimate: 'a few people (3–4)',
-      small: 'a small group (5–8)',
-      large: 'a bigger group (9+)',
+      intimate: 'profile.envelope.groupSize.intimate',
+      small: 'profile.envelope.groupSize.small',
+      large: 'profile.envelope.groupSize.large',
     },
   },
   structure: {
-    title: 'The shape of it',
+    title: 'profile.envelope.structure',
     positions: {
-      'activity-anchored': 'something to do together',
-      balanced: 'a bit of both',
-      'open-conversation': 'open conversation',
+      'activity-anchored': 'profile.envelope.structure.activityAnchored',
+      balanced: 'profile.envelope.structure.balanced',
+      'open-conversation': 'profile.envelope.structure.openConversation',
     },
   },
   familiarity: {
-    title: 'Familiar faces',
+    title: 'profile.envelope.familiarity',
     positions: {
-      'needs-known-face': 'best with someone you know there',
-      'easier-with-known-face': 'easier with a familiar face',
-      'fine-with-strangers': 'fine walking in new',
+      'needs-known-face': 'profile.envelope.familiarity.needsKnownFace',
+      'easier-with-known-face': 'profile.envelope.familiarity.easierWithKnownFace',
+      'fine-with-strangers': 'profile.envelope.familiarity.fineWithStrangers',
     },
   },
   role: {
-    title: 'Having a role',
+    title: 'profile.envelope.role',
     positions: {
-      'wants-a-job': 'happiest with a job to do',
-      either: 'either way',
-      'happy-to-attend': 'happy to just come along',
+      'wants-a-job': 'profile.envelope.role.wantsAJob',
+      either: 'profile.envelope.role.either',
+      'happy-to-attend': 'profile.envelope.role.happyToAttend',
     },
   },
   novelty: {
-    title: 'New vs. familiar',
+    title: 'profile.envelope.novelty',
     positions: {
-      'prefers-ritual': 'the regular and familiar',
-      mix: 'a mix',
-      'seeks-new': 'trying new things',
+      'prefers-ritual': 'profile.envelope.novelty.prefersRitual',
+      mix: 'profile.envelope.novelty.mix',
+      'seeks-new': 'profile.envelope.novelty.seeksNew',
     },
   },
 };
@@ -60,13 +63,13 @@ export function envelopeRows(envelope) {
     const dim = envelope?.[dimension] ?? {};
     rows.push({
       dimension,
-      title: view.title,
+      title: text(view.title),
       position: dim.position,
-      positionLabel: dim.position ? view.positions[dim.position] : undefined,
+      positionLabel: dim.position ? text(view.positions[dim.position]) : undefined,
       positionChoices: Object.entries(view.positions)
-        .map(([value, label]) => ({ value, label })),
+        .map(([value, key]) => ({ value, label: text(key) })),
       edgeToward: dim.edgeToward,
-      edgeLabel: dim.edgeToward ? view.positions[dim.edgeToward] : undefined,
+      edgeLabel: dim.edgeToward ? text(view.positions[dim.edgeToward]) : undefined,
       source: dim.source,
       story: dim.latestObservation ?? dim.comfort,
       growthEdge: dim.growthEdge,
@@ -97,7 +100,7 @@ export async function handleModelLoad({ commands, showToast }) {
     const out = await commands.getModel();
     return out?.model ?? null;
   } catch {
-    showToast?.("Couldn't load this right now — try again in a moment");
+    showToast?.(text('profile.model.loadFailedToast'));
     return undefined; // distinct from null (= genuinely no model yet)
   }
 }
@@ -108,11 +111,11 @@ export async function handleModelLoad({ commands, showToast }) {
 export async function handleCorrection({ commands, correction, showToast, onDone }) {
   try {
     await commands.correctModel({ correction });
-    showToast?.('Got it — noted');
+    showToast?.(text('profile.model.noted'));
     await onDone?.();
     return true;
   } catch {
-    showToast?.("That didn't save — try again in a moment");
+    showToast?.(text('profile.model.failed'));
     return false;
   }
 }

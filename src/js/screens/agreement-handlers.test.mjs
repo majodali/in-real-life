@@ -55,7 +55,8 @@ test('401 sends to signin; other errors toast and stay', async () => {
   api.get = spy(async () => { throw httpError(500, 'boom'); });
   assert.equal(await handleAgreementMount({ api, navigate, showToast }), null);
   assert.equal(navigate.calls.length, 0);
-  assert.equal(showToast.calls[0][0], 'boom');
+  // The screen's own words, never the server's (src/js/errors.js).
+  assert.equal(showToast.calls[0][0], 'Could not load your account.');
 });
 
 // ─── handleAgreementAccept ───
@@ -86,5 +87,5 @@ test('other errors toast and stay for a retry', async () => {
   });
   assert.equal(ok, false);
   assert.equal(navigate.calls.length, 0);
-  assert.equal(showToast.calls[0][0], 'nope');
+  assert.equal(showToast.calls[0][0], 'Could not record your acceptance.');
 });

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="in·real·life is a community-driven way to find meetups on Bainbridge Island and to say you'll be there. A coffee walk, a book swap, a low-tide morning.">
+<meta name="description" data-copy-content="landing.meta.description">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#f8f3e9">
@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="in·real·life">
 <link rel="stylesheet" href="css/styles.css">
-<title>in·real·life — neighborhood meetups on Bainbridge Island</title>
+<title data-copy="landing.meta.title"></title>
 
 <!--
   The landing page: Direction D, chosen 2026-10-21 (U12); revised at
@@ -23,6 +23,10 @@
   and the judgment that picked it live in
   design/landing-directions-2026-09.md; the drawn previews it came from
   are archived beside that note.
+
+  The words are in src/copy/en-US/ (landing.js, and site.js for the
+  header and footer) and are filled in at deploy
+  (infrastructure/scripts/render-copy.mjs).
 
   `class="lp"` scopes the public-page styles in css/styles.css (the
   "Public pages" section) and gives this page ordinary document
@@ -44,61 +48,61 @@
 </script>
 </head>
 <body>
-<a class="lp-skip" href="#main">Skip to content</a>
+<a class="lp-skip" href="#main" data-copy="site.skip"></a>
 
-<aside class="lp-notice-bar" aria-label="Where things stand">
+<aside class="lp-notice-bar" data-copy-aria-label="landing.notice.label">
   <div class="lp-wrap">
-    <span class="lp-notice-label">Early days</span>
-    <p>We're opening on Bainbridge Island first, and starting small on purpose. We check every sign-up ourselves, so allow a few days.</p>
+    <span class="lp-notice-label" data-copy="landing.notice.tag"></span>
+    <p data-copy="landing.notice.body"></p>
   </div>
 </aside>
 
 <header class="lp-wrap lp-top">
-  <a class="lp-wordmark" href="index.html" aria-label="in real life, home">in<span>·</span>real<span>·</span>life</a>
-  <nav class="lp-nav" aria-label="Page">
-    <a class="lp-anchor" href="#week">Example week</a>
-    <a class="lp-anchor" href="#how">How it works</a>
-    <a class="lp-anchor" href="#absent">Principles</a>
-    <a class="lp-signin" href="app.html#signin" data-auth="signin">Sign in</a>
+  <a class="lp-wordmark" href="index.html" data-copy-aria-label="site.wordmark.label">in<span>·</span>real<span>·</span>life</a>
+  <nav class="lp-nav" data-copy-aria-label="landing.nav.label">
+    <a class="lp-anchor" href="#week" data-copy="landing.nav.week"></a>
+    <a class="lp-anchor" href="#how" data-copy="landing.nav.how"></a>
+    <a class="lp-anchor" href="#absent" data-copy="landing.nav.absent"></a>
+    <a class="lp-signin" href="app.html#signin" data-auth="signin" data-copy="site.signin"></a>
   </nav>
 </header>
 
 <main id="main">
 
   <div class="lp-wrap">
-    <p class="lp-tagline" id="tagline"><span class="lp-tagline-text" id="taglineText">Who are the people in your neighborhood?</span><span class="lp-tagline-by" id="taglineBy"></span></p>
+    <p class="lp-tagline" id="tagline"><span class="lp-tagline-text" id="taglineText" data-copy="landing.tagline.fallback"></span><span class="lp-tagline-by" id="taglineBy"></span></p>
   </div>
 
   <section class="lp-wrap lp-opening" aria-labelledby="h1">
     <div class="lp-hero">
-      <h1 id="h1">You're invited to meet your neighbors, <em>in real life.</em></h1>
-      <p class="lp-lede">in·real·life is a community-driven way to find meetups on Bainbridge Island and to say you'll be there. A coffee walk, a book swap, a low-tide morning. You confirm, and then you show up. That is the whole thing.</p>
+      <h1 id="h1" data-copy="landing.hero.headline"></h1>
+      <p class="lp-lede" data-copy="landing.hero.lede"></p>
     </div>
 
     <div class="lp-intro">
       <div class="lp-intro-cta">
         <div class="lp-cta">
-          <a class="lp-btn" href="app.html#location" data-auth="signup">Accept the invitation</a>
-          <a class="lp-quiet" href="app.html#signin" data-auth="signin">Already signed up? Sign in</a>
+          <a class="lp-btn" href="app.html#location" data-auth="signup" data-copy="landing.cta.accept"></a>
+          <a class="lp-quiet" href="app.html#signin" data-auth="signin" data-copy="landing.cta.signin"></a>
         </div>
         <section class="lp-glance-card" aria-labelledby="glance-h">
-          <h2 class="lp-glance-title" id="glance-h">At a glance</h2>
+          <h2 class="lp-glance-title" id="glance-h" data-copy="landing.glance.title"></h2>
           <dl class="lp-glance">
             <div>
-              <dt>What it is</dt>
-              <dd>A short list of small, in-person meetups near where you live, and a way to say you'll come.</dd>
+              <dt data-copy="landing.glance.what.term"></dt>
+              <dd data-copy="landing.glance.what.def"></dd>
             </div>
             <div>
-              <dt>Who it's for</dt>
-              <dd>Adults, 18 and over, living on Bainbridge Island. Sign-up takes a few minutes; then we check you're local.</dd>
+              <dt data-copy="landing.glance.who.term"></dt>
+              <dd data-copy="landing.glance.who.def"></dd>
             </div>
             <div>
-              <dt>Who runs it</dt>
-              <dd>It's community-driven: neighbors propose the meetups, and every decision about how it works is public. Not for profit, no ads, nothing for sale.</dd>
+              <dt data-copy="landing.glance.runs.term"></dt>
+              <dd data-copy="landing.glance.runs.def"></dd>
             </div>
             <div>
-              <dt>Where</dt>
-              <dd>Bainbridge Island, Washington, to begin with. One place at a time after that.</dd>
+              <dt data-copy="landing.glance.where.term"></dt>
+              <dd data-copy="landing.glance.where.def"></dd>
             </div>
           </dl>
         </section>
@@ -107,120 +111,120 @@
 
     <div class="lp-week" id="week">
       <div class="lp-week-head">
-        <h2>A week of ideas</h2>
-        <span class="lp-flag">Example week</span>
+        <h2 data-copy="landing.week.title"></h2>
+        <span class="lp-flag" data-copy="landing.week.flag"></span>
       </div>
-      <p class="lp-week-note">Examples, to show the kind of thing neighbors propose. They are invented and not live: the places are real, the people are not. The real calendar is in the app.</p>
+      <p class="lp-week-note" data-copy="landing.week.note"></p>
 
-      <ol aria-label="Example meetups, by day">
+      <ol data-copy-aria-label="landing.week.listLabel">
 
         <li class="lp-day">
-          <h3 class="lp-day-label"><span class="lp-dow">Monday</span></h3>
+          <h3 class="lp-day-label"><span class="lp-dow" data-copy="landing.week.mon"></span></h3>
           <ol class="lp-events">
             <li class="lp-event">
-              <p class="lp-when"><time datetime="18:30">6:30 pm</time></p>
+              <p class="lp-when"><time datetime="18:30" data-copy="landing.week.walk.when"></time></p>
               <div class="lp-what">
-                <h4>Evening walk, Grand Forest west loop</h4>
-                <p class="lp-meta">Mandus Olson Road trailhead · Hosted by <b>Ruth</b></p>
+                <h4 data-copy="landing.week.walk.title"></h4>
+                <p class="lp-meta" data-copy="landing.week.walk.meta"></p>
               </div>
             </li>
           </ol>
         </li>
 
         <li class="lp-day">
-          <h3 class="lp-day-label"><span class="lp-dow">Tuesday</span></h3>
+          <h3 class="lp-day-label"><span class="lp-dow" data-copy="landing.week.tue"></span></h3>
           <ol class="lp-events">
             <li class="lp-event">
-              <p class="lp-when"><time datetime="07:30">7:30 am</time></p>
+              <p class="lp-when"><time datetime="07:30" data-copy="landing.week.coffee.when"></time></p>
               <div class="lp-what">
-                <h4>Coffee before the morning boat</h4>
-                <p class="lp-meta">Pegasus Coffee House, Winslow · Hosted by <b>Daniel</b></p>
+                <h4 data-copy="landing.week.coffee.title"></h4>
+                <p class="lp-meta" data-copy="landing.week.coffee.meta"></p>
               </div>
             </li>
           </ol>
         </li>
 
         <li class="lp-day">
-          <h3 class="lp-day-label"><span class="lp-dow">Wednesday</span></h3>
+          <h3 class="lp-day-label"><span class="lp-dow" data-copy="landing.week.wed"></span></h3>
           <ol class="lp-events">
             <li class="lp-event">
-              <p class="lp-when"><time datetime="12:15">12:15 pm</time></p>
+              <p class="lp-when"><time datetime="12:15" data-copy="landing.week.lunch.when"></time></p>
               <div class="lp-what">
-                <h4>Lunch on the benches at Waterfront Park</h4>
-                <p class="lp-meta">Waterfront Park, near the boat launch · Hosted by <b>Amara</b></p>
+                <h4 data-copy="landing.week.lunch.title"></h4>
+                <p class="lp-meta" data-copy="landing.week.lunch.meta"></p>
               </div>
             </li>
             <li class="lp-event">
-              <p class="lp-when"><time datetime="19:00">7:00 pm</time></p>
+              <p class="lp-when"><time datetime="19:00" data-copy="landing.week.games.when"></time></p>
               <div class="lp-what">
-                <h4>Board games at the library</h4>
-                <p class="lp-meta">Bainbridge Public Library, meeting room · Hosted by <b>Joe</b></p>
+                <h4 data-copy="landing.week.games.title"></h4>
+                <p class="lp-meta" data-copy="landing.week.games.meta"></p>
               </div>
             </li>
           </ol>
         </li>
 
         <li class="lp-day">
-          <h3 class="lp-day-label"><span class="lp-dow">Thursday</span></h3>
+          <h3 class="lp-day-label"><span class="lp-dow" data-copy="landing.week.thu"></span></h3>
           <ol class="lp-events">
             <li class="lp-event">
-              <p class="lp-when"><time datetime="18:00">6:00 pm</time></p>
+              <p class="lp-when"><time datetime="18:00" data-copy="landing.week.pickleball.when"></time></p>
               <div class="lp-what">
-                <h4>Pickleball for people who have never played</h4>
-                <p class="lp-meta">Battle Point Park courts · Hosted by <b>Linh</b></p>
+                <h4 data-copy="landing.week.pickleball.title"></h4>
+                <p class="lp-meta" data-copy="landing.week.pickleball.meta"></p>
               </div>
             </li>
           </ol>
         </li>
 
         <li class="lp-day">
-          <h3 class="lp-day-label"><span class="lp-dow">Friday</span></h3>
+          <h3 class="lp-day-label"><span class="lp-dow" data-copy="landing.week.fri"></span></h3>
           <ol class="lp-events">
             <li class="lp-event">
-              <p class="lp-when"><time datetime="17:30">5:30 pm</time></p>
+              <p class="lp-when"><time datetime="17:30" data-copy="landing.week.sketching.when"></time></p>
               <div class="lp-what">
-                <h4>Sketching the harbor</h4>
-                <p class="lp-meta">Eagle Harbor waterfront trail, by the marina · Hosted by <b>Ellen</b></p>
+                <h4 data-copy="landing.week.sketching.title"></h4>
+                <p class="lp-meta" data-copy="landing.week.sketching.meta"></p>
               </div>
             </li>
           </ol>
         </li>
 
         <li class="lp-day">
-          <h3 class="lp-day-label"><span class="lp-dow">Saturday</span></h3>
+          <h3 class="lp-day-label"><span class="lp-dow" data-copy="landing.week.sat"></span></h3>
           <ol class="lp-events">
             <li class="lp-event">
-              <p class="lp-when"><time datetime="09:00">9:00 am</time></p>
+              <p class="lp-when"><time datetime="09:00" data-copy="landing.week.market.when"></time></p>
               <div class="lp-what">
-                <h4>Farmers' market, then a coffee</h4>
-                <p class="lp-meta">Town Square, Winslow · Hosted by <b>Priya</b></p>
+                <h4 data-copy="landing.week.market.title"></h4>
+                <p class="lp-meta" data-copy="landing.week.market.meta"></p>
               </div>
             </li>
             <li class="lp-event">
-              <p class="lp-when"><time datetime="14:00">2:00 pm</time></p>
+              <p class="lp-when"><time datetime="14:00" data-copy="landing.week.tide.when"></time></p>
               <div class="lp-what">
-                <h4>Low tide walk at Fay Bainbridge</h4>
-                <p class="lp-meta">Fay Bainbridge Park, the beach below the campground · Hosted by <b>Tom</b></p>
+                <h4 data-copy="landing.week.tide.title"></h4>
+                <p class="lp-meta" data-copy="landing.week.tide.meta"></p>
               </div>
             </li>
           </ol>
         </li>
 
         <li class="lp-day">
-          <h3 class="lp-day-label"><span class="lp-dow">Sunday</span></h3>
+          <h3 class="lp-day-label"><span class="lp-dow" data-copy="landing.week.sun"></span></h3>
           <ol class="lp-events">
             <li class="lp-event">
-              <p class="lp-when"><time datetime="10:00">10:00 am</time></p>
+              <p class="lp-when"><time datetime="10:00" data-copy="landing.week.run.when"></time></p>
               <div class="lp-what">
-                <h4>Sunday run, Gazzam Lake loop</h4>
-                <p class="lp-meta">Gazzam Lake Nature Preserve, Marshall Road entrance · Hosted by <b>Marcus</b></p>
+                <h4 data-copy="landing.week.run.title"></h4>
+                <p class="lp-meta" data-copy="landing.week.run.meta"></p>
               </div>
             </li>
             <li class="lp-event">
-              <p class="lp-when"><time datetime="16:00">4:00 pm</time></p>
+              <p class="lp-when"><time datetime="16:00" data-copy="landing.week.books.when"></time></p>
               <div class="lp-what">
-                <h4>Book swap, one in and one out</h4>
-                <p class="lp-meta">Lynwood Center, the benches outside the theater · Hosted by <b>Sofia</b></p>
+                <h4 data-copy="landing.week.books.title"></h4>
+                <p class="lp-meta" data-copy="landing.week.books.meta"></p>
               </div>
             </li>
           </ol>
@@ -228,7 +232,7 @@
 
       </ol>
 
-      <p class="lp-week-end">That is one week of ideas. The real calendar shows what neighbors have actually proposed.</p>
+      <p class="lp-week-end" data-copy="landing.week.end"></p>
     </div>
   </section>
 
@@ -236,28 +240,28 @@
 
   <section class="lp-section" id="absent" aria-labelledby="h-absent">
     <div class="lp-wrap">
-      <h2 id="h-absent" class="lp-title">What the cards leave out, on purpose</h2>
-      <p class="lp-lead">You have just read ten meetups without seeing what anyone looks like or which one is "popular". That is the design. Each thing we leave out is paired with what we do instead.</p>
+      <h2 id="h-absent" class="lp-title" data-copy="landing.absent.title"></h2>
+      <p class="lp-lead" data-copy="landing.absent.lead"></p>
       <ul class="lp-absent">
         <li>
-          <h3>No faces, no surnames</h3>
-          <p>There are no profile photos to size people up by. <b>Instead:</b> a first name, and a line from the host on how to find the group. Your surname, address and phone number stay yours.</p>
+          <h3 data-copy="landing.absent.faces.title"></h3>
+          <p data-copy="landing.absent.faces.body"></p>
         </li>
         <li>
-          <h3>No inbox</h3>
-          <p>There is no messaging and no direct messages, so there is nothing to check and nobody can write to you. <b>Instead:</b> the way to talk to someone is to go where they said they would be, and ask in person.</p>
+          <h3 data-copy="landing.absent.inbox.title"></h3>
+          <p data-copy="landing.absent.inbox.body"></p>
         </li>
         <li>
-          <h3>No popularity contest</h3>
-          <p>Nothing is trending or promoted, and we never rank people. <b>Instead:</b> meetups are suggested by fit — what you enjoy, when you're free, the size of group you like — and never by how many are going.</p>
+          <h3 data-copy="landing.absent.popular.title"></h3>
+          <p data-copy="landing.absent.popular.body"></p>
         </li>
         <li>
-          <h3>Nothing to keep up with</h3>
-          <p>No streaks, no badges, no feed that never ends. Miss a month and nothing happens to you. <b>Instead:</b> a short list of what's coming up nearby, there when you want it.</p>
+          <h3 data-copy="landing.absent.keepUp.title"></h3>
+          <p data-copy="landing.absent.keepUp.body"></p>
         </li>
         <li>
-          <h3>No ads, nothing for sale</h3>
-          <p>in·real·life is not for profit. We do not sell advertising, and we do not sell what we know about you. <b>Instead:</b> we collect the minimum a meetup needs, and we publish how we decide things.</p>
+          <h3 data-copy="landing.absent.ads.title"></h3>
+          <p data-copy="landing.absent.ads.body"></p>
         </li>
       </ul>
     </div>
@@ -265,27 +269,27 @@
 
   <section class="lp-section" id="how" aria-labelledby="h-how">
     <div class="lp-wrap">
-      <h2 id="h-how" class="lp-title">How it works</h2>
-      <p class="lp-lead">Three steps. The first one is the part that makes the room trustworthy.</p>
+      <h2 id="h-how" class="lp-title" data-copy="landing.how.title"></h2>
+      <p class="lp-lead" data-copy="landing.how.lead"></p>
       <ol class="lp-steps">
         <li>
           <div>
-            <h3>Sign up, and show us you're local</h3>
-            <p>Sign-up is for adults, 18 and over, and we verify that you live on the island before you see anyone. That is what makes this a neighborhood and not the whole internet.</p>
-            <p>Then a short interview: what you enjoy, when you are free, the kind of company you like.</p>
+            <h3 data-copy="landing.how.join.title"></h3>
+            <p data-copy="landing.how.join.p1"></p>
+            <p data-copy="landing.how.join.p2"></p>
           </div>
         </li>
         <li>
           <div>
-            <h3>Pick something coming up</h3>
-            <p>Read the real calendar the way you read the ideas above. When something looks right, say you'll be there. That is a promise to the host, not a like.</p>
+            <h3 data-copy="landing.how.pick.title"></h3>
+            <p data-copy="landing.how.pick.p1"></p>
           </div>
         </li>
         <li>
           <div>
-            <h3>Show up</h3>
-            <p>Look for the first name on the card and say hello. That is where the app stops and the meetup starts.</p>
-            <p>Afterwards we ask how it went, starting with whether it was worth another go.</p>
+            <h3 data-copy="landing.how.show.title"></h3>
+            <p data-copy="landing.how.show.p1"></p>
+            <p data-copy="landing.how.show.p2"></p>
           </div>
         </li>
       </ol>
@@ -294,18 +298,18 @@
 
   <section class="lp-section lp-prose" aria-labelledby="h-where">
     <div class="lp-wrap">
-      <h2 id="h-where" class="lp-title">Where it works</h2>
-      <p>We are starting on Bainbridge Island, Washington, and only there. We add neighborhoods one at a time, so each one stays small enough to recognize itself.</p>
-      <p>Not on the island? Leave your email at sign-up. We will let you know when we reach your neighborhood, and we will not write to you in between.</p>
+      <h2 id="h-where" class="lp-title" data-copy="landing.where.title"></h2>
+      <p data-copy="landing.where.p1"></p>
+      <p data-copy="landing.where.p2"></p>
     </div>
   </section>
 
   <section class="lp-wrap lp-closing" aria-labelledby="h-close">
-    <h2 id="h-close">We hope to see you there.</h2>
-    <p>Sign up, see what neighbors have proposed, and say you'll come. Or propose something yourself; a walk is enough.</p>
+    <h2 id="h-close" data-copy="landing.close.title"></h2>
+    <p data-copy="landing.close.body"></p>
     <div class="lp-cta">
-      <a class="lp-btn" href="app.html#location" data-auth="signup">Accept the invitation</a>
-      <a class="lp-quiet" href="app.html#signin" data-auth="signin">Already signed up? Sign in</a>
+      <a class="lp-btn" href="app.html#location" data-auth="signup" data-copy="landing.cta.accept"></a>
+      <a class="lp-quiet" href="app.html#signin" data-auth="signin" data-copy="landing.cta.signin"></a>
     </div>
   </section>
 
@@ -313,11 +317,11 @@
 
 <footer class="lp-wrap">
   <div class="lp-foot">
-    <nav class="lp-foot-links" aria-label="About in real life">
-      <a href="terms.html">Terms of use</a>
-      <a href="registers/index.html">How we decide</a>
+    <nav class="lp-foot-links" data-copy-aria-label="site.footer.label">
+      <a href="terms.html" data-copy="site.footer.terms"></a>
+      <a href="registers/index.html" data-copy="site.footer.decide"></a>
     </nav>
-    <p>in·real·life is community-driven and run not for profit, from Bainbridge Island, Washington. First names only, no messaging, no ads.</p>
+    <p data-copy="site.footer.line"></p>
   </div>
 </footer>
 

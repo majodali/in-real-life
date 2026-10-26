@@ -7,6 +7,8 @@
 // interaction level, both from GET /events. Real notification channels
 // (push/email) are the Group 7 notifications slice.
 
+import { text } from './copy.js';
+
 const SEEN_KEY = 'irl_seen_cancellations';
 
 // Cancelled events the member was committed to and hasn't been shown yet.
@@ -22,12 +24,10 @@ export function unseenCancellations(events, seenIds) {
 export function noticeMessage(cancelled) {
   if (!cancelled?.length) return null;
   const first = cancelled[0];
-  const what = `“${first.title}” was cancelled`;
-  const rest = cancelled.length > 1 ? ` (and ${cancelled.length - 1} more — check your feed)` : '';
-  const why = cancelled.length === 1 && first.cancellationReason
-    ? ` — ${first.cancellationReason}`
-    : '';
-  return `${what}${why}${rest}. You'd said you'd be there.`;
+  if (cancelled.length > 1) return text('feed.notice.many', { title: first.title, count: cancelled.length - 1 });
+  return first.cancellationReason
+    ? text('feed.notice.oneWithReason', { title: first.title, reason: first.cancellationReason })
+    : text('feed.notice.one', { title: first.title });
 }
 
 export function readSeen(storage) {

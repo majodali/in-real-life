@@ -6,6 +6,7 @@ import { commands, auth, api } from '../services.js';
 import { navigate, showToast } from '../app.js';
 import { AGREEMENT_LAST_UPDATED } from '../agreement.js';
 import { handleAgreementMount, handleAgreementAccept } from './agreement-handlers.js';
+import { t, text, date } from '../copy.js';
 
 export function renderAgreement() {
   if (!auth.getCurrentTokens()) {
@@ -18,8 +19,8 @@ export function renderAgreement() {
     <div class="auth-card">
       <div class="auth-content">
         <h1 class="wordmark">in<span>·</span>real<span>·</span>life</h1>
-        <h2 class="auth-title">Our terms have changed</h2>
-        <p class="auth-subtext" id="agreementSubtext">One moment…</p>
+        <h2 class="auth-title">${t('auth.agreement.title')}</h2>
+        <p class="auth-subtext" id="agreementSubtext">${t('common.oneMoment')}</p>
       </div>
     </div>
   `;
@@ -36,21 +37,16 @@ async function mount(container) {
     <div class="auth-card">
       <div class="auth-content">
         <h1 class="wordmark">in<span>·</span>real<span>·</span>life</h1>
-        <h2 class="auth-title">Our terms have changed</h2>
+        <h2 class="auth-title">${t('auth.agreement.title')}</h2>
+        <p class="auth-subtext">${t('auth.agreement.body', { version: requiredAgreementVersion, updated: date(AGREEMENT_LAST_UPDATED, 'agreementDate') })}</p>
         <p class="auth-subtext">
-          We’ve updated the Terms of Use (now ${escapeHtml(requiredAgreementVersion)},
-          last updated ${escapeHtml(AGREEMENT_LAST_UPDATED)}). Please take a look and
-          accept the new version to keep using in·real·life. Until then you can
-          still browse, export your data, or delete your account.
-        </p>
-        <p class="auth-subtext">
-          <a href="terms.html" target="_blank" rel="noopener" class="auth-link">Read the Terms of Use</a>
+          <a href="terms.html" target="_blank" rel="noopener" class="auth-link">${t('auth.agreement.read')}</a>
         </p>
         <form class="auth-form" id="agreementForm">
-          <button class="btn-primary" id="agreementAccept" type="submit">I agree</button>
+          <button class="btn-primary" id="agreementAccept" type="submit">${t('auth.agreement.accept')}</button>
         </form>
         <p class="auth-subtext">
-          <a href="#" class="auth-link" id="agreementSignOut">Sign out instead</a>
+          <a href="#" class="auth-link" id="agreementSignOut">${t('auth.agreement.signOut')}</a>
         </p>
       </div>
     </div>
@@ -61,7 +57,7 @@ async function mount(container) {
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     button.disabled = true;
-    button.textContent = 'Saving…';
+    button.textContent = text('common.saving');
     const ok = await handleAgreementAccept({
       agreementVersion: requiredAgreementVersion,
       commands,
@@ -70,7 +66,7 @@ async function mount(container) {
     });
     if (!ok) {
       button.disabled = false;
-      button.textContent = 'I agree';
+      button.textContent = text('auth.agreement.accept');
     }
   });
 
@@ -79,10 +75,4 @@ async function mount(container) {
     auth.signOut();
     navigate('signin');
   });
-}
-
-function escapeHtml(str) {
-  const div = document.createElement('div');
-  div.textContent = str == null ? '' : String(str);
-  return div.innerHTML;
 }

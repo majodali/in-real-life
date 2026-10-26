@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en" class="lp" data-theme="morning-linen">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<meta name="theme-color" content="#f8f3e9">
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="css/styles.css">
+<title>in·real·life — copy review</title>
+
+<!--
+  The copy review page (docs/page-copy.md §5): a workshop tool, like
+  taglines.html. For each review variant it lists every key the variant
+  rewords, the base wording beside it, and the words that changed. It
+  ships only to workshop stacks — inject-config.mjs drops it from a
+  production deploy and CDK's own upload excludes it.
+
+  Its own labels are not page copy: no member ever sees this page.
+  Styles are inline so a review tool never weighs on the site's
+  stylesheet budget (design-spec §9).
+-->
+<script>
+  window.__IRL_CONFIG__ = { workshopMode: '__IRL_WORKSHOP_MODE__' === 'true' };
+</script>
+<script type="module">
+  import { initTheme } from './js/theme.js';
+  initTheme();
+</script>
+<style>
+  html.lp .lp-doc > #review { max-width: 1100px; }
+  .review-head { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: baseline; margin: 8px 0 20px; }
+  .review-head label { font-weight: 500; }
+  .review-head select { font: inherit; padding: 8px 10px; min-height: 44px; border-radius: 8px; border: 1px solid var(--lp-line); background: var(--lp-surface); color: var(--text); }
+  html.lp .review-about { border: 1px solid var(--lp-line); border-radius: 12px; padding: 16px 18px; margin-bottom: 24px; }
+  .review-about h2 { margin: 0 0 6px; }
+  .review-about p { margin: 6px 0; }
+  .review-about code, .review-key { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.85em; }
+  .review-surface { margin: 28px 0 8px; }
+  .review-row { border-top: 1px solid var(--lp-line); padding: 12px 0; display: grid; gap: 6px 20px; grid-template-columns: 1fr; }
+  .review-row .review-key { color: var(--text); opacity: 0.8; overflow-wrap: anywhere; }
+  .review-label { display: block; font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text); opacity: 0.8; margin-right: 6px; }
+  .review-row del { text-decoration: line-through; background: color-mix(in srgb, var(--rust) 18%, transparent); }
+  .review-row ins { text-decoration: none; background: color-mix(in srgb, var(--amber) 30%, transparent); }
+  .review-empty { color: var(--text); opacity: 0.8; }
+  @media (min-width: 900px) {
+    .review-row { grid-template-columns: 14rem 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header class="lp-wrap lp-top">
+  <a class="lp-wordmark" href="index.html" aria-label="in real life, home">in<span>·</span>real<span>·</span>life</a>
+</header>
+
+<main id="main" class="lp-wrap lp-doc">
+  <h1>Copy review</h1>
+  <p class="lp-lede">Each variant rewords some of the site's words for a review round. Pick one to see what it changes against the base wording.</p>
+
+  <div class="review-head">
+    <p id="deployed"></p>
+    <p>
+      <label for="variantPick">Variant</label>
+      <select id="variantPick"></select>
+    </p>
+  </div>
+
+  <section id="review" aria-live="polite"></section>
+</main>
+
+<script type="module">
+  import base from './copy/en-US/index.js';
+  import { VARIANTS } from './copy/variants/index.js';
+  import { name as deployed } from './copy/active.js';
+
+  const escape = (str) => {
+    const d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+  };
+
+  // Word-level difference, marked with <del> and <ins>.
+  function diff(before, after) {
+    const a = before.split(/(\s+)/);
+    const b = after.split(/(\s+)/);
+    const lcs = Array.from({ length: a.length + 1 }, () => new Array(b.length + 1).fill(0));
+    for (let i = a.length - 1; i >= 0; i--) {
+      for (let j = b.length - 1; j >= 0; j--) {
+        lcs[i][j] = a[i] === b[j] ? lcs[i + 1][j + 1] + 1 : Math.max(lcs[i + 1][j], lcs[i][j + 1]);
+      }
+    }
+    // Changed words are gathered into runs — everything removed, then
+    // everything added — so a reworded phrase reads as a phrase.
+    let out = '';
+    let removed = '';
+    let added = '';
+    const flush = () => {
+      // A run's trailing space belongs outside the marks.
+      const tail = (removed.match(/\s+$/) ?? added.match(/\s+$/) ?? [''])[0];
+      removed = removed.trimEnd();
+      added = added.trimEnd();
+      if (removed) out += `<del>${escape(removed)}</del>`;
+      if (removed && added) out += ' ';
+      if (added) out += `<ins>${escape(added)}</ins>`;
+      out += tail;
+      removed = '';
+      added = '';
+    };
+    let i = 0;
+    let j = 0;
+    while (i < a.length || j < b.length) {
+      if (i < a.length && j < b.length && a[i] === b[j]) {
+        // A space shared between two changed words stays inside the run.
+        if (/^\s+$/.test(a[i]) && (removed || added)) { removed += a[i]; added += b[j]; i++; j++; continue; }
+        flush(); out += escape(a[i]); i++; j++;
+      }
+      else if (j < b.length && (i === a.length || lcs[i][j + 1] >= lcs[i + 1][j])) { added += b[j]; j++; }
+      else { removed += a[i]; i++; }
+    }
+    flush();
+    return out;
+  }
+
+  const forms = (value) => (typeof value === 'string' ? { '': value } : value);
+
+  function render(name) {
+    const v = VARIANTS[name];
+    const review = document.getElementById('review');
+    if (!v) {
+      review.innerHTML = '<p class="review-empty">No variants yet. Add one under src/copy/variants/ and register it in index.js.</p>';
+      return;
+    }
+    const keys = Object.keys(v.default);
+    const bySurface = new Map();
+    for (const key of keys) {
+      const surface = key.split('.')[0];
+      bySurface.set(surface, [...(bySurface.get(surface) ?? []), key]);
+    }
+    let html = `
+      <div class="review-about">
+        <h2>${escape(v.about?.title ?? name)}</h2>
+        <p>${escape(v.about?.note ?? '')}</p>
+        <p>${escape([v.about?.by, v.about?.date].filter(Boolean).join(' · '))} · ${keys.length} ${keys.length === 1 ? 'key' : 'keys'} reworded</p>
+        <p>Deploy to a workshop stack: <code>node infrastructure/scripts/inject-config.mjs &lt;stack&gt; --copy-variant ${escape(name)}</code></p>
+      </div>`;
+    for (const [surface, list] of bySurface) {
+      html += `<h2 class="review-surface">${escape(surface)}</h2>`;
+      for (const key of list) {
+        const was = forms(base.strings[key] ?? '');
+        const now = forms(v.default[key]);
+        for (const form of Object.keys(now)) {
+          const label = form ? ` (${escape(form)})` : '';
+          html += `
+            <div class="review-row">
+              <div class="review-key">${escape(key)}${label}</div>
+              <div><span class="review-label">Base</span>${escape(was[form] ?? was.other ?? '')}</div>
+              <div><span class="review-label">Variant</span>${diff(was[form] ?? was.other ?? '', now[form])}</div>
+            </div>`;
+        }
+      }
+    }
+    review.innerHTML = html;
+  }
+
+  document.getElementById('deployed').textContent = deployed
+    ? `Deployed on this stack: ${deployed}.`
+    : 'This stack serves the base wording.';
+
+  const pick = document.getElementById('variantPick');
+  pick.innerHTML = Object.entries(VARIANTS)
+    .map(([name, v]) => `<option value="${escape(name)}">${escape(name)} — ${escape(v.about?.title ?? '')}</option>`)
+    .join('');
+  const fromQuery = new URLSearchParams(location.search).get('variant');
+  pick.value = [fromQuery, deployed, Object.keys(VARIANTS)[0]].find((n) => n && VARIANTS[n]) ?? '';
+  pick.addEventListener('change', () => render(pick.value));
+  render(pick.value);
+</script>
+
+</body>
+</html>

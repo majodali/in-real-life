@@ -21,18 +21,21 @@ import {
 import { renderSuggestionsSection } from './event-suggestions.js';
 import { renderPollsSection } from './event-polls.js';
 import { loadLocalities, localityLine, bandBetween } from '../localities.js';
+import { t, attr, text, date } from '../copy.js';
+import { errorText } from '../errors.js';
+import { lifecycleLabel } from '../lifecycle-labels.js';
 
 export async function renderEventDetail(eventId) {
   const container = document.getElementById('screen-event');
   container.innerHTML = `
     <div class="profile-header">
       <div class="profile-header-top">
-        <button class="detail-back" id="eventBack">← Back</button>
+        <button class="detail-back" id="eventBack">${t('common.back')}</button>
       </div>
-      <div class="profile-header-title">Event</div>
+      <div class="profile-header-title">${t('event.header')}</div>
     </div>
     <div class="profile-body">
-      <div class="event-detail-loading">Loading…</div>
+      <div class="event-detail-loading">${t('common.loading')}</div>
     </div>
   `;
 
@@ -48,12 +51,12 @@ export async function renderEventDetail(eventId) {
     event = events.find((e) => e.eventId === eventId);
   } catch (err) {
     container.querySelector('.event-detail-loading').textContent =
-      err?.message || 'Could not load this event.';
+      errorText(err, 'event.loadFailed');
     return;
   }
 
   if (!event) {
-    container.querySelector('.event-detail-loading').textContent = 'This event isn’t available.';
+    container.querySelector('.event-detail-loading').textContent = text('event.unavailable');
     return;
   }
 
@@ -75,13 +78,13 @@ export async function renderEventDetail(eventId) {
       if (line) {
         localityFact = `
         <div class="event-fact">
-          <span class="event-fact-label">Locality</span>
+          <span class="event-fact-label">${t('event.fact.locality')}</span>
           <span class="event-fact-value">${escapeHtml(line)}
             ${localityBand && localityBand !== 'here' ? `
             <span class="locality-actions">
-              <button type="button" class="btn-small locality-chip" data-feels="closer">feels closer to me</button>
-              <button type="button" class="btn-small locality-chip" data-feels="further">feels further to me</button>
-              <button type="button" class="btn-small locality-chip" id="wishCloserBtn">wish this was closer</button>
+              <button type="button" class="btn-small locality-chip" data-feels="closer">${t('event.locality.closer')}</button>
+              <button type="button" class="btn-small locality-chip" data-feels="further">${t('event.locality.further')}</button>
+              <button type="button" class="btn-small locality-chip" id="wishCloserBtn">${t('event.locality.wish')}</button>
             </span>` : ''}
           </span>
         </div>`;
@@ -89,8 +92,8 @@ export async function renderEventDetail(eventId) {
     }
   } catch { /* register unavailable — skip the line */ }
   const effective = event.effectiveState || event.lifecycleState;
-  const lifecycleLabel = LIFECYCLE_LABELS[effective] || effective;
-  const sourceLabel = SOURCE_LABELS[event.source] || event.source;
+  const stateLabel = lifecycleLabel(effective);
+  const sourceLabel = SOURCE_KEYS[event.source] ? text(SOURCE_KEYS[event.source]) : event.source;
   // While the event is still open (proposed or planned) it accepts changes —
   // interest, suggestions, polls. The backend rejects all of these once the
   // event is in-progress, over, or cancelled, so the UI follows suit.
@@ -100,68 +103,68 @@ export async function renderEventDetail(eventId) {
   container.querySelector('.profile-body').innerHTML = `
     <div class="event-card-large">
       <div class="event-card-meta">
-        <span class="event-state event-state-${effective}">${escapeHtml(lifecycleLabel)}</span>
+        <span class="event-state event-state-${effective}">${escapeHtml(stateLabel)}</span>
         <span class="event-source">${escapeHtml(sourceLabel)}</span>
-        ${event.lastEditedAt ? `<span class="event-edited" title="${escapeHtml(new Date(event.lastEditedAt).toLocaleString())}">edited</span>` : ''}
+        ${event.lastEditedAt ? `<span class="event-edited" title="${escapeHtml(date(event.lastEditedAt, 'editedAt'))}">${t('event.edited')}</span>` : ''}
       </div>
       <h2 class="event-title">${escapeHtml(event.title)}</h2>
       ${event.description ? `<p class="event-description">${escapeHtml(event.description)}</p>` : ''}
 
       <div class="event-facts">
         <div class="event-fact">
-          <span class="event-fact-label">When</span>
-          <span class="event-fact-value">${event.startTime ? escapeHtml(start) : 'To be decided'}${event.timesApproximate ? ' <span class="event-fact-approx">(approximate)</span>' : ''}</span>
+          <span class="event-fact-label">${t('event.fact.when')}</span>
+          <span class="event-fact-value">${event.startTime ? escapeHtml(start) : t('event.tbd')}${event.timesApproximate ? ` <span class="event-fact-approx">${t('event.approximate')}</span>` : ''}</span>
         </div>
         <div class="event-fact">
-          <span class="event-fact-label">Where</span>
-          <span class="event-fact-value">${event.location ? escapeHtml(event.location) : 'To be decided'}</span>
+          <span class="event-fact-label">${t('event.fact.where')}</span>
+          <span class="event-fact-value">${event.location ? escapeHtml(event.location) : t('event.tbd')}</span>
         </div>
         ${localityFact}
         ${event.cost ? `
         <div class="event-fact">
-          <span class="event-fact-label">Cost</span>
-          <span class="event-fact-value">$${escapeHtml(String(event.cost.amount))} — covers ${escapeHtml(event.cost.covers)}</span>
+          <span class="event-fact-label">${t('event.fact.cost')}</span>
+          <span class="event-fact-value">${t('event.costValue', { amount: String(event.cost.amount), covers: event.cost.covers })}</span>
         </div>
         ` : ''}
         ${event.maxAttendance ? `
         <div class="event-fact">
-          <span class="event-fact-label">Spots</span>
-          <span class="event-fact-value">${event.maxAttendance} including the organizer${event.full ? ' — currently full' : ''}</span>
+          <span class="event-fact-label">${t('event.fact.spots')}</span>
+          <span class="event-fact-value">${t(event.full ? 'event.spotsValueFull' : 'event.spotsValue', { max: event.maxAttendance })}</span>
         </div>
         ` : ''}
         ${event.meetingSpot ? `
         <div class="event-fact">
-          <span class="event-fact-label">Finding the group</span>
+          <span class="event-fact-label">${t('event.fact.findGroup')}</span>
           <span class="event-fact-value">${escapeHtml(event.meetingSpot)}</span>
         </div>
         ` : ''}
         ${event.shape ? `
         <div class="event-fact">
-          <span class="event-fact-label">What it's like</span>
+          <span class="event-fact-label">${t('event.fact.shape')}</span>
           <span class="event-fact-value">${escapeHtml(describeShape(event.shape))}</span>
         </div>
         ` : ''}
         <div class="event-fact">
-          <span class="event-fact-label">${event.source === 'external' ? 'Listed by' : 'Organizer'}</span>
+          <span class="event-fact-label">${t(event.source === 'external' ? 'event.fact.listedBy' : 'event.fact.organizer')}</span>
           <span class="event-fact-value">${escapeHtml(event.organizerName)}</span>
         </div>
         ${event.minimumAttendance > 3 ? `
         <div class="event-fact">
-          <span class="event-fact-label">Needs at least</span>
-          <span class="event-fact-value">${event.minimumAttendance} people (including the organizer)</span>
+          <span class="event-fact-label">${t('event.fact.needs')}</span>
+          <span class="event-fact-value">${t('event.needsValue', { count: event.minimumAttendance })}</span>
         </div>
         ` : ''}
         ${event.lifecycleState === 'cancelled' && event.cancellationReason ? `
         <div class="event-fact">
-          <span class="event-fact-label">Cancelled because</span>
+          <span class="event-fact-label">${t('event.fact.cancelledBecause')}</span>
           <span class="event-fact-value">${escapeHtml(event.cancellationReason)}</span>
         </div>
         ` : ''}
       </div>
 
       <div class="event-counts">
-        <span class="event-count"><strong>${event.interestCount ?? 0}</strong> interested</span>
-        <span class="event-count"><strong>${event.confirmedCount ?? 0}</strong> confirmed</span>
+        <span class="event-count">${t('event.count.interested', bold(event.interestCount ?? 0))}</span>
+        <span class="event-count">${t('event.count.confirmed', bold(event.confirmedCount ?? 0))}</span>
       </div>
       <div class="event-roster" id="eventRoster"></div>
 
@@ -202,9 +205,9 @@ export async function renderEventDetail(eventId) {
             feels: btn.dataset.feels,
           },
         });
-        showToast('Noted — your word wins over the map');
+        showToast(text('event.locality.noted'));
       } catch {
-        showToast('That didn’t save — try again in a moment');
+        showToast(text('event.locality.failed'));
       }
     });
   });
@@ -213,10 +216,10 @@ export async function renderEventDetail(eventId) {
     try {
       await commands.wishCloser({ eventId: event.eventId });
       wishBtn.disabled = true;
-      wishBtn.textContent = 'noted — thanks';
-      showToast('Wish recorded — it helps us know what to grow here');
+      wishBtn.textContent = text('event.locality.wishNoted');
+      showToast(text('event.locality.wishRecorded'));
     } catch {
-      showToast('That didn’t save — try again in a moment');
+      showToast(text('event.locality.failed'));
     }
   });
 
@@ -245,12 +248,24 @@ export async function renderEventDetail(eventId) {
 // positive-attribution chips (§4 of the event-type note): the why of a
 // good night in one optional tap — great-company already covers the
 // people. Exact wording gets the voice pass with the redesign.
-const TEXTURE_CHIPS = [
-  'great-company', 'too-big', 'just-right', 'hard-to-break-in',
-  'nothing-to-do', 'went-long',
-  'the-activity-itself', 'the-place', 'well-run',
-];
-const NOSHOW_CHIPS = ['timing', 'distance', 'energy', 'nerves', 'plans-changed'];
+const TEXTURE_CHIPS = {
+  'great-company': 'event.debrief.texture.greatCompany',
+  'too-big': 'event.debrief.texture.tooBig',
+  'just-right': 'event.debrief.texture.justRight',
+  'hard-to-break-in': 'event.debrief.texture.hardToBreakIn',
+  'nothing-to-do': 'event.debrief.texture.nothingToDo',
+  'went-long': 'event.debrief.texture.wentLong',
+  'the-activity-itself': 'event.debrief.texture.theActivity',
+  'the-place': 'event.debrief.texture.thePlace',
+  'well-run': 'event.debrief.texture.wellRun',
+};
+const NOSHOW_CHIPS = {
+  timing: 'event.debrief.noShow.timing',
+  distance: 'event.debrief.noShow.distance',
+  energy: 'event.debrief.noShow.energy',
+  nerves: 'event.debrief.noShow.nerves',
+  'plans-changed': 'event.debrief.noShow.plansChanged',
+};
 
 // Tiered debrief (docs/debrief.md): taps first, optional texture and
 // text, the people step over the roster, and a calm conduct door. Most
@@ -259,69 +274,64 @@ function renderDebriefSection(event) {
   if (event.myDebrief) return '';  // already debriefed — see renderMyDebrief
   return `
     <div class="event-debrief">
-      <div class="organizer-controls-label">How was it?</div>
+      <div class="organizer-controls-label">${t('event.debrief.title')}</div>
       <form id="debriefForm" class="debrief-form">
         <div class="debrief-field">
-          <span class="debrief-q">Did you make it?</span>
+          <span class="debrief-q">${t('event.debrief.madeIt')}</span>
           <div class="event-action-row">
-            <button type="button" class="btn-small debrief-chip" data-attended="yes">Yes</button>
-            <button type="button" class="btn-small debrief-chip" data-attended="no">Couldn't make it</button>
+            <button type="button" class="btn-small debrief-chip" data-attended="yes">${t('event.debrief.yes')}</button>
+            <button type="button" class="btn-small debrief-chip" data-attended="no">${t('event.debrief.no')}</button>
           </div>
         </div>
 
         <div class="debrief-field" id="debriefNoShow" style="display:none">
-          <span class="debrief-q">No worries — what got in the way?</span>
+          <span class="debrief-q">${t('event.debrief.whyNot')}</span>
           <div class="event-action-row debrief-chip-row">
-            ${NOSHOW_CHIPS.map((c) => `<button type="button" class="btn-small debrief-chip" data-noshow="${c}">${c.replace(/-/g, ' ')}</button>`).join('')}
+            ${Object.entries(NOSHOW_CHIPS).map(([c, key]) => `<button type="button" class="btn-small debrief-chip" data-noshow="${c}">${t(key)}</button>`).join('')}
           </div>
         </div>
 
         <div id="debriefWent" style="display:none">
           <div class="debrief-field">
-            <span class="debrief-q">Worth another go?</span>
+            <span class="debrief-q">${t('event.debrief.again')}</span>
             <div class="event-action-row">
-              <button type="button" class="btn-small debrief-chip" data-again="yes">Yes</button>
-              <button type="button" class="btn-small debrief-chip" data-again="maybe">Maybe</button>
-              <button type="button" class="btn-small debrief-chip" data-again="no">Not for me</button>
+              <button type="button" class="btn-small debrief-chip" data-again="yes">${t('event.debrief.againYes')}</button>
+              <button type="button" class="btn-small debrief-chip" data-again="maybe">${t('event.debrief.againMaybe')}</button>
+              <button type="button" class="btn-small debrief-chip" data-again="no">${t('event.debrief.againNo')}</button>
             </div>
           </div>
 
           <div class="debrief-field" id="debriefPeople" style="display:none">
-            <span class="debrief-q">Who'd you end up meeting?</span>
+            <span class="debrief-q">${t('event.debrief.people')}</span>
             <div id="debriefPeopleList"></div>
           </div>
 
           <div class="debrief-field">
-            <span class="debrief-q">Anything stand out? <span class="auth-optional">(optional)</span></span>
+            <span class="debrief-q">${t('event.debrief.standOut', { optional: (inner) => `<span class="auth-optional">${inner}</span>` })}</span>
             <div class="event-action-row debrief-chip-row">
-              ${TEXTURE_CHIPS.map((c) => `<button type="button" class="btn-small debrief-chip" data-texture="${c}">${c.replace(/-/g, ' ')}</button>`).join('')}
+              ${Object.entries(TEXTURE_CHIPS).map(([c, key]) => `<button type="button" class="btn-small debrief-chip" data-texture="${c}">${t(key)}</button>`).join('')}
             </div>
           </div>
 
           <textarea class="profile-field-input suggest-textarea" id="debriefReflection"
                     rows="2" maxlength="1000"
-                    placeholder="Anything else worth saying? (optional)"></textarea>
+                    placeholder="${attr('event.debrief.reflectionPlaceholder')}"></textarea>
         </div>
 
         <div class="debrief-field" id="debriefFollowUp" style="display:none">
           <span class="debrief-q" id="debriefFollowUpQ"></span>
           <textarea class="profile-field-input suggest-textarea" id="debriefFollowUpA"
-                    rows="2" maxlength="1000" placeholder="Only if you feel like it — skipping is fine"></textarea>
+                    rows="2" maxlength="1000" placeholder="${attr('event.debrief.followUpPlaceholder')}"></textarea>
         </div>
 
-        <button type="button" class="debrief-conduct-link" id="debriefConductLink">
-          Did you have any concerns with anyone's conduct?
-        </button>
+        <button type="button" class="debrief-conduct-link" id="debriefConductLink">${t('event.debrief.conductLink')}</button>
         <div class="debrief-field" id="debriefConduct" style="display:none">
-          <p class="event-action-hint">
-            If someone made you feel unsafe or uncomfortable, you can tell us
-            what happened — it goes to a person, never into your preferences.
-          </p>
+          <p class="event-action-hint">${t('event.debrief.conductHint')}</p>
           <textarea class="profile-field-input suggest-textarea" id="debriefConductNote"
-                    rows="2" maxlength="1000" placeholder="What happened (optional)"></textarea>
+                    rows="2" maxlength="1000" placeholder="${attr('event.debrief.conductPlaceholder')}"></textarea>
         </div>
 
-        <button type="submit" class="btn-primary" id="debriefSubmit">Save</button>
+        <button type="submit" class="btn-primary" id="debriefSubmit">${t('event.debrief.save')}</button>
       </form>
     </div>
   `;
@@ -329,34 +339,32 @@ function renderDebriefSection(event) {
 
 function renderMyDebrief(event) {
   const d = event.myDebrief;
-  const line = d.conductConcern
-    ? 'Thanks for telling us — someone will look at it with care.'
+  const line = text(d.conductConcern
+    ? 'event.mine.conduct'
     : d.attended === false
-      ? "Couldn't make it — no worries."
-      : d.again === 'yes' ? 'Worth another go ✓'
-        : d.again === 'maybe' ? 'Maybe again'
-          : d.again === 'no' ? 'Not for you — noted'
-            : 'Recorded';
+      ? 'event.mine.absent'
+      : d.again === 'yes' ? 'event.mine.yes'
+        : d.again === 'maybe' ? 'event.mine.maybe'
+          : d.again === 'no' ? 'event.mine.no'
+            : 'event.mine.recorded');
   // The standing reflection door (D44): static, always there, spans self
   // and process. Not offered on a conduct-flagged debrief — that one's
   // with the safety path.
   const door = d.conductConcern ? '' : `
-    <button type="button" class="debrief-conduct-link" id="reflectionDoor">
-      Anything else worth saying — about the event, the people, or how we're doing?
-    </button>
+    <button type="button" class="debrief-conduct-link" id="reflectionDoor">${t('event.reflect.door')}</button>
     <div id="reflectionPanel" style="display:none">
       <div id="reflectionThread" class="reflection-thread"></div>
       <textarea class="profile-field-input suggest-textarea" id="reflectionInput"
-                rows="2" maxlength="1000" placeholder="Say as much or as little as you like"></textarea>
+                rows="2" maxlength="1000" placeholder="${attr('event.reflect.placeholder')}"></textarea>
       <div class="event-action-row" style="margin-top:8px;">
-        <button type="button" class="btn-secondary" id="reflectionDone">I'm done</button>
-        <button type="button" class="btn-primary" id="reflectionSend">Send</button>
+        <button type="button" class="btn-secondary" id="reflectionDone">${t('event.reflect.done')}</button>
+        <button type="button" class="btn-primary" id="reflectionSend">${t('event.reflect.send')}</button>
       </div>
     </div>
   `;
   return `
     <div class="event-debrief event-debrief-done">
-      <div class="organizer-controls-label">Your reflection</div>
+      <div class="organizer-controls-label">${t('event.mine.title')}</div>
       <div class="debrief-saved-row">
         <span class="debrief-saved-notes">${escapeHtml(line)}</span>
       </div>
@@ -392,7 +400,7 @@ function bindReflection(container, event) {
       eventId: event.eventId, transcript, commands,
     });
     if (error) {
-      showToast(error.message || 'Couldn’t open that just now.');
+      showToast(errorText(error, 'event.reflect.openFailed'));
       panel.style.display = 'none';
       door.style.display = '';
       return;
@@ -413,26 +421,26 @@ function bindReflection(container, event) {
       showToast,
       onDone: () => {
         panel.style.display = 'none';
-        showToast('Thanks — we’ll keep that in mind.');
+        showToast(text('event.reflect.thanks'));
       },
     });
   };
 
   container.querySelector('#reflectionSend').addEventListener('click', async () => {
     const input = container.querySelector('#reflectionInput');
-    const text = input.value.trim();
-    if (!text || closed) return;
+    const said = input.value.trim();
+    if (!said || closed) return;
     input.value = '';
-    transcript = appendExchange(transcript, text, null);
+    transcript = appendExchange(transcript, said, null);
     renderThread(true);
     const { turn, error } = await handleReflectionTurn({
       eventId: event.eventId, transcript, commands,
     });
     if (error) {
       renderThread(false);
-      showToast('Connection hiccup — try that again.');
+      showToast(text('event.reflect.hiccup'));
       transcript = transcript.slice(0, -1);
-      input.value = text;
+      input.value = said;
       return;
     }
     turns.push(turn);
@@ -504,13 +512,13 @@ function bindDebriefForm(container, event) {
         form.querySelector('#debriefFollowUpQ').textContent = question;
         wrap.style.display = '';
         wrap.dataset.question = question;
-        submit.textContent = 'Save';
+        submit.textContent = text('event.debrief.save');
         return;
       }
     }
 
     submit.disabled = true;
-    submit.textContent = 'Saving…';
+    submit.textContent = text('common.saving');
     const followUpWrap = form.querySelector('#debriefFollowUp');
     const followUp = followUpShown
       ? { question: followUpWrap.dataset.question, answer: form.querySelector('#debriefFollowUpA').value }
@@ -527,15 +535,15 @@ function bindDebriefForm(container, event) {
       commands,
       showToast,
       onSuccess: () => {
-        showToast(followUp?.answer?.trim()
-          ? 'Got it — that helps us aim better.'
-          : 'Thanks — we\u2019ll keep that in mind.');
+        showToast(text(followUp?.answer?.trim()
+          ? 'event.debrief.savedWithFollowUp'
+          : 'event.debrief.saved'));
         renderEventDetail(event.eventId);
       },
     });
     if (!ok) {
       submit.disabled = false;
-      submit.textContent = 'Save';
+      submit.textContent = text('event.debrief.save');
     }
   });
 }
@@ -559,21 +567,16 @@ async function loadDebriefPeople(form, event, peopleMarks) {
       <div class="debrief-person" data-ref="${escapeAttr(p.ref)}">
         <button type="button" class="btn-small debrief-chip" data-person-met>${escapeHtml(p.name)}</button>
         <button type="button" class="btn-small debrief-chip debrief-see-again" data-person-again
-                style="display:none" title="Want to see again?">★ see again</button>
+                style="display:none" title="${attr('event.debrief.seeAgainTitle')}">${t('event.debrief.seeAgain')}</button>
         <button type="button" class="btn-small debrief-chip debrief-more-btn" data-person-more
-                style="display:none" title="More options" aria-label="More options for ${escapeHtml(p.name)}">⋯</button>
+                style="display:none" title="${attr('event.debrief.more')}" aria-label="${attr('event.debrief.moreFor', { name: p.name })}">⋯</button>
         <div class="debrief-avoid-options" data-person-avoid-options style="display:none">
-          <button type="button" class="btn-small debrief-chip" data-avoid="didnt-click">we didn’t really click</button>
-          <button type="button" class="btn-small debrief-chip" data-avoid="do-not-interact">I’d rather not cross paths</button>
+          <button type="button" class="btn-small debrief-chip" data-avoid="didnt-click">${t('event.debrief.avoid.didntClick')}</button>
+          <button type="button" class="btn-small debrief-chip" data-avoid="do-not-interact">${t('event.debrief.avoid.rather')}</button>
         </div>
       </div>
     `).join('') + `
-      <p class="debrief-avoid-note" id="debriefAvoidNote" style="display:none">
-        Noted, just between us. We’ll gently suggest fewer of the same
-        rooms — it can’t prevent being at the same event, and they’ll
-        never know. If someone made you feel unsafe, use the conduct
-        question below instead — that reaches a person, not the ranking.
-      </p>`;
+      <p class="debrief-avoid-note" id="debriefAvoidNote" style="display:none">${t('event.debrief.avoidNote')}</p>`;
     const avoidNote = list.querySelector('#debriefAvoidNote');
     list.querySelectorAll('.debrief-person').forEach((row) => {
       const ref = row.dataset.ref;
@@ -642,14 +645,14 @@ async function loadRoster(event) {
 function renderRoster({ confirmed = [], interested = [] }, event) {
   if (!confirmed.length && !interested.length) return '';
   const names = (list) => list
-    .map((p) => (p.me ? '<strong>you</strong>' : escapeHtml(p.name)))
+    .map((p) => (p.me ? `<strong>${t('event.roster.you')}</strong>` : escapeHtml(p.name)))
     .join(', ');
-  const goingLabel = event.source === 'external' ? 'Meeting there' : 'Going';
+  const goingLabel = t(event.source === 'external' ? 'event.roster.meetingThere' : 'event.roster.going');
   const going = confirmed.length
     ? `<div class="roster-line"><span class="roster-label">${goingLabel}</span> ${names(confirmed)}</div>`
     : '';
   const curious = interested.length
-    ? `<div class="roster-line"><span class="roster-label">Interested</span> ${names(interested)}</div>`
+    ? `<div class="roster-line"><span class="roster-label">${t('event.roster.interested')}</span> ${names(interested)}</div>`
     : '';
   return going + curious;
 }
@@ -660,12 +663,8 @@ function renderRoster({ confirmed = [], interested = [] }, event) {
 function renderCancelledOnMeNote(event) {
   const effective = event.effectiveState || event.lifecycleState;
   if (effective !== 'cancelled' || !event.myLevel) return '';
-  const verb = event.myLevel === 'confirmed' ? "you'd said you'd be there" : 'you were interested';
   return `
-    <div class="event-conflict-note">
-      ✕ This one's off — ${verb}. Nothing needed from you; it stays in your
-      history and the spot frees up on its own.
-    </div>
+    <div class="event-conflict-note">${t(event.myLevel === 'confirmed' ? 'event.note.cancelledConfirmed' : 'event.note.cancelledInterested')}</div>
   `;
 }
 
@@ -676,12 +675,11 @@ function renderConflictNote(event, events) {
   const titles = event.conflictsWith
     .map((id) => events.find((e) => e.eventId === id)?.title)
     .filter(Boolean);
-  const names = titles.length ? titles.map((t) => `“${escapeHtml(t)}”`).join(', ') : 'another event';
+  const names = titles.length
+    ? titles.map((title) => t('event.note.quoted', { title })).join(', ')
+    : t('event.anotherEvent');
   return `
-    <div class="event-conflict-note">
-      ⚠ This overlaps with ${names}, which you're also confirmed for.
-      If you can't make both, free up a spot so others can plan around you.
-    </div>
+    <div class="event-conflict-note">${t('event.note.overlap', { titles: () => names })}</div>
   `;
 }
 
@@ -692,17 +690,17 @@ function renderInteractionButtons(myLevel, effective, full = false) {
   if (full && myLevel !== 'confirmed') {
     if (myLevel === 'interested') {
       return `
-        <div class="event-action-status">✓ You're interested</div>
-        <p class="event-action-hint">This one's full — if a spot frees up, interest is how you'll hear about it.</p>
+        <div class="event-action-status">${t('event.action.youreInterested')}</div>
+        <p class="event-action-hint">${t('event.action.fullInterested')}</p>
         <div class="event-action-row">
-          <button class="btn-outline-rust" data-action="withdraw">Not anymore</button>
+          <button class="btn-outline-rust" data-action="withdraw">${t('event.action.notAnymore')}</button>
         </div>
       `;
     }
     return `
-      <p class="event-action-hint">This one's full — register interest and the organizer can gauge demand for a repeat.</p>
+      <p class="event-action-hint">${t('event.action.full')}</p>
       <div class="event-action-row">
-        <button class="btn-secondary" data-action="interested">I'm interested</button>
+        <button class="btn-secondary" data-action="interested">${t('event.action.interested')}</button>
       </div>
     `;
   }
@@ -711,42 +709,42 @@ function renderInteractionButtons(myLevel, effective, full = false) {
   if (effective === 'idea') {
     if (myLevel === 'interested') {
       return `
-        <div class="event-action-status">✓ You're interested</div>
-        <p class="event-action-hint">Still an idea — once a time and place are set, you can commit to going.</p>
+        <div class="event-action-status">${t('event.action.youreInterested')}</div>
+        <p class="event-action-hint">${t('event.action.ideaInterested')}</p>
         <div class="event-action-row">
-          <button class="btn-outline-rust" data-action="withdraw">Not anymore</button>
+          <button class="btn-outline-rust" data-action="withdraw">${t('event.action.notAnymore')}</button>
         </div>
       `;
     }
     return `
-      <p class="event-action-hint">Still an idea — say you're interested and help pin down a time and place.</p>
+      <p class="event-action-hint">${t('event.action.idea')}</p>
       <div class="event-action-row">
-        <button class="btn-primary" data-action="interested">I'm interested</button>
+        <button class="btn-primary" data-action="interested">${t('event.action.interested')}</button>
       </div>
     `;
   }
   if (myLevel === 'confirmed') {
     return `
-      <div class="event-action-status">✓ You're confirmed</div>
+      <div class="event-action-status">${t('event.action.youreConfirmed')}</div>
       <div class="event-action-row">
-        <button class="btn-secondary" data-action="interested">Just interested instead</button>
-        <button class="btn-outline-rust" data-action="withdraw">I can't make it</button>
+        <button class="btn-secondary" data-action="interested">${t('event.action.justInterested')}</button>
+        <button class="btn-outline-rust" data-action="withdraw">${t('event.action.cantMakeIt')}</button>
       </div>
     `;
   }
   if (myLevel === 'interested') {
     return `
-      <div class="event-action-status">✓ You're interested</div>
+      <div class="event-action-status">${t('event.action.youreInterested')}</div>
       <div class="event-action-row">
-        <button class="btn-primary" data-action="confirmed">I'll be there</button>
-        <button class="btn-outline-rust" data-action="withdraw">Not anymore</button>
+        <button class="btn-primary" data-action="confirmed">${t('event.action.confirm')}</button>
+        <button class="btn-outline-rust" data-action="withdraw">${t('event.action.notAnymore')}</button>
       </div>
     `;
   }
   return `
     <div class="event-action-row">
-      <button class="btn-secondary" data-action="interested">I'm interested</button>
-      <button class="btn-primary" data-action="confirmed">I'll be there</button>
+      <button class="btn-secondary" data-action="interested">${t('event.action.interested')}</button>
+      <button class="btn-primary" data-action="confirmed">${t('event.action.confirm')}</button>
     </div>
   `;
 }
@@ -764,24 +762,22 @@ function renderOrganizerControls(event) {
 
   return `
     <div class="event-organizer-controls">
-      <div class="organizer-controls-label">${event.source === 'external' ? 'You listed this — keep it current or cancel it if it\u2019s off' : 'Your event'}</div>
+      <div class="organizer-controls-label">${t(event.source === 'external' ? 'event.organizer.labelExternal' : 'event.organizer.label')}</div>
       ${stored === 'proposed' && isIdea ? `
-        <p class="organizer-threshold-met">Set a time and place (Edit event) before confirming it's happening — until then it floats as an idea.</p>
+        <p class="organizer-threshold-met">${t('event.organizer.ideaHint')}</p>
       ` : ''}
       ${stored === 'proposed' && !isIdea ? `
         ${reached ? `
-          <p class="organizer-threshold-met">✨ Threshold reached. ${event.autoPlanOnThreshold ? 'Auto-plan should have triggered — refresh to see it.' : 'Confirm this is happening when you\'re ready.'}</p>
+          <p class="organizer-threshold-met">${t(event.autoPlanOnThreshold ? 'event.organizer.reachedAuto' : 'event.organizer.reached')}</p>
         ` : ''}
-        <button class="btn-primary" data-organizer-action="schedule">
-          ${reached ? 'Confirm this is happening' : 'It\'s on — confirm now'}
-        </button>
+        <button class="btn-primary" data-organizer-action="schedule">${t(reached ? 'event.organizer.confirm' : 'event.organizer.confirmEarly')}</button>
         <label class="organizer-toggle">
           <input type="checkbox" id="autoPlanToggle" ${event.autoPlanOnThreshold ? 'checked' : ''}>
-          <span>Auto-confirm once ${min} are in (including you)</span>
+          <span>${t('event.organizer.autoPlan', { min })}</span>
         </label>
       ` : ''}
-      <button class="btn-secondary" data-organizer-action="edit">Edit event</button>
-      <button class="btn-outline-rust" data-organizer-action="cancel">Cancel this event</button>
+      <button class="btn-secondary" data-organizer-action="edit">${t('event.organizer.edit')}</button>
+      <button class="btn-outline-rust" data-organizer-action="cancel">${t('event.organizer.cancel')}</button>
     </div>
   `;
 }
@@ -794,7 +790,7 @@ function bindInteractionButtons(container, eventId, currentLevel) {
       const desired = btn.dataset.action;
       const originalText = btn.textContent;
       btn.disabled = true;
-      btn.textContent = 'Saving…';
+      btn.textContent = text('common.saving');
       try {
         await handleInteraction({
           desired,
@@ -803,8 +799,8 @@ function bindInteractionButtons(container, eventId, currentLevel) {
           commands,
           showToast,
           onSuccess: () => {
-            const verb = desired === 'withdraw' ? 'Withdrawn' : desired === 'confirmed' ? 'Confirmed' : 'Interested';
-            showToast(`${verb} ✓`);
+            showToast(text(desired === 'withdraw' ? 'event.action.done.withdrawn'
+              : desired === 'confirmed' ? 'event.action.done.confirmed' : 'event.action.done.interested'));
             renderEventDetail(eventId);
           },
         });
@@ -822,13 +818,13 @@ function bindOrganizerControls(container, event) {
     schedule.addEventListener('click', async () => {
       const original = schedule.textContent;
       schedule.disabled = true;
-      schedule.textContent = 'Saving…';
+      schedule.textContent = text('common.saving');
       try {
         await commands.scheduleEvent({ eventId: event.eventId });
-        showToast("It's on! 🌿");
+        showToast(text('event.organizer.scheduled'));
         renderEventDetail(event.eventId);
       } catch (err) {
-        showToast(err?.message || 'Could not confirm. Try again.');
+        showToast(errorText(err, 'event.organizer.scheduleFailed'));
         schedule.disabled = false;
         schedule.textContent = original;
       }
@@ -858,7 +854,7 @@ function bindOrganizerControls(container, event) {
         });
         renderEventDetail(event.eventId);
       } catch (err) {
-        showToast(err?.message || 'Could not save that.');
+        showToast(errorText(err, 'event.saveFailed'));
         e.target.checked = !next;
       } finally {
         auto.disabled = false;
@@ -872,13 +868,11 @@ function bindOrganizerControls(container, event) {
 function cancelImpactLine(event) {
   const interested = event.interestCount ?? 0;
   const confirmed = event.confirmedCount ?? 0;
-  if (interested + confirmed === 0) {
-    return 'No-one has committed yet, so this only removes the listing.';
-  }
-  const parts = [];
-  if (confirmed) parts.push(`${confirmed} confirmed`);
-  if (interested) parts.push(`${interested} interested`);
-  return `${parts.join(' and ')} will see this marked as cancelled — IRL can't message them yet, so consider spreading the word yourself.`;
+  if (interested + confirmed === 0) return t('event.cancel.impactNone');
+  if (confirmed && interested) return t('event.cancel.impactBoth', { confirmed, interested });
+  return confirmed
+    ? t('event.cancel.impactConfirmed', { confirmed })
+    : t('event.cancel.impactInterested', { interested });
 }
 
 function promptCancel(container, event) {
@@ -886,78 +880,76 @@ function promptCancel(container, event) {
   const controls = container.querySelector('.event-organizer-controls');
   if (!controls) return;
   controls.innerHTML = `
-    <div class="organizer-controls-label">Cancel this event?</div>
-    <p class="profile-danger-warning">${cancelImpactLine(event)} There's no undo.</p>
-    <label class="profile-field-label" for="cancelReason">Reason (optional)</label>
+    <div class="organizer-controls-label">${t('event.cancel.title')}</div>
+    <p class="profile-danger-warning">${cancelImpactLine(event)} ${t('event.cancel.noUndo')}</p>
+    <label class="profile-field-label" for="cancelReason">${t('event.cancel.reason')}</label>
     <input class="profile-field-input" id="cancelReason" maxlength="200"
-           placeholder="e.g. Not enough interest this time">
+           placeholder="${attr('event.cancel.reasonPlaceholder')}">
     <div class="event-action-row" style="margin-top:12px;">
-      <button class="btn-secondary" id="cancelAbort">Never mind</button>
-      <button class="btn-outline-rust" id="cancelConfirm">Yes, cancel</button>
+      <button class="btn-secondary" id="cancelAbort">${t('event.cancel.back')}</button>
+      <button class="btn-outline-rust" id="cancelConfirm">${t('event.cancel.confirm')}</button>
     </div>
   `;
   document.getElementById('cancelAbort').addEventListener('click', () => renderEventDetail(event.eventId));
   document.getElementById('cancelConfirm').addEventListener('click', async (e) => {
     const reason = document.getElementById('cancelReason').value;
     e.currentTarget.disabled = true;
-    e.currentTarget.textContent = 'Cancelling…';
+    e.currentTarget.textContent = text('event.cancel.cancelling');
     try {
       await commands.cancelEvent({ eventId: event.eventId, reason });
-      showToast('Cancelled.');
+      showToast(text('event.cancel.done'));
       renderEventDetail(event.eventId);
     } catch (err) {
-      showToast(err?.message || 'Could not cancel.');
+      showToast(errorText(err, 'event.cancel.failed'));
       renderEventDetail(event.eventId);
     }
   });
 }
 
-const LIFECYCLE_LABELS = {
-  idea: 'Idea',
-  proposed: 'Proposed',
-  planned: 'Planned',
-  'in-progress': 'Happening now',
-  over: 'Over',
-  cancelled: 'Cancelled',
-  upcoming: 'Upcoming',
-};
-
-const SOURCE_LABELS = {
-  community: 'Community',
-  external: 'Listed locally',
-  platform: 'IRL pick',
+const SOURCE_KEYS = {
+  community: 'event.source.community',
+  external: 'event.source.external',
+  platform: 'event.source.platform',
 };
 
 // Event shape (D56) as one readable line — tags, then how structured,
-// then which doors it opens. Never a score, just what it's like.
-const DOOR_LABELS = {
-  useful: 'be useful',
-  'make-learn': 'make & learn',
-  connect: 'connect',
+// then which doors it opens. Never a score, just what it's like. The
+// tags are the organizer's own words; the rest come from the bundle.
+const STRUCTURE_KEYS = {
+  structured: 'event.shape.structured',
+  'semi-structured': 'event.shape.semiStructured',
+  unstructured: 'event.shape.unstructured',
 };
+const DOOR_KEYS = {
+  useful: 'event.shape.door.useful',
+  'make-learn': 'event.shape.door.makeLearn',
+  connect: 'event.shape.door.connect',
+};
+const label = (keys, value) => (keys[value] ? text(keys[value]) : value);
 
 function describeShape(shape) {
   return [
     ...(shape.activityTags ?? []),
-    shape.structure,
-    ...(shape.doors ?? []).map((d) => DOOR_LABELS[d] ?? d),
+    shape.structure && label(STRUCTURE_KEYS, shape.structure),
+    ...(shape.doors ?? []).map((d) => label(DOOR_KEYS, d)),
   ].filter(Boolean).join(' · ');
+}
+
+// A count shown in bold: {n} is the bold number, {count} picks the
+// plural form.
+function bold(count) {
+  return { count, n: () => `<strong>${count}</strong>` };
 }
 
 function formatDateRange(startIso, endIso) {
   if (!startIso) return '—';
   const start = new Date(startIso);
-  const startStr = start.toLocaleString(undefined, {
-    weekday: 'short', month: 'short', day: 'numeric',
-    hour: 'numeric', minute: '2-digit',
-  });
+  const startStr = date(start, 'eventStart');
   if (!endIso) return startStr;
   const end = new Date(endIso);
   const sameDay = start.toDateString() === end.toDateString();
-  const endStr = end.toLocaleString(undefined, sameDay
-    ? { hour: 'numeric', minute: '2-digit' }
-    : { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
-  return `${startStr} — ${endStr}`;
+  const endStr = date(end, sameDay ? 'eventTime' : 'eventStart');
+  return text('event.dateRange', { start: startStr, end: endStr });
 }
 
 function escapeAttr(str) {

@@ -210,7 +210,16 @@ export class IrlStack extends cdk.Stack {
       // without losing bucket contents.
       new s3deploy.BucketDeployment(this, 'DeploySite', {
         sources: [s3deploy.Source.asset(path.join(__dirname, '../../src'), {
-          exclude: ['app.html', 'js/config.js', '**/*.test.mjs'],
+          // index.html and terms.html too: their copy is filled in by
+          // inject-config.mjs (docs/page-copy.md), and an unfilled page —
+          // empty headline — must never be what a deploy that stopped
+          // after `cdk deploy` leaves live. copy-review.html and
+          // copy/active.js likewise: inject-config.mjs writes them for the
+          // review variant a workshop deploy names (§5).
+          exclude: [
+            'app.html', 'index.html', 'terms.html', 'copy-review.html', 'copy/active.js',
+            'js/config.js', '**/*.test.mjs',
+          ],
         })],
         destinationBucket: siteBucket,
         prune: false,

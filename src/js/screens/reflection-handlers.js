@@ -4,6 +4,8 @@
 // are ephemeral, the close converges on 409, and the coaching cap record
 // (perspectivesOffered) is accumulated from the turn envelopes.
 
+import { errorText } from '../errors.js';
+
 export function appendExchange(transcript, memberText, usText) {
   const next = [...transcript];
   if (memberText != null) next.push({ role: 'member', text: memberText });
@@ -47,7 +49,7 @@ export async function handleReflectionClose({
     await commands.completeReflection({ eventId, transcript, perspectivesOffered });
   } catch (err) {
     if (err?.status !== 409) {
-      showToast(err?.message || 'Could not save that — try again.');
+      showToast(errorText(err, 'event.reflect.saveFailed'));
       return false;
     }
     // 409: already recorded — converge.

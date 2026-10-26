@@ -9,6 +9,8 @@
 //     showProgress,   // show progress dots (default true)
 //   })
 
+import { t, attr, text } from '../copy.js';
+
 let state = {
   questions: [],
   responses: [],  // { questionId, questionText, response, timestamp }
@@ -61,8 +63,8 @@ function renderCard() {
       ` : ''}
 
       <div class="interview-content">
-        <h2 class="interview-question">${q.text}</h2>
-        ${q.subtext ? `<p class="interview-subtext">${q.subtext}</p>` : ''}
+        <h2 class="interview-question">${escapeHtml(q.text)}</h2>
+        ${q.subtext ? `<p class="interview-subtext">${escapeHtml(q.subtext)}</p>` : ''}
 
         <div class="interview-input-area">
           ${renderInput(q, existing)}
@@ -70,11 +72,9 @@ function renderCard() {
 
         ${q.helpers ? `
           <div class="interview-helpers" id="helpersSection">
-            <button class="helpers-toggle" id="helpersToggle">
-              \u{1F4A1} Need a prompt?
-            </button>
+            <button class="helpers-toggle" id="helpersToggle">${t('interview.helpers.show')}</button>
             <div class="helpers-list" id="helpersList" style="display:none">
-              ${q.helpers.map(h => `<div class="helper-item">${h}</div>`).join('')}
+              ${q.helpers.map(h => `<div class="helper-item">${escapeHtml(h)}</div>`).join('')}
             </div>
           </div>
         ` : ''}
@@ -82,13 +82,13 @@ function renderCard() {
 
       <div class="interview-nav">
         ${isFirst && !state.existingName
-          ? `<button class="interview-nav-btn cancel" id="navCancel">Cancel</button>`
-          : `<button class="interview-nav-btn back" id="navBack">\u2190 Back</button>`
+          ? `<button class="interview-nav-btn cancel" id="navCancel">${t('interview.nav.cancel')}</button>`
+          : `<button class="interview-nav-btn back" id="navBack">${t('common.back')}</button>`
         }
         <div class="interview-nav-spacer"></div>
-        ${q.skippable ? `<button class="interview-nav-btn skip" id="navSkip">Skip</button>` : ''}
+        ${q.skippable ? `<button class="interview-nav-btn skip" id="navSkip">${t('interview.nav.skip')}</button>` : ''}
         <button class="interview-nav-btn next" id="navNext" ${!existing && q.type !== 'name' ? '' : ''}>
-          ${isLast ? 'Done' : 'Next \u2192'}
+          ${isLast ? t('interview.nav.done') : t('interview.nav.next')}
         </button>
       </div>
     </div>
@@ -105,7 +105,7 @@ function renderInput(q, existing) {
           class="interview-text-input"
           id="interviewInput"
           type="text"
-          placeholder="Your first name"
+          placeholder="${attr('interview.namePlaceholder')}"
           value="${escapeHtml(existing)}"
           autocomplete="off"
           maxlength="30"
@@ -118,7 +118,7 @@ function renderInput(q, existing) {
         <textarea
           class="interview-textarea"
           id="interviewInput"
-          placeholder="Type your answer here..."
+          placeholder="${attr('interview.answerPlaceholder')}"
           rows="4"
         >${escapeHtml(existing)}</textarea>
       `;
@@ -198,7 +198,7 @@ function bindEvents(q, isFirst, isLast) {
     helpersToggle.addEventListener('click', () => {
       const visible = helpersList.style.display !== 'none';
       helpersList.style.display = visible ? 'none' : 'flex';
-      helpersToggle.textContent = visible ? '\u{1F4A1} Need a prompt?' : '\u{1F4A1} Hide prompts';
+      helpersToggle.textContent = visible ? text('interview.helpers.show') : text('interview.helpers.hide');
     });
   }
 }

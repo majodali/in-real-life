@@ -6,6 +6,9 @@
 // data.js remains as the fallback when the live API is unreachable — the
 // dev personas and offline preview keep working.
 
+import { text } from '../copy.js';
+import { errorText } from '../errors.js';
+
 // One exchange = the card the interviewer showed + what the member said.
 export function appendExchange(transcript, prompt, answer) {
   return [
@@ -60,12 +63,12 @@ export async function handleOnboardingDone({
     await commands.createProfile({ name, avatar, vibeMessage });
   } catch (err) {
     if (err.status === 404) {
-      showToast('Account not registered yet — please sign in again.');
+      showToast(text('auth.notRegistered'));
       navigate('signin');
       return false;
     }
     if (err.status !== 409) {
-      showToast(err.message || 'Could not save your profile.');
+      showToast(errorText(err, 'onboarding.profileFailed'));
       return false;
     }
     // 409: profile already exists — fine, continue to the interview close.
@@ -79,7 +82,7 @@ export async function handleOnboardingDone({
         // The profile is saved; don't strand the user over the extraction.
         // The transcript is lost, but understanding grows from debriefs —
         // losing the seed is recoverable, losing the member is not.
-        showToast('We saved your profile, but couldn’t finish the interview notes.');
+        showToast(text('onboarding.notesFailed'));
       }
       // 409: onboarding already completed — converge silently.
     }

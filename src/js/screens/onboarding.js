@@ -18,8 +18,10 @@ import {
   handleInterviewTurn,
   handleOnboardingDone,
 } from './onboarding-handlers.js';
+import { t, attr, text } from '../copy.js';
 
-const SKIP_ANSWER = 'I’d rather skip that one.';
+// Sent to the interviewer as the member's own answer.
+const SKIP_ANSWER = text('onboarding.skipAnswer');
 
 let userName = '';
 let transcript = [];
@@ -40,7 +42,7 @@ export function renderOnboarding() {
     questions: [nameQuestion],
     showProgress: false,
     onComplete: (responses) => {
-      userName = responses.find(r => r.questionId === 'name')?.response || 'Friend';
+      userName = responses.find(r => r.questionId === 'name')?.response || text('onboarding.defaultName');
       beginInterview(container);
     },
     onCancel: () => {
@@ -52,7 +54,7 @@ export function renderOnboarding() {
 // Try the live loop; if the first turn fails, fall back to the scripted
 // flow — the dev personas and offline preview keep working.
 async function beginInterview(container) {
-  showWaitingCard(container, 'One moment…');
+  showWaitingCard(container, text('common.oneMoment'));
 
   const { turn, error } = await handleInterviewTurn({ transcript, commands });
   if (error) {
@@ -98,16 +100,14 @@ function renderLiveCard(container, card, prefill = '') {
           <textarea
             class="interview-textarea"
             id="interviewInput"
-            placeholder="Type your answer here..."
+            placeholder="${attr('interview.answerPlaceholder')}"
             rows="4"
           >${escapeHtml(prefill)}</textarea>
         </div>
 
         ${card.helpers?.length ? `
           <div class="interview-helpers" id="helpersSection">
-            <button class="helpers-toggle" id="helpersToggle">
-              \u{1F4A1} Need a prompt?
-            </button>
+            <button class="helpers-toggle" id="helpersToggle">${t('interview.helpers.show')}</button>
             <div class="helpers-list" id="helpersList" style="display:none">
               ${card.helpers.map(h => `<div class="helper-item">${escapeHtml(h)}</div>`).join('')}
             </div>
@@ -117,8 +117,8 @@ function renderLiveCard(container, card, prefill = '') {
 
       <div class="interview-nav">
         <div class="interview-nav-spacer"></div>
-        <button class="interview-nav-btn skip" id="navSkip">Skip</button>
-        <button class="interview-nav-btn next" id="navNext">Next →</button>
+        <button class="interview-nav-btn skip" id="navSkip">${t('interview.nav.skip')}</button>
+        <button class="interview-nav-btn next" id="navNext">${t('interview.nav.next')}</button>
       </div>
     </div>
   `;
@@ -136,7 +136,7 @@ function renderLiveCard(container, card, prefill = '') {
     helpersToggle.addEventListener('click', () => {
       const visible = helpersList.style.display !== 'none';
       helpersList.style.display = visible ? 'none' : 'flex';
-      helpersToggle.textContent = visible ? '\u{1F4A1} Need a prompt?' : '\u{1F4A1} Hide prompts';
+      helpersToggle.textContent = visible ? text('interview.helpers.show') : text('interview.helpers.hide');
     });
   }
 
@@ -157,13 +157,13 @@ function renderLiveCard(container, card, prefill = '') {
 
 async function submitAnswer(container, card, answer) {
   const nextTranscript = appendExchange(transcript, card.prompt, answer);
-  showWaitingCard(container, 'Thinking…');
+  showWaitingCard(container, text('onboarding.thinking'));
 
   const { turn, error } = await handleInterviewTurn({ transcript: nextTranscript, commands });
   if (error) {
     // Mid-interview failure: keep the transcript as-was and re-show the
     // same card with the answer prefilled so a tap on Next retries.
-    showToast('Connection hiccup — let’s try that one again.');
+    showToast(text('onboarding.hiccup'));
     renderLiveCard(container, card, answer === SKIP_ANSWER ? '' : answer);
     return;
   }
@@ -181,7 +181,7 @@ function renderClosing(container, closing) {
       </div>
       <div class="interview-nav">
         <div class="interview-nav-spacer"></div>
-        <button class="interview-nav-btn next" id="closingNext">Set up my profile →</button>
+        <button class="interview-nav-btn next" id="closingNext">${t('onboarding.closingNext')}</button>
       </div>
     </div>
   `;
@@ -209,11 +209,11 @@ function showConfirmationCard(container) {
   container.innerHTML = `
     <div class="interview-card confirmation-card">
       <div class="interview-content">
-        <h2 class="interview-question">Nice to meet you, ${escapeHtml(userName)}!</h2>
-        <p class="interview-subtext">Let’s set up how others will see you. Remember — only your name, avatar, and vibe are shared.</p>
+        <h2 class="interview-question">${t('onboarding.confirm.title', { name: userName })}</h2>
+        <p class="interview-subtext">${t('onboarding.confirm.subtext')}</p>
 
         <div class="confirmation-section">
-          <label class="confirmation-label">Pick an avatar</label>
+          <label class="confirmation-label">${t('onboarding.confirm.avatar')}</label>
           <div class="emoji-picker" id="emojiPicker">
             ${AVATAR_EMOJIS.map(e => `
               <button class="emoji-option ${e === selectedAvatar ? 'selected' : ''}" data-emoji="${e}">${e}</button>
@@ -222,24 +222,24 @@ function showConfirmationCard(container) {
         </div>
 
         <div class="confirmation-section">
-          <label class="confirmation-label">Your current vibe</label>
+          <label class="confirmation-label">${t('onboarding.confirm.vibe')}</label>
           <input
             class="interview-text-input"
             id="vibeInput"
             type="text"
-            placeholder="e.g. Always up for a morning walk"
+            placeholder="${attr('onboarding.confirm.vibePlaceholder')}"
             maxlength="60"
           >
-          <p class="vibe-hint">A short message others will see — what are you about right now?</p>
+          <p class="vibe-hint">${t('onboarding.confirm.vibeHint')}</p>
         </div>
 
         <div class="confirmation-preview">
-          <div class="preview-label">How you’ll appear</div>
+          <div class="preview-label">${t('onboarding.confirm.preview')}</div>
           <div class="preview-card">
             <div class="preview-avatar" id="previewAvatar">${selectedAvatar}</div>
             <div class="preview-info">
               <div class="preview-name">${escapeHtml(userName)}</div>
-              <div class="preview-vibe" id="previewVibe">Set your vibe above</div>
+              <div class="preview-vibe" id="previewVibe">${t('onboarding.confirm.previewVibe')}</div>
             </div>
           </div>
         </div>
@@ -247,7 +247,7 @@ function showConfirmationCard(container) {
 
       <div class="interview-nav">
         <div class="interview-nav-spacer"></div>
-        <button class="interview-nav-btn next" id="confDone">Find my people →</button>
+        <button class="interview-nav-btn next" id="confDone">${t('onboarding.confirm.done')}</button>
       </div>
     </div>
   `;
@@ -266,13 +266,13 @@ function showConfirmationCard(container) {
   const vibeInput = document.getElementById('vibeInput');
   vibeInput.addEventListener('input', () => {
     vibeMessage = vibeInput.value.trim();
-    document.getElementById('previewVibe').textContent = vibeMessage || 'Set your vibe above';
+    document.getElementById('previewVibe').textContent = vibeMessage || text('onboarding.confirm.previewVibe');
   });
 
   const doneBtn = document.getElementById('confDone');
   doneBtn.addEventListener('click', async () => {
     doneBtn.disabled = true;
-    doneBtn.textContent = 'Saving…';
+    doneBtn.textContent = text('common.saving');
     const ok = await handleOnboardingDone({
       name: userName,
       avatar: selectedAvatar,
@@ -284,7 +284,7 @@ function showConfirmationCard(container) {
     });
     if (!ok) {
       doneBtn.disabled = false;
-      doneBtn.textContent = 'Find my people →';
+      doneBtn.textContent = text('onboarding.confirm.done');
     }
   });
 }

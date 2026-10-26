@@ -15,6 +15,8 @@
 //   401                           → signin (session lost)
 //   anything else                 → toast, stay on screen
 
+import { errorText } from '../errors.js';
+
 export async function handleWelcomeMount({ api, commands, navigate, showToast, saveUser }) {
   let me;
   try {
@@ -28,13 +30,13 @@ export async function handleWelcomeMount({ api, commands, navigate, showToast, s
       try {
         await commands.register();
       } catch (regErr) {
-        showToast(regErr.message || 'Could not set up your account.');
+        showToast(errorText(regErr, 'auth.welcome.setupFailed'));
         return;
       }
       navigate('onboarding');
       return;
     }
-    showToast(err.message || 'Could not load your account.');
+    showToast(errorText(err, 'auth.loadAccountFailed'));
     return;
   }
 

@@ -5,15 +5,18 @@
 // 409 (already debriefed / concurrent retry). DOM stays in
 // event-detail.js.
 
+import { text } from '../copy.js';
+import { errorText } from '../errors.js';
+
 // The one invited Tier-2 question (docs/debrief.md → When depth is
 // invited) — deterministic, so the fast path stays model-free. Returns
 // null when depth wouldn't yield real signal (good outcome, no-show,
 // conduct) — the minimal close is the right ending for most debriefs.
 const MISMATCH_EXPAND = {
-  'too-big': 'Was it the size itself, or more that it was hard to find a way in?',
-  'hard-to-break-in': 'What would’ve made it easier to break in?',
-  'nothing-to-do': 'What would’ve given it more shape for you?',
-  'went-long': 'Was it the length itself, or the pacing?',
+  'too-big': 'event.debrief.followUp.tooBig',
+  'hard-to-break-in': 'event.debrief.followUp.hardToBreakIn',
+  'nothing-to-do': 'event.debrief.followUp.nothingToDo',
+  'went-long': 'event.debrief.followUp.wentLong',
 };
 
 export function chooseFollowUp({ attended, again, textures, conductConcern }) {
@@ -22,12 +25,12 @@ export function chooseFollowUp({ attended, again, textures, conductConcern }) {
   if (again === 'maybe' || again === 'no') {
     // Poor-ish result → one follow-up to aim better; a mismatch chip
     // makes it specific (confirm and expand).
-    return mismatch ? MISMATCH_EXPAND[mismatch] : 'What would’ve made it easier?';
+    return text(mismatch ? MISMATCH_EXPAND[mismatch] : 'event.debrief.followUp.easier');
   }
   if (again === 'yes' && mismatch) {
     // Enjoyed it despite a predicted mismatch — worth a calibration
     // check (forecast error), not a refine-negotiation.
-    return 'Anything surprise you about how it went?';
+    return text('event.debrief.followUp.surprise');
   }
   return null;
 }
@@ -59,7 +62,7 @@ export function buildDebriefPayload({
   conductNote,
 }) {
   if (typeof attended !== 'boolean') {
-    return { error: 'Let us know if you made it.' };
+    return { error: text('event.debrief.needAttended') };
   }
   if (conductConcern === true) {
     // Quarantine: the concern travels alone (plus attendance) — the
@@ -81,7 +84,7 @@ export function buildDebriefPayload({
     };
   }
   if (!['yes', 'maybe', 'no'].includes(again)) {
-    return { error: 'Worth another go? Pick one — that’s the heart of it.' };
+    return { error: text('event.debrief.needAgain') };
   }
   return {
     payload: {
@@ -113,7 +116,7 @@ export async function handleDebriefSubmit({
     await commands.submitDebrief({ eventId, ...payload });
   } catch (err) {
     if (err?.status !== 409) {
-      showToast(err?.message || 'Could not save.');
+      showToast(errorText(err, 'event.debrief.failed'));
       return false;
     }
     // 409: already recorded (retry or another tab) — converge.

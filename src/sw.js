@@ -12,7 +12,9 @@
 //
 // Bump CACHE when the shell changes; activate deletes older caches.
 
-const CACHE = 'irl-shell-v1';
+// v2: page copy moved into bundles (src/copy/) — screens and the
+// bundles must not be mixed across versions.
+const CACHE = 'irl-shell-v2';
 
 const SHELL = [
   './',

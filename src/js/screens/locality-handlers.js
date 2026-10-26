@@ -5,6 +5,9 @@
 // via the injected navigate / showToast callbacks. DOM access lives in
 // locality.js so this layer can be exercised in unit tests.
 
+import { text } from '../copy.js';
+import { errorText } from '../errors.js';
+
 export async function handleLocalitySubmit({
   city,
   postalCode,
@@ -15,13 +18,13 @@ export async function handleLocalitySubmit({
 }) {
   const trimmedCity = (city ?? '').trim();
   if (!trimmedCity) {
-    showToast('Please enter your city or town.');
+    showToast(text('auth.locality.needCity'));
     return;
   }
 
   const trimmedPostal = (postalCode ?? '').trim();
   if (!trimmedPostal) {
-    showToast('Please enter your postal code.');
+    showToast(text('auth.needPostal'));
     return;
   }
 
@@ -34,7 +37,7 @@ export async function handleLocalitySubmit({
     navigate('welcome');
   } catch (err) {
     if (err.status === 404) {
-      showToast('Account not registered yet — please sign in again.');
+      showToast(text('auth.notRegistered'));
       navigate('signin');
     } else if (err.status === 409) {
       // Already activated — fine, just move on.
@@ -42,9 +45,9 @@ export async function handleLocalitySubmit({
     } else if (err.status === 422) {
       // Defence-in-depth on the backend rejected the postal code. Shouldn't
       // happen in the normal flow because the sign-up gate already checked.
-      showToast("We're not in your area yet — please reach out if this is unexpected.");
+      showToast(text('auth.locality.notServed'));
     } else {
-      showToast(err.message || 'Could not verify your locality.');
+      showToast(errorText(err, 'auth.locality.failed'));
     }
   }
 }

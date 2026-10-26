@@ -8,6 +8,9 @@
 import { commands } from '../services.js';
 import { navigate, showToast } from '../app.js';
 import { handleLocationCheck, handleNotifySubmit } from './location-handlers.js';
+import { t, text } from '../copy.js';
+
+const bold = (value) => () => `<strong>${escapeHtml(value)}</strong>`;
 
 const STASH_KEY = 'irl_signup_location';
 
@@ -21,26 +24,19 @@ function renderCheckForm(container, initialPostal) {
     <div class="auth-card">
       <div class="auth-content">
         <h1 class="wordmark">in<span>·</span>real<span>·</span>life</h1>
-        <h2 class="auth-title">Where do you live?</h2>
-        <p class="auth-subtext">
-          We start with one neighborhood at a time. Tell us your postal
-          code and we'll let you in if we're already there &mdash; or save
-          your spot if we're not.
-        </p>
+        <h2 class="auth-title">${t('auth.location.title')}</h2>
+        <p class="auth-subtext">${t('auth.location.subtext')}</p>
 
         <form class="auth-form" id="locationForm">
-          <label class="auth-label" for="locationPostal">Postal code</label>
+          <label class="auth-label" for="locationPostal">${t('auth.field.postalCode')}</label>
           <input class="auth-input" id="locationPostal" type="text"
                  inputmode="numeric" autocomplete="postal-code"
                  required value="${escapeAttr(initialPostal)}">
 
-          <button class="btn-primary" id="locationSubmit" type="submit">Continue</button>
+          <button class="btn-primary" id="locationSubmit" type="submit">${t('common.continue')}</button>
         </form>
 
-        <p class="auth-alt">
-          Already have an account?
-          <a href="app.html#signin" class="auth-link">Sign in</a>
-        </p>
+        <p class="auth-alt">${t('auth.haveAccount', { link: (inner) => `<a href="app.html#signin" class="auth-link">${inner}</a>` })}</p>
       </div>
     </div>
   `;
@@ -53,7 +49,7 @@ function renderCheckForm(container, initialPostal) {
     const postalCode = document.getElementById('locationPostal').value;
 
     submit.disabled = true;
-    submit.textContent = 'Checking…';
+    submit.textContent = text('auth.location.checking');
     try {
       await handleLocationCheck({
         postalCode,
@@ -65,7 +61,7 @@ function renderCheckForm(container, initialPostal) {
       });
     } finally {
       submit.disabled = false;
-      submit.textContent = 'Continue';
+      submit.textContent = text('common.continue');
     }
   });
 }
@@ -75,23 +71,19 @@ function renderNotifyForm(container, postalCode) {
     <div class="auth-card">
       <div class="auth-content">
         <h1 class="wordmark">in<span>·</span>real<span>·</span>life</h1>
-        <h2 class="auth-title">Not there yet</h2>
-        <p class="auth-subtext">
-          We're not in <strong>${escapeHtml(postalCode)}</strong> yet. Leave
-          us your email and we'll be in touch when in·real·life arrives in
-          your neighborhood.
-        </p>
+        <h2 class="auth-title">${t('auth.notify.title')}</h2>
+        <p class="auth-subtext">${t('auth.notify.subtext', { postalCode: bold(postalCode) })}</p>
 
         <form class="auth-form" id="notifyForm">
-          <label class="auth-label" for="notifyEmail">Email</label>
+          <label class="auth-label" for="notifyEmail">${t('auth.field.email')}</label>
           <input class="auth-input" id="notifyEmail" type="email"
                  autocomplete="email" inputmode="email" required>
 
-          <button class="btn-primary" id="notifySubmit" type="submit">Keep me posted</button>
+          <button class="btn-primary" id="notifySubmit" type="submit">${t('auth.notify.submit')}</button>
         </form>
 
         <p class="auth-alt">
-          <a href="#" class="auth-link" id="notifyBack">Use a different postal code</a>
+          <a href="#" class="auth-link" id="notifyBack">${t('auth.notify.back')}</a>
         </p>
       </div>
     </div>
@@ -105,7 +97,7 @@ function renderNotifyForm(container, postalCode) {
     const email = document.getElementById('notifyEmail').value;
 
     submit.disabled = true;
-    submit.textContent = 'Saving…';
+    submit.textContent = text('common.saving');
     try {
       await handleNotifySubmit({
         email,
@@ -116,7 +108,7 @@ function renderNotifyForm(container, postalCode) {
       });
     } finally {
       submit.disabled = false;
-      submit.textContent = 'Keep me posted';
+      submit.textContent = text('auth.notify.submit');
     }
   });
 
@@ -131,12 +123,10 @@ function renderNotifyThanks(container) {
     <div class="auth-card">
       <div class="auth-content">
         <h1 class="wordmark">in<span>·</span>real<span>·</span>life</h1>
-        <h2 class="auth-title">Thank you</h2>
-        <p class="auth-subtext">
-          We'll be in touch when in·real·life arrives in your neighborhood.
-        </p>
+        <h2 class="auth-title">${t('auth.notify.thanksTitle')}</h2>
+        <p class="auth-subtext">${t('auth.notify.thanks')}</p>
 
-        <p class="auth-alt"><a href="index.html" class="auth-link">Back to home</a></p>
+        <p class="auth-alt"><a href="index.html" class="auth-link">${t('auth.notify.home')}</a></p>
       </div>
     </div>
   `;
