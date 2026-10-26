@@ -222,6 +222,10 @@ export class IrlStack extends cdk.Stack {
           ],
         })],
         destinationBucket: siteBucket,
+        // Same header inject-config.mjs uploads with: browsers check
+        // every file with the server before reuse, so no deploy is
+        // half-seen (sw.js does the same for the service worker cache).
+        cacheControl: [s3deploy.CacheControl.noCache()],
         prune: false,
         retainOnDelete: true,
       });

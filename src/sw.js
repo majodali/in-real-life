@@ -10,11 +10,17 @@
 // travel to a cancelled event on cached data. Requests to any other
 // origin (the API, fonts) are not intercepted at all.
 //
+// Code is fetched fresh, never served from the cache first: the app is
+// dozens of ES modules (screens, the copy engine, the copy bundles) that
+// must all come from the same deploy. Serving cached modules first and
+// refreshing behind meant the first load after a deploy could pair a new
+// screen with an old bundle — missing-key text on screen. The cache
+// stays as the offline fallback.
+//
 // Bump CACHE when the shell changes; activate deletes older caches.
 
-// v2: page copy moved into bundles (src/copy/) — screens and the
-// bundles must not be mixed across versions.
-const CACHE = 'irl-shell-v2';
+// v3: code is network-first (above), so this worker must replace v2's.
+const CACHE = 'irl-shell-v3';
 
 const SHELL = [
   './',
@@ -67,8 +73,27 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Static assets: serve from cache, refresh in the background.
-  if (/\.(css|js|mjs|png|svg|webmanifest|json)$/.test(url.pathname)) {
+  // Code and data: network first, revalidated against the server (an
+  // unchanged file answers 304, so this costs a round trip, not a
+  // download); the cached copy only when offline.
+  if (/\.(css|js|mjs|json|webmanifest)$/.test(url.pathname)) {
+    event.respondWith(
+      fetch(request, { cache: 'no-cache' })
+        .then((response) => {
+          if (response.ok) {
+            const copy = response.clone();
+            caches.open(CACHE).then((cache) => cache.put(request, copy));
+          }
+          return response;
+        })
+        .catch(() => caches.match(request).then((hit) => hit || Response.error())),
+    );
+    return;
+  }
+
+  // Images: serve from cache, refresh in the background — an old icon is
+  // harmless, and these never change in step with the code.
+  if (/\.(png|svg)$/.test(url.pathname)) {
     event.respondWith(
       caches.match(request).then((hit) => {
         const network = fetch(request)
