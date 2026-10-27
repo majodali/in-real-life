@@ -146,7 +146,8 @@ node infrastructure/scripts/inject-config.mjs <stack>   # --dry-run to preview
 `inject-config.mjs` substitutes the runtime config into the pages
 that carry placeholders, generates the public register views
 (`docs/hosted-register-views.md`), syncs `dist/` to the stack's
-bucket, and invalidates CloudFront.
+bucket, and invalidates CloudFront — stopping with exit status 1, and
+naming the bucket, region and profile, if either AWS step fails.
 
 ## Conventions
 
