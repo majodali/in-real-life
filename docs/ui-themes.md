@@ -69,8 +69,8 @@ card with per-direction tokens and a recommendation).
   the ≥24px wordmark (3:1). Cards, sheets and inputs take
   `--surface` (white, except Lantern's dark surface) — never a literal
   `white`, which a dark theme cannot reach. A new color pairing is
-  checked with the computed-style audit across every registered theme
-  before it ships.
+  checked in every registered theme before it ships (computed-style
+  audit; method in `design/landing-directions-2026-09.md` §5).
 
 ## Deliberately not done yet (each named in the Backlog)
 

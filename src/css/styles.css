@@ -2415,7 +2415,7 @@ html.lp .lp-doc-list li::before {
   --warm: #212822;
   --amber: #d99a4e;
   --amber-ink: var(--amber);
-  --rust: #cd8a6a;
+  --rust: #d39b7f;
   --text: #ede4d0;
   --soft: #9fa793;
   --surface: var(--lt-surface);
@@ -2483,10 +2483,11 @@ html.lp .lp-doc-list li::before {
   border-radius: 999px; padding: 3px 10px;
 }
 [data-theme="lantern"] .mylevel-confirmed { background: var(--amber); color: var(--lt-ground); }
-/* --mist is a text colour here, so it cannot be a chip ground; and
+/* --mist is a text color here, so it cannot be a chip ground; and
    white text cannot sit on the light accents */
 [data-theme="lantern"] .event-state-idea,
-[data-theme="lantern"] .model-chip { background: rgba(237, 228, 208, 0.1); }
+[data-theme="lantern"] .model-chip,
+[data-theme="lantern"] .reflection-member { background: rgba(237, 228, 208, 0.1); }
 [data-theme="lantern"] .model-pos-btn.selected,
 [data-theme="lantern"] .debrief-chip.selected,
 [data-theme="lantern"] .debrief-see-again.selected { color: var(--lt-ground); }
@@ -2555,7 +2556,7 @@ html.lp .lp-doc-list li::before {
   --amber-ink: #904e30;
   --rust: #904e30;   /* clay deepened for text: #c77b58 is 2.8:1 */
   --text: #24413a;
-  --soft: #606b63;
+  --soft: #5e6961;
   --pb-surface: #fbfcfa;
   --pb-shadow: 0 6px 22px rgba(36, 65, 58, 0.07);
   --pb-btn-shadow: 0 10px 24px rgba(36, 65, 58, 0.22);
@@ -2588,6 +2589,7 @@ html.lp .lp-doc-list li::before {
   font-size: 12px; font-weight: 500; color: var(--moss);
   background: rgba(127, 169, 155, 0.18); border-radius: 999px; padding: 5px 12px;
 }
+[data-theme="pebble"] .feed-header.light .feed-location { color: var(--moss); }
 [data-theme="pebble"] .feed-avatar {
   background: var(--pb-surface); color: var(--earth);
   box-shadow: 0 4px 14px rgba(36,65,58,0.10); width: 42px; height: 42px;
