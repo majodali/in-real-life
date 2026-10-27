@@ -65,7 +65,7 @@ operator (`admin`, `seed-handlers`).
 | `lambda/api/{users,events,matching,notify,admin,workshop}/` | Domain handlers and their projections |
 | `lambda/api/stream-projector.mjs` + `projector/` | Async user-model projector. **The entry file must not be named `projector.mjs`** — the sibling directory shadows it in the runtime's extensionless resolution (T9) |
 | `lambda/feedback/index.mjs` | Feedback Lambda (S3 writer) |
-| `scripts/` | `inject-config.mjs` (copy + substitution → dist → S3 sync → register views), `render-copy.mjs` (fills the static pages' copy; also the local preview), `copy-variants.mjs` (checks review variants; `--copy-variant` deploys one), `render-registers.mjs` (K-009 views + advisor packs), `seed-events.mjs`, `purge-pii-aggregates.mjs` |
+| `scripts/` | `inject-config.mjs` (copy + substitution → dist → S3 sync → register views), `render-copy.mjs` (fills the static pages' copy; also the local preview), `copy-variants.mjs` (checks review variants; `--copy-variant` deploys one), `deploy-step.mjs` (runs the upload and invalidation; a failure stops the deploy, naming where), `render-registers.mjs` (K-009 views + advisor packs), `seed-events.mjs`, `purge-pii-aggregates.mjs` |
 | `test/functional/` | End-to-end tests against the deployed `IrlStackTest`, incl. the replay proof |
 | `test/helpers/` | CDK-output config, Cognito auth, cleanup, workshop time, region resolution (T10) |
 
