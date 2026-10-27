@@ -108,8 +108,8 @@ node infrastructure/scripts/render-copy.mjs src/index.html --out src/index.local
 # Backend unit tests (lambda/api, scripts/, test/helpers/)
 cd infrastructure && npm install && npm test
 
-# Frontend unit tests - not yet wired to an npm script (Backlog)
-cd src && node --test js/*.test.mjs js/screens/*.test.mjs
+# Frontend unit tests (every src/js/**/*.test.mjs; CI runs the same)
+cd src && npm test
 
 # Functional tests against the deployed test stack
 cd infrastructure && npm run test:functional

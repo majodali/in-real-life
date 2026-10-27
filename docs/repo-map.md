@@ -74,7 +74,7 @@ operator (`admin`, `seed-handlers`).
 | Rung | Command | Covers |
 |---|---|---|
 | Backend + script units | `npm test` in `infrastructure/` | `lambda/api`, `scripts/`, `test/helpers/` — co-located `*.test.mjs` |
-| Frontend units | `node --test js/*.test.mjs js/screens/*.test.mjs` from `src/` | 279 tests over the screen handlers and client modules. **No npm script runs these yet** — Backlog item |
+| Frontend units | `npm test` in `src/` (CI runs the same) | Every `src/js/**/*.test.mjs`: the screen handlers, the client modules, the copy engine and bundles, the error mapping, the service worker |
 | Functional | `npm run test:functional` in `infrastructure/` | The deployed test stack; needs `AWS_PROFILE` + `AWS_REGION` (see CLAUDE.md) |
 
 ## Screens and routes

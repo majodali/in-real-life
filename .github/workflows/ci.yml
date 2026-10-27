@@ -35,11 +35,13 @@ jobs:
         run: npm ci
 
       - name: Frontend unit tests
-        # Use find + xargs instead of a `**` glob — GitHub Actions runs
-        # non-interactive bash without globstar, and node --test doesn't
-        # expand glob patterns itself. The directory-discovery mode of
-        # node --test treats src/js/ as a single file (and fails).
-        run: find src/js -name '*.test.mjs' -print0 | xargs -0 node --test
+        # The same command a contributor runs: `npm test` in src/ (its
+        # package.json finds every js/**/*.test.mjs with find + xargs —
+        # non-interactive bash has no globstar, and node --test neither
+        # expands globs nor discovers a directory's tests reliably).
+        # No dependencies, so no install step.
+        working-directory: src
+        run: npm test
 
       - name: Backend unit tests
         working-directory: infrastructure
