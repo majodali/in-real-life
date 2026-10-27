@@ -267,9 +267,8 @@ in the tests and again at deploy
 Check a variant before deploying it:
 `node infrastructure/scripts/copy-variants.mjs <name>`.
 
-After switching variants on a stack, reload once: the service worker
-serves JavaScript from its cache first (backlog: "Old and new
-JavaScript can mix on the first load after a deploy").
+Switching variants takes effect on the next page load: code is always
+fetched fresh (T11), so a new variant never mixes with the old one.
 
 ## 6. Scope of the first pass
 

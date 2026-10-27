@@ -191,10 +191,16 @@ function walk(dir, acc = []) {
 const bucket = process.env.IRL_BUCKET ?? required('BucketName', 'site bucket name');
 const distId = process.env.IRL_DISTRIBUTION_ID ?? outputs.DistributionId;
 
+// Cache-Control: no-cache — a browser may keep a file but must check it
+// with the server (ETag → 304) before using it, so the first load after
+// a deploy never mixes old and new modules. Without the header browsers
+// guess a lifetime from Last-Modified. dist/ is rebuilt on every run, so
+// every file is newer than its S3 copy and is re-uploaded with it.
 console.log(`Syncing dist/ → s3://${bucket}/`);
 spawnSync('aws', [
   's3', 'sync', distDir + '/', `s3://${bucket}/`,
   '--delete',
+  '--cache-control', 'no-cache',
 ], { stdio: 'inherit' });
 
 if (distId) {

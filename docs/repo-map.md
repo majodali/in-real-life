@@ -23,7 +23,7 @@ the `__IRL_*__` placeholders into the three pages that carry them.
 | `copy/<locale>/` | Member-facing copy bundles (`page-copy.md`, T12): `locale.js` declares the locale and date formats; `index.js` merges one file per surface into the base bundle — `site.js` (the public pages' shared header and footer), `landing.js`, `terms.js`, `taglines.js`, `common.js` (words several screens share), `errors.js`, then one per screen family (`auth.js`, `interview.js`, `onboarding.js`, `feed.js`, `event.js`, `propose.js`, `edit.js`, `profile.js`, `menu.js`); keys prefixed with the surface |
 | `css/styles.css` | All styles: base (phone), the `data-theme` layers (`ui-themes.md`), and the responsive layer at the end (`design-spec.md` §4) |
 | `manifest.json` | Web app manifest — installability (`design-spec.md` §5) |
-| `sw.js` | Service worker: app shell only, never API responses (T11) |
+| `sw.js` | Service worker: app shell only, never API responses; pages and code network-first, the cache only offline (T11) |
 | `icons/` | App icons: 192, 512, 512-maskable, apple-touch (placeholders) |
 
 `src/js/` — app plumbing:
