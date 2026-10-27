@@ -34,6 +34,7 @@ import { fileURLToPath } from 'node:url';
 import { renderRegisters } from './render-registers.mjs';
 import { renderCopy, baseCopy } from './render-copy.mjs';
 import { checkVariant, findVariant, activeModule } from './copy-variants.mjs';
+import { runDeployStep } from './deploy-step.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const repoRoot = join(__dirname, '..', '..');
@@ -196,22 +197,37 @@ const distId = process.env.IRL_DISTRIBUTION_ID ?? outputs.DistributionId;
 // a deploy never mixes old and new modules. Without the header browsers
 // guess a lifetime from Last-Modified. dist/ is rebuilt on every run, so
 // every file is newer than its S3 copy and is re-uploaded with it.
-console.log(`Syncing dist/ → s3://${bucket}/`);
-spawnSync('aws', [
-  's3', 'sync', distDir + '/', `s3://${bucket}/`,
-  '--delete',
-  '--cache-control', 'no-cache',
-], { stdio: 'inherit' });
+// Both AWS steps must succeed, or the deploy stops here and says which
+// step failed and against what — never "Done." over a site that did not
+// change.
+const where = { bucket: `s3://${bucket}`, region, profile: process.env.AWS_PROFILE };
+try {
+  console.log(`Syncing dist/ → s3://${bucket}/`);
+  runDeployStep('upload', [
+    's3', 'sync', distDir + '/', `s3://${bucket}/`,
+    '--delete',
+    '--cache-control', 'no-cache',
+  ], {
+    where,
+    after: 'Some files may have uploaded and others not, so the site can be a mix of old and new: fix the cause and run this script again.',
+  });
 
-if (distId) {
-  console.log(`Invalidating CloudFront ${distId}`);
-  spawnSync('aws', [
-    'cloudfront', 'create-invalidation',
-    '--distribution-id', distId,
-    '--paths', '/*',
-  ], { stdio: 'inherit' });
-} else {
-  console.log('No DistributionId output on stack — skipping CloudFront invalidation.');
+  if (distId) {
+    console.log(`Invalidating CloudFront ${distId}`);
+    runDeployStep('invalidation', [
+      'cloudfront', 'create-invalidation',
+      '--distribution-id', distId,
+      '--paths', '/*',
+    ], {
+      where: { ...where, distribution: distId },
+      after: 'The files are uploaded; run this script again, or invalidate /* on the distribution by hand.',
+    });
+  } else {
+    console.log('No DistributionId output on stack — skipping CloudFront invalidation.');
+  }
+} catch (err) {
+  console.error(`\n${err.message}`);
+  process.exit(1);
 }
 
-console.log('Done.');
+console.log(`Done: s3://${bucket}${distId ? `, CloudFront ${distId} invalidated` : ''}.`);
