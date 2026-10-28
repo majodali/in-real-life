@@ -2713,6 +2713,10 @@ html.lp .lp-doc-list li::before {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     align-content: start;
+    /* Rows keep their cards' full height: a card clips its overflow, so
+       without this the scroll area's height squeezes every row (the
+       phone layout's flex-shrink: 0 does the same job). */
+    grid-auto-rows: max-content;
     gap: 16px;
     padding: 20px 24px 48px;
   }
@@ -2722,6 +2726,16 @@ html.lp .lp-doc-list li::before {
   .feed-empty { grid-column: 1 / -1; }
   /* One action, not a full-width bar across a desktop header (G2). */
   .feed-propose-btn { width: auto; padding-inline: 28px; }
+
+  /* Headers run full width so a theme that paints them (Grove's dark
+     band) has no seam beside the column; their content still lines up
+     with the container. */
+  .feed-header,
+  .detail-header,
+  .profile-header {
+    max-width: none;
+    padding-inline: max(20px, calc((100% - var(--container)) / 2 + 20px));
+  }
 
   .detail-body,
   .profile-body { padding-inline: 24px; }
