@@ -10,11 +10,10 @@ for them.
 - **C-tier**: C2 (serious project, pre-users). Promotion to C3 is
   bound to soft open — real members are what "production with real
   users" means here; the gate rides the launch playbook (§6).
-- **Pinned methodology version**: 1.5.0 (compliance target;
-  migrated from 1.4.0 on 2026-09-02 — v1.5.0 carries one migration
-  note: a project with an Agent bootstrap copies W-008's prescribed
-  block into it verbatim, done in `CLAUDE.md` in the same commit. The
-  other five amendments ship migration-note `none`.)
+- **Pinned methodology version**: 1.6.0 (compliance target; migrated
+  from 1.5.0 on 2026-10-28 — v1.6.0 carries one migration note, the
+  amended W-008 bootstrap block, which this repo's `CLAUDE.md` now
+  carries verbatim)
 - **S-level**: S2 (member PII: profiles, interview content, debriefs —
   see the crypto-shredding design and PII registry)
 - **Type**: web-app
