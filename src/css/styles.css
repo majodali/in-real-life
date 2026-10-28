@@ -10,9 +10,14 @@
   --cream: #f5f0e8;
   --warm: #e8ddc8;
   --amber: #c4853a;
-  --rust: #a85c38;
+  --rust: #8d4d2f;
   --text: #1e2a1f;
-  --soft: #6b7c6c;
+  --soft: #586659;
+  /* Small text on light grounds needs 4.5:1 (open risk #24): --soft
+     passes on cream, white and --warm; --rust on its own tints;
+     --amber-ink is amber for text, since --amber itself is 2.7:1. */
+  --amber-ink: #855a27;
+  --surface: #fff;   /* cards, sheets, inputs; Lantern makes it dark */
   /* The wordmark's interpuncts: the theme's amber, deepened just enough
      to pass 3:1 as large text (every wordmark is 24px or more). Grove's
      #c4853a is 2.74:1 on its cream; this is 3.21:1. Founder, 2026-10-22
@@ -182,8 +187,7 @@ html, body {
    --moss, --cream, --warm, --mist, --amber, --text, --wordmark-dot).
    Surfaces, lines, shadows and the primary button go through the
    --lp-* tokens, set once per theme just below, so the pages render in
-   all four themes without per-component overrides. Never --soft for
-   text: it fails 4.5:1 on light grounds (open risk #24). */
+   all four themes without per-component overrides. */
 
 html.lp {
   /* Grove (the baseline) */
@@ -590,7 +594,7 @@ html.lp .lp-doc-list li::before {
 .tagline-card {
   position: relative;
   padding: 14px 16px;
-  background: white;
+  background: var(--surface);
   border-radius: 12px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.05);
   margin-bottom: 10px;
@@ -671,7 +675,7 @@ html.lp .lp-doc-list li::before {
 .auth-input {
   width: 100%; padding: 14px 16px; border-radius: 14px;
   border: 1.5px solid var(--warm); font-size: 16px;
-  font-family: 'DM Sans', sans-serif; background: white;
+  font-family: 'DM Sans', sans-serif; background: var(--surface);
   color: var(--text); outline: none; transition: border-color 0.15s;
 }
 
@@ -749,7 +753,7 @@ html.lp .lp-doc-list li::before {
 .interview-text-input {
   width: 100%; padding: 14px 16px; border-radius: 14px;
   border: 1.5px solid var(--warm); font-size: 16px;
-  font-family: 'DM Sans', sans-serif; background: white;
+  font-family: 'DM Sans', sans-serif; background: var(--surface);
   color: var(--text); outline: none; transition: border-color 0.15s;
 }
 
@@ -758,7 +762,7 @@ html.lp .lp-doc-list li::before {
 .interview-textarea {
   width: 100%; padding: 14px 16px; border-radius: 14px;
   border: 1.5px solid var(--warm); font-size: 16px;
-  font-family: 'DM Sans', sans-serif; background: white;
+  font-family: 'DM Sans', sans-serif; background: var(--surface);
   color: var(--text); outline: none; resize: none;
   min-height: 100px; line-height: 1.5; transition: border-color 0.15s;
 }
@@ -820,7 +824,7 @@ html.lp .lp-doc-list li::before {
 
 .emoji-option {
   width: 44px; height: 44px; border-radius: 12px;
-  border: 2px solid transparent; background: white; font-size: 22px;
+  border: 2px solid transparent; background: var(--surface); font-size: 22px;
   display: flex; align-items: center; justify-content: center;
   cursor: pointer; transition: all 0.15s;
 }
@@ -836,7 +840,7 @@ html.lp .lp-doc-list li::before {
 }
 
 .preview-card {
-  background: white; border-radius: 14px; padding: 14px;
+  background: var(--surface); border-radius: 14px; padding: 14px;
   display: flex; align-items: center; gap: 12px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.06);
 }
@@ -868,7 +872,7 @@ html.lp .lp-doc-list li::before {
   line-height: 1.15; flex: 1;
 }
 
-.feed-location { font-size: 11px; color: var(--sage); margin-top: 4px; }
+.feed-location { font-size: 11px; color: var(--mist); margin-top: 4px; }
 .feed-header-actions { display: flex; align-items: center; gap: 8px; }
 .feed-avatar-btn { background: none; border: none; cursor: pointer; padding: 0; }
 
@@ -899,7 +903,7 @@ html.lp .lp-doc-list li::before {
 }
 
 .event-card {
-  background: white; border-radius: 14px; overflow: hidden;
+  background: var(--surface); border-radius: 14px; overflow: hidden;
   box-shadow: 0 2px 8px rgba(0,0,0,0.06); flex-shrink: 0;
   cursor: pointer; transition: transform 0.1s;
 }
@@ -926,7 +930,7 @@ html.lp .lp-doc-list li::before {
 .card-type { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--soft); }
 
 .card-going {
-  font-size: 10px; background: var(--mist); color: var(--moss);
+  font-size: 10px; background: var(--mist); color: var(--earth);
   padding: 3px 8px; border-radius: 20px; font-weight: 500;
 }
 
@@ -1065,7 +1069,7 @@ html.lp .lp-doc-list li::before {
 .profile-body { flex: 1; overflow-y: auto; padding: 20px 16px 40px; }
 
 .profile-card {
-  background: white; border-radius: 14px; padding: 24px 20px;
+  background: var(--surface); border-radius: 14px; padding: 24px 20px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.06); text-align: center;
   margin-bottom: 16px;
 }
@@ -1101,7 +1105,7 @@ html.lp .lp-doc-list li::before {
 .profile-section { margin-bottom: 16px; }
 
 .profile-tellmore-btn {
-  width: 100%; background: white; border: 1.5px solid var(--warm);
+  width: 100%; background: var(--surface); border: 1.5px solid var(--warm);
   border-radius: 14px; padding: 14px 16px;
   display: flex; align-items: center; gap: 12px;
   cursor: pointer; font-family: 'DM Sans', sans-serif;
@@ -1215,7 +1219,7 @@ html.lp .lp-doc-list li::before {
 }
 
 .suggest-option {
-  background: white; border-radius: 12px; padding: 12px 14px;
+  background: var(--surface); border-radius: 12px; padding: 12px 14px;
   margin-bottom: 8px; display: flex; justify-content: space-between;
   align-items: center; cursor: pointer;
   box-shadow: 0 1px 4px rgba(0,0,0,0.04); transition: all 0.15s;
@@ -1230,10 +1234,8 @@ html.lp .lp-doc-list li::before {
 .ellipsis-btn {
   background: none; border: none; color: inherit;
   font-size: 20px; cursor: pointer; padding: 4px 8px;
-  line-height: 1; opacity: 0.7; letter-spacing: 2px;
+  line-height: 1; letter-spacing: 2px;
 }
-
-.ellipsis-btn:active { opacity: 1; }
 
 .ellipsis-overlay {
   display: none; position: fixed; inset: 0;
@@ -1265,7 +1267,7 @@ html.lp .lp-doc-list li::before {
 .alt-option:active { background: var(--warm); }
 
 .alt-option.selected {
-  background: white; box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  background: var(--surface); box-shadow: 0 1px 4px rgba(0,0,0,0.06);
 }
 
 .alt-radio { font-size: 14px; color: var(--soft); flex-shrink: 0; }
@@ -1283,7 +1285,7 @@ html.lp .lp-doc-list li::before {
 .alt-feedback-section { padding-top: 8px; border-top: 1px solid var(--warm); }
 
 .alt-feedback-btn {
-  width: 100%; background: white; border: 1.5px solid var(--warm);
+  width: 100%; background: var(--surface); border: 1.5px solid var(--warm);
   border-radius: 12px; padding: 12px 16px; font-size: 14px;
   font-family: 'DM Sans', sans-serif; color: var(--text);
   cursor: pointer; text-align: center; transition: all 0.15s;
@@ -1314,7 +1316,7 @@ html.lp .lp-doc-list li::before {
 .feedback-textarea {
   width: 100%; padding: 12px 14px; border-radius: 12px;
   border: 1.5px solid var(--warm); font-size: 14px;
-  font-family: 'DM Sans', sans-serif; background: white;
+  font-family: 'DM Sans', sans-serif; background: var(--surface);
   color: var(--text); outline: none; resize: none;
   min-height: 80px; line-height: 1.5; margin-bottom: 16px;
 }
@@ -1327,7 +1329,7 @@ html.lp .lp-doc-list li::before {
 
 .feedback-rating-btn {
   width: 44px; height: 44px; border-radius: 12px;
-  border: 2px solid transparent; background: white; font-size: 22px;
+  border: 2px solid transparent; background: var(--surface); font-size: 22px;
   display: flex; align-items: center; justify-content: center;
   cursor: pointer; transition: all 0.15s;
 }
@@ -1369,7 +1371,7 @@ html.lp .lp-doc-list li::before {
 
 .debrief-rating-btn {
   width: 48px; height: 48px; border-radius: 14px;
-  border: 2px solid transparent; background: white; font-size: 24px;
+  border: 2px solid transparent; background: var(--surface); font-size: 24px;
   display: flex; align-items: center; justify-content: center;
   cursor: pointer; transition: all 0.15s;
   box-shadow: 0 1px 4px rgba(0,0,0,0.06);
@@ -1385,7 +1387,7 @@ html.lp .lp-doc-list li::before {
 .debrief-person {
   display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
   padding: 10px 12px; border-radius: 12px;
-  background: white; cursor: pointer;
+  background: var(--surface); cursor: pointer;
   box-shadow: 0 1px 4px rgba(0,0,0,0.04);
   transition: all 0.15s;
 }
@@ -1405,7 +1407,7 @@ html.lp .lp-doc-list li::before {
 .debrief-textarea {
   width: 100%; padding: 12px 14px; border-radius: 12px;
   border: 1.5px solid var(--warm); font-size: 14px;
-  font-family: 'DM Sans', sans-serif; background: white;
+  font-family: 'DM Sans', sans-serif; background: var(--surface);
   color: var(--text); outline: none; resize: none;
   min-height: 70px; line-height: 1.5;
 }
@@ -1418,7 +1420,7 @@ html.lp .lp-doc-list li::before {
 
 .debrief-goagain-btn {
   flex: 1; padding: 12px 8px; border-radius: 12px;
-  border: 1.5px solid var(--warm); background: white;
+  border: 1.5px solid var(--warm); background: var(--surface);
   font-size: 13px; font-family: 'DM Sans', sans-serif;
   color: var(--text); cursor: pointer; text-align: center;
   transition: all 0.15s;
@@ -1435,7 +1437,7 @@ html.lp .lp-doc-list li::before {
 
 /* Debrief summary */
 .debrief-summary-card {
-  background: white; border-radius: 14px; padding: 16px;
+  background: var(--surface); border-radius: 14px; padding: 16px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.06);
 }
 
@@ -1490,7 +1492,7 @@ html.lp .lp-doc-list li::before {
 .feed-propose-btn:active { transform: scale(0.99); }
 
 .feed-propose-plus {
-  font-size: 18px; line-height: 1; opacity: 0.8;
+  font-size: 18px; line-height: 1;
 }
 
 .feed-loading {
@@ -1540,7 +1542,7 @@ html.lp .lp-doc-list li::before {
 .propose-intro em { color: var(--earth); font-style: normal; font-weight: 500; }
 
 .propose-form {
-  background: white; border-radius: 14px; padding: 20px;
+  background: var(--surface); border-radius: 14px; padding: 20px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.06);
 }
 
@@ -1565,7 +1567,7 @@ html.lp .lp-doc-list li::before {
 .debrief-chip-row { flex-wrap: wrap; }
 .debrief-chip.selected { background: var(--moss); color: #fff; border-color: var(--moss); }
 .debrief-person { display: flex; gap: 6px; margin: 4px 0; align-items: center; flex-wrap: wrap; }
-.debrief-see-again.selected { background: var(--amber); border-color: var(--amber); color: #fff; }
+.debrief-see-again.selected { background: var(--amber-ink); border-color: var(--amber-ink); color: #fff; }
 .reflection-thread { margin: 8px 0; }
 .reflection-line {
   font-size: 13px; line-height: 1.5; padding: 6px 10px; border-radius: 10px;
@@ -1615,7 +1617,7 @@ html.lp .lp-doc-list li::before {
 }
 
 .event-card-large {
-  background: white; border-radius: 14px; padding: 22px 20px;
+  background: var(--surface); border-radius: 14px; padding: 22px 20px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.06);
 }
 
@@ -1629,7 +1631,7 @@ html.lp .lp-doc-list li::before {
   padding: 4px 10px; border-radius: 999px; font-weight: 500;
 }
 
-.event-state-proposed { background: rgba(196, 133, 58, 0.15); color: var(--amber); }
+.event-state-proposed { background: rgba(196, 133, 58, 0.15); color: var(--amber-ink); }
 .event-state-planned { background: rgba(122, 158, 110, 0.18); color: var(--moss); }
 .event-state-in-progress { background: rgba(168, 92, 56, 0.18); color: var(--rust); }
 .event-state-over, .event-state-cancelled { background: var(--warm); color: var(--soft); }
@@ -1705,7 +1707,7 @@ html.lp .lp-doc-list li::before {
 
 .btn-secondary {
   width: 100%;
-  background: white;
+  background: var(--surface);
   color: var(--earth);
   border: 1.5px solid var(--moss);
   border-radius: 14px;
@@ -1846,7 +1848,7 @@ html.lp .lp-doc-list li::before {
 }
 
 .suggest-tag-place {
-  background: rgba(196, 133, 58, 0.15); color: var(--amber);
+  background: rgba(196, 133, 58, 0.15); color: var(--amber-ink);
 }
 
 .suggest-status {
@@ -1854,7 +1856,7 @@ html.lp .lp-doc-list li::before {
   background: var(--warm); color: var(--soft); text-transform: lowercase;
 }
 
-.suggest-status-adopted { background: rgba(122, 158, 110, 0.25); color: var(--moss); }
+.suggest-status-adopted { background: rgba(122, 158, 110, 0.18); color: var(--moss); }
 .suggest-status-rejected, .suggest-status-withdrawn { background: var(--warm); color: var(--soft); }
 
 .suggest-text {
@@ -1863,7 +1865,7 @@ html.lp .lp-doc-list li::before {
 
 .suggest-response {
   margin-top: 8px; padding: 8px 10px;
-  background: white; border-radius: 8px;
+  background: var(--surface); border-radius: 8px;
   border-left: 3px solid var(--moss);
 }
 
@@ -1882,7 +1884,7 @@ html.lp .lp-doc-list li::before {
 }
 
 .suggest-vote {
-  background: white; border: 1px solid var(--warm);
+  background: var(--surface); border: 1px solid var(--warm);
   color: var(--text); padding: 4px 10px;
   border-radius: 999px; font-family: 'DM Sans', sans-serif;
   font-size: 11px; cursor: pointer;
@@ -2001,7 +2003,7 @@ html.lp .lp-doc-list li::before {
 
 .poll-option {
   position: relative; overflow: hidden;
-  background: white; border: 1px solid var(--warm);
+  background: var(--surface); border: 1px solid var(--warm);
   border-radius: 10px; padding: 10px 12px;
   font-family: 'DM Sans', sans-serif;
   cursor: pointer; transition: border-color 0.15s;
@@ -2009,7 +2011,7 @@ html.lp .lp-doc-list li::before {
 }
 
 .poll-option:not(:disabled):active { transform: scale(0.99); }
-.poll-option:disabled { cursor: default; opacity: 0.85; }
+.poll-option:disabled { cursor: default; }
 
 .poll-option-mine { border-color: var(--moss); }
 .poll-option-outcome {
@@ -2056,12 +2058,12 @@ html.lp .lp-doc-list li::before {
 }
 
 .mylevel-interested {
-  background: rgba(196, 133, 58, 0.15); color: var(--amber);
+  background: rgba(196, 133, 58, 0.15); color: var(--amber-ink);
 }
 
 .mylevel-conflict {
   background: color-mix(in srgb, var(--amber) 18%, transparent);
-  color: var(--amber);
+  color: var(--amber-ink);
 }
 
 .mylevel-full {
@@ -2198,10 +2200,10 @@ html.lp .lp-doc-list li::before {
   color: var(--text);
 }
 
-.model-chip em { font-style: italic; color: var(--soft); }
+.model-chip em { font-style: italic; }
 
 .model-chip-x {
-  border: none; background: none; color: var(--soft);
+  border: none; background: none; color: inherit;
   font-size: 14px; line-height: 1; padding: 0 2px;
 }
 
@@ -2238,7 +2240,7 @@ html.lp .lp-doc-list li::before {
   color: var(--soft);
 }
 
-.locality-chip:disabled { opacity: 0.7; }
+.locality-chip:disabled { cursor: default; }
 
 /* ─── Workshop theme switching (docs/plans/ui-restyle.md) ─── */
 /* The chip exists only on workshop stacks (theme.js never creates it
@@ -2267,8 +2269,10 @@ html.lp .lp-doc-list li::before {
   --cream: #f8f3e9;
   --warm: #efe7d4;
   --amber: #c08a45;
+  --amber-ink: #845d2d;
+  --rust: #914f30;
   --text: #26332a;
-  --soft: #77806f;
+  --soft: #636a5c;
   --ml-surface: #fffdf6;
   --ml-border: rgba(42, 58, 47, 0.07);
   --ml-line: rgba(42, 58, 47, 0.1);
@@ -2288,7 +2292,7 @@ html.lp .lp-doc-list li::before {
 [data-theme="morning-linen"] .detail-title { font-size: 24px; letter-spacing: -0.01em; }
 [data-theme="morning-linen"] .feed-location,
 [data-theme="morning-linen"] .detail-type {
-  color: #8a927f; opacity: 1; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--soft); opacity: 1; letter-spacing: 0.14em; text-transform: uppercase;
 }
 [data-theme="morning-linen"] .detail-back { color: var(--soft); opacity: 1; }
 [data-theme="morning-linen"] .feed-avatar {
@@ -2327,11 +2331,11 @@ html.lp .lp-doc-list li::before {
 [data-theme="morning-linen"] .card-title {
   font-size: 19px; line-height: 1.25; letter-spacing: -0.005em; margin-bottom: 5px;
 }
-[data-theme="morning-linen"] .card-type { color: #8a927f; letter-spacing: 0.14em; }
+[data-theme="morning-linen"] .card-type { color: var(--soft); letter-spacing: 0.14em; }
 [data-theme="morning-linen"] .card-details { font-size: 13px; gap: 10px; }
 [data-theme="morning-linen"] .card-going {
   font-size: 11px; font-weight: 500; letter-spacing: 0.06em;
-  color: #a3702f; background: rgba(192,138,69,0.13);
+  color: var(--amber-ink); background: rgba(192,138,69,0.13);
   border-radius: 999px; padding: 3px 10px;
 }
 [data-theme="morning-linen"] .card-action-text { font-size: 12.5px; }
@@ -2340,7 +2344,7 @@ html.lp .lp-doc-list li::before {
 [data-theme="morning-linen"] .section-label,
 [data-theme="morning-linen"] .feed-section-label {
   display: flex; align-items: center; gap: 12px;
-  letter-spacing: 0.16em; font-weight: 500; color: #8a927f;
+  letter-spacing: 0.16em; font-weight: 500; color: var(--soft);
 }
 [data-theme="morning-linen"] .section-label::after,
 [data-theme="morning-linen"] .feed-section-label::after {
@@ -2404,14 +2408,17 @@ html.lp .lp-doc-list li::before {
 
 [data-theme="lantern"] {
   --earth: #ede4d0;   /* heading/active-text usages read cream on dark */
-  --moss: #8fa986;
+  --moss: #94ad8b;
   --sage: #8fa986;
   --mist: #ede4d0;
   --cream: #171d17;
   --warm: #212822;
   --amber: #d99a4e;
+  --amber-ink: var(--amber);
+  --rust: #d39b7f;
   --text: #ede4d0;
   --soft: #9fa793;
+  --surface: var(--lt-surface);
   --lt-ground: #171d17;
   --lt-surface: #212822;
   --lt-line: rgba(237, 228, 208, 0.12);
@@ -2476,6 +2483,14 @@ html.lp .lp-doc-list li::before {
   border-radius: 999px; padding: 3px 10px;
 }
 [data-theme="lantern"] .mylevel-confirmed { background: var(--amber); color: var(--lt-ground); }
+/* --mist is a text color here, so it cannot be a chip ground; and
+   white text cannot sit on the light accents */
+[data-theme="lantern"] .event-state-idea,
+[data-theme="lantern"] .model-chip,
+[data-theme="lantern"] .reflection-member { background: rgba(237, 228, 208, 0.1); }
+[data-theme="lantern"] .model-pos-btn.selected,
+[data-theme="lantern"] .debrief-chip.selected,
+[data-theme="lantern"] .debrief-see-again.selected { color: var(--lt-ground); }
 [data-theme="lantern"] .section-label,
 [data-theme="lantern"] .feed-section-label { color: #7e8874; letter-spacing: 0.16em; }
 
@@ -2538,9 +2553,10 @@ html.lp .lp-doc-list li::before {
   --cream: #eceee8;
   --warm: #efe7d6;
   --amber: #c77b58;
-  --rust: #c77b58;
+  --amber-ink: #904e30;
+  --rust: #904e30;   /* clay deepened for text: #c77b58 is 2.8:1 */
   --text: #24413a;
-  --soft: #7d8b81;
+  --soft: #5e6961;
   --pb-surface: #fbfcfa;
   --pb-shadow: 0 6px 22px rgba(36, 65, 58, 0.07);
   --pb-btn-shadow: 0 10px 24px rgba(36, 65, 58, 0.22);
@@ -2573,6 +2589,7 @@ html.lp .lp-doc-list li::before {
   font-size: 12px; font-weight: 500; color: var(--moss);
   background: rgba(127, 169, 155, 0.18); border-radius: 999px; padding: 5px 12px;
 }
+[data-theme="pebble"] .feed-header.light .feed-location { color: var(--moss); }
 [data-theme="pebble"] .feed-avatar {
   background: var(--pb-surface); color: var(--earth);
   box-shadow: 0 4px 14px rgba(36,65,58,0.10); width: 42px; height: 42px;
@@ -2603,14 +2620,14 @@ html.lp .lp-doc-list li::before {
 [data-theme="pebble"] .card-title { font-size: 18px; line-height: 1.3; margin-bottom: 6px; }
 [data-theme="pebble"] .card-type {
   font-size: 11px; font-weight: 500; letter-spacing: 0.02em; text-transform: none;
-  background: var(--warm); color: #85683a; border-radius: 999px; padding: 4px 11px;
+  background: var(--warm); color: #7f6438; border-radius: 999px; padding: 4px 11px;
 }
 [data-theme="pebble"] .card-details { font-size: 13px; }
 [data-theme="pebble"] .card-going {
   font-size: 12px; font-weight: 500; color: var(--moss);
   background: rgba(127,169,155,0.16); border-radius: 999px; padding: 4px 11px;
 }
-[data-theme="pebble"] .mylevel-confirmed { background: var(--sage); color: var(--mist); }
+[data-theme="pebble"] .mylevel-confirmed { background: var(--moss); color: var(--mist); }
 [data-theme="pebble"] .section-label,
 [data-theme="pebble"] .feed-section-label { letter-spacing: 0.14em; font-weight: 500; }
 

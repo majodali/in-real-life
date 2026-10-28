@@ -59,6 +59,18 @@ card with per-direction tokens and a recommendation).
 - **State-driven accents without markup**: Lantern's "lit" committed
   card uses `:has(.mylevel-confirmed)` — the effect follows real RSVP
   state.
+- **Contrast is a token property** (design-spec §8, open risk #24):
+  every theme defines its text colors to pass WCAG AA on its own
+  grounds, so a component stays legible in every theme without
+  overrides. `--soft` passes 4.5:1 on cream, white and `--warm`;
+  `--rust` passes on its own tints; `--amber-ink` is the theme's amber
+  for small text (amber itself is ~2.7:1 on light grounds and stays
+  for fills, dots and borders); `--wordmark-dot` is amber deepened for
+  the ≥24px wordmark (3:1). Cards, sheets and inputs take
+  `--surface` (white, except Lantern's dark surface) — never a literal
+  `white`, which a dark theme cannot reach. A new color pairing is
+  checked in every registered theme before it ships (computed-style
+  audit; method in `design/landing-directions-2026-09.md` §5).
 
 ## Deliberately not done yet (each named in the Backlog)
 
